@@ -6,8 +6,8 @@
   exclude-result-prefixes="#default"
 >
 
+  <xsl:import href="./Ui/Content/Dialog.xsl"/>
   <xsl:import href="./Ui/Content/Comments/List.xsl"/>
-  <xsl:import href="./Ui/Content/Surfer/Gallery/Upload/Dialog.xsl"/>
 
   <xsl:template match="acommunity-comments">
     <xsl:call-template name="acommunity-comments-list">
@@ -20,9 +20,45 @@
   </xsl:template>
   
   <xsl:template match="acommunity-surfer-gallery-upload">
-    <xsl:call-template name="acommunity-surfer-gallery-upload-dialog">
+    <xsl:call-template name="acommunity-content-dialog">
       <xsl:with-param name="dialog" select="dialog-box" />
       <xsl:with-param name="dialogMessage" select="dialog-message" />
+      <xsl:with-param name="className" select="'surferGalleryUploadDialog'" />
+      <xsl:with-param name="multipartFormData" select="true()" />
+    </xsl:call-template>
+  </xsl:template>
+  
+  <xsl:template match="acommunity-surfer-gallery-folders">
+    <xsl:if test="count(folders/folder) &gt; 0">
+      <xsl:variable name="commandLinks" select="command-links" />
+      <ul class="surferGalleryFolders">
+        <xsl:for-each select="folders/folder">
+          <xsl:variable name="folderId" select="@id" />
+          <li class="surferGalleryFolder">
+            <xsl:choose>
+              <xsl:when test="@selected = '1'">
+                <xsl:value-of select="@name" />
+              </xsl:when>
+              <xsl:otherwise>
+                <a class="surferGallerySelectFolderLink" href="{@href}"><xsl:value-of select="@name" /></a>
+              </xsl:otherwise>
+            </xsl:choose>
+            <xsl:if test="$commandLinks and $commandLinks/command-link[@folder_id = $folderId and @name = 'delete_folder']">
+              <xsl:text> </xsl:text>
+              <a class="surferGalleryDeleteFolderLink" href="{$commandLinks/command-link[@folder_id = $folderId and @name = 'delete_folder']/text()}" title="{$commandLinks/command-link[@folder_id = $folderId and @name = 'delete_folder']/@caption}"><img src="{$PAGE_THEME_PATH}pics/folder-delete.png" alt="" /></a>
+            </xsl:if>
+          </li>
+        </xsl:for-each>
+      </ul>
+      <xsl:if test="command-links/command-link[@name = 'add_folder']">
+        <a class="surferGalleryAddFolderLink" href="{command-links/command-link[@name = 'add_folder']/text()}" title="{command-links/command-link[@name = 'add_folder']/@caption}"><img src="{$PAGE_THEME_PATH}pics/folder-add.png" alt="" /></a>
+      </xsl:if>
+    </xsl:if>
+    <xsl:call-template name="float-fix" />
+    <xsl:call-template name="acommunity-content-dialog">
+      <xsl:with-param name="dialog" select="dialog-box" />
+      <xsl:with-param name="dialogMessage" select="dialog-message" />
+      <xsl:with-param name="className" select="'surferGalleryFolderDialog'" />
     </xsl:call-template>
   </xsl:template>
   

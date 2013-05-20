@@ -113,14 +113,19 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
   */
   public function callbackUploadImage($context, $dialog) {
     $ressource = $this->data()->ressource();
-    $this->data()->galleries()->load(array('surfer_id' => $ressource['id']), 0, 1);
+    $filter = array('surfer_id' => $ressource['id']);
+    $ressourceParameters = reset($this->data()->ressourceParameters());
+    if (!empty($ressourceParameters['folder_id'])) {
+      $filter['folder_id'] = $ressourceParameters['folder_id'];
+    } else {
+      $filter['parent_folder_id'] = 0;
+    }
+    $this->data()->galleries()->load($filter, 1);
     $error = NULL;
     
     if (count($this->data()->galleries()) > 0) {
-      $galleries = $this->data()->galleries();
-      $galleryKeys = array_keys($galleries->toArray());
-      $folderId = !empty($galleries[$galleryKeys[0]]['folder_id']) ? 
-        $galleries[$galleryKeys[0]]['folder_id'] : NULL;
+      $gallery = reset($this->data()->galleries()->toArray());
+      $folderId = !empty($gallery['folder_id']) ? $gallery['folder_id'] : NULL;
       $parameterGroup = $this->data()->owner->parameterGroup();
       
       if (!empty($folderId)) {

@@ -23,6 +23,11 @@
             name="Surfer Gallery Upload Box" 
             class="ACommunitySurferGalleryUploadBox" 
             file="Surfer/Gallery/Upload/Box.php">An image upload field for surfer galleries</module>
+    <module type="box" 
+            guid="a7aecb7111e14e19984864934b97cfce" 
+            name="Surfer Gallery Folders Box" 
+            class="ACommunitySurferGalleryFoldersBox" 
+            file="Surfer/Gallery/Folders/Box.php">Gallery folders navigation and management</module>
     <module type="page" 
             guid="4d514cb5bbb34b4086b9da1af6527969" 
             name="Surfer Gallery Page" 

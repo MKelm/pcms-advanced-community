@@ -1,0 +1,19 @@
+ul.surferGalleryFolders {
+  float: left;
+  margin-top: 0.6em;
+  margin-bottom: 1em;
+}
+
+ul.surferGalleryFolders li {
+  display: inline;
+  background: url(pics/listitem.gif) 0 2px no-repeat;
+  margin-right: 0.8em;
+}
+
+a.surferGalleryDeleteFolderLink {
+  margin-left: 0.4em;
+}
+a.surferGalleryAddFolderLink {
+  float: right;
+  margin-top: 0.8em;
+}

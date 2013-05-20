@@ -30,8 +30,13 @@ Das Advanced Community Paket enthält folgende Module:
 --- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
 -- Unterstützt das Kommentarmodul, siehe oben
 
+- Surfergallerie Ordner (Surfer Gallery Folders Box)
+-- Zeigt in der Surfergallerie alle Ordner des jeweiligen Surfers an
+-- Enthält Links zum Löschen und Hinzufügen von Ordnern wenn der angemeldete
+   Surfer dem gewählten Surfer entspricht
+
 - Surfergallerie Upload (Surfer Gallery Upload Box)
--- Zeigt in der Surfergallerie Feld zum Hochladen von Bilder an
+-- Zeigt in der Surfergallerie ein Feld zum Hochladen von Bilder an
 --- der gewählte Surfer muss mit dem angemeldeten Surfer übereinstimmen
 
 - Conntector 
@@ -121,9 +126,17 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 -- Ändern sie bei Bedarf weitere Einstellungen
 -- Publizieren sie die Seite
 
+- Surfergallerie Ordner (Surfer Gallery Folders Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
+-- Wählen sie die Boxengruppe "before-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box auf ihrer Surfergallerieseite unter dem Punkt "Boxen" ein
+
 - Surfergallerie Upload (Surfer Gallery Upload Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ranglistenbox zu erstellen
--- Wählen sie die Boxengruppe "before-content"
+-- Wählen sie die Boxengruppe "after-content"
 -- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Box

@@ -36,22 +36,28 @@ class ACommunitySurferGalleryPage extends content_thumbs {
   public $paramName = 'acg';
   
   /**
-   * Community connector
-   * @var connector_surfers
+   * Surfer gallery data
+   * @var ACommunitySurferGalleryData
    */
-  protected $_communityConnector = NULL;
+  protected $_data = NULL;
   
   /**
-   * Surfer gallery database record
-   * @var object
+   * Get/set surfer gallery folders data
+   *
+   * @param ACommunitySurferGalleryData $data
+   * @return ACommunitySurferGalleryData
    */
-  protected $_gallery = NULL;
-  
-  /**
-   * Surfer galleries database records
-   * @var object
-   */
-  protected $_galleries = NULL;
+  public function data(ACommunitySurferGalleryData $data = NULL) {
+    if (isset($data)) {
+      $this->_data = $data;
+    } elseif (is_null($this->_data)) {
+      include_once(dirname(__FILE__).'/Data.php');
+      $this->_data = new ACommunitySurferGalleryData();
+      $this->_data->papaya($this->papaya());
+      $this->_data->owner = $this;
+    }
+    return $this->_data;
+  }
   
   /**
    * Overwrite get web link method to get surfer_handle parameter in links
@@ -63,6 +69,10 @@ class ACommunitySurferGalleryPage extends content_thumbs {
     if (isset($this->params['surfer_handle'])) {
       $params = empty($params) ? array('surfer_handle' => $this->params['surfer_handle']) : 
         array_merge($params, array('surfer_handle' => $this->params['surfer_handle']));
+    }
+    if (isset($this->params['folder_id'])) {
+      $params = empty($params) ? array('folder_id' => $this->params['folder_id']) : 
+        array_merge($params, array('folder_id' => $this->params['folder_id']));
     }
     return parent::getWebLink($pageId, $lng, $mode, $params, $paramName, $text, $categId);
   }
@@ -99,24 +109,6 @@ class ACommunitySurferGalleryPage extends content_thumbs {
   }
   
   /**
-   * Get/set community connector
-   * 
-   * @param object $connector
-   * @return object
-   */
-  public function communityConnector(connector_surfers $connector = NULL) {
-    if (isset($connector)) {
-      $this->_communityConnector = $connector;
-    } elseif (is_null($this->_communityConnector)) {
-      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-      $this->_communityConnector = base_pluginloader::getPluginInstance(
-        '06648c9c955e1a0e06a7bd381748c4e4', $this
-      );
-    }
-    return $this->_communityConnector;
-  }
-  
-  /**
    * Overwrite get parsed data to load surfer gallery
    * 
    * @return string
@@ -127,77 +119,48 @@ class ACommunitySurferGalleryPage extends content_thumbs {
     
     // load media db folder depending on surfer handle
     if (isset($this->params['surfer_handle'])) {
-      $surferId = $this->communityConnector()->getIdByHandle($this->params['surfer_handle']);
+      $surferId = $this->data()->communityConnector()->getIdByHandle(
+        $this->params['surfer_handle']
+      );
       if (!empty($surferId)) {
-        $this->galleries()->load(
-          array('surfer_id' => $surferId, 'parent_folder_id' => $this->data['directory']), 0, 1
-        );
-        if (count($this->galleries()) == 0) {
-          include_once(PAPAYA_INCLUDE_PATH.'system/base_mediadb_edit.php');
-          $mediaDBEdit = new base_mediadb_edit();
+        
+        $filter = array('surfer_id' => $surferId);
+        if (!empty($this->params['folder_id'])) {
+          $filter['folder_id'] = $this->params['folder_id'];
+        } else {
+          $filter['parent_folder_id'] = 0;
+        }
+        
+        $this->data()->galleries()->load($filter, 1);
+        if (empty($this->params['folder_id']) && count($this->data()->galleries()) == 0) {
           $languageId = $this->papaya()->request->languageId;
-          $parentFolder = $mediaDBEdit->getFolder($this->data['directory']);
+          $parentFolder = $this->data()->mediaDBEdit()->getFolder($this->data['directory']);
           if (!empty($parentFolder[$languageId])) {
-            $newFolderId = $mediaDBEdit->addFolder(
+            $newFolderId = $this->data()->mediaDBEdit()->addFolder(
               $parentFolder[$languageId]['folder_id'], 
               $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';', 
               $parentFolder[$languageId]['permission_mode']
             );
             if (!empty($newFolderId)) {
-              $mediaDBEdit->addFolderTranslation(
-                $newFolderId, $this->papaya()->request->languageId, $surferId
+              $this->data()->mediaDBEdit()->addFolderTranslation(
+                $newFolderId, $languageId, $surferId
               );
-              $gallery = $this->gallery();
+              $gallery = $this->data()->gallery();
               $gallery['surfer_id'] = $surferId;
               $gallery['folder_id'] = $newFolderId;
-              $gallery['parent_folder_id'] = $this->data['directory'];
+              $gallery['parent_folder_id'] = 0;
               $gallery->save();
               $this->data['directory'] = $newFolderId;
             }
           }
-        } else {
-          $galleries = $this->galleries();
-          $galleryKeys = array_keys($galleries->toArray());
-          $this->data['directory'] = $galleries[$galleryKeys[0]]['folder_id'];
+        } elseif (count($this->data()->galleries()) > 0) {
+          $gallery = reset($this->data()->galleries()->toArray());
+          $this->data['directory'] = $gallery['folder_id'];
         }
       }
     }
     
     return parent::getParsedData();
-  }
-  
-  /**
-  * Access to surfer gallery database record data
-  *
-  * @param ACommunityContentSurferGallery $comment
-  * @return ACommunityContentSurferGallery
-  */
-  public function gallery(ACommunityContentSurferGallery $gallery = NULL) {
-    if (isset($gallery)) {
-      $this->_gallery = $gallery;
-    } elseif (is_null($this->_gallery)) {
-      include_once(dirname(__FILE__).'/../../Content/Surfer/Gallery.php');
-      $this->_gallery = new ACommunityContentSurferGallery();
-      $this->_gallery->papaya($this->papaya());
-    }
-    return $this->_gallery;
-  }
-  
-  /**
-  * Access to the surfer galleries database records data
-  *
-  * @param ACommunityContentSurferGalleries $comments
-  * @return ACommunityContentSurferGalleries
-  */
-  public function galleries(ACommunityContentSurferGalleries $galleries = NULL) {
-    if (isset($galleries)) {
-      $this->_galleries = $galleries;
-    } elseif (is_null($this->_galleries)) {
-      include_once(dirname(__FILE__).'/../../Content/Surfer/Galleries.php');
-      $this->_galleries = new ACommunityContentSurferGalleries();
-      $this->_galleries->papaya($this->papaya());
-    }
-    return $this->_galleries;
   }
   
 }

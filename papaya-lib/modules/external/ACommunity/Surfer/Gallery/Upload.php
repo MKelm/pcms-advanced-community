@@ -38,7 +38,7 @@ class ACommunitySurferGalleryUpload extends PapayaObjectInteractive
   protected $_uiContentUploadDialog = NULL;
   
   /**
-   * Get/set comments data
+   * Get/set surfer gallery upload data
    *
    * @param ACommunitySurferGalleryUploadData $data
    * @return ACommunitySurferGalleryUploadData
@@ -82,8 +82,7 @@ class ACommunitySurferGalleryUpload extends PapayaObjectInteractive
   */
   public function getXml() {
     $dom = new PapayaXmlDocument();
-    $dom->appendElement('comments');
-
+    $dom->appendElement('upload');
     $this->appendTo($dom->documentElement);
     $xml = '';
     foreach ($dom->documentElement->childNodes as $node) {
@@ -96,7 +95,6 @@ class ACommunitySurferGalleryUpload extends PapayaObjectInteractive
   * Access to the ui content surfer gallery upload dialog control
   *
   * @param ACommunityUiContentSurferGalleryUploadDialog $uiContentUploadDialog
-  * @param boolean $reset
   * @return ACommunityUiContentSurferGalleryUploadDialog
   */
   public function uiContentUploadDialog(ACommunityUiContentSurferGalleryUploadDialog $uiContentUploadDialog = NULL) {

@@ -40,6 +40,7 @@
     <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
     <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
     <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />
+    <file module="ACommunitySurferGalleryFoldersBox" file="box_acommunity_surfer_gallery_folders.css" />
   </styles>  
   <scripts>
     <!-- 

@@ -93,10 +93,13 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox {
         $this->parentObj->moduleObj->paramName
       );
       if (isset($parameters['surfer_handle']) && !isset($parameters['img'])) {
-        $this->upload()->data()->ressource('surfer', $parameters['surfer_handle']);  
+        $this->upload()->data()->ressource('surfer', $parameters['surfer_handle']); 
+        $ressourceParameters = array('surfer_handle' => $parameters['surfer_handle']);
+        if (!empty($parameters['folder_id'])) {
+          $ressourceParameters['folder_id'] = $parameters['folder_id'];
+        }
         $this->upload()->data()->ressourceParameters(
-          $this->parentObj->moduleObj->paramName,
-          array('surfer_handle' => $parameters['surfer_handle'])
+          $this->parentObj->moduleObj->paramName, $ressourceParameters
         );
       }
     }
@@ -114,7 +117,16 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Upload.php');
       $this->_upload = new ACommunitySurferGalleryUpload();
       $this->_upload->parameterGroup($this->paramName);
-      $this->_upload->data()->setPluginData($this->data);
+      $captionNames = array('caption_dialog_image', 'caption_dialog_button');
+      $messageNames = array(
+        'message_dialog_input_error', 'message_dialog_error_no_folder',
+        'message_dialog_error_no_upload_file', 'message_dialog_error_upload',
+        'message_dialog_error_file_extension', 'message_dialog_error_file_type',
+        'message_dialog_error_media_db'
+      );
+      $this->_upload->data()->setPluginData(
+        $this->data, $captionNames, $messageNames
+      );
       $this->_upload->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_upload;
