@@ -1,0 +1,41 @@
+<?xml version="1.0"  encoding="ISO-8859-1" ?>
+  <modulegroup>
+  <name>Advanced Community</name>
+  <description>Advanced community modules</description>
+  <modules>
+    <module type="box" 
+            guid="9736efe1a26742e1bce447ae99abdf6a" 
+            name="Comments Box" 
+            class="ACommunityCommentsBox" 
+            file="Comments/Box.php">Get and set comments for pages, surfers and images</module>
+    <module type="box" 
+            guid="46bfe809a7724c85b649bc9225e3fed7" 
+            name="Comments Ranking Box" 
+            class="ACommunityCommentsRankingBox" 
+            file="Comments/Ranking/Box.php">Get a list of comments orderd by voting score</module>
+    <module type="box" 
+            guid="85731abd5fdf4235b24ab406758d127e" 
+            name="Commenters Ranking Box" 
+            class="ACommunityCommentersRankingBox" 
+            file="Commenters/Ranking/Box.php">Get a list of commenters orderd by submitted comments</module>
+    <module type="box" 
+            guid="f1ade379722f40668198253c179b98d8" 
+            name="Surfer Gallery Upload Box" 
+            class="ACommunitySurferGalleryUploadBox" 
+            file="Surfer/Gallery/Upload/Box.php">An image upload field for surfer galleries</module>
+    <module type="page" 
+            guid="4d514cb5bbb34b4086b9da1af6527969" 
+            name="Surfer Gallery Page" 
+            class="ACommunitySurferGalleryPage" 
+            file="Surfer/Gallery/Page.php">Thumbnail gallery for surfers</module>
+    <module type="connector" 
+            guid="0badeb14ea2d41d5bcfd289e9d190534" 
+            name="Connector" 
+            class="ACommunityConnector" 
+            file="Connector.php">Connector methods for other papaya CMS packages</module>
+  </modules>
+  <tables>
+    <table name="acommunity_comments"/>
+    <table name="acommunity_surfer_galleries"/>
+  </tables>
+</modulegroup>

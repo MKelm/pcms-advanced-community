@@ -1,0 +1,75 @@
+.comments .commentUser,
+.comments .commentText,
+.comments .commentTextParagraph,
+.comments .commentExtras {
+  float: left;
+}
+
+.comments.indent,
+.commentDialog.indent,
+.commentDialogMessage.indent {
+  margin-left: 25px;
+}
+.comments.indent .paging {
+  float: right;
+}
+
+.comments .comment {
+  margin-top: 10px;
+}
+
+.comments .commentUser,
+.comments .commentText {
+  background-color: #EEF5CE;
+  display: block;
+}
+
+.comments .commentUserAvatar {
+  margin-bottom: 5px;
+}
+
+.comments .commentUser {
+  width: 8.7em;
+  padding: 5px;
+}
+
+.comments .commentUserHandle {
+  line-height: 1em;
+}
+
+.comments .commentTime {
+  font-size: 0.89em;
+  line-height: 1.3em;
+}
+
+.comments .commentText {
+  margin-left: 10px;
+  width: 26.5em;
+  padding: 5px;
+}
+.comments.indent .commentText {
+  width: 24.2em;
+}
+
+.comments .commentExtras {
+  float: right;
+  margin-left: 10px;
+  width: 4.5em;
+}
+
+.comments .commentExtrasReply {
+  margin-top: 20px;
+  display: block;
+}
+
+.comments .paging {
+  margin-top: 15px;
+}
+
+.commentDialogMessage {
+  margin-top: 15px !important;
+  margin-bottom: 15px !important;
+}
+.commentDialogField textarea {
+  height: 50px;
+}

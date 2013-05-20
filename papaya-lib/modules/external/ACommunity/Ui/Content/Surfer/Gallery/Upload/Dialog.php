@@ -1,0 +1,201 @@
+<?php
+/**
+ * Advanced community surfer gallery upload dialog
+ *
+ * @copyright 2013 by Martin Kelm
+ * @link http://idx.shrt.ws
+ * @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
+ *
+ * You can redistribute and/or modify this script under the terms of the GNU General Public
+ * License (GPL) version 2, provided that the copyright and license notes, including these
+ * lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.
+ *
+ * @package Papaya-Modules
+ * @subpackage External-ACommunity
+ */
+
+/**
+ * Advanced surfer gallery upload dialog
+ *
+ * @package Papaya-Modules
+ * @subpackage External-ACommunity
+ */
+class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlCommandDialog {
+
+  /**
+  * Comments data
+  * @var ACommunitySurferGalleryUploadData
+  */
+  protected $_data = NULL;
+ 
+  /**
+  * Current error message.
+  * @var string
+  */
+  protected $_errorMessage = NULL;
+  
+  /**
+   * Name of image field
+   * @var string
+   */
+  protected $_imageFieldName = 'image';
+
+  /**
+   * Get/set surfer gallery data
+   *
+   * @param ACommunitySurferGalleryUploadData $data
+   * @return ACommunitySurferGalleryUploadData
+   */
+  public function data(ACommunitySurferGalleryUploadData $data = NULL) {
+    if (isset($data)) {
+      $this->_data = $data;
+    }
+    return $this->_data;
+  }
+  
+  /**
+  * Get/set error message
+  * @var string $errorMessage
+  */
+  public function errorMessage($errorMessage = NULL) {
+    if (isset($errorMessage)) {
+      PapayaUtilConstraints::assertString($errorMessage);
+      $this->_errorMessage = $errorMessage;
+    }
+    return $this->_errorMessage;
+  }
+  
+  /**
+  * Create dialog
+  *
+  * @see PapayaUiControlCommandDialog::createDialog()
+  * @return PapayaUiDialog
+  */
+  public function createDialog() {
+    $buttonCaption = $this->data()->captions['caption_dialog_button'];
+
+    $dialog = new PapayaUiDialog();
+
+    $dialog->papaya($this->papaya());
+    $dialog->parameterGroup($this->parameterGroup());
+    $dialog->parameters($this->parameters());
+    $dialog->action($this->data()->reference()->getRelative());
+    $dialog->hiddenFields()->merge(
+      array(
+        'command' => 'upload'
+      )
+    );
+    $dialog->caption = NULL;
+    
+    include_once(dirname(__FILE__).'/../../../../Dialog/Field/Input/File.php');
+    $dialog->fields[] = $field = new ACommunityUiDialogFieldInputFile(
+      $this->data()->captions['caption_dialog_image'],
+      $this->_imageFieldName,
+      TRUE
+    );
+    $field->setMandatory(TRUE);
+    $field->setId('dialogGalleryImage');
+    $dialog->buttons[] = new PapayaUiDialogButtonSubmit($buttonCaption);
+    
+    $this->callbacks()->onExecuteSuccessful = array($this, 'callbackUploadImage');
+    $this->callbacks()->onExecuteFailed = array($this, 'callbackShowError');
+    return $dialog;
+  }
+  
+  
+  /**
+  * Upload image on sucessful execution
+  *
+  * @param object $context
+  * @param PapayaUiDialog $dialog
+  */
+  public function callbackUploadImage($context, $dialog) {
+    $ressource = $this->data()->ressource();
+    $this->data()->galleries()->load(array('surfer_id' => $ressource['id']), 0, 1);
+    $error = NULL;
+    
+    if (count($this->data()->galleries()) > 0) {
+      $galleries = $this->data()->galleries();
+      $galleryKeys = array_keys($galleries->toArray());
+      $folderId = !empty($galleries[$galleryKeys[0]]['folder_id']) ? 
+        $galleries[$galleryKeys[0]]['folder_id'] : NULL;
+      $parameterGroup = $this->data()->owner->parameterGroup();
+      
+      if (!empty($folderId)) {
+        if (isset($_FILES[$parameterGroup]) &&
+            isset($_FILES[$parameterGroup]['name'][$this->_imageFieldName]) &&
+            isset($_FILES[$parameterGroup]['tmp_name'][$this->_imageFieldName])) {
+          
+          if (!($_FILES[$parameterGroup]['error'][$this->_imageFieldName] > 0)) {
+          
+            $allowedExtensions = array('gif', 'jpeg', 'jpg', 'png');
+            $extension = strtolower(
+              end(explode('.', $_FILES[$parameterGroup]['name'][$this->_imageFieldName]))
+            );
+            if (in_array($extension, $allowedExtensions)) {
+              
+              $allowedTypes = array(
+                "image/gif", "image/jpeg", "image/jpg", "image/pjpeg", "image/x-png", "image/png"
+              );
+              $type = $_FILES[$parameterGroup]['type'][$this->_imageFieldName];
+              
+              if (in_array($type, $allowedTypes)) {
+                $mediaDBEdit = $this->data()->mediaDBEdit();
+                $added = $mediaDBEdit->addFile(
+                  $_FILES[$parameterGroup]['tmp_name'][$this->_imageFieldName], 
+                  $_FILES[$parameterGroup]['name'][$this->_imageFieldName], 
+                  $folderId, 
+                  $ressource['id']
+                );
+                if (empty($added)) {
+                  $error = 'message_dialog_error_media_db';
+                } else {
+                  $href = $this->data()->reference()->get();
+                  $GLOBALS['PAPAYA_PAGE']->sendHTTPStatus(301);
+                  @header("Location: ".$href);
+                  printf(
+                    '<html><head><meta http-equiv="refresh" content="0; URL=%s"></head></html>',
+                    papaya_strings::escapeHTMLChars($href)
+                  );
+                  exit;
+                }
+              } else {
+                $error = 'message_dialog_error_file_type';
+              }
+            } else {
+              $error = 'message_dialog_error_file_extension';
+            }
+          } else {
+            $error = 'message_dialog_error_upload';
+          }
+        } else {
+          $error = 'message_dialog_error_no_upload_file';
+        }
+      } else {
+        $error = 'message_dialog_error_no_folder';
+      }
+    } else {
+      $error = 'message_dialog_error_no_folder';
+    }
+    if (!empty($error)) {
+      $this->errorMessage($this->data()->messages[$error]);
+    }
+  }
+  
+  /**
+  * Show error message
+  *
+  * @param object $context
+  * @param PapayaUiDialog $dialog
+  */
+  public function callbackShowError($context, $dialog) {
+    $this->errorMessage(
+      sprintf(
+        $this->data()->messages['message_dialog_input_error'],
+        implode(', ', $dialog->errors()->getSourceCaptions())
+      )
+    );
+  }
+}

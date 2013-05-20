@@ -1,0 +1,18 @@
+.surferGalleryUploadDialogField label,
+.surferGalleryUploadDialogField input {
+  display: block;
+  float: left;
+}
+
+.surferGalleryUploadDialog {
+  margin-bottom: 15px;
+}
+
+.surferGalleryUploadDialog fieldset {
+  float: left;
+}
+
+fieldset.surferGalleryUploadDialogButton {
+  margin-top: 2.7em;
+  float: right;
+}

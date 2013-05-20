@@ -1,0 +1,159 @@
+= papaya CMS Advanced Community Installation =
+
+== Vorwort ==
+
+Diese Installtionsanleitung ist für eine papaya CMS Standardinstallation
+geschrieben. Die in dem Modulpacket enthaltenden Templates sind für
+das papaya CMS default-Theme erstellt.
+
+== Modulübersicht ==
+
+Das Advanced Community Paket enthält folgende Module:
+
+- Kommentare (Comments Box)
+-- Zeigt eine Liste mit Kommentaren und Unterkommentaren an
+-- Kommentare können mit gut oder schlecht bewertet werden
+-- Enthält ein Eingabeformular für Kommentare oder Unterkommentare
+-- Unterstützt Seiten, Surfer und Galleriebilder
+--- für Surfer muss ein Seitenparameter mit surfer_handle gesetzt sein
+--- für Galleriebilder muss das Surfergallerie-Modul genutzt werden
+---- sobald ein Bild ausgewählt wird erscheint die Kommentarbox
+
+- Kommentar-Rangliste (Comments Ranking Box)
+-- Zeigt eine Liste mit Kommentaren sortiert nach Bewertung an
+
+- Kommentierer-Rangliste (Commenters Ranking Box)
+-- Zeigt eine Liste mit Kommentierern sortiert nach Kommentaranzahl an
+
+- Surfergallerie (Surfer Gallery Page)
+-- Zeigt eine Thumbnailgallerie für einen gewählten Surfer an
+--- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
+-- Unterstützt das Kommentarmodul, siehe oben
+
+- Surfergallerie Upload (Surfer Gallery Upload Box)
+-- Zeigt in der Surfergallerie Feld zum Hochladen von Bilder an
+--- der gewählte Surfer muss mit dem angemeldeten Surfer übereinstimmen
+
+- Conntector 
+-- Enthält eine onDeleteSurfer Methode für den Action Dispatcher
+
+== Dateien kopieren ==
+
+Die in dem Paket enthaltenen Dateien sind je papaya CMS Ordner sortiert.
+Es reicht die Hauptordner in das papaya CMS Basisverzeichnis zu kopieren.
+Wenn papaya-data und papaya-lib in einem externen Verzeichnis liegen,
+müssen die entsprechenden Paketordner dorthin kopiert werden. 
+In dem papaya-data Verzeichnis sind einige Änderungen an der boxes.xml,
+page_gallery.xsl und modules/free/thumbs/content_thumbs.xsl enthalten.
+Beim Kopieren werden die alten Versionen dieser Dateien überschrieben.
+Im Normalfall sollte die Kompatibilität mit dem aktuellen default-Theme
+bestehen bleiben.
+
+== Module einrichten ==
+
+Um die Advanced Community Module einzurichten gehen sie in das papaya CMS
+Backend zum Menüpunkt Module und klicken auf Module suchen. Danach erscheint
+in der Liste "Packete" der Punkt "Advanced Community". Wählen sie diesen
+Punkt aus und bestätigen sie danach die Frage rechts zum Erstellen von
+Pakettabellen mit "Erzeugen".
+
+== Ansichten einrichten ==
+
+Diese Anleitung geht davon aus das eine papaya CMS Standardinstalltion mit
+dem Ausgabefilter "html" besteht.
+Unter dem Menüpunkt "Ansichten" finden sie das Formular zum Erstellen von
+Ansichten. 
+In der Combobox "Modul" finden sie alle Module unter dem Abschnitt 
+"Advanced Community".
+Nachdem sie eine Ansicht mit Titel erstellt haben müssen sie diese 
+Ansicht noch mit dem Ausgabefilter "html" verknüpfen.
+Dabei ist ein "XSL-Stylesheet" zu wählen. Hier ist eine Liste mit
+Modulbezeichnungen und zugehörigen XSL-Stylesheets:
+
+- Commenters Ranking Box = box_acommunity.xsl
+- Comments Box = box_acommunity.xsl
+- Comments Ranking Box = box_acommunity.xsl
+- Surfer Gallery Upload Box = box_acommunity.xsl
+- Surfer Gallery Page = page_gallery.xsl
+
+== Boxen und Seiten einrichten ==
+
+- Kommentare (Comments Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Kommentarbox zu erstellen
+-- Wählen sie die Boxengruppe "after-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie unter "Inhalt" einen Ressourcentyp
+--- für normale papaya CMS Seiten ist der Typ "Page"
+--- für Seiten mit seiner Surferauswahl (Parameter surfer_handle) ist der Typ "Surfer"
+--- für Gallerien mit einer Bildauswahl ist der Typ "Image"
+-- Ändern sie bei Bedarf weitere Einstellungen
+-- Sie müssen maximal drei Boxen erstellen um alle Ressourcentypen zu unterstützen
+-- Publizieren sie die erstellte/n Box/en
+-- Hängen sie die Box in einer Seite unter dem Punkt "Boxen" ein
+--- für Bildkommentare brauchen sie zuerst eine Surfergallerie-Seite, siehe unten
+--- Surferkommentare funktionieren z.B. mit dem Communityseitenmodul "Show user"
+---- ein erweitertes Surfer Page Modul für die Advanced Community ist in Planung
+
+- Kommentar-Rangliste (Comments Ranking Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ranglistenbox zu erstellen
+-- Wählen sie die Boxengruppe "after-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box in einer Seite unter dem Punkt "Boxen" ein
+
+- Kommentierer-Rangliste (Commenters Ranking Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ranglistenbox zu erstellen
+-- Wählen sie die Boxengruppe "additional"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box in einer Seite unter dem Punkt "Boxen" ein
+
+- Surfergallerie (Surfer Gallery Page)
+-- Wählen sie den Menüpunkt "Dateien"
+-- Erstellen sie einen neuen (Unter-)Ordner für Surfergallerien
+-- Wählen sie den Menüpunkt "Ändern" um eine Surfergallerie-Seite zu erstellen
+-- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
+-- Danach bennen sie die neue Unterseite eindeutig
+-- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
+-- Gehen sie zu "Inhalt" und wählen sie unter "Ordner" den zuvor erstellen Dateiordner
+-- Ändern sie bei Bedarf weitere Einstellungen
+-- Publizieren sie die Seite
+
+- Surfergallerie Upload (Surfer Gallery Upload Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ranglistenbox zu erstellen
+-- Wählen sie die Boxengruppe "before-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box auf ihrer Surfergallerieseite unter dem Punkt "Boxen" ein
+
+== Action Dispatcher einrichten ==
+
+Der Action Dispatcher sollte eingerichtet werden um Daten gelöschter Surfer 
+in der Advanced Community korrekt zu handhaben.
+
+Bitte lesen sie zuerst die Action Dispatcher Anleitung auf 
+http://de.wiki.papaya-cms.com/wiki/Action_Dispatcher
+
+Sie brauchen eine Gruppe "community" und eine Aktion "onDeleteSurfer"
+danach können sie die Observerklasse "ACommunityConnector" der Aktion
+hinzufügen.
+
+Der Advanced Community Connector führt über den Action Dispatcher beim
+Löschen eines Surfers folgende Aktionen aus:
+- Kommentare werden mit einem Flag versehen, dass der Surfer gelöscht wurde
+-- in den Kommentarlisten werden später Surferhandles mit "Deleted user" ö.ä. ersetzt
+-- im Kommentiererranking werden gelöschte Surfer ignoriert
+- Surfergallerien werden mitsamt aller Dateien und Dateiordner gelöscht
+
+== Verlinkungen von Surferseiten ==
+
+Für die Zukunft sind verschiedene Ansätze von Verlinkungen z.B. zwischen
+Surferseiten und Surfergallerien u.ä. geplant. Derzeit müssen die Verlinkungen
+noch manuell gesetzt werden. Die Verlinkungen können einfach im Richtext-Editor
+über den Menüpunkt "Link einfügen/bearbeiten" gesetzt werden.
+
+Eine Surfergallerie ist z.B. folgendermaßen anzusteueren:
+papaya.11.html?acg:surfer_handle=dasIstEinSurferHandle
