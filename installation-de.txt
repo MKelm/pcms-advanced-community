@@ -6,7 +6,57 @@ Diese Installtionsanleitung ist für eine papaya CMS Standardinstallation
 geschrieben. Die in dem Modulpacket enthaltenden Templates sind für
 das papaya CMS default-Theme erstellt.
 
-== Modulübersicht ==
+== Dateien kopieren ==
+
+Die in dem Paket enthaltenen Dateien sind je papaya CMS Ordner sortiert.
+Es reicht die Hauptordner in das papaya CMS Basisverzeichnis zu kopieren.
+Wenn papaya-data und papaya-lib in einem externen Verzeichnis liegen,
+müssen die entsprechenden Paketordner dorthin kopiert werden.
+
+=== Patches ===
+
+Es gibt eine Reihe von Patches für die bestehenden papaya CMS Dateien die im Ordner patches liegen.
+
+Zum Patchen müssen sie in ihren papaya CMS Ordner per Kommandozeile gehen
+und folgenden Befehl ausführen:
+- patch -p 0 < /pfad/zum/packet/patches/papayacms.patches
+
+papayacms.patches ersetzen sie durch einen der folgenden Dateinamen:
+- trunk_r38500.patches wenn sie einen nightly-Build benutzen
+- release_r38112.patches wenn sie einen 5.5.2 release-Build benutzen
+
+Falls sie den Patchvorgang nicht durchführen können, können sie sich auch eine
+gepatchte Version des papaya CMS herunterladen.
+"papaya CMS mit Patches" unter http://idx.shrt.ws/dateien.9.de.html?ldb:categ_id=8
+
+==== Patches im Detail ====
+
+Folgende Patches sind enthalten:
+- Community
+-- Ausgabe von Titlen dynamischer Datengruppen in content_register-/content_userdata-Formularen
+--- die Sortiereung von dynamischen Feldern erfolgt nun nach Datengruppentitel, Feldsortierung
+-- Bugfix für getNameById, es gab einen Fehler in der Bufferverwaltung
+- Thumbs
+-- die Templatedatei page_gallery.xsl unterstützt nun auch ACommunitySurferGalleryPage
+-- das Thumbnailgalleriemodul enthält neue Optionen
+--- Anzeigemodus: Resized image with original image link, Resized image wie image download link
+--- Kommentar in Detailansicht anzeigen ja/nein
+--- Lightbox aktivieren ja/nein
+-- CSS / Stylesheets
+--- Verbesserungen von Formularausgaben
+--- Verbesserung von Thumbnailausgabe (Gallery)
+--- Unterstützung von Box-CSS-Dateien für "Advanced Community"
+- Beim Löschen von Seiten wird die ActionDispatcher-Aktion system/onDeletePages unterstützt
+
+== Module einrichten ==
+
+Um die Advanced Community Module einzurichten gehen sie in das papaya CMS
+Backend zum Menüpunkt Module und klicken auf Module suchen. Danach erscheint
+in der Liste "Packete" der Punkt "Advanced Community". Wählen sie diesen
+Punkt aus und bestätigen sie danach die Frage rechts zum Erstellen von
+Pakettabellen mit "Erzeugen".
+
+=== Modulübersicht ===
 
 Das Advanced Community Paket enthält folgende Module:
 
@@ -81,43 +131,6 @@ Das Advanced Community Paket enthält folgende Module:
 
 - Conntector
 -- Enthält eine onDeleteSurfer Methode für den Action Dispatcher
-
-- Erweiterte Version von "content_thumbs"
--- In dem freien Modul content_thumbs wurden einige Optionen hinzugefügt um eine erweiterte Anzeige
-   im Surfergalleriemodul zu ermöglichen
--- die Erweiterung ist solange Bestandteil dieses Pakets bis ein papaya CMS Update erfolgt
-
-== Dateien kopieren ==
-
-Die in dem Paket enthaltenen Dateien sind je papaya CMS Ordner sortiert.
-Es reicht die Hauptordner in das papaya CMS Basisverzeichnis zu kopieren.
-Wenn papaya-data und papaya-lib in einem externen Verzeichnis liegen,
-müssen die entsprechenden Paketordner dorthin kopiert werden.
-Das Paket enthält einige Änderungen an bestehenden papaya CMS Dateien:
-- papaya-data/templates/default-xhtml/html/boxes.xml
-- papaya-data/templates/default-xhtml/html/page_gallery.xsl
-- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl
-- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl
-- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
-- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
-- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
-- papaya-lib/modules/_base/community/base_surfers.php
-- papaya-lib/modules/_base/community/content_userdata.php
-- papaya-lib/modules/free/thumbs/content_thumbs.php
-- papaya-themes/default/basic.css
-- papaya-themes/default/page_thumbs.css
-Beim Kopieren werden die alten Versionen dieser Dateien überschrieben.
-Im Normalfall sollte die Kompatibilität mit dem aktuellen default-Theme
-bestehen bleiben. Sie müssen die Dateien bei jedem papaya CMS Update, das sie durchführen,
-aus dem Advanced Community Paket erneut kopieren.
-
-== Module einrichten ==
-
-Um die Advanced Community Module einzurichten gehen sie in das papaya CMS
-Backend zum Menüpunkt Module und klicken auf Module suchen. Danach erscheint
-in der Liste "Packete" der Punkt "Advanced Community". Wählen sie diesen
-Punkt aus und bestätigen sie danach die Frage rechts zum Erstellen von
-Pakettabellen mit "Erzeugen".
 
 == Ansichten einrichten ==
 

@@ -115,6 +115,12 @@ class ACommunityConnector extends base_connector {
   protected $_communityConnector = NULL;
 
   /**
+   * Notification handler object
+   * @var ACommunityNotificationHandler
+   */
+  protected $_notifcationHandler = NULL;
+
+  /**
    * Surfer deletion object
    *
    * @param ACommunitySurferDeletion $deletion
@@ -144,6 +150,22 @@ class ACommunityConnector extends base_connector {
       $this->_pageDeletion = new ACommunityPageDeletion();
     }
     return $this->_pageDeletion;
+  }
+
+  /**
+   * Notification handler object
+   *
+   * @param ACommunityNotificationHandler $handler
+   * @return ACommunityNotificationHandler
+   */
+  public function notificationHandler(ACommunityNotificationHandler $handler = NULL) {
+    if (isset($handler)) {
+      $this->_notifcationHandler = $handler;
+    } elseif (is_null($this->_notifcationHandler)) {
+      include_once(dirname(__FILE__).'/Notification/Handler.php');
+      $this->_notifcationHandler = new ACommunityNotificationHandler();
+    }
+    return $this->_notifcationHandler;
   }
 
   /**
@@ -351,6 +373,23 @@ class ACommunityConnector extends base_connector {
       }
     }
     return NULL;
+  }
+
+  /**
+   * Notify surfer by notifcation name with additional parameters
+   *
+   * Use surfer parameters to set surfer names in simple template placeholders:
+   * - 'recipient_surfer' => Surfer ID of recipient surfer, example "John you have new messages."
+   * - 'context_surfer' => Surfer ID of context surfer, example "Sebastian moved your image to trash."
+   *
+   * Use additional parameters to set more data in simple template placeholders.
+   *
+   * @param string $notificationName
+   * @param string $recipientId Surfer ID of recipient surfer
+   * @param array $parameters
+   */
+  public function notify($notificationName, $recipientId, $parameters = array()) {
+    $this->notificationHandler()->notify($notificationName, $recipientId, $parameters);
   }
 
   /**

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
-|  Adavanced community modules for papaya CMS 5.5                     |
-|  Version: 0.9 (17.05.2013)                                          |
+|  Adavanced community modules for papaya CMS 5.5.2 or higher         |
+|  Version: 0.10 (18.05.2013)                                         |
 |  Author: Martin Kelm                                                |
 -----------------------------------------------------------------------
 
@@ -15,8 +15,27 @@ This package contains modules to extend your papaya CMS community.
 - Administration
 
 -----------
+| Patches |
+-----------
+
+This package needs some patches in your papaya CMS installation.
+You have to use one file from the patches folder to patch your system.
+Go to your papaya CMS folder by command line and enter the following command:
+patch -p 0 < /path/to/package/patches/patchfile.patches
+patchfile.patches can replaced by:
+- trunk_r38500.patches if you use a nightly build
+- release_r38112.patches if you use the 5.5.2 release build
+The patches file assumes a directory with all folders. If you have papaya-lib and papaya-data
+in a seperate folder, you have to perform the patch command in each folder.
+
+-----------
 | Changes |
 -----------
+
+Revision 0.10 (18.05.2013)
+- Added notify-method in connector to support notifications from other module packages
+- Added patches files for trunk revision 38500 and release revision 38112
+- Removed replacement files in ACommunity package
 
 Revision 0.9 (17.05.2013)
 - Added links to notifications and notification settings in surfer status box
