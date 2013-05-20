@@ -124,7 +124,6 @@ class ACommunityUiContentCommentDialog
         'ressource_type' => $ressource['type'],
         'time' => time(),
         'votes_score' => 0,
-        'last_vote_time' => 0,
         'deleted_surfer' => 0
       )
     );
