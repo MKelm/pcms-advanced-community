@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title> Advanced Community by MKelm</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1> Advanced Community</h1>
+        <p>papaya CMS Advanced Community</p>
+        <p class="view"><a href="https://github.com/MKelm/pcms-advanced-community">View the Project on GitHub <small>MKelm/pcms-advanced-community</small></a></p>
+        <ul>
+          <li><a href="https://github.com/MKelm/pcms-advanced-community/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/MKelm/pcms-advanced-community/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/MKelm/pcms-advanced-community">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>This package contains modules to extend your papaya CMS community.</h2>
+
+<hr><table><tr>
+<th>Todos</th>
+</tr></table><ul>
+<li>Some improvements</li>
+<li>Surfer gallery, delete images</li>
+<li>Administration</li>
+</ul><hr><table><tr>
+<th>Patches</th>
+</tr></table><p>This package needs some patches in your papaya CMS installation.
+You have to use one file from the patches folder to patch your system.
+Go to your papaya CMS folder by command line and enter the following command:
+patch -p 0 &lt; /path/to/package/patches/patchfile.patches
+patchfile.patches can replaced by:</p>
+
+<ul>
+<li>trunk_r38500.patches if you use a nightly build</li>
+<li>release_r38112.patches if you use the 5.5.2 release build
+The patches file assumes a directory with all folders. If you have papaya-lib and papaya-data in
+a seperate folder, you have to perform the patch command in each folder.</li>
+</ul><p>Or get the papaya CMS with patches from <a href="https://github.com/MKelm/papaya-cms">https://github.com/MKelm/papaya-cms</a></p>
+
+<hr><table><tr>
+<th>Changes</th>
+</tr></table><p>Revision 0.12 (20.05.2013)</p>
+
+<ul>
+<li>Fixed a caching bug in surfer gallery teaser box</li>
+<li>Fixed a ressource detection bug in surfer gallery page</li>
+<li>Added extended text filter with URL to link replacement for comments and messages
+-- Added optional thumbnail links feature for comment and message text</li>
+<li>Fixed an error with =-chars in PapayaFilterText, in patches</li>
+<li>Fixed some errors in onDeleteSurfer methods</li>
+<li>Added deletion methods for last changes timestamps in onDeleteSurfer and onDeletePages methods</li>
+<li>Added pages connector in connector-&gt;getPageLink-method to get login / registration page title</li>
+<li>Improved ressource handling in surfer gallery page</li>
+<li>Added checkURLFilename-Methods to avoid URL Fixation</li>
+</ul><p>Revision 0.11 (19.05.2013)</p>
+
+<ul>
+<li>Added last changes table to detect changes for caching
+-- Added change detection for surfer_gallery_folders and surfer_gallery_images in gallery modules
+--- set last change of folders and images in folders and upload module
+-- Added change detection for all types of contacts in contact modules
+--- set last change of contacts for all types in Surfer/Contact/Changes.php
+-- Added change detection for surfer in surfer page</li>
+<li>Changed surfers page to surfer contacts page only, use boxes for the deprecated display modes</li>
+<li>Added constants in surfers boxes to use dynamic cache identifier values or not</li>
+<li>Splitted surfers box into surfers last action, surfers registration and contacts box to
+get valid cache ids for each display mode</li>
+<li>Splitted comments box into page comments box, surfer comments box and image comments box to
+get valid cache ids for each output type</li>
+<li>Added cache identifier definitions to modules</li>
+<li>Added show paging option to surfers page module</li>
+<li>Added dynamic data categories option to surfer page module</li>
+<li>Added patches for community/content_profile module</li>
+</ul><p>Revision 0.10 (18.05.2013)</p>
+
+<ul>
+<li>Added notify-method in connector to support notifications from other module packages</li>
+<li>Added patches files for trunk revision 38500 and release revision 38112</li>
+<li>Removed replacement files in ACommunity package</li>
+</ul><p>Revision 0.9 (17.05.2013)</p>
+
+<ul>
+<li>Added links to notifications and notification settings in surfer status box</li>
+<li>Added notifications view in messages page</li>
+<li>Added notification settings page</li>
+<li>Fixed some notice errors in surfer page and commenters ranking box</li>
+<li>Change, filter all content ressource parameters on empty array in filter parameter</li>
+<li>Moved and renamed some files to get "Surfers List" to "Surfers"</li>
+</ul><p>Revision 0.8 (16.05.2013)</p>
+
+<ul>
+<li>Added notification handler to notify surfers by system message or email</li>
+<li>Added three notifications, new-surfer-comment, new-surfer-image-comment and new-contact-request
+-- added csv files for notifcations data import</li>
+<li>Refactored modules to get surfer data with support for display mode surfer name</li>
+<li>Added new module option, display mode for surfer names</li>
+<li>Improved comments and comments ranking output, reworked css styling and added surfer page links</li>
+<li>Added messages deletion in connector module -&gt; onDeleteSurfer for action dispatcher</li>
+<li>Refactored page links generation in connector module</li>
+</ul><p>Revision 0.7 (15.05.2013)</p>
+
+<ul>
+<li>Added messages page link to surfer status box</li>
+<li>Added send message link to surfer page</li>
+<li>Added message conversation box to navigate between message conversations</li>
+<li>Added messages page to show messages between surfers</li>
+<li>Added paging to surfer lists</li>
+</ul><p>Revision 0.6 (14.05.2013)</p>
+
+<ul>
+<li>Added surfer contacts display mode in surfers list box</li>
+<li>Added surfer contacts statistic and contact page links in surfer status box</li>
+<li>Added surfers list page with surfer contacts and contact requests display mode
+-- additionally this module supports the last action time and registration time display mode</li>
+<li>Added surfer contact handling in surfer page</li>
+</ul><p>Revision 0.5 (12.05.2013)</p>
+
+<ul>
+<li>Added surfers list box</li>
+<li>Added surfer status box</li>
+<li>Added no surfer message to surfer page</li>
+<li>Added no images messages to gallery page (via template language text)</li>
+<li>Refactored data handling and specifically ressource handling</li>
+<li>Added more database table keys to optimize query execution times</li>
+<li>Community improvement, show titles of user data classes in form output with a correct order by
+-- activated in content_registration and content_userdata</li>
+</ul><p>Revision 0.4 (11.05.2013)</p>
+
+<ul>
+<li>Added surfer gallery teaser box</li>
+<li>Added links to surfer page in comments, comments ranking and commenters ranking box</li>
+<li>Added connector module options for surfer page id and surfer gallery page id</li>
+</ul><p>Revision 0.3 (11.05.2013)</p>
+
+<ul>
+<li>Added surfer page module</li>
+<li>Correct text paragraph css sizes in comments</li>
+<li>Added support for action dispatcher call onDeletePages
+-- needs an base_topic_edit-&gt;destroy() code replacement to delete page dependend data
+--- see base_topic_edit_destroy_replacement.txt</li>
+<li>Added an extended version of content_thumbs with template modifications
+-- includes lightbox switch and orinal image link in image detail page and more</li>
+</ul><p>Revision 0.2 (10.05.2013)</p>
+
+<ul>
+<li>Added anchors to comments list ouput</li>
+<li>Added surfer gallery folders box</li>
+</ul><p>Revision 0.1 (10.05.2013):</p>
+
+<ul>
+<li>Added surfer gallery upload module</li>
+<li>Added surfer gallery module</li>
+<li>Added commenters ranking module</li>
+<li>Added comments ranking module</li>
+<li>Added comments module</li>
+<li>Added connector module</li>
+</ul><hr><table><tr>
+<th>License</th>
+</tr></table><p>This module is offered under GNU General Public Licence
+(GPL). The detailed license text can be found in gpl.txt</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/MKelm">MKelm</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
