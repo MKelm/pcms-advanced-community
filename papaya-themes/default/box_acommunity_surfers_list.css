@@ -5,6 +5,7 @@
 
 .box ul.surfersList {
   list-style-type: none;
+  margin-bottom: 1em;
 }
 
 .box ul.surfersList li {
@@ -33,6 +34,10 @@
 
 .box ul.surfersList li .surferCommand {
   margin-right: 0.7em;
+}
+
+.box .surfersListPaging {
+  margin-bottom: 1em;
 }
 
 /**

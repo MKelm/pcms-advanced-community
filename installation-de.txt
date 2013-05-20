@@ -40,12 +40,22 @@ Das Advanced Community Paket enthält folgende Module:
 --- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
 -- Unterstützt das Kommentarmodul, siehe oben
 
+- Mitteilungen (Messages Page)
+-- Zeigt eine Liste mit Mitteilungen zwischen Surfer an sofern eine Unterhaltung gewählt wurde
+--- zum Navigieren zwischen Unterhaltungen wir eine "Message Conversation Box" benötigt
+-- Zeigt einen Dialog zum schreiben von Mitteilungen an
+
+- Unterhaltungen Box (Message Conversations Box)
+-- Zeigt eine Liste mit Surfern an zu denen Mitteilungen existieren
+-- Zeigt die letzte Mitteilung einer Unterhaltung mit Text und Zeit je Surferkontakt an
+
 - Surferstatus Box (Surfer Status Box)
 -- zeigt einen Login / Registrierungslink bei inaktivem Login an
 -- zeigt Benutzeravatar und -name bei aktivem Login an
 --- enthält zudem einen Surferseiten- und Logoutlink
 -- zeigt Anzahl von Kontakten und Kontaktanfragen an
 --- enthält passende Links zur Kontakteseite
+-- enthält einen Link zur "Messages Page"
 
 - Surferlisten Box (Surfer List Box)
 -- zeigt Surfer nach Aktivität oder Registrierungszeit an und verlinkt auf die Surferseiten
@@ -125,6 +135,8 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Surfer Gallery Upload Box = box_acommunity.xsl
 - Surfer Gallery Page = page_gallery.xsl
 - Surfer Page = page_acommunity.xsl
+- Message Page = page_acommunity.xsl
+- Message Conversations Box = box_acommunity.xsl
 - Surfer Status Box = box_acommunity.xsl
 - Surfers List Box = box_acommunity.xsl
 - Surfers List Oage = page_acommunity.xsl
@@ -201,6 +213,22 @@ enthält, bzw. bei aktivem Login einen Link zur Userdata-Seite.
 -- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
 --- sie brauchen maximal drei Seiten um alle Ausgabemodi in ihrem Angebot zu verlinken
 -- Publizieren sie die Seite
+
+- Mitteilungen (Messages Page)
+-- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
+-- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
+-- Danach bennen sie die neue Unterseite eindeutig
+-- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
+-- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Seite
+
+- Unterhaltungen Box (Message Conversations Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
+-- Wählen sie die Boxengruppe "additional"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
 
 - Surfergallerie (Surfer Gallery Page)
 -- Wählen sie den Menüpunkt "Dateien"
@@ -307,10 +335,11 @@ Löschen einer Seite folgende Aktionen aus:
 
 == Verlinkungen von Surferseiten ==
 
-Um Surfer in Kommentarboxen oder Surferlistenboxen und Surfergallerien in Gallerieteaserboxen
-korrekt zu verlinken, müssen sie die Moduloptionen des Connectors anpassen.
-Sie benötigen zuvor eine Seite mit dem Modul "Surfer Page" und "Surfer Gallery Page".
-Moduloptionen ändern:
+Um Surfer in Boxen und Seiten korrekt zu verlinken, müssen sie die Moduloptionen des Connectors anpassen.
+Diese Moduloptionen werden von vielen Advanced Community Modulen genutzt um Links zu erzeugen.
+Bevor sie die Optionen ändern, benötigen sie entsprechende Seiten in ihrem Seitenbaum.
+
+Moduloptionen ändern, z.B. für "Surfer Page" und "Surfer Gallery Page":
 - Öffnen sie die Modulübersicht im Menüpunkt "Module"
 - Öffnen sie das Paket "Advanced Community"
 - Wählen sie das Modul "Connector" aus
@@ -330,4 +359,6 @@ Es gibt noch weitere Page ID-Einstellungen in den Moduloptionen des Connectors:
 - Registration Page = Seiten ID der Registrierungsseite, wird in "Surfer Status Box" genutzt
 - Editor Page = Seiten ID des "Mixed user data"-Moduls, wird in "Surfer Status Box" genutzt
 - Contacts Page = Seiten ID eines "Surfer List Page"-Moduls mit einer Ausgabe von Kontakten
+-- wird in "Surfer Status Box" genutzt
+- Messages Page = Seiten ID eines "Message Page"-Modules mit Ausgabe von Mitteilungen
 -- wird in "Surfer Status Box" genutzt

@@ -60,16 +60,35 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
   protected $_timeframe = NULL;
 
   /**
-   * Surfers limit
-   * @var string
+   * Flag to show paging or not
+   * @var boolean
    */
-  protected $_limit = NULL;
+  public $showPaging = FALSE;
+
+  /**
+   * Limit of items per page
+   * @var integer
+   */
+  public $pagingItemsPerPage = NULL;
+
+  /**
+   * Absolute count of items
+   * @var integer|array
+   */
+  public $pagingItemsAbsCount = NULL;
 
   /**
    * Perform changes to contact data
    * @var ACommunitySurferContactChanges
    */
   protected $_contactChanges = NULL;
+
+  /**
+   * A regular expression to filter reference parameters by name
+   * @var string
+   */
+  protected $_referenceParametersExpression =
+    '(lastaction|registration|contacts|own_contact_requests|contact_requests)_list_page';
 
   /**
    * Set data by plugin object
@@ -83,7 +102,8 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
     $this->_avatarResizeMode = $data['avatar_resize_mode'];
     $this->displayMode = $data['display_mode'];
     $this->_timeframe = $data['timeframe'];
-    $this->_limit = $data['limit'];
+    $this->pagingItemsPerPage = (int)$data['limit'];
+    $this->showPaging = !isset($data['show_paging']) ? TRUE : (bool)$data['show_paging'];
     parent::setPluginData($data, $captionNames, $messageNames);
   }
 
@@ -93,30 +113,62 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
   public function initialize() {
     $timeframe = 60 * 60 * 24 * $this->_timeframe;
     $ressource = $this->ressource();
+
     if ($this->displayMode == 'lastaction') {
+      $page = $this->owner->parameters()->get('lastaction_list_page', 0);
       $surfers = $this->owner->communityConnector()->getLastActiveSurfers(
-        $timeframe, $this->_limit
+        $timeframe,
+        $this->pagingItemsPerPage,
+        $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
       if (!empty($surfers)) {
-        $surfers = reset($surfers);
+        $this->pagingItemsAbsCount = $surfers[1];
+        $surfers = $surfers[0];
       }
+
     } elseif ($this->displayMode == 'registration') {
+      $page = $this->owner->parameters()->get('registration_list_page', 0);
       $surfers = $this->owner->communityConnector()->getLatestRegisteredSurfers(
-        time() - $timeframe, $this->_limit
+        time() - $timeframe,
+        $this->pagingItemsPerPage,
+        $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
+      $this->pagingItemsAbsCount = $this->owner->communityConnector()->surferAdmin->surfersAbsCount;
+
     } elseif ($this->displayMode == 'contacts_and_requests' &&
               $this->ressourceIsActiveSurfer == TRUE) {
-      $surfers = array(
-        'contacts' => $this->owner->communityConnector()->getContacts(
-          $this->currentSurferId(), FALSE, $this->_limit
-        ),
-        'own_contact_requests' => $this->owner->communityConnector()->getContactRequestsSent(
-          $this->currentSurferId(), FALSE, $this->_limit
-        ),
-        'contact_requests' => $this->owner->communityConnector()->getContactRequestsReceived(
-          $this->currentSurferId(), FALSE, $this->_limit
-        )
+      $this->pagingItemsAbsCount = array();
+      $data = array();
+      $page = $this->owner->parameters()->get('contacts_list_page', 0);
+      $data['contacts'] = $this->owner->communityConnector()->getContacts(
+        $this->currentSurferId(),
+        FALSE,
+        $this->pagingItemsPerPage,
+        $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
+      $this->pagingItemsAbsCount['contacts'] = $this->owner->communityConnector()->contactsAbsCount;
+      $page = $this->owner->parameters()->get('own_contact_requests_list_page', 0);
+      $data['own_contact_requests'] = $this->owner->communityConnector()->getContactRequestsSent(
+        $this->currentSurferId(),
+        FALSE,
+        $this->pagingItemsPerPage,
+        $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
+      );
+      $this->pagingItemsAbsCount['own_contact_requests'] = $this->owner->communityConnector()->contactsAbsCount;
+      $page = $this->owner->parameters()->get('contact_requests_list_page', 0);
+      $data['contact_requests'] = $this->owner->communityConnector()->getContactRequestsReceived(
+        $this->currentSurferId(),
+        FALSE,
+        $this->pagingItemsPerPage,
+        $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
+      );
+      $this->pagingItemsAbsCount['contact_requests'] = $this->owner->communityConnector()->contactsAbsCount;
+      $surfers = array(
+        'contacts' => $data['contacts'],
+        'own_contact_requests' => $data['own_contact_requests'],
+        'contact_requests' => $data['contact_requests']
+      );
+      unset($data);
       $contactSurferIds = array_flip($surfers['contacts']);
       $ownRequestSurferIds = array_flip($surfers['own_contact_requests']);
       $requestSurferIds = array_flip($surfers['contact_requests']);
@@ -173,10 +225,16 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
           }
         }
       }
+
     } elseif ($this->displayMode == 'contacts') {
+      $page = $this->owner->parameters()->get('contacts_list_page', 0);
       $contactIds = $this->owner->communityConnector()->getContacts(
-        $ressource['id'], FALSE, $this->_limit
+        $ressource['id'],
+        FALSE,
+        $this->pagingItemsPerPage,
+        $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
+      $this->pagingItemsAbsCount = $this->owner->communityConnector()->contactsAbsCount;
       $surfers = $this->owner->communityConnector()->getNameById($contactIds);
       foreach ($surfers as $surferId => $surfer) {
         $surfers[$surferId]['surfer_id'] = $surferId;

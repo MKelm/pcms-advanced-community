@@ -72,6 +72,12 @@ class ACommunitySurferData extends ACommunityUiContentData {
   protected $_contactChanges = NULL;
 
   /**
+   * Link to send a message to surfer
+   * @var string
+   */
+  public $sendMessageLink = NULL;
+
+  /**
    * Set data by plugin object
    *
    * @param array $data
@@ -110,6 +116,11 @@ class ACommunitySurferData extends ACommunityUiContentData {
       'group' => $surferDetails['surfergroup_title']
     );
     unset($surferDetails);
+    if ($this->ressourceIsActiveSurfer == FALSE) {
+      $this->sendMessageLink = $this->owner->acommunityConnector()->getMessagesPageLink(
+        $ressource['id']
+      );
+    }
 
     $this->surferDetails = array();
     $details = $this->owner->communityConnector()->getProfileData($ressource['id']);

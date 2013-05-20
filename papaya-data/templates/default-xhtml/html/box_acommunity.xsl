@@ -6,7 +6,7 @@
   exclude-result-prefixes="#default"
 >
 <!--
-  @papaya:modules ACommunityCommentsBox, ACommunityCommentsRankingBox, ACommunityCommentersRankingBox, ACommunitySurferGalleryUploadBox, ACommunitySurferGalleryFoldersBox, ACommunitySurferGalleryTeaserBox, ACommunitySurferStatusBox, ACommunitySurfersListBox
+  @papaya:modules ACommunityCommentsBox, ACommunityCommentsRankingBox, ACommunityCommentersRankingBox, ACommunitySurferGalleryUploadBox, ACommunitySurferGalleryFoldersBox, ACommunitySurferGalleryTeaserBox, ACommunitySurferStatusBox, ACommunitySurfersListBox, ACommunityMessageConversationsBox
 -->
 
 <!-- import main layout rules, this will import the default rules, too -->

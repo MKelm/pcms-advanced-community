@@ -36,6 +36,13 @@ class ACommunitySurfersList extends ACommunityUiContentObject {
   protected $_data = NULL;
 
   /**
+  * Paging object
+  *
+  * @var PapayaUiPagingCount
+  */
+  protected $_paging = NULL;
+
+  /**
    * Get/set surfer status data
    *
    * @param ACommunitySurferStatusData $data
@@ -106,6 +113,11 @@ class ACommunitySurfersList extends ACommunityUiContentObject {
           foreach ($surfers as $surfer) {
             $this->_appendSurferTo($groupElement, $surfer);
           }
+          if ($this->data()->showPaging) {
+            $this->paging(
+              NULL, TRUE, $groupName.'_', $this->data()->pagingItemsAbsCount[$groupName]
+            )->appendTo($groupElement);
+          }
         }
       }
     } else {
@@ -119,6 +131,11 @@ class ACommunitySurfersList extends ACommunityUiContentObject {
       } else {
         foreach ($this->data()->surfers as $surfer) {
           $this->_appendSurferTo($listElement, $surfer);
+        }
+        if ($this->data()->showPaging) {
+          $this->paging(
+            NULL, TRUE, $this->data()->displayMode.'_', $this->data()->pagingItemsAbsCount
+          )->appendTo($listElement);
         }
       }
     }
@@ -147,7 +164,7 @@ class ACommunitySurfersList extends ACommunityUiContentObject {
         array('caption' => $this->data()->captions['last_action']),
         $surfer['last_action']
       );
-    } elseif (!empty($surfer['last_action'])) {
+    } elseif (!empty($surfer['registration'])) {
       $surferElement->appendElement(
         'last-time',
         array('caption' => $this->data()->captions['registration']),
@@ -166,6 +183,33 @@ class ACommunitySurfersList extends ACommunityUiContentObject {
         );
       }
     }
+  }
+
+  /**
+   * Paging object
+   *
+   * @param PapayaUiPagingCount $paging
+   * @param boolean $reset
+   * @param string $parameterNamePrefix
+   * @param integer $absCount
+   */
+  public function paging(
+           PapayaUiPagingCount $paging, $reset = FALSE, $parameterNamePrefix = '', $absCount = NULL
+         ) {
+    if (isset($paging)) {
+      $this->_paging = $paging;
+    } elseif (is_null($this->_paging) || $reset == TRUE) {
+      $parameter = sprintf(
+        '%s[%s]', $this->parameterGroup(), $parameterNamePrefix.'list_page'
+      );
+      $this->_paging = new PapayaUiPagingCount(
+        $parameter, $this->papaya()->request->getParameter($parameter), $absCount
+      );
+      $this->_paging->papaya($this->papaya());
+      $this->_paging->itemsPerPage = $this->data()->pagingItemsPerPage;
+      $this->_paging->reference($this->data()->reference());
+    }
+    return $this->_paging;
   }
 
 }

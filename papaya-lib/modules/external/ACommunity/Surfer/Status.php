@@ -99,6 +99,10 @@ class ACommunitySurferStatus extends ACommunityUiContentObject {
         );
       }
       $activeSurfer->appendElement(
+        'messages-link', array('caption' => $this->data()->captions['messages_link']),
+        PapayaUtilStringXml::escape($this->data()->surfer['messages_link'])
+      );
+      $activeSurfer->appendElement(
         'page-link', array('caption' => ''),
         PapayaUtilStringXml::escape($this->data()->surfer['page_link'])
       );

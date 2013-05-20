@@ -90,12 +90,6 @@ class ACommunityCommentsData extends ACommunityUiContentData {
   public $_links = NULL;
 
   /**
-  * Current surfer id
-  * @var string
-  */
-  protected $_surferId = NULL;
-
-  /**
    * Comments database records
    * @var object
    */
@@ -385,21 +379,4 @@ class ACommunityCommentsData extends ACommunityUiContentData {
     }
     return $listData;
   }
-
-  /**
-  * Get/set current surfer id
-  *
-  * @param string $surferId
-  * @return string
-  */
-  public function surferId($surferId = NULL) {
-    if (isset($surferId)) {
-      $this->_surferId = $surferId;
-    } elseif (is_null($this->_surferId)) {
-      $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
-      $this->_surferId = $currentSurfer->surfer['surfer_id'];
-    }
-    return $this->_surferId;
-  }
-
 }

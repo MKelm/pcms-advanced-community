@@ -106,13 +106,13 @@ class ACommunityUiContentData extends PapayaObject {
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
     foreach ($captionNames as $name) {
       if (isset($data[$name])) {
-        $newName = str_replace('caption_', '', $name);
+        $newName = substr($name, 8);
         $this->captions[$newName] = $data[$name];
       }
     }
     foreach ($messageNames as $name) {
       if (isset($data[$name])) {
-        $newName = str_replace('message_', '', $name);
+        $newName = substr($name, 8);
         $this->messages[$newName] = $data[$name];
       }
     }

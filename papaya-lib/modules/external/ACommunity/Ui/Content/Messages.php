@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community ui content comments
+ * Advanced community ui content messages
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,26 +17,26 @@
  */
 
 /**
- * Advanced community ui content comments
+ * Advanced community ui content messages
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityUiContentComments extends PapayaUiControlCollection {
+class ACommunityUiContentMessages extends PapayaUiControlCollection {
 
   /**
   * Only {@see PapayaModuleGuestbookUiContentBookEntry} objects are allowed in this list
   *
   * @var string
   */
-  protected $_itemClass = 'ACommunityUiContentComment';
+  protected $_itemClass = 'ACommunityUiContentMessage';
 
   /**
   * If a tag name is provided, an additional element will be added in
   * {@see PapayaUiControlCollection::appendTo()) that will wrapp the items.
   * @var string
   */
-  protected $_tagName = 'comments';
+  protected $_tagName = 'messages';
 
   /**
   * Paging object
@@ -55,7 +55,7 @@ class ACommunityUiContentComments extends PapayaUiControlCollection {
    * Parameter name to change page
    * @var string
    */
-  public $pagingParameterName = 'comments_page';
+  public $pagingParameterName = 'messages_page';
 
   /**
    * Items per page

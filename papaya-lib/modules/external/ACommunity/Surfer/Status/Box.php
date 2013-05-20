@@ -66,13 +66,16 @@ class ACommunitySurferStatusBox extends base_actionbox {
       'Edit Link', 'isNoHTML', TRUE, 'input', 200, 'Caption for edit surfer link.', 'Edit'
     ),
     'caption_contacts_link' => array(
-      'Contacts Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact(s).'
+      'Contacts Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact(s)'
     ),
     'caption_contact_requests_link' => array(
-      'Received Contact Requests Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request(s) received.'
+      'Received Contact Requests Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request(s) received'
     ),
     'caption_contact_own_requests_link' => array(
-      'Sent Contact Requests Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request(s) sent.'
+      'Sent Contact Requests Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request(s) sent'
+    ),
+    'caption_messages_link' => array(
+      'Messages Link', 'isNoHTML', TRUE, 'input', 200, 'Caption for messages page link.', 'Messages'
     ),
     'caption_logout_link' => array(
       'Logout Link', 'isNoHTML', TRUE, 'input', 200, 'Caption for logout surfer link.', 'Logout'
@@ -116,7 +119,7 @@ class ACommunitySurferStatusBox extends base_actionbox {
           'caption_login_link', 'caption_registration_link',
           'caption_edit_link', 'caption_logout_link',
           'caption_contacts_link', 'caption_contact_requests_link',
-          'caption_contact_own_requests_link'
+          'caption_contact_own_requests_link', 'caption_messages_link'
         ),
         array('message_no_login')
       );

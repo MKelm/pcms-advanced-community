@@ -6,6 +6,8 @@
   exclude-result-prefixes="#default"
 >
 
+  <xsl:import href="../Paging.xsl"/>
+
   <xsl:template name="acommunity-surfers-list">
     <xsl:param name="content" />
     <xsl:choose>
@@ -17,12 +19,20 @@
             <xsl:call-template name="acommunity-surfers-list-surfer">
               <xsl:with-param name="content" select="." />
             </xsl:call-template>
+            <xsl:call-template name="acommunity-content-paging">
+              <xsl:with-param name="paging" select="paging" />
+              <xsl:with-param name="additionalClass" select="'surfersListPaging'" />
+            </xsl:call-template>
           </div>
         </xsl:for-each>
       </xsl:when>
       <xsl:otherwise>
         <xsl:call-template name="acommunity-surfers-list-surfer">
           <xsl:with-param name="content" select="$content" />
+        </xsl:call-template>
+        <xsl:call-template name="acommunity-content-paging">
+          <xsl:with-param name="paging" select="paging" />
+          <xsl:with-param name="additionalClass" select="'surfersListPaging'" />
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>

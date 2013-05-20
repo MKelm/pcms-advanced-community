@@ -1,27 +1,27 @@
 /*
  CSS rules for ACommunitySurferPage
 */
-.surferPage .surferAvatar {
+#content .surferPage .surferAvatar {
   float: left;
   margin-right: 1em;
   margin-bottom: 0.8em;
 }
 
-.surferPage .surferEmail {
+#content .surferPage .surferEmail {
   font-size: 0.87em;
 }
 
-.surferPage .surferGender {
+#content .surferPage .surferGender {
   float: left;
   margin-right: 0.5em;
 }
 
-.surferPage .surferStatus,
-.surferPage .surferContact {
+#content .surferPage .surferStatus,
+#content .surferPage .surferContact {
   margin-top: 1.2em;
 }
 
-.surferPage .surferDetailsGroup {
+#content .surferPage .surferDetailsGroup {
   float: left;
   width: 200px;
   margin-right: 0.5em;
@@ -37,6 +37,7 @@
 
 #content ul.surfersList {
   list-style-type: none;
+  margin-bottom: 1em;
 }
 
 #content ul.surfersList li {
@@ -66,4 +67,41 @@
 
 #content ul.surfersList li .surferCommand {
   margin-right: 0.7em;
+}
+
+#content .surfersListPaging {
+  margin-bottom: 1em;
+}
+
+/*
+ CSS rules for ACommunityMessagesPage
+*/
+#content .messageDialog {
+  margin-bottom: 1.5em;
+}
+#content .messageDialog #dialogMessageText {
+  height: 5em;
+}
+
+#content .messageEntry {
+  margin-bottom: 0.5em;
+}
+#content .messageEntry .messageSurferAvatar {
+  float: left;
+  margin-right: 1em;
+  margin-bottom: 1em;
+}
+#content .messageEntry .messageContainer {
+  float: left;
+}
+#content .messageEntry .messageHeader,
+#content .messageEntry .messageText {
+  width: 33.1em;
+}
+#content .messageEntry .messageSurferName {
+  float: left;
+}
+#content .messageEntry .messageTime {
+  float: right;
+  color: #8A8A8A;
 }

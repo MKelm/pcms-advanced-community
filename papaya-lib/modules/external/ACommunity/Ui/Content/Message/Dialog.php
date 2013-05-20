@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community comment dialog
+ * Advanced community message dialog
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,17 +17,17 @@
  */
 
 /**
- * Advanced community comment dialog
+ * Advanced community message dialog
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityUiContentCommentDialog
+class ACommunityUiContentMessageDialog
   extends PapayaUiControlCommandDialogDatabaseRecord {
 
   /**
-  * Comments data
-  * @var ACommunityCommentsData
+  * Messages data
+  * @var ACommunityMessagesData
   */
   protected $_data = NULL;
 
@@ -38,12 +38,12 @@ class ACommunityUiContentCommentDialog
   protected $_errorMessage = NULL;
 
   /**
-   * Get/set comments data
+   * Get/set messages data
    *
-   * @param ACommunityCommentsData $data
-   * @return ACommunityCommentsData
+   * @param ACommunityMessagesData $data
+   * @return ACommunityMessagesData
    */
-  public function data(ACommunityCommentsData $data = NULL) {
+  public function data(ACommunityMessagesData $data = NULL) {
     if (isset($data)) {
       $this->_data = $data;
     }
@@ -78,10 +78,7 @@ class ACommunityUiContentCommentDialog
     $dialog->parameters($this->parameters());
     $dialog->action($this->data()->reference()->getRelative());
     $dialog->hiddenFields()->merge(
-      array(
-        'command' => 'reply',
-        'comment_id' => $this->parameters()->get('comment_id', 0)
-      )
+      array('command' => 'reply')
     );
     $dialog->caption = NULL;
 
@@ -95,7 +92,7 @@ class ACommunityUiContentCommentDialog
       )
     );
     $field->setMandatory(TRUE);
-    $field->setId('dialogCommentText');
+    $field->setId('dialogMessageText');
     $dialog->buttons[] = new PapayaUiDialogButtonSubmit($buttonCaption);
 
     $this->callbacks()->onExecuteFailed = array($this, 'callbackShowError');
@@ -109,25 +106,26 @@ class ACommunityUiContentCommentDialog
   * @param object $record
   */
   public function callbackBeforeSaveRecord($context, $record) {
-    $commentId = (int)$this->parameters()->get('comment_id', 0);
-    $command = $this->parameters()->get('command', '');
-    $ressourceData = $this->data()->ressource();
+    $ressource = $this->data()->ressource();
+    // save message surfer bi-directional to detect message conversation correctly
+    $messageSurfer = clone $this->data()->messageSurfer();
+    $messageSurfer->assign(
+      array('surfer_id' => $this->data()->currentSurferId(), 'contact_surfer_id' => $ressource['id'])
+    );
+    $messageSurfer->save();
+    $messageSurfer = clone $this->data()->messageSurfer();
+    $messageSurfer->assign(
+      array('surfer_id' => $ressource['id'], 'contact_surfer_id' => $this->data()->currentSurferId())
+    );
+    $messageSurfer->save();
+    // assign missing message data
     $record->assign(
       array(
-        'language_id' => $this->data()->languageId,
-        'parent_id' => $commentId,
-        'surfer_id' => $this->data()->currentSurferId(),
-        'ressource_id' => $ressourceData['id'],
-        'ressource_type' => $ressourceData['type'],
-        'time' => time(),
-        'votes_score' => 0,
-        'deleted_surfer' => 0
+        'sender' => $this->data()->currentSurferId(),
+        'recipient' => $ressource['id'],
+        'time' => time()
       )
     );
-    if ($command == 'reply' && $commentId > 0) {
-      $this->parameters()->set('comment_id', 0);
-      $this->parameters()->set('reset_dialog', 1);
-    }
     return TRUE;
   }
 

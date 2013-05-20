@@ -56,6 +56,9 @@ class ACommunityConnector extends base_connector {
     'surfer_gallery_page_id' => array(
       'Surfer Gallery', 'isNum', TRUE, 'pageid', 30, NULL, NULL
     ),
+    'messages_page_id' => array(
+      'Messages', 'isNum', TRUE, 'pageid', 30, '', NULL
+    ),
     'Parameter Groups',
     'surfer_page_parameter_group' => array(
       'Surfer Login', 'isAlpha', TRUE, 'input', 30, NULL, 'acs'
@@ -231,6 +234,28 @@ class ACommunityConnector extends base_connector {
       return base_object::getWebLink(
         $pageId, NULL, NULL, array('surfer_handle' => $handle), 'acg', $handle.'s-gallery'
       );
+    }
+    return NULL;
+  }
+
+  /**
+   * Get link to messages page by surfer id
+   *
+   * @var string $surferId
+   * @return string|NULL
+   */
+  public function getMessagesPageLink($surferId, $overview = FALSE) {
+    $handle = $this->communityConnector()->getHandleById($surferId);
+    if (!empty($handle)) {
+      $pageId = papaya_module_options::readOption($this->_guid, 'messages_page_id', NULL);
+      if ($overview == FALSE) {
+        $parameters = array('surfer_handle' => $handle);
+        $pageName = $handle.'-messages';
+      } else {
+        $parameters = array();
+        $pageName = $handle.'s-messages';
+      }
+      return base_object::getWebLink($pageId, NULL, NULL, $parameters, 'acm', $pageName);
     }
     return NULL;
   }

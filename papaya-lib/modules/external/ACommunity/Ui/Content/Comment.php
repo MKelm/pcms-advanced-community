@@ -26,77 +26,77 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
 
   /**
   * Id
-  * 
+  *
   * @var integer
   */
   protected $_id = NULL;
-  
+
   /**
   * Surfer
-  * 
+  *
   * @var string
   */
   protected $_surferHandle = NULL;
-  
+
   /**
   * Surfer avatar image
-  * 
+  *
   * @var string
   */
   protected $_surferAvatar = NULL;
-  
+
   /**
   * Surfer page link
-  * 
+  *
   * @var string
   */
   protected $_surferPageLink = NULL;
-  
+
   /**
   * Text
-  * 
+  *
   * @var string
   */
   protected $_text = NULL;
-  
+
   /**
   * Time
-  * 
+  *
   * @var string
   */
   protected $_time = NULL;
-  
+
   /**
   * Votes score
-  * 
+  *
   * @var integer
   */
   protected $_votesScore = NULL;
-  
+
   /**
   * Link to reply
-  * 
+  *
   * @var string
   */
   protected $_linkReply = NULL;
-  
+
   /**
   * Link to vote up
-  * 
+  *
   * @var string
   */
   protected $_linkVoteUp = NULL;
-  
+
   /**
   * Link to vote down
-  * 
+  *
   * @var string
   */
   protected $_linkVoteDown = NULL;
-  
+
   /**
   * Sub comments
-  * 
+  *
   * @var ACommunityUiContentComments
   */
   protected $_subComments = NULL;
@@ -119,13 +119,13 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
     'linkVoteDown' => array('_linkVoteDown', '_linkVoteDown'),
     'subComments' => array('subComments', 'subComments')
   );
-  
+
   /**
   * Create object and store intialization values.
   *
   * @param integer $id
   * @param string $text
-  * @param string $surferId
+  * @param string $surferHandle
   * @param integer $time
   * @param integer $votesScore
   */
@@ -136,16 +136,16 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
     $this->time = $time;
     $this->votesScore = $votesScore;
   }
-  
+
   /**
   * Set a date time string.
-  * 
+  *
   * @param integer $time
   */
   protected function setTime($time) {
     $this->_time = date('Y-m-d H:i:s', $time);
   }
-  
+
   /**
   * Return the collection for the item, overload for code completion and type check
   *
@@ -155,7 +155,7 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
   public function collection(ACommunityUiContentComments $comments = NULL) {
     return parent::collection($comments);
   }
-  
+
   /**
   * Append entry item xml to parent xml element.
   *
@@ -181,7 +181,7 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
     $text->appendXml(
       base_object::getXHTMLString($this->text, TRUE)
     );
-    
+
     $links = $comment->appendElement('links');
     if (!is_null($this->linkReply)) {
       $links->appendElement('link', array('name' => 'reply'), $this->linkReply);
@@ -192,10 +192,10 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
     if (!is_null($this->linkVoteDown)) {
       $links->appendElement('link', array('name' => 'vote_down'), $this->linkVoteDown);
     }
-    
+
     $this->subComments()->appendTo($comment);
   }
-  
+
   public function subComments(ACommunityUiContentComments $subComments) {
     if (isset($subComments)) {
       $this->_subComments = $subComments;

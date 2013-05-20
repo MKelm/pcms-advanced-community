@@ -1,0 +1,27 @@
+.box ul.conversationsList {
+  list-style-type: none;
+  margin: 0;
+  margin-bottom: 1em;
+}
+.box ul.conversationsList li {
+  padding-left: 0;
+}
+.box ul.conversationsList li .surferAvatar {
+  display: block;
+  float: left;
+  margin-right: 0.2em;
+}
+.box ul.conversationsList li .right {
+  float: right;
+  width: 10.5em;
+}
+.box ul.conversationsList li .surferName,
+.box ul.conversationsList li .surferLastMessageText {
+  display: block;
+}
+.box ul.conversationsList li .surferName {
+  font-size: 1.2em;
+}
+.box .messageConversations .paging {
+  margin-bottom: 1em;
+}

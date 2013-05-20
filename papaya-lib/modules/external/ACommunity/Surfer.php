@@ -104,6 +104,14 @@ class ACommunitySurfer extends ACommunityUiContentObject {
     if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
       $this->_performCommands();
       $this->data()->initialize();
+      $currentSurferId = $this->data()->currentSurferId();
+      if (!empty($currentSurferId) && !empty($this->data()->sendMessageLink)) {
+        $page->appendElement(
+          'send-message-link',
+          array('caption' => $this->data()->captions['send_message']),
+          $this->data()->sendMessageLink
+        );
+      }
       $details = $page->appendElement('details');
       $baseDetails = $details->appendElement(
         'group', array('id' => 0, 'caption' => $this->data()->captions['base_details'])

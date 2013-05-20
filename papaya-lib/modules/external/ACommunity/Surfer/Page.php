@@ -90,17 +90,20 @@ class ACommunitySurferPage extends base_content {
     'caption_surfer_group' => array(
       'Surfer Group', 'isNoHTML', TRUE, 'input', 200, '', 'Group'
     ),
+    'caption_send_message' => array(
+      'Send message', 'isNoHTML', TRUE, 'input', 200, '', 'Send message'
+    ),
     'Contact Status Captions',
-    'contact_status_none' => array(
+    'caption_contact_status_none' => array(
       'Is no contact', 'isNoHTML', TRUE, 'input', 200, '', 'Request contact'
     ),
-    'contact_status_direct' => array(
+    'caption_contact_status_direct' => array(
       'Is contact', 'isNoHTML', TRUE, 'input', 200, '', 'Contact accepted'
     ),
-    'contact_status_pending' => array(
+    'caption_contact_status_pending' => array(
       'Is request', 'isNoHTML', TRUE, 'input', 200, '', 'Contact request pending'
     ),
-    'contact_status_own_pending' => array(
+    'caption_contact_status_own_pending' => array(
       'Is own request', 'isNoHTML', TRUE, 'input', 200, '', 'Own contact request pending'
     ),
     'Command Captions',
@@ -155,9 +158,9 @@ class ACommunitySurferPage extends base_content {
         'caption_surfer_handle', 'caption_surfer_givenname', 'caption_surfer_surname',
         'caption_surfer_email', 'caption_surfer_gender', 'caption_surfer_avatar',
         'caption_surfer_lastlogin', 'caption_surfer_lastaction', 'caption_surfer_registration',
-        'caption_surfer_group',
-        'contact_status_none', 'contact_status_direct', 'contact_status_pending',
-        'contact_status_own_pending', 'caption_command_request_contact',
+        'caption_surfer_group', 'caption_send_message',
+        'caption_contact_status_none', 'caption_contact_status_direct', 'caption_contact_status_pending',
+        'caption_contact_status_own_pending', 'caption_command_request_contact',
         'caption_command_accept_contact_request', 'caption_command_decline_contact_request',
         'caption_command_remove_contact_request', 'caption_command_remove_contact'
       );

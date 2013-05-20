@@ -28,19 +28,19 @@ require_once(dirname(__FILE__).'/Ui/Content/Object.php');
  * @subpackage External-ACommunity
  */
 class ACommunityComments extends ACommunityUiContentObject {
-  
+
   /**
    * Comments data
    * @var ACommunityCommentsData
    */
   protected $_data = NULL;
-  
+
   /**
    * Ui content comment dialog
    * @var ACommunityUiContentCommentDialog
    */
   protected $_uiContentCommentDialog = NULL;
-  
+
   /**
    * Ui comments list control
    * @var ACommunityUiContentCommentsList
@@ -64,7 +64,7 @@ class ACommunityComments extends ACommunityUiContentObject {
     }
     return $this->_data;
   }
-  
+
   /**
    * Perform commands by parameter
    */
@@ -108,7 +108,7 @@ class ACommunityComments extends ACommunityUiContentObject {
         break;
     }
   }
-  
+
   /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
@@ -122,7 +122,7 @@ class ACommunityComments extends ACommunityUiContentObject {
       if ($this->data()->mode == 'list') {
         $currentSurfer = $this->communityConnector()->getCurrentSurfer();
         if ($currentSurfer->isValid) {
-                  
+
           $dom = new PapayaXmlDocument();
           $dom->appendElement('dialog');
           $this->uiContentCommentDialog()->appendTo($dom->documentElement);
@@ -137,7 +137,7 @@ class ACommunityComments extends ACommunityUiContentObject {
             $xml .= $node->ownerDocument->saveXml($node);
           }
           $comments->appendXml($xml);
-          
+
           $errorMessage = $this->uiContentCommentDialog()->errorMessage();
           if (!empty($errorMessage)) {
             $comments->appendElement(
@@ -148,7 +148,7 @@ class ACommunityComments extends ACommunityUiContentObject {
       }
       $this->uiCommentsList()->appendTo($comments);
       $comments->appendElement(
-        'command', 
+        'command',
         array(
           'name' => PapayaUtilStringXml::escape($this->parameters()->get('command', 'reply')),
           'comment_id' => PapayaUtilStringXml::escapeAttribute($this->parameters()->get('comment_id', 0))
@@ -165,7 +165,7 @@ class ACommunityComments extends ACommunityUiContentObject {
   * @return ACommunityUiContentCommentDialog
   */
   public function uiContentCommentDialog(
-           ACommunityUiContentCommentDialog $uiContentCommentDialog = NULL, 
+           ACommunityUiContentCommentDialog $uiContentCommentDialog = NULL,
            $reset = FALSE
          ) {
     if (isset($uiContentCommentDialog)) {
@@ -181,7 +181,7 @@ class ACommunityComments extends ACommunityUiContentObject {
     }
     return $this->_uiContentCommentDialog;
   }
-  
+
   /**
   * Access to the ui comments list
   *
@@ -195,9 +195,7 @@ class ACommunityComments extends ACommunityUiContentObject {
       $this->_uiCommentsList = $uiCommentsList;
     } elseif (is_null($this->_uiCommentsList)) {
       include_once(dirname(__FILE__).'/Ui/Content/Comments/List.php');
-      $this->_uiCommentsList = new ACommunityUiContentCommentsList(
-        $this->_commentsListData
-      );
+      $this->_uiCommentsList = new ACommunityUiContentCommentsList();
       $this->_uiCommentsList->papaya($this->papaya());
       $this->_uiCommentsList->data($this->data());
     }

@@ -33,7 +33,7 @@ class ACommunitySurfersListPage extends base_content {
    * Use a advanced community parameter group name
    * @var string
    */
-  public $paramName = 'acs';
+  public $paramName = 'acslp';
 
   /**
    * Edit fields
@@ -54,7 +54,7 @@ class ACommunitySurfersListPage extends base_content {
        array(
          'contacts_and_requests' => 'Surfer contacts and contact requests of current surfer',
          'lastaction' => 'Surfers by last action Time',
-         'registration' => 'Surfer by registration Time'
+         'registration' => 'Surfers by registration Time'
        ), '', 'contacts_and_requests'
     ),
     'timeframe' => array(

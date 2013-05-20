@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml">
-  
+
   <xsl:template name="acommunity-content-dialog">
     <xsl:param name="dialog" />
     <xsl:param name="dialogMessage" select="false()" />
@@ -8,7 +8,7 @@
     <xsl:param name="parentAnchor" select="''" />
     <xsl:param name="className" select="'dialog'" />
     <xsl:param name="multipartFormData" select="false()" />
-    
+
     <xsl:if test="$dialog">
       <xsl:if test="$dialogMessage">
         <div>
@@ -29,7 +29,7 @@
           <xsl:value-of select="$dialogMessage/text()" />
         </div>
       </xsl:if>
-      
+
       <form>
         <xsl:attribute name="class">
           <xsl:value-of select="$className" />
@@ -53,6 +53,9 @@
           <xsl:copy-of select="$dialog/input[@type='hidden']" />
           <xsl:for-each select="$dialog/field">
             <div class="commentDialogField">
+              <xsl:attribute name="class">
+                <xsl:value-of select="$className" /><xsl:text>Field</xsl:text>
+              </xsl:attribute>
               <label for="{@id}"><xsl:value-of select="@caption" /></label>
               <xsl:choose>
                 <xsl:when test="textarea">
@@ -89,5 +92,5 @@
       </form>
     </xsl:if>
   </xsl:template>
-  
+
 </xsl:stylesheet>

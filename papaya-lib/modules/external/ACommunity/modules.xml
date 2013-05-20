@@ -1,7 +1,7 @@
 <?xml version="1.0"  encoding="ISO-8859-1" ?>
   <modulegroup>
   <name>Advanced Community</name>
-  <description>Advanced community modules</description>
+  <description>Modules to extend your community</description>
   <modules>
     <module type="box"
             guid="9736efe1a26742e1bce447ae99abdf6a"
@@ -43,6 +43,11 @@
             name="Surfers List Box"
             class="ACommunitySurfersListBox"
             file="Surfers/List/Box.php">Shows a list of surfers by registration or last action time</module>
+    <module type="box"
+            guid="f31dc79fd0fe47a9ad49ed5e5a7b919c"
+            name="Message Conversations Box"
+            class="ACommunityMessageConversationsBox"
+            file="Message/Conversations/Box.php">Shows message conversations by surfer for current surfer</module>
     <module type="page"
             guid="4d514cb5bbb34b4086b9da1af6527969"
             name="Surfer Gallery Page"
@@ -58,6 +63,11 @@
             name="Surfer List Page"
             class="ACommunitySurfersListPage"
             file="Surfers/List/Page.php">Shows surfer's contacts or a list of surfers by registration or last action time</module>
+    <module type="page"
+            guid="0b1573c87d654c07b499b6b565804f73"
+            name="Messages Page"
+            class="ACommunityMessagesPage"
+            file="Messages/Page.php">Shows messages between selected surfer and current surfer</module>
     <module type="connector"
             guid="0badeb14ea2d41d5bcfd289e9d190534"
             name="Connector"
@@ -66,6 +76,8 @@
   </modules>
   <tables>
     <table name="acommunity_comments"/>
+    <table name="acommunity_messages"/>
+    <table name="acommunity_message_surfers"/>
     <table name="acommunity_surfer_galleries"/>
   </tables>
 </modulegroup>

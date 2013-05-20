@@ -35,7 +35,7 @@ class ACommunitySurfersListBox extends base_actionbox {
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acs';
+  public $paramName = 'acslb';
 
   /**
    * Edit fields
@@ -56,7 +56,7 @@ class ACommunitySurfersListBox extends base_actionbox {
        array(
          'contacts' => 'Surfer contacts of current or selected surfer',
          'lastaction' => 'Surfers by last action Time',
-         'registration' => 'Surfer by registration Time'
+         'registration' => 'Surfers by registration Time'
        ), '', 'lastaction'
     ),
     'timeframe' => array(
@@ -64,7 +64,10 @@ class ACommunitySurfersListBox extends base_actionbox {
       'Get surfers by last action or registration time in a specified timeframe.', 365
     ),
     'limit' => array(
-      'Limit', 'isNum', TRUE, 'input', 30,'', 5
+      'Limit', 'isNum', TRUE, 'input', 30, '', 5
+    ),
+    'show_paging' => array(
+      'Show paging', 'isNum', TRUE, 'yesno', NULL, NULL, 0
     ),
     'Captions',
     'caption_last_action' => array(

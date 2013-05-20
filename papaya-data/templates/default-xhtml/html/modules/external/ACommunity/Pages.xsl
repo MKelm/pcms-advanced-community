@@ -2,6 +2,8 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml">
 
   <xsl:import href="./Ui/Content/Surfers/List.xsl"/>
+  <xsl:import href="./Ui/Content/Dialog.xsl"/>
+  <xsl:import href="./Ui/Content/Paging.xsl"/>
 
   <xsl:template name="page-styles">
     <xsl:call-template name="link-style">
@@ -12,6 +14,11 @@
   <xsl:template name="content-area">
     <xsl:param name="pageContent" select="content/topic"/>
     <xsl:choose>
+      <xsl:when test="$pageContent/@module = 'ACommunityMessagesPage'">
+        <xsl:call-template name="module-content-acommunity-messages-page">
+          <xsl:with-param name="pageContent" select="$pageContent/acommunity-messages"/>
+        </xsl:call-template>
+      </xsl:when>
       <xsl:when test="$pageContent/@module = 'ACommunitySurferPage'">
         <xsl:call-template name="module-content-acommunity-surfer-page">
           <xsl:with-param name="pageContent" select="$pageContent/surfer-page"/>
@@ -30,6 +37,52 @@
     </xsl:choose>
   </xsl:template>
 
+  <xsl:template name="module-content-acommunity-messages-page">
+    <xsl:param name="pageContent" />
+
+    <xsl:call-template name="acommunity-content-dialog">
+      <xsl:with-param name="dialog" select="$pageContent/dialog-box" />
+      <xsl:with-param name="dialogMessage" select="$pageContent/dialog-message" />
+      <xsl:with-param name="className" select="'messageDialog'" />
+    </xsl:call-template>
+
+    <xsl:if test="$pageContent/message">
+      <div class="message"><xsl:value-of select="$pageContent/message" /></div>
+    </xsl:if>
+
+    <div class="messagesList">
+      <xsl:for-each select="$pageContent/messages/message">
+        <div class="messageEntry">
+          <div class="messageSurferAvatar"><a href="{surfer/@page-link}"><img src="{surfer/@avatar}" alt="" /></a></div>
+          <div class="messageContainer">
+            <div class="messageHeader">
+              <div class="messageSurferName"><a href="{surfer/@page-link}"><xsl:value-of select="surfer/@givenname" />
+                <xsl:text> '</xsl:text><xsl:value-of select="surfer/@handle" /><xsl:text>' </xsl:text>
+                <xsl:value-of select="surfer/@surname" /></a>
+              </div>
+              <div class="messageTime">
+                <xsl:call-template name="format-date">
+                  <xsl:with-param name="date" select="@time" />
+                </xsl:call-template><xsl:text>, </xsl:text>
+                <xsl:call-template name="format-time">
+                  <xsl:with-param name="time" select="substring(@time, 12, 8)" />
+                </xsl:call-template>
+              </div>
+              <xsl:call-template name="float-fix" />
+            </div>
+            <div class="messageText">
+              <xsl:value-of select="text" disable-output-escaping="yes" />
+            </div>
+          </div>
+          <xsl:call-template name="float-fix" />
+        </div>
+      </xsl:for-each>
+      <xsl:call-template name="acommunity-content-paging">
+        <xsl:with-param name="paging" select="$pageContent/messages/paging" />
+      </xsl:call-template>
+    </div>
+  </xsl:template>
+
   <xsl:template name="module-content-acommunity-surfer-page">
     <xsl:param name="pageContent" />
     <xsl:choose>
@@ -41,6 +94,9 @@
           <xsl:call-template name="module-content-acommunity-surfer-page-contact">
             <xsl:with-param name="pageContent" select="$pageContent" />
           </xsl:call-template>
+          <xsl:if test="$pageContent/send-message-link">
+            <a class="surferSendMessageLink" href="{$pageContent/send-message-link/text()}"><xsl:value-of select="$pageContent/send-message-link/@caption" /></a>
+          </xsl:if>
           <xsl:call-template name="float-fix" />
           <xsl:for-each select="$pageContent/details/group[@id != 0]">
             <xsl:call-template name="module-content-acommunity-surfer-page-details">

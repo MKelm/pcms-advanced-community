@@ -94,6 +94,7 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
         ),
         'page_link' => $this->owner->acommunityConnector()->getSurferPageLink($ressource['id']),
         'edit_link' => $this->owner->acommunityConnector()->getSurferEditorPageLink($surfer['surfer_handle']),
+        'messages_link' => $this->owner->acommunityConnector()->getMessagesPageLink($ressource['id'], TRUE),
         'logout_link' => $logoutLink
       );
       unset($surfer);

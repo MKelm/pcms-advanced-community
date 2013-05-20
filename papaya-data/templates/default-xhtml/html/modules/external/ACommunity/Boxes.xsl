@@ -7,6 +7,7 @@
 >
 
   <xsl:import href="./Ui/Content/Dialog.xsl"/>
+  <xsl:import href="./Ui/Content/Paging.xsl"/>
   <xsl:import href="./Ui/Content/Surfers/List.xsl"/>
   <xsl:import href="./Ui/Content/Comments/List.xsl"/>
 
@@ -18,6 +19,39 @@
       <xsl:with-param name="dialog" select="dialog-box" />
       <xsl:with-param name="dialogMessage" select="dialog-message" />
     </xsl:call-template>
+  </xsl:template>
+
+  <xsl:template match="acommunity-message-conversations">
+    <div class="messageConversations">
+      <xsl:if test="message">
+        <div class="message"><xsl:value-of select="message" /></div>
+      </xsl:if>
+      <xsl:if test="count(conversations/conversation) &gt; 0">
+        <ul class="conversationsList">
+          <xsl:for-each select="conversations/conversation">
+            <li>
+              <span class="surferAvatar"><a href="{messages-page-link/text()}"><img src="{surfer-contact/@avatar}" alt="" /></a></span>
+              <xsl:text> </xsl:text>
+              <span class="right">
+                <span class="surferName"><a href="{messages-page-link/text()}"><xsl:value-of select="surfer-contact/@givenname" />
+                <xsl:text> '</xsl:text><xsl:value-of select="surfer-contact/@handle" />
+                <xsl:text>' </xsl:text><xsl:value-of select="surfer-contact/@surname" /></a></span>
+                <xsl:text> </xsl:text>
+                <span class="lastMessageText"><xsl:value-of select="last-message/text()" /></span>
+                <xsl:text> </xsl:text>
+                <span class="lastMessageTime"><xsl:call-template name="format-date-time">
+                  <xsl:with-param name="dateTime" select="last-message/@time" />
+                </xsl:call-template></span>
+                </span>
+              <xsl:call-template name="float-fix" />
+            </li>
+          </xsl:for-each>
+        </ul>
+        <xsl:call-template name="acommunity-content-paging">
+          <xsl:with-param name="paging" select="conversations/paging" />
+        </xsl:call-template>
+      </xsl:if>
+    </div>
   </xsl:template>
 
   <xsl:template match="acommunity-surfer-gallery-teaser">
@@ -68,6 +102,7 @@
                 </xsl:if>
               </div>
             </xsl:if>
+            <a class="surferMessages" href="{active-surfer/messages-link}"><xsl:value-of select="active-surfer/messages-link/@caption" /></a>
           </xsl:when>
           <xsl:otherwise>
             <xsl:copy-of select="message[@type = 'no-login']/node()" />
