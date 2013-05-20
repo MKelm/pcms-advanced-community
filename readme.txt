@@ -2,6 +2,7 @@
 |  Adavanced community modules for papaya CMS 5.5.2 or higher         |
 |  Version: 0.12 (20.05.2013)                                         |
 |  Author: Martin Kelm                                                |
+|  Repository: https://github.com/MKelm/advanced-community            |
 -----------------------------------------------------------------------
 
 This package contains modules to extend your papaya CMS community.
@@ -25,8 +26,10 @@ patch -p 0 < /path/to/package/patches/patchfile.patches
 patchfile.patches can replaced by:
 - trunk_r38500.patches if you use a nightly build
 - release_r38112.patches if you use the 5.5.2 release build
-The patches file assumes a directory with all folders. If you have papaya-lib and papaya-data
-in a seperate folder, you have to perform the patch command in each folder.
+The patches file assumes a directory with all folders. If you have papaya-lib and papaya-data in
+a seperate folder, you have to perform the patch command in each folder.
+
+Or get the papaya CMS with patches from https://github.com/MKelm/papaya-cms
 
 -----------
 | Changes |
