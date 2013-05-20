@@ -106,5 +106,4 @@ class ACommunityContentMessageConversations extends PapayaDatabaseRecords {
     );
     return $this->_loadRecords($sql, $parameters, $limit, $offset, 'id');
   }
-
 }

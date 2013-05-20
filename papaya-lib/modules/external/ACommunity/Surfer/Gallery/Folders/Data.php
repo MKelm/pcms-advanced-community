@@ -26,34 +26,34 @@ require_once(dirname(__FILE__).'/../Data.php');
  * @subpackage External-ACommunity
  */
 class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
-  
+
   /**
    * Ressource needs active surfer
    * @var boolean
    */
   protected $_ressourceNeedsActiveSurfer = FALSE;
-  
+
   /**
    * Loaded folders
    * @var array
    */
   public $folders = NULL;
-  
+
   /**
    * Id of base folder to use as parent id for sub folders
    * @var integer
    */
   protected $_baseFolderId = NULL;
-  
+
   /**
    * Loaded command links
    * @var array
    */
   public $commandLinks = NULL;
-  
+
   /**
    * Get base folder id
-   * 
+   *
    * @return integer
    */
   public function getBaseFolderId() {
@@ -67,7 +67,7 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
     }
     return $this->_baseFolderId;
   }
-  
+
   /**
    * Load folders by ressource with internal links
    */
@@ -79,7 +79,7 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
     foreach ($galleries as $gallery) {
       $this->folders[$gallery['folder_id']] = array();
     }
-    
+
     $command = $this->owner->parameters()->get('command', NULL);
     $folderId = $this->owner->parameters()->get('folder_id', NULL);
     if (!isset($command) && isset($folderId)) {
@@ -87,7 +87,7 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
     } else {
       $selectedFolderId = 0;
     }
-    
+
     $folders = $this->mediaDBEdit()->getFolders($this->languageId, array_keys($this->folders));
     if (!empty($folders)) {
       foreach ($folders as $folder) {
@@ -117,7 +117,7 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
       $this->folders = NULL;
     }
   }
-  
+
   /**
    * Load command links by loaded folders
    */
@@ -131,7 +131,7 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
       if ($folder['name'] != $this->captions['base_folder']) {
         $reference = clone $this->reference();
         $reference->setParameters(
-          array('command' => 'delete_folder', 'folder_id' => $folderId), 
+          array('command' => 'delete_folder', 'folder_id' => $folderId),
           $this->owner->parameterGroup()
         );
         $deleteFolderLinks['href'][$folderId] = $reference->getRelative();
@@ -147,5 +147,4 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
       'href' => $reference->getRelative()
     );
   }
-  
 }

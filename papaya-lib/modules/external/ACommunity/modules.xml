@@ -5,9 +5,19 @@
   <modules>
     <module type="box"
             guid="9736efe1a26742e1bce447ae99abdf6a"
-            name="Comments Box"
-            class="ACommunityCommentsBox"
-            file="Comments/Box.php">Get and set comments for pages, surfers and images</module>
+            name="Page Comments Box"
+            class="ACommunityPageCommentsBox"
+            file="Page/Comments/Box.php">Get and set comments for pages</module>
+    <module type="box"
+            guid="4212da1165804b55bd6279a62e077272"
+            name="Surfer Comments Box"
+            class="ACommunitySurferCommentsBox"
+            file="Surfer/Comments/Box.php">Get and set comments for surfers</module>
+    <module type="box"
+            guid="6f026e8b25d24c00b81ef19898723dce"
+            name="Image Comments Box"
+            class="ACommunityImageCommentsBox"
+            file="Image/Comments/Box.php">Get and set comments for images</module>
     <module type="box"
             guid="46bfe809a7724c85b649bc9225e3fed7"
             name="Comments Ranking Box"
@@ -40,9 +50,19 @@
             file="Surfer/Status/Box.php">Shows status of current surfer and some surfer page links</module>
     <module type="box"
             guid="3c3ee2f2fe5245c7a5e7e2e5b4afebf3"
-            name="Surfers Box"
-            class="ACommunitySurfersBox"
-            file="Surfers/Box.php">Shows a list of surfers by registration or last action time or surfer contacts</module>
+            name="Surfer Contacts Box"
+            class="ACommunitySurferContactsBox"
+            file="Surfer/Contacts/Box.php">Shows a list of surfer contacts</module>
+    <module type="box"
+            guid="f0c3b6f41d3b4f31b1d262c9afde0b5a"
+            name="Surfers Last Action Box"
+            class="ACommunitySurfersLastActionBox"
+            file="Surfers/Last/Action/Box.php">Shows a list of surfers by last action time</module>
+    <module type="box"
+            guid="571712a8cbca4563b703e8b7dd71bfa3"
+            name="Surfers Registration Box"
+            class="ACommunitySurfersRegistrationBox"
+            file="Surfers/Registration/Box.php">Shows a list of surfers by registration time</module>
     <module type="box"
             guid="f31dc79fd0fe47a9ad49ed5e5a7b919c"
             name="Message Conversations Box"
@@ -59,10 +79,15 @@
             class="ACommunitySurferPage"
             file="Surfer/Page.php">Shows surfer's base data, dynamic data and links to modify contact status</module>
     <module type="page"
+            guid="70d36f1a48b94e01a342b8fd69fa6a39"
+            name="Surfer Editor Page"
+            class="ACommunitySurferEditorPage"
+            file="Surfer/Editor/Page.php">Shows a form to change surfer base data and dynamic data</module>
+    <module type="page"
             guid="4acf2b522199438f95cab490e8b400b1"
-            name="Surfers Page"
-            class="ACommunitySurfersPage"
-            file="Surfers/Page.php">Shows a list of surfers by registration or last action time or surfer contacts</module>
+            name="Surfer Contacts Page"
+            class="ACommunitySurferContactsPage"
+            file="Surfer/Contacts/Page.php">Shows a list of surfer contacts and requests with management</module>
     <module type="page"
             guid="0b1573c87d654c07b499b6b565804f73"
             name="Messages Page"
@@ -81,6 +106,7 @@
   </modules>
   <tables>
     <table name="acommunity_comments"/>
+    <table name="acommunity_last_changes"/>
     <table name="acommunity_messages"/>
     <table name="acommunity_message_surfers"/>
     <table name="acommunity_notifications"/>

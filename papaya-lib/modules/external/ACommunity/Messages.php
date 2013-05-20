@@ -101,12 +101,15 @@ class ACommunityMessages extends ACommunityUiContent {
         if ($showNotifications == TRUE) {
           $this->uiContentMessagesList()->appendTo($messages);
         } elseif (!empty($ressource) && $this->data()->ressourceIsActiveSurfer == FALSE) {
-          $this->uiContentMessageDialog()->appendTo($messages);
-          $errorMessage = $this->uiContentMessageDialog()->errorMessage();
-          if (!empty($errorMessage)) {
-            $messages->appendElement(
-              'dialog-message', array('type' => 'error'), $errorMessage
-            );
+          $messagesPage = $this->parameters()->get('messages_page', 0);
+          if (!($messagesPage > 1)) {
+            $this->uiContentMessageDialog()->appendTo($messages);
+            $errorMessage = $this->uiContentMessageDialog()->errorMessage();
+            if (!empty($errorMessage)) {
+              $messages->appendElement(
+                'dialog-message', array('type' => 'error'), $errorMessage
+              );
+            }
           }
           $this->uiContentMessagesList()->appendTo($messages);
         } else {

@@ -27,13 +27,13 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityMessagesPage extends base_content {
+class ACommunityMessagesPage extends base_content implements PapayaPluginCacheable {
 
   /**
    * Use a advanced community parameter group name
    * @var string
    */
-  public $paramName = 'acm';
+  public $paramName = 'acmp';
 
   /**
   * Content edit fields
@@ -89,10 +89,52 @@ class ACommunityMessagesPage extends base_content {
   protected $_messages = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
+          $this->papaya()->surfer->surfer['surfer_id'] : NULL;
+      $notifications = $this->messages()->parameters()->get('notifications', NULL);
+      if (!empty($currentSurferId) && !isset($notifications)) {
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+      } else {
+        $definitionValues = array('acommunity_messages_page');
+        if (!empty($ressource) && isset($currentSurferId)) {
+          include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $currentSurferId;
+          $definitionValues[] = 'system';
+          $definitionValues[] = $values->lastMessageTime($currentSurferId, 'system');
+        }
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters(
+            array('messages_page'), $this->paramName
+          )
+        );
+      }
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->messages()->data()->ressource(
+    return $this->messages()->data()->ressource(
       'surfer',
       $this,
       array('surfer' => 'surfer_handle'),
@@ -112,19 +154,10 @@ class ACommunityMessagesPage extends base_content {
       include_once(dirname(__FILE__).'/../Messages.php');
       $this->_messages = new ACommunityMessages();
       $this->_messages->parameterGroup($this->paramName);
-      $captionNames = array(
-        'caption_dialog_text', 'caption_dialog_button'
-      );
-      $messageNames = array(
-        'message_dialog_input_error', 'message_no_messages', 'message_no_login',
-        'message_no_message_conversation'
-      );
-      $this->_messages->data()->setPluginData($this->data, $captionNames, $messageNames);
       $this->_messages->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_messages;
   }
-
 
   /**
   * Get parsed data
@@ -132,10 +165,17 @@ class ACommunityMessagesPage extends base_content {
   * @return string $result
   */
   function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $captionNames = array(
+      'caption_dialog_text', 'caption_dialog_button'
+    );
+    $messageNames = array(
+      'message_dialog_input_error', 'message_no_messages', 'message_no_login',
+      'message_no_message_conversation'
+    );
+    $this->messages()->data()->setPluginData($this->data, $captionNames, $messageNames);
     return $this->messages()->getXml();
   }
-
 }

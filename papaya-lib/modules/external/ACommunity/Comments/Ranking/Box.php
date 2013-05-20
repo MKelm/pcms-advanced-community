@@ -27,13 +27,13 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityCommentsRankingBox extends base_actionbox {
+class ACommunityCommentsRankingBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acc';
+  public $paramName = 'accr';
 
   /**
    * Edit fields
@@ -64,6 +64,37 @@ class ACommunityCommentsRankingBox extends base_actionbox {
   protected $_comments = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+      $values = new ACommunityCacheIdentifierValues();
+      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+        new PapayaCacheIdentifierDefinitionValues(
+          'acommunity_comments_ranking_box', $values->lastChangeTime('comments')
+        ),
+        new PapayaCacheIdentifierDefinitionParameters(
+          array('comments_page'), $this->paramName
+        )
+      );
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
   * Get (and, if necessary, initialize) the ACommunityComments object
   *
   * @return ACommunityComments $comments
@@ -75,7 +106,6 @@ class ACommunityCommentsRankingBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../../Comments.php');
       $this->_comments = new ACommunityComments();
       $this->_comments->parameterGroup($this->paramName);
-      $this->_comments->data()->setPluginData($this->data);
       $this->_comments->data()->languageId = $this->papaya()->request->languageId;
       $this->_comments->data()->mode = 'ranking';
     }
@@ -88,8 +118,9 @@ class ACommunityCommentsRankingBox extends base_actionbox {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
+    $this->setDefaultData();
+    $this->comments()->data()->setPluginData($this->data);
     return $this->comments()->getXml();
   }
 }

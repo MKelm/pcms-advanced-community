@@ -80,18 +80,37 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContent {
         $command = $this->parameters()->get('command', NULL);
         switch ($command) {
           case 'add_folder':
-            $this->uiContentFolderDialog()->appendTo($galleryFolders);
-            $errorMessage = $this->uiContentFolderDialog()->errorMessage();
-            if (!empty($errorMessage)) {
-              $galleryFolders->appendElement(
-                'dialog-message', array('type' => 'error'), $errorMessage
-              );
+
+            $dom = new PapayaXmlDocument();
+            $dom->appendElement('dialog');
+            $this->uiContentFolderDialog()->appendTo($dom->documentElement);
+            $removeDialog = $this->parameters()->get('remove_dialog', 0);
+            if (empty($removeDialog)) {
+              $xml = '';
+              foreach ($dom->documentElement->childNodes as $node) {
+                $xml .= $node->ownerDocument->saveXml($node);
+              }
+              $galleryFolders->appendXml($xml);
+              $errorMessage = $this->uiContentFolderDialog()->errorMessage();
+              if (!empty($errorMessage)) {
+                $galleryFolders->appendElement(
+                  'dialog-message', array('type' => 'error'), $errorMessage
+                );
+              }
             }
             break;
           case 'delete_folder':
             $folderId = $this->parameters()->get('folder_id', NULL);
             if (!empty($folderId)) {
-              $this->galleryDeletion()->deleteSurferGalleryByFolderId($folderId);
+              if ($this->galleryDeletion()->deleteSurferGalleryByFolderId($folderId)) {
+                $this->data()->lastChange()->assign(
+                  array(
+                    'ressource' => 'surfer_gallery_folders:surfer_'.$ressource['id'],
+                    'time' => time()
+                  )
+                );
+                $this->data()->lastChange()->save();
+              }
             }
             break;
         }
@@ -172,5 +191,4 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContent {
     }
     return $this->_galleryDeletion;
   }
-
 }

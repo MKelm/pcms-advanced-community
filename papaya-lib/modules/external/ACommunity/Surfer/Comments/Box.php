@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery database record
+ * Advanced community surfer comments box
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,29 +17,21 @@
  */
 
 /**
- * Advanced community surfer gallery database record
+ * Basic box class
+ */
+require_once(dirname(__FILE__).'/../../Comments/Box.php');
+
+/**
+ * Advanced community surfer comments box
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityContentSurferGallery extends PapayaDatabaseRecord {
+class ACommunitySurferCommentsBox extends ACommunityCommentsBox {
 
   /**
-   * Map field names to more convinient property names
-   *
-   * @var array(string=>string)
-   */
-  protected $_fields = array(
-	  'id' => 'gallery_id',
-    'surfer_id' => 'surfer_id',
-    'folder_id' => 'gallery_folder_id',
-    'parent_folder_id' => 'gallery_parent_folder_id'
-  );
-
-  /**
-   * Table containing books
-   *
+   * Ressource type
    * @var string
    */
-  protected $_tableName = 'acommunity_surfer_galleries';
+  protected $_ressourceType = 'surfer';
 }

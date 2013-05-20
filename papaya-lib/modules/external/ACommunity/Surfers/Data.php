@@ -102,7 +102,6 @@ class ACommunitySurfersData extends ACommunityUiContentData {
     $timeframe = 60 * 60 * 24 * $this->_timeframe;
     $ressource = $this->ressource();
     $surfers = array();
-
     if ($this->displayMode == 'lastaction') {
       $page = $this->owner->parameters()->get('lastaction_list_page', 0);
       $surfers = $this->owner->communityConnector()->getLastActiveSurfers(

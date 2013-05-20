@@ -29,13 +29,13 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
   * @var ACommunitySurferGalleryUploadData
   */
   protected $_data = NULL;
- 
+
   /**
   * Current error message.
   * @var string
   */
   protected $_errorMessage = NULL;
-  
+
   /**
    * Name of image field
    * @var string
@@ -54,7 +54,7 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
     }
     return $this->_data;
   }
-  
+
   /**
   * Get/set error message
   * @var string $errorMessage
@@ -66,7 +66,7 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
     }
     return $this->_errorMessage;
   }
-  
+
   /**
   * Create dialog
   *
@@ -88,7 +88,7 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
       )
     );
     $dialog->caption = NULL;
-    
+
     include_once(dirname(__FILE__).'/../../../../Dialog/Field/Input/File.php');
     $dialog->fields[] = $field = new ACommunityUiDialogFieldInputFile(
       $this->data()->captions['dialog_image'],
@@ -98,13 +98,13 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
     $field->setMandatory(TRUE);
     $field->setId('dialogGalleryImage');
     $dialog->buttons[] = new PapayaUiDialogButtonSubmit($buttonCaption);
-    
+
     $this->callbacks()->onExecuteSuccessful = array($this, 'callbackUploadImage');
     $this->callbacks()->onExecuteFailed = array($this, 'callbackShowError');
     return $dialog;
   }
-  
-  
+
+
   /**
   * Upload image on sucessful execution
   *
@@ -122,41 +122,52 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
     }
     $this->data()->galleries()->load($filter, 1);
     $error = NULL;
-    
     if (count($this->data()->galleries()) > 0) {
       $gallery = reset($this->data()->galleries()->toArray());
       $folderId = !empty($gallery['folder_id']) ? $gallery['folder_id'] : NULL;
       $parameterGroup = $this->data()->owner->parameterGroup();
-      
+
       if (!empty($folderId)) {
         if (isset($_FILES[$parameterGroup]) &&
             isset($_FILES[$parameterGroup]['name'][$this->_imageFieldName]) &&
             isset($_FILES[$parameterGroup]['tmp_name'][$this->_imageFieldName])) {
-          
+
           if (!($_FILES[$parameterGroup]['error'][$this->_imageFieldName] > 0)) {
-          
+
             $allowedExtensions = array('gif', 'jpeg', 'jpg', 'png');
             $extension = strtolower(
               end(explode('.', $_FILES[$parameterGroup]['name'][$this->_imageFieldName]))
             );
             if (in_array($extension, $allowedExtensions)) {
-              
+
               $allowedTypes = array(
                 "image/gif", "image/jpeg", "image/jpg", "image/pjpeg", "image/x-png", "image/png"
               );
               $type = $_FILES[$parameterGroup]['type'][$this->_imageFieldName];
-              
+
               if (in_array($type, $allowedTypes)) {
                 $mediaDBEdit = $this->data()->mediaDBEdit();
                 $added = $mediaDBEdit->addFile(
-                  $_FILES[$parameterGroup]['tmp_name'][$this->_imageFieldName], 
-                  $_FILES[$parameterGroup]['name'][$this->_imageFieldName], 
-                  $folderId, 
+                  $_FILES[$parameterGroup]['tmp_name'][$this->_imageFieldName],
+                  $_FILES[$parameterGroup]['name'][$this->_imageFieldName],
+                  $folderId,
                   $ressource['id']
                 );
                 if (empty($added)) {
                   $error = 'dialog_error_media_db';
                 } else {
+
+                  $ressource = $this->data()->ressource();
+                  if ($gallery['parent_folder_id'] == 0) {
+                    $ressource = 'surfer_gallery_images:folder_base:surfer_'.$ressource['id'];
+                  } else {
+                    $ressource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
+                  }
+                  $this->data()->lastChange()->assign(
+                    array('ressource' => $ressource, 'time' => time())
+                  );
+                  $this->data()->lastChange()->save();
+
                   $href = $this->data()->reference()->get();
                   $GLOBALS['PAPAYA_PAGE']->sendHTTPStatus(301);
                   @header("Location: ".$href);
@@ -188,7 +199,7 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
       $this->errorMessage($this->data()->messages[$error]);
     }
   }
-  
+
   /**
   * Show error message
   *

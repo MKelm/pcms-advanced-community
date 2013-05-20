@@ -27,13 +27,13 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityCommentersRankingBox extends base_actionbox {
+class ACommunityCommentersRankingBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acc';
+  public $paramName = 'accmr';
 
   /**
    * Edit fields
@@ -65,6 +65,30 @@ class ACommunityCommentersRankingBox extends base_actionbox {
   protected $_ranking = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionValues(
+        'acommunity_commenters_ranking_box'
+      );
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
   * Get (and, if necessary, initialize) the ACommunityCommentersRanking object
   *
   * @return ACommunityCommentersRanking $ranking
@@ -76,7 +100,6 @@ class ACommunityCommentersRankingBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Ranking.php');
       $this->_ranking = new ACommunityCommentersRanking();
       $this->_ranking->parameterGroup($this->paramName);
-      $this->_ranking->data()->setPluginData($this->data, array('caption_comments'));
     }
     return $this->_ranking;
   }
@@ -87,9 +110,9 @@ class ACommunityCommentersRankingBox extends base_actionbox {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
+    $this->setDefaultData();
+    $this->ranking()->data()->setPluginData($this->data, array('caption_comments'));
     return $this->ranking()->getXml();
   }
-
 }

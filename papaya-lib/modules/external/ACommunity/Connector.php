@@ -45,7 +45,7 @@ class ACommunityConnector extends base_connector {
     ),
     'surfer_editor_page_id' => array(
       'Surfer Editor', 'isNum', TRUE, 'pageid', 30,
-      'Use a community mixed user data page module', NULL
+      'Use a community profile page module', NULL
     ),
     'surfer_page_id' => array(
       'Surfer', 'isNum', TRUE, 'pageid', 30, NULL, NULL
@@ -64,7 +64,7 @@ class ACommunityConnector extends base_connector {
     ),
     'Parameter Groups',
     'surfer_page_parameter_group' => array(
-      'Surfer Login', 'isAlpha', TRUE, 'input', 30, NULL, 'acs'
+      'Surfer', 'isAlpha', TRUE, 'input', 30, NULL, 'acsp'
     ),
     'Display Modes',
     'display_mode_surfer_name' => array(
@@ -252,7 +252,7 @@ class ACommunityConnector extends base_connector {
    */
   public function getSurferPageLink($surferId) {
     $parameterGroup = papaya_module_options::readOption(
-      $this->_guid, 'surfer_page_parameter_group', 'acs'
+      $this->_guid, 'surfer_page_parameter_group', 'acsp'
     );
     return $this->_getPageLink('surfer_page_id', $surferId, TRUE, $parameterGroup, 's-page');
   }
@@ -286,7 +286,7 @@ class ACommunityConnector extends base_connector {
    * @return string|NULL
    */
   public function getSurferGalleryPageLink($surferId) {
-    return $this->_getPageLink('surfer_gallery_page_id', $surferId, TRUE, 'acg', 's-gallery');
+    return $this->_getPageLink('surfer_gallery_page_id', $surferId, TRUE, 'acsg', 's-gallery');
   }
 
   /**
@@ -306,7 +306,7 @@ class ACommunityConnector extends base_connector {
       $parameters = TRUE;
     }
     return $this->_getPageLink(
-      'messages_page_id', $surferId, $parameters, 'acm', $parameterNamePostfix
+      'messages_page_id', $surferId, $parameters, 'acmp', $parameterNamePostfix
     );
   }
 
@@ -409,5 +409,4 @@ class ACommunityConnector extends base_connector {
     }
     return $this->_communityConnector;
   }
-
 }

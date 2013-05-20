@@ -71,41 +71,48 @@ class ACommunityComments extends ACommunityUiContent {
   public function performCommands() {
     $command = $this->parameters()->get('command', '');
     $commentId = $this->parameters()->get('comment_id', 0);
-    switch ($command) {
-      case 'vote_up':
-        if ($commentId > 0) {
-          $comment = clone $this->data()->comment();
-          $comment->load($commentId);
-          $votingCookieData = $this->data()->votingCookie();
-          if (empty($votingCookieData[$commentId])) {
-            $comment->assign(
-              array('votes_score' => $comment['votes_score'] + 1)
-            );
-            $comment->save();
-            $votingCookieData[$commentId] = 1;
-            $this->data()->votingCookie($votingCookieData);
+    if ($command == 'vote_up' || $command == 'vote_down') {
+      if ($commentId > 0) {
+        $change = 0;
+        $votingCookieData = $this->data()->votingCookie();
+        $comment = clone $this->data()->comment();
+        $comment->load($commentId);
+        if (empty($votingCookieData[$commentId])) {
+          switch ($command) {
+            case 'vote_up':
+              $comment->assign(array('votes_score' => $comment['votes_score'] + 1));
+              if ($comment->save()) {
+                $change = 1;
+              }
+              break;
+            case 'vote_down':
+              $comment->assign(array('votes_score' => $comment['votes_score'] - 1));
+              if ($comment->save()) {
+                $change = -1;
+              }
+              break;
           }
         }
-        $this->parameters()->set('command', 'reply');
-        $this->parameters()->set('comment_id', 0);
-        break;
-      case 'vote_down':
-        if ($commentId > 0) {
-          $comment = clone $this->data()->comment();
-          $comment->load($commentId);
-          $votingCookieData = $this->data()->votingCookie();
-          if (empty($votingCookieData[$commentId])) {
-            $comment->assign(
-              array('votes_score' => $comment['votes_score'] - 1)
-            );
-            $comment->save();
-            $votingCookieData[$commentId] = 1;
-            $this->data()->votingCookie($votingCookieData);
-          }
+        if ($change != 0) {
+          $votingCookieData[$commentId] = $change;
+          $this->data()->votingCookie($votingCookieData);
+          $ressource = $this->data()->ressource();
+          $lastChange = clone $this->data()->lastChange();
+          $lastChange->assign(
+            array(
+              'ressource' => 'comments:'.$ressource['type'].'_'.$ressource['id'],
+              'time' => time()
+            )
+          );
+          $lastChange->save();
+          $this->data()->lastChange()->assign(
+            array('ressource' => 'comments', 'time' => time())
+          );
+          $this->data()->lastChange()->save();
         }
-        $this->parameters()->set('command', 'reply');
-        $this->parameters()->set('comment_id', 0);
-        break;
+      }
+      $this->parameters()->set('command', 'reply');
+      $this->parameters()->set('comment_id', 0);
     }
   }
 

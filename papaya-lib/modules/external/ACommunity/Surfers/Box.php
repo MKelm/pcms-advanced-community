@@ -24,18 +24,47 @@
 require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
 
 /**
+ * If you want to ignore the last time of the surfers' last action property set this
+ * constant to 0.
+ */
+if (!defined('PAPAYA_ACOMMUNITY_CACHE_LAST_ACTIONS_BOX_USE_LAST_TIME')) {
+  define('PAPAYA_ACOMMUNITY_CACHE_LAST_ACTIONS_BOX_USE_LAST_TIME', 1);
+}
+
+/**
+ * If you want to ignore the last time of the surfers' registration property set this
+ * constant to 0.
+ */
+if (!defined('PAPAYA_ACOMMUNITY_CACHE_REGISTRATIONS_BOX_USE_LAST_TIME')) {
+  define('PAPAYA_ACOMMUNITY_CACHE_REGISTRATIONS_BOX_USE_LAST_TIME', 1);
+}
+
+/**
+ * If you want to ignore the last change time of surfer's contacts set this constant to 0.
+ */
+if (!defined('PAPAYA_ACOMMUNITY_CACHE_CONTACTS_BOX_USE_LAST_CHANGE_TIME')) {
+  define('PAPAYA_ACOMMUNITY_CACHE_CONTACTS_BOX_USE_LAST_CHANGE_TIME', 1);
+}
+
+/**
  * Advanced community surfers box
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurfersBox extends base_actionbox {
+abstract class ACommunitySurfersBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acssb';
+  public $paramName = '';
+
+  /**
+   * Display mode
+   * @var string
+   */
+  protected $_displayMode = '';
 
   /**
    * Edit fields
@@ -50,14 +79,6 @@ class ACommunitySurfersBox extends base_actionbox {
        array(
          'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
        ), '', 'mincrop'
-    ),
-    'display_mode' => array(
-      'Display Mode', 'isAlpha', TRUE, 'translatedcombo',
-       array(
-         'contacts' => 'Surfer contacts of current or selected surfer',
-         'lastaction' => 'Surfers by last action Time',
-         'registration' => 'Surfers by registration Time'
-       ), '', 'lastaction'
     ),
     'timeframe' => array(
       'Timeframe in days', 'isNum', TRUE, 'input', 30,
@@ -89,10 +110,62 @@ class ACommunitySurfersBox extends base_actionbox {
   protected $_surfers = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $definitionValues = array('acommunity_surfers_box', $this->_displayMode);
+      $definitionParameters = array();
+      include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+      $values = new ACommunityCacheIdentifierValues();
+      switch ($this->_displayMode) {
+        case 'lastaction':
+          $definitionParameters[] = 'lastaction_list_page';
+          if (PAPAYA_ACOMMUNITY_CACHE_LAST_ACTIONS_BOX_USE_LAST_TIME == 1) {
+            $definitionValues[] = $values->surferLastActionTime();
+          }
+          break;
+        case 'registration':
+          $definitionParameters[] = 'registration_list_page';
+          if (PAPAYA_ACOMMUNITY_CACHE_REGISTRATIONS_BOX_USE_LAST_TIME == 1) {
+            $definitionValues[] = $values->surferLastRegistrationTime();
+          }
+          break;
+        case 'contacts':
+          $ressource = $this->setRessourceData();
+          $definitionValues[] = !empty($ressource['id']) ? $ressource['id'] : NULL;
+          if (PAPAYA_ACOMMUNITY_CACHE_CONTACTS_BOX_USE_LAST_CHANGE_TIME == 1) {
+            $definitionValues[] = !empty($ressource['id']) ?
+              $values->lastChangeTime('contacts_accepted:surfer_'.$ressource['id']) : 0;
+          }
+          $definitionParameters[] = 'contacts_list_page';
+          break;
+      }
+      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+        new PapayaCacheIdentifierDefinitionValues($definitionValues),
+        new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
+      );
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->surfers()->data()->ressource(
+    return $this->surfers()->data()->ressource(
       'surfer', $this, array('surfer' => array('surfer_handle'))
     );
   }
@@ -109,13 +182,6 @@ class ACommunitySurfersBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Surfers.php');
       $this->_surfers = new ACommunitySurfers();
       $this->_surfers->parameterGroup($this->paramName);
-      $this->_surfers->data()->setPluginData(
-        $this->data,
-        array(
-          'caption_last_action', 'caption_registration'
-        ),
-        array('message_empty_list')
-      );
       $this->_surfers->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_surfers;
@@ -127,10 +193,14 @@ class ACommunitySurfersBox extends base_actionbox {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $this->surfers()->data()->setPluginData(
+      $this->data,
+      array('caption_last_action', 'caption_registration'),
+      array('message_empty_list')
+    );
     return $this->surfers()->getXml();
   }
-
 }

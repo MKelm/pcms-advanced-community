@@ -1,7 +1,7 @@
 <?php
 /**
  * Advanced community surfer gallery deletion
- * 
+ *
  * This class offers methods to delete and modify community data on surfer deletion
  *
  * @copyright 2013 by Martin Kelm
@@ -31,31 +31,31 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
   * @var PapayaDatabaseAccess
   */
   protected $_databaseAccess = NULL;
-  
+
   /**
    * Table name of comments
    * @var string
    */
   protected $_tableNameComments = 'acommunity_comments';
-  
+
   /**
    * Table name of surfer galleries
    * @var string
    */
   protected $_tableNameSurferGalleries = 'acommunity_surfer_galleries';
-  
+
   /**
    * Media db edit object
    * @var object
    */
   protected $_mediaDBEdit = NULL;
-  
+
   /**
    * Surfer galleries database records
    * @var object
    */
   protected $_surferGalleries = NULL;
-  
+
   /**
   * Set/get database access object
   *
@@ -69,46 +69,53 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
     }
     return $this->_databaseAccess;
   }
-  
+
   /**
    * Delete all surfer galleries and related data by one surfer id
-   * 
+   *
    * @param string $surferId
+   * @param boolean $result
    */
   public function deleteSurferGalleries($surferId) {
     $this->surferGalleries()->load(array('surfer_id' => $surferId));
     $surferGalleries = $this->surferGalleries()->toArray();
+    $result = TRUE;
     if (!empty($surferGalleries)) {
       foreach ($surferGalleries as $surferGallery) {
         $this->_deleteMediaDBFolder($surferGallery['folder_id']);
       }
-      $this->databaseAccess()->deleteRecord(
+      $result = $result && $this->databaseAccess()->deleteRecord(
         $this->databaseAccess()->getTableName($this->_tableNameSurferGalleries),
         array('surfer_id' => $surferId)
       );
     }
+    return $result;
   }
-  
+
   /**
    * Delete one surfer gallery by folder id
-   * 
+   *
    * @param integer $folderId
+   * @param boolean $result
    */
   public function deleteSurferGalleryByFolderId($folderId) {
     $this->surferGalleries()->load(array('folder_id' => $folderId));
     $surferGallery = reset($this->surferGalleries()->toArray());
+    $result = 0;
     if (!empty($surferGallery)) {
-      $this->_deleteMediaDBFolder($surferGallery['folder_id']);
-      $result = $this->databaseAccess()->deleteRecord(
-        $this->databaseAccess()->getTableName($this->_tableNameSurferGalleries),
-        array('gallery_folder_id' => $surferGallery['folder_id'])
-      );
+      if ($this->_deleteMediaDBFolder($surferGallery['folder_id'])) {
+        $result = $this->databaseAccess()->deleteRecord(
+          $this->databaseAccess()->getTableName($this->_tableNameSurferGalleries),
+          array('gallery_folder_id' => $surferGallery['folder_id'])
+        );
+      }
     }
+    return (boolean)$result;
   }
-  
+
   /**
    * Delete one media db folder, all related files and comments
-   * 
+   *
    * @param integer $folderId
    */
   protected function _deleteMediaDBFolder($folderId) {
@@ -119,18 +126,18 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
         $this->databaseAccess()->deleteRecord(
           $this->databaseAccess()->getTableName($this->_tableNameComments),
           array(
-            'comment_ressource_type' => 'image', 
+            'comment_ressource_type' => 'image',
             'comment_ressource_id' => $file['file_id']
           )
         );
       }
     }
-    $this->mediaDBEdit()->deleteFolder($folderId);
+    return $this->mediaDBEdit()->deleteFolder($folderId);
   }
-  
+
   /**
    * Media DB Edit to delete related data
-   * 
+   *
    * @param base_mediadb_edit $mediaDBEdit
    * @return base_mediadb_edit
    */
@@ -143,7 +150,7 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
     }
     return $this->_mediaDBEdit;
   }
-  
+
   /**
   * Access to the surfer galleries database records data
   *
@@ -160,5 +167,4 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
     }
     return $this->_surferGalleries;
   }
-
 }

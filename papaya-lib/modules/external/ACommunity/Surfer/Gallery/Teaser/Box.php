@@ -27,14 +27,14 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryTeaserBox extends base_actionbox {
-  
+class ACommunitySurferGalleryTeaserBox extends base_actionbox implements PapayaPluginCacheable {
+
   /**
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acg';
-  
+  public $paramName = 'acsg';
+
   /**
    * Edit fields
    * @var array $editFields
@@ -48,7 +48,7 @@ class ACommunitySurferGalleryTeaserBox extends base_actionbox {
       'Size', 'isNum', TRUE, 'input', 30, '', 100
     ),
     'thumbnail_resize_mode' => array(
-      'Resize Mode', 'isAlpha', TRUE, 'translatedcombo', 
+      'Resize Mode', 'isAlpha', TRUE, 'translatedcombo',
        array(
          'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',' mincrop' => 'Minimum cropped'
        ), '', 'mincrop'
@@ -61,13 +61,49 @@ class ACommunitySurferGalleryTeaserBox extends base_actionbox {
       'More Images Link', 'isNoHTML', TRUE, 'input', 200, '', 'Check out more images here!'
     )
   );
-  
+
   /**
    * Gallery teaser object
    * @var ACommunitySurferGalleryTeaser
    */
   protected $_teaser = NULL;
-  
+
+  /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefinition = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefinition = $definition;
+    } elseif (NULL == $this->_cacheDefinition) {
+      $ressource = $this->setRessourceData();
+      $definitionValues = array('acommunity_surfer_gallery_teaser');
+      if (!empty($ressource)) {
+        $ressource = $this->setRessourceData();
+        if (!empty($ressource)) {
+          include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $ressource['type'];
+          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = $values->lastChangeTime(
+            'surfer_gallery_images:folder_base:surfer_'.$ressource['id']
+          );
+        }
+      }
+      $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues($definitionValues);
+    }
+    return $this->_cacheDefinition;
+  }
+
   /**
    * Set ressource data to get surfer
    */
@@ -81,12 +117,12 @@ class ACommunitySurferGalleryTeaserBox extends base_actionbox {
         $surferHandle = $parameters['surfer_handle'];
       }
     }
-    $this->teaser()->data()->ressource('surfer', $surferHandle);
+    return $this->teaser()->data()->ressource('surfer', $surferHandle);
   }
-  
+
   /**
-  * Get (and, if necessary, initialize) the ACommunitySurferGalleryTeaser object 
-  * 
+  * Get (and, if necessary, initialize) the ACommunitySurferGalleryTeaser object
+  *
   * @return ACommunitySurferGalleryTeaser $teaser
   */
   public function teaser(ACommunitySurferGalleryTeaser $teaser = NULL) {
@@ -96,11 +132,6 @@ class ACommunitySurferGalleryTeaserBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Teaser.php');
       $this->_teaser = new ACommunitySurferGalleryTeaser();
       $this->_teaser->parameterGroup($this->paramName);
-      $captionNames = array('caption_add_new_images_link', 'caption_more_images_link');
-      $messageNames = array();
-      $this->_teaser->data()->setPluginData(
-        $this->data, $captionNames, $messageNames
-      );
       $this->_teaser->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_teaser;
@@ -112,10 +143,12 @@ class ACommunitySurferGalleryTeaserBox extends base_actionbox {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $captionNames = array('caption_add_new_images_link', 'caption_more_images_link');
+    $messageNames = array();
+    $this->teaser()->data()->setPluginData($this->data, $captionNames, $messageNames);
     return $this->teaser()->getXml();
   }
-  
 }

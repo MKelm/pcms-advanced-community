@@ -27,13 +27,19 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurfersPage extends base_content {
+abstract class ACommunitySurfersPage extends base_content implements PapayaPluginCacheable {
 
   /**
    * Use a advanced community parameter group name
    * @var string
    */
-  public $paramName = 'acssp';
+  public $paramName = '';
+
+  /**
+   * Display mode
+   * @var string
+   */
+  protected $_displayMode = '';
 
   /**
    * Edit fields
@@ -49,14 +55,6 @@ class ACommunitySurfersPage extends base_content {
          'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
        ), '', 'mincrop'
     ),
-    'display_mode' => array(
-      'Display Mode', 'isAlpha', TRUE, 'translatedcombo',
-       array(
-         'contacts_and_requests' => 'Surfer contacts and contact requests of current surfer',
-         'lastaction' => 'Surfers by last action Time',
-         'registration' => 'Surfers by registration Time'
-       ), '', 'contacts_and_requests'
-    ),
     'timeframe' => array(
       'Timeframe in days', 'isNum', TRUE, 'input', 30,
       'Get surfers by last action or registration time in a specified timeframe.', 365
@@ -66,6 +64,9 @@ class ACommunitySurfersPage extends base_content {
       "Note: The contacts display mode has three lists for contacts,
       received contact requests and sent contact requests.",
       5
+    ),
+    'show_paging' => array(
+      'Show paging', 'isNum', TRUE, 'yesno', NULL, 'Note: The contacts display mode needs paging.', 1
     ),
     'Captions',
     'caption_contacts' => array(
@@ -109,10 +110,68 @@ class ACommunitySurfersPage extends base_content {
   protected $_surfers = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $definitionValues = array('acommunity_surfers_page', $this->_displayMode);
+      $definitionParameters = array();
+      include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+      $values = new ACommunityCacheIdentifierValues();
+      switch ($this->_displayMode) {
+        case 'lastaction':
+          $definitionParameters[] = 'lastaction_list_page';
+          $definitionValues[] = $values->surferLastActionTime();
+          break;
+        case 'registration':
+          $definitionParameters[] = 'registration_list_page';
+          $definitionValues[] = $values->surferLastRegistrationTime();
+          break;
+        case 'contacts_and_requests':
+          $ressource = $this->setRessourceData();
+          if (!empty($ressource)) {
+            $command = $this->surfers()->parameters()->get('command', NULL);
+            if (empty($command)) {
+              $definitionValues[] = $ressource['id'];
+              $definitionValues[] = $values->lastChangeTime('contacts:surfer_'.$ressource['id']);
+              $definitionParameters[] = 'contacts_list_page';
+              $definitionParameters[] = 'own_contact_requests_list_page';
+              $definitionParameters[] = 'contact_requests_list_page';
+              $definitionParameters[] = 'surfer_handle';
+              $definitionParameters[] = 'command';
+            } else {
+              $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+            }
+          }
+          break;
+      }
+      if (is_null($this->_cacheDefiniton)) {
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
+        );
+      }
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->surfers()->data()->ressource('surfer', $this);
+    return $this->surfers()->data()->ressource('surfer', $this);
   }
 
   /**
@@ -127,16 +186,6 @@ class ACommunitySurfersPage extends base_content {
       include_once(dirname(__FILE__).'/../Surfers.php');
       $this->_surfers = new ACommunitySurfers();
       $this->_surfers->parameterGroup($this->paramName);
-      $this->_surfers->data()->setPluginData(
-        $this->data,
-        array(
-          'caption_last_action', 'caption_registration',
-          'caption_contacts', 'caption_own_contact_requests', 'caption_contact_requests',
-          'caption_command_accept_contact_request', 'caption_command_decline_contact_request',
-          'caption_command_remove_contact_request', 'caption_command_remove_contact'
-        ),
-        array('message_empty_list')
-      );
       $this->_surfers->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_surfers;
@@ -148,10 +197,19 @@ class ACommunitySurfersPage extends base_content {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $this->surfers()->data()->setPluginData(
+      $this->data,
+      array(
+        'caption_last_action', 'caption_registration',
+        'caption_contacts', 'caption_own_contact_requests', 'caption_contact_requests',
+        'caption_command_accept_contact_request', 'caption_command_decline_contact_request',
+        'caption_command_remove_contact_request', 'caption_command_remove_contact'
+      ),
+      array('message_empty_list')
+    );
     return $this->surfers()->getXml();
   }
-
 }

@@ -27,13 +27,13 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityMessageConversationsBox extends base_actionbox {
+class ACommunityMessageConversationsBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acmc';
+  public $paramName = 'acmcb';
 
   /**
    * Edit fields
@@ -71,6 +71,43 @@ class ACommunityMessageConversationsBox extends base_actionbox {
   protected $_messages = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $ressource = $this->setRessourceData();
+      $definitionValues = array('acommunity_message_conversations_box');
+      if (!empty($ressource)) {
+        include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+        $values = new ACommunityCacheIdentifierValues();
+        $definitionValues[] = $ressource['type'];
+        $definitionValues[] = $ressource['id'];
+        $definitionValues[] = $values->lastMessageConversationTime($ressource['id']);
+      }
+      $surferId = !empty($ressource['id']) ? $ressource['id'] : 'null';
+      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+        new PapayaCacheIdentifierDefinitionValues($definitionValues),
+        new PapayaCacheIdentifierDefinitionParameters(
+          array('message_conversations_page'), $this->paramName
+        )
+      );
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Get ressource data to load corresponding comments
    * Overwrite this method for customized ressources
    */
@@ -92,11 +129,6 @@ class ACommunityMessageConversationsBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../../Messages.php');
       $this->_messages = new ACommunityMessages();
       $this->_messages->parameterGroup($this->paramName);
-      $this->_messages->data()->setPluginData(
-        $this->data,
-        array(),
-        array('message_no_login', 'message_no_message_conversations')
-      );
       $this->_messages->data()->languageId = $this->papaya()->request->languageId;
       $this->_messages->mode = 'message-conversations';
     }
@@ -109,10 +141,14 @@ class ACommunityMessageConversationsBox extends base_actionbox {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $this->messages()->data()->setPluginData(
+      $this->data,
+      array(),
+      array('message_no_login', 'message_no_message_conversations')
+    );
     return $this->messages()->getXml();
   }
-
 }

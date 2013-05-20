@@ -22,7 +22,7 @@
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityUiContentSurferGalleryFolderDialog 
+class ACommunityUiContentSurferGalleryFolderDialog
   extends PapayaUiControlCommandDialogDatabaseRecord {
 
   /**
@@ -30,13 +30,13 @@ class ACommunityUiContentSurferGalleryFolderDialog
   * @var ACommunitySurferGalleryUploadData
   */
   protected $_data = NULL;
- 
+
   /**
   * Current error message.
   * @var string
   */
   protected $_errorMessage = NULL;
-  
+
   /**
    * New folder id on save
    * @var integer
@@ -55,7 +55,7 @@ class ACommunityUiContentSurferGalleryFolderDialog
     }
     return $this->_data;
   }
-  
+
   /**
   * Get/set error message
   * @var string $errorMessage
@@ -67,7 +67,7 @@ class ACommunityUiContentSurferGalleryFolderDialog
     }
     return $this->_errorMessage;
   }
-  
+
   /**
   * Create dialog
   *
@@ -88,7 +88,7 @@ class ACommunityUiContentSurferGalleryFolderDialog
       array('command' => 'add_folder')
     );
     $dialog->caption = NULL;
-    
+
     $dialog->fields[] = $field = new PapayaUiDialogFieldInput(
       $this->data()->captions['dialog_folder_name'],
       'folder_name'
@@ -96,14 +96,15 @@ class ACommunityUiContentSurferGalleryFolderDialog
     $field->setMandatory(TRUE);
     $field->setId('dialogGalleryFolderName');
     $dialog->buttons[] = new PapayaUiDialogButtonSubmit($buttonCaption);
-    
+
+    $this->callbacks()->onExecuteSuccessful = array($this, 'callbackExecuteSuccessful');
     $this->callbacks()->onExecuteFailed = array($this, 'callbackShowError');
     return $dialog;
   }
-  
+
   /**
   * Callback before save record in PapayaUiDialogDatabaseSave
-  * 
+  *
   * @param object $context
   * @param object $record
   */
@@ -115,8 +116,8 @@ class ACommunityUiContentSurferGalleryFolderDialog
     $folderName = $this->parameters()->get('folder_name', NULL);
     if (!empty($folderName) && !empty($parentFolder[$languageId])) {
       $newFolderId = $this->data()->mediaDBEdit()->addFolder(
-        $parentFolder[$languageId]['folder_id'], 
-        $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';', 
+        $parentFolder[$languageId]['folder_id'],
+        $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';',
         $parentFolder[$languageId]['permission_mode']
       );
       if (!empty($newFolderId)) {
@@ -140,7 +141,25 @@ class ACommunityUiContentSurferGalleryFolderDialog
     }
     return FALSE;
   }
-  
+
+  /**
+  * Actions on execute successful
+  *
+  * @param object $context
+  * @param PapayaUiDialog $dialog
+  */
+  public function callbackExecuteSuccessful($context, $dialog) {
+    $ressource = $this->data()->ressource();
+    $this->data()->lastChange()->assign(
+      array(
+        'ressource' => 'surfer_gallery_folders:surfer_'.$ressource['id'],
+        'time' => time()
+      )
+    );
+    $this->data()->lastChange()->save();
+    $this->data()->owner->parameters()->set('remove_dialog', 1);
+  }
+
   /**
   * Show error message
   *

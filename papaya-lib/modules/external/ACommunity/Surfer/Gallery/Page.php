@@ -27,26 +27,82 @@ require_once(PAPAYA_INCLUDE_PATH.'modules/free/thumbs/content_thumbs.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryPage extends content_thumbs {
-  
+class ACommunitySurferGalleryPage extends content_thumbs implements PapayaPluginCacheable {
+
   /**
    * Use a advanced community parameter group name
    * @var string
    */
-  public $paramName = 'acg';
-  
+  public $paramName = 'acsg';
+
   /**
    * Surfer gallery data
    * @var ACommunitySurferGalleryData
    */
   protected $_data = NULL;
-  
+
+  /**
+   * Id by selected surfer
+   * @var string
+   */
+  protected $_surferId = NULL;
+
+  /**
+   * Id of elected surfer gallery folder
+   * @var integer
+   */
+  protected $_galleryFolderId = NULL;
+
   /**
    * Community connector
    * @var connector_surfers
    */
   protected $_communityConnector = NULL;
-  
+
+  /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefinition = $definition;
+    } elseif (NULL == $this->_cacheDefinition) {
+      $this->initializeParams();
+      $surferId = $this->surferId();
+      $definitionValues = array('acommunity_surfer_gallery', $surferId);
+      if (!empty($surferId)) {
+        $command = isset($this->params['command']) ? $this->params['command'] : NULL;
+        if ($command != 'delete_folder' && !empty($this->params['folder_id'])) {
+          $folder = $this->params['folder_id'];
+        } else {
+          $folder = 'base';
+        }
+        include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+        $values = new ACommunityCacheIdentifierValues();
+        $definitionValues[] = $folder;
+        $definitionValues[] = $values->lastChangeTime(
+          'surfer_gallery_images:folder_'.$folder.':surfer_'.$surferId
+        );
+      }
+      $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
+        new PapayaCacheIdentifierDefinitionValues($definitionValues),
+        new PapayaCacheIdentifierDefinitionParameters(
+          array('mode', 'idx', 'img'), $this->paramName
+        )
+      );
+    }
+    return $this->_cacheDefinition;
+  }
+
   /**
    * Get/set surfer gallery folders data
    *
@@ -64,7 +120,7 @@ class ACommunitySurferGalleryPage extends content_thumbs {
     }
     return $this->_data;
   }
-  
+
   /**
    * Overwrite get web link method to get surfer_handle parameter in links
    */
@@ -73,19 +129,20 @@ class ACommunitySurferGalleryPage extends content_thumbs {
                     $paramName = NULL, $text = '', $categId = NULL
                   ) {
     if (isset($this->params['surfer_handle'])) {
-      $params = empty($params) ? array('surfer_handle' => $this->params['surfer_handle']) : 
+      $params = empty($params) ? array('surfer_handle' => $this->params['surfer_handle']) :
         array_merge($params, array('surfer_handle' => $this->params['surfer_handle']));
     }
-    if (isset($this->params['folder_id'])) {
-      $params = empty($params) ? array('folder_id' => $this->params['folder_id']) : 
+    $command = isset($this->params['command']) ? $this->params['command'] : NULL;
+    if ($command != 'delete_folder' && isset($this->params['folder_id'])) {
+      $params = empty($params) ? array('folder_id' => $this->params['folder_id']) :
         array_merge($params, array('folder_id' => $this->params['folder_id']));
     }
     return parent::getWebLink($pageId, $lng, $mode, $params, $paramName, $text, $categId);
   }
-  
+
   /**
    * Callback method for comments box to get current image id as ressource id
-   * 
+   *
    * @return string
    */
   public function callbackGetCurrentImageId() {
@@ -100,7 +157,7 @@ class ACommunitySurferGalleryPage extends content_thumbs {
         $min = 0;
       }
       $files = $mediaDB->getFiles(
-        $this->data['directory'],
+        $this->_galleryFolderId(),
         $this->data['maxperpage'],
         $min,
         isset($this->data['order']) ? $this->data['order'] : 'name',
@@ -113,45 +170,49 @@ class ACommunitySurferGalleryPage extends content_thumbs {
     }
     return NULL;
   }
-  
+
   /**
-   * Overwrite get parsed data to load surfer gallery
-   * 
+   * Get id of current selected surfer
+   *
    * @return string
    */
-  public function getParsedData() {
-    $this->setDefaultData();
-    $this->initializeParams();
-    
-    // load media db folder depending on surfer handle
-    if (isset($this->params['surfer_handle'])) {
-      $surferId = $this->communityConnector()->getIdByHandle(
-        $this->params['surfer_handle']
-      );
-    }
-    if (empty($surferId)) {
-      $currentSurfer = $this->communityConnector()->getCurrentSurfer();
-      if ($currentSurfer->isValid && !empty($currentSurfer->surfer['surfer_id'])) {
-        $surferId = $currentSurfer->surfer['surfer_id'];
+  public function surferId() {
+    if (is_null($this->_surferId)) {
+      if (isset($this->params['surfer_handle'])) {
+        $surferId = $this->communityConnector()->getIdByHandle($this->params['surfer_handle']);
+      }
+      if (!empty($surferId)) {
+        $this->_surferId = $surferId;
+      } elseif ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
+        $this->_surferId = $this->papaya()->surfer->surfer['surfer_id'];
       }
     }
-    if (!empty($surferId)) {
-      
+    return $this->_surferId;
+  }
+
+  /**
+   * Get id of current selected gallery folder
+   *
+   * @return string
+   */
+  protected function _galleryFolderId() {
+    if (is_null($this->_galleryFolderId)) {
+      $surferId = $this->surferId();
       $filter = array('surfer_id' => $surferId);
-      if (!empty($this->params['folder_id'])) {
+      $command = isset($this->params['command']) ? $this->params['command'] : NULL;
+      if ($command != 'delete_folder' && !empty($this->params['folder_id'])) {
         $filter['folder_id'] = $this->params['folder_id'];
       } else {
         $filter['parent_folder_id'] = 0;
       }
-      
       $this->data()->galleries()->load($filter, 1);
       if (empty($this->params['folder_id']) && count($this->data()->galleries()) == 0) {
         $languageId = $this->papaya()->request->languageId;
         $parentFolder = $this->data()->mediaDBEdit()->getFolder($this->data['directory']);
         if (!empty($parentFolder[$languageId])) {
           $newFolderId = $this->data()->mediaDBEdit()->addFolder(
-            $parentFolder[$languageId]['folder_id'], 
-            $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';', 
+            $parentFolder[$languageId]['folder_id'],
+            $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';',
             $parentFolder[$languageId]['permission_mode']
           );
           if (!empty($newFolderId)) {
@@ -163,20 +224,39 @@ class ACommunitySurferGalleryPage extends content_thumbs {
             $gallery['folder_id'] = $newFolderId;
             $gallery['parent_folder_id'] = 0;
             $gallery->save();
-            $this->data['directory'] = $newFolderId;
+            $this->_galleryFolderId = $newFolderId;
+          } else {
+            $this->_galleryFolderId = FALSE;
           }
+        } else {
+          $this->_galleryFolderId = FALSE;
         }
       } elseif (count($this->data()->galleries()) > 0) {
         $gallery = reset($this->data()->galleries()->toArray());
-        $this->data['directory'] = $gallery['folder_id'];
+        $this->_galleryFolderId = $gallery['folder_id'];
       }
-    }    
+    }
+    return $this->_galleryFolderId;
+  }
+
+  /**
+   * Overwrite get parsed data to load surfer gallery
+   *
+   * @return string
+   */
+  public function getParsedData() {
+    $this->setDefaultData();
+    $this->initializeParams();
+    $surferId = $this->surferId();
+    if (!empty($surferId)) {
+      $this->data['directory'] = $this->_galleryFolderId();
+    }
     return parent::getParsedData();
   }
-  
+
   /**
    * Get/set community connector
-   * 
+   *
    * @param object $connector
    * @return object
    */
@@ -191,5 +271,4 @@ class ACommunitySurferGalleryPage extends content_thumbs {
     }
     return $this->_communityConnector;
   }
-  
 }

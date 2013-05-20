@@ -27,13 +27,13 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferPage extends base_content {
+class ACommunitySurferPage extends base_content implements PapayaPluginCacheable {
 
   /**
    * Use a advanced community parameter group name
    * @var string
    */
-  public $paramName = 'acs';
+  public $paramName = 'acsp';
 
   /**
   * Content edit fields
@@ -48,6 +48,9 @@ class ACommunitySurferPage extends base_content {
        array(
          'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
        ), '', 'mincrop'
+    ),
+    'dynamic_data_categories' => array(
+      'Dynamic Data Categories', 'isNum', FALSE, 'function', 'callbackDynamicDataCategories'
     ),
     'Titles',
     'title_gender_male' => array(
@@ -129,10 +132,58 @@ class ACommunitySurferPage extends base_content {
   protected $_surfer = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $definitionValues = array('acommunity_surfer_page');
+      $ressource = $this->setRessourceData();
+      if (!empty($ressource)) {
+        $command = NULL;
+        $currentSurferId = $this->surfer()->data()->currentSurferId();
+        if (!empty($currentSurferId) && $currentSurferId != $ressource['id']) {
+          $command = $this->surfer()->parameters()->get('command', NULL);
+        }
+        if (empty($command)) {
+          include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $currentSurferId;
+          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = $values->lastChangeTime('surfer:surfer_'.$ressource['id']);
+          $definitionValues[] = $values->lastChangeTime(
+            'contact:surfer_'.$currentSurferId.':surfer_'.$ressource['id']
+          );
+        } else {
+          $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+        }
+      }
+      if (is_null($this->_cacheDefiniton)) {
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionPage()
+        );
+      }
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->surfer()->data()->ressource('surfer', $this, array('surfer' => 'surfer_handle'));
+    return $this->surfer()->data()->ressource('surfer', $this, array('surfer' => 'surfer_handle'));
   }
 
   /**
@@ -147,22 +198,10 @@ class ACommunitySurferPage extends base_content {
       include_once(dirname(__FILE__).'/../Surfer.php');
       $this->_surfer = new ACommunitySurfer();
       $this->_surfer->parameterGroup($this->paramName);
-      $captionNames = array(
-        'caption_base_details', 'caption_surfer_name',
-        'caption_surfer_email', 'caption_surfer_gender', 'caption_surfer_avatar',
-        'caption_surfer_lastlogin', 'caption_surfer_lastaction', 'caption_surfer_registration',
-        'caption_surfer_group', 'caption_send_message',
-        'caption_contact_status_none', 'caption_contact_status_direct', 'caption_contact_status_pending',
-        'caption_contact_status_own_pending', 'caption_command_request_contact',
-        'caption_command_accept_contact_request', 'caption_command_decline_contact_request',
-        'caption_command_remove_contact_request', 'caption_command_remove_contact'
-      );
-      $this->_surfer->data()->setPluginData($this->data, $captionNames, array('message_no_surfer'));
       $this->_surfer->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_surfer;
   }
-
 
   /**
   * Get parsed data
@@ -170,10 +209,55 @@ class ACommunitySurferPage extends base_content {
   * @return string $result
   */
   function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $captionNames = array(
+      'caption_base_details', 'caption_surfer_name',
+      'caption_surfer_email', 'caption_surfer_gender', 'caption_surfer_avatar',
+      'caption_surfer_lastlogin', 'caption_surfer_lastaction', 'caption_surfer_registration',
+      'caption_surfer_group', 'caption_send_message',
+      'caption_contact_status_none', 'caption_contact_status_direct', 'caption_contact_status_pending',
+      'caption_contact_status_own_pending', 'caption_command_request_contact',
+      'caption_command_accept_contact_request', 'caption_command_decline_contact_request',
+      'caption_command_remove_contact_request', 'caption_command_remove_contact'
+    );
+    $this->surfer()->data()->setPluginData($this->data, $captionNames, array('message_no_surfer'));
     return $this->surfer()->getXml();
   }
 
+  /**
+  * Get form xml to select dynamic data categories by callback.
+  *
+  * @param string $name Field name
+  * @param array $element Field element configurations
+  * @param string $data Current field data
+  * @return string $result XML
+  */
+  function callbackDynamicDataCategories($name, $element, $data) {
+    $classes = $this->surfer()->communityConnector()->getProfileDataClasses();
+    $result = '';
+    $commonTitle = $this->_gt('Category');
+    foreach ($classes as $class) {
+      $classTitles = $this->surfer()->communityConnector()->getProfileDataClassTitles(
+        $class['surferdataclass_id']
+      );
+      if (isset($classTitles[$this->papaya()->request->languageId])) {
+        $title = $classTitles[$this->papaya()->request->languageId];
+      } else {
+        $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
+      }
+      $checked = (is_array($data) && in_array($class['surferdataclass_id'], $data)) ?
+        ' checked="checked"' : '';
+      $result .= sprintf(
+        '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
+        $this->paramName,
+        $name,
+        $class['surferdataclass_id'],
+        $checked,
+        $title
+      );
+    }
+    return $result;
+  }
 }

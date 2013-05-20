@@ -29,7 +29,7 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferStatusBox extends base_actionbox {
+class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
@@ -100,11 +100,41 @@ class ACommunitySurferStatusBox extends base_actionbox {
   protected $_status = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $ressource = $this->setRessourceData();
+      include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+      $values = new ACommunityCacheIdentifierValues();
+      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionValues(
+        'acommunity_surfer_status_box',
+        !empty($ressource['id']) ? $ressource['id'] : NULL,
+        !empty($ressource['id']) ? $values->lastChangeTime('surfer:surfer_'.$ressource['id']) : 0,
+        !empty($ressource['id']) ? $values->lastChangeTime('contacts:surfer_'.$ressource['id']) : 0
+      );
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Get ressource data to load corresponding comments
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    $this->status()->data()->ressource('surfer', $this);
+    return $this->status()->data()->ressource('surfer', $this);
   }
 
   /**
@@ -119,17 +149,6 @@ class ACommunitySurferStatusBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Status.php');
       $this->_status = new ACommunitySurferStatus();
       $this->_status->parameterGroup($this->paramName);
-      $this->_status->data()->setPluginData(
-        $this->data,
-        array(
-          'caption_login_link', 'caption_registration_link',
-          'caption_edit_link', 'caption_logout_link',
-          'caption_contacts_link', 'caption_contact_requests_link',
-          'caption_contact_own_requests_link', 'caption_messages_link',
-          'caption_notifications_link', 'caption_notification_settings_link'
-        ),
-        array('message_no_login')
-      );
       $this->_status->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_status;
@@ -141,10 +160,20 @@ class ACommunitySurferStatusBox extends base_actionbox {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $this->status()->data()->setPluginData(
+      $this->data,
+      array(
+        'caption_login_link', 'caption_registration_link',
+        'caption_edit_link', 'caption_logout_link',
+        'caption_contacts_link', 'caption_contact_requests_link',
+        'caption_contact_own_requests_link', 'caption_messages_link',
+        'caption_notifications_link', 'caption_notification_settings_link'
+      ),
+      array('message_no_login')
+    );
     return $this->status()->getXml();
   }
-
 }

@@ -27,7 +27,7 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityNotificationSettingsPage extends base_content {
+class ACommunityNotificationSettingsPage extends base_content implements PapayaPluginCacheable {
 
   /**
    * Use a advanced community parameter group name
@@ -70,10 +70,32 @@ class ACommunityNotificationSettingsPage extends base_content {
   protected $_settings = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->settings()->data()->ressource('surfer', $this, NULL, array('surfer' => array()));
+    return $this->settings()->data()->ressource('surfer', $this, NULL, array('surfer' => array()));
   }
 
   /**
@@ -88,18 +110,10 @@ class ACommunityNotificationSettingsPage extends base_content {
       include_once(dirname(__FILE__).'/../Settings.php');
       $this->_settings = new ACommunityNotificationSettings();
       $this->_settings->parameterGroup($this->paramName);
-      $captionNames = array(
-        'caption_dialog_checkbox_by_message', 'caption_dialog_checkbox_by_email', 'caption_dialog_button'
-      );
-      $messageNames = array(
-        'message_dialog_input_error', 'message_no_login'
-      );
-      $this->_settings->data()->setPluginData($this->data, $captionNames, $messageNames);
       $this->_settings->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_settings;
   }
-
 
   /**
   * Get parsed data
@@ -107,10 +121,16 @@ class ACommunityNotificationSettingsPage extends base_content {
   * @return string $result
   */
   function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $captionNames = array(
+      'caption_dialog_checkbox_by_message', 'caption_dialog_checkbox_by_email', 'caption_dialog_button'
+    );
+    $messageNames = array(
+      'message_dialog_input_error', 'message_no_login'
+    );
+    $this->settings()->data()->setPluginData($this->data, $captionNames, $messageNames);
     return $this->settings()->getXml();
   }
-
 }

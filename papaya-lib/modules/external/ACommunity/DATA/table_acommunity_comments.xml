@@ -10,6 +10,7 @@
     <field name="comment_time" type="integer" size="4" null="no"/>
     <field name="comment_text" type="string" size="65535" null="no"/>
     <field name="comment_votes_score" type="integer" size="4" null="no"/>
+    <field name="comment_last_vote_time" type="integer" size="4" null="no"/>
     <field name="comment_deleted_surfer" type="integer" size="2" null="no"/>
   </fields>
   <keys>
@@ -29,7 +30,10 @@
       <field>comment_ressource_type</field>
     </key>
     <key name="comment_votes_score">
-      <field>comment_ressource_type</field>
+      <field>comment_votes_score</field>
+    </key>
+    <key name="comment_last_vote_time">
+      <field>comment_last_vote_time</field>
     </key>
     <key name="comment_deleted_surfer">
       <field>comment_deleted_surfer</field>

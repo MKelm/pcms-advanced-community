@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community message surfer database record
+ * Advanced community last change database record
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,12 +17,12 @@
  */
 
 /**
- * Advanced community message surfer database record
+ * Advanced community last change database record
  *
  * @package Papaya-Modules
  * @subpackage External-Guestbook
  */
-class ACommunityContentMessageSurfer extends PapayaDatabaseRecord {
+class ACommunityContentLastChange extends PapayaDatabaseRecord {
 
   /**
    * Map field names to more convinient property names
@@ -30,8 +30,8 @@ class ACommunityContentMessageSurfer extends PapayaDatabaseRecord {
    * @var array(string=>string)
    */
   protected $_fields = array(
-	  'surfer_id' => 'surfer_id',
-    'contact_surfer_id' => 'contact_surfer_id'
+    'ressource' => 'change_ressource',
+    'time' => 'change_time'
   );
 
   /**
@@ -39,7 +39,7 @@ class ACommunityContentMessageSurfer extends PapayaDatabaseRecord {
    *
    * @var string
    */
-  protected $_tableName = 'acommunity_message_surfers';
+  protected $_tableName = 'acommunity_last_changes';
 
   /**
   * Create a standard autoincrement key object for the property "id".
@@ -48,7 +48,7 @@ class ACommunityContentMessageSurfer extends PapayaDatabaseRecord {
   */
   protected function _createKey() {
     return new PapayaDatabaseRecordKeyFields(
-      $this, $this->_tableName, array('surfer_id', 'contact_surfer_id')
+      $this, $this->_tableName, array('ressource')
     );
   }
 }

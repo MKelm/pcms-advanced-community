@@ -124,6 +124,12 @@ class ACommunityUiContentData extends PapayaObject {
   protected $_surferGenderTitles = array();
 
   /**
+   * Last cahnge database record
+   * @var object
+   */
+  protected $_lastChange = NULL;
+
+  /**
    * Get surfer data by id depending on some module options
    *
    * @param array|string $surferId one id or multiple ids
@@ -322,14 +328,14 @@ class ACommunityUiContentData extends PapayaObject {
             $parameterId = NULL;
           }
           $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
-          if (!empty($currentSurfer->surfer['surfer_id']) && $currentSurfer->isValid) {
-            $this->ressourceIsActiveSurfer = $parameterId == $currentSurfer->surfer['surfer_id'];
+          if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
+            $this->ressourceIsActiveSurfer = $parameterId == $this->papaya()->surfer->surfer['surfer_id'];
             if ($this->_ressourceNeedsActiveSurfer == FALSE  || empty($parameterId) ||
                 ($this->_ressourceNeedsActiveSurfer == TRUE && $this->ressourceIsActiveSurfer == TRUE)) {
               if (empty($id)) {
-                $id = $currentSurfer->surfer['surfer_id'];
+                $id = $this->papaya()->surfer->surfer['surfer_id'];
                 $this->ressourceParameters($parameterGroup, $parameters);
-                $this->ressourceIsActiveSurfer = $id == $currentSurfer->surfer['surfer_id'];
+                $this->ressourceIsActiveSurfer = $id == $this->papaya()->surfer->surfer['surfer_id'];
               }
             }
           }
@@ -339,7 +345,7 @@ class ACommunityUiContentData extends PapayaObject {
            * Get a image ressource in box modules by parent page module.
            * Needs a callbackGetCurrentImageId method, see ACommunitySurferGalleryPage
            */
-          if ($isBoxModule &&
+          if ($isBoxModule && isset($parameters['img']) &&
               method_exists($module->parentObj->moduleObj, 'callbackGetCurrentImageId')) {
             $id = $module->parentObj->moduleObj->callbackGetCurrentImageId();
             if (!empty($id)) {
@@ -445,4 +451,20 @@ class ACommunityUiContentData extends PapayaObject {
     return $this->_currentSurferId;
   }
 
+  /**
+  * Access to last change database record data
+  *
+  * @param ACommunityContentLastChange $lastChange
+  * @return ACommunityContentLastChange
+  */
+  public function lastChange(ACommunityContentLastChange $lastChange = NULL) {
+    if (isset($lastChange)) {
+      $this->_lastChange = $lastChange;
+    } elseif (is_null($this->_lastChange)) {
+      include_once(dirname(__FILE__).'/../../Content/Last/Change.php');
+      $this->_lastChange = new ACommunityContentLastChange();
+      $this->_lastChange->papaya($this->papaya());
+    }
+    return $this->_lastChange;
+  }
 }

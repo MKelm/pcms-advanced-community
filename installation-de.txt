@@ -26,7 +26,7 @@ papayacms.patches ersetzen sie durch einen der folgenden Dateinamen:
 - release_r38112.patches wenn sie einen 5.5.2 release-Build benutzen
 
 Falls sie den Patchvorgang nicht durchführen können, können sie sich auch eine
-gepatchte Version des papaya CMS herunterladen.
+gepatchte Version des papaya CMS herunterladen:
 "papaya CMS mit Patches" unter http://idx.shrt.ws/dateien.9.de.html?ldb:categ_id=8
 
 ==== Patches im Detail ====
@@ -78,6 +78,11 @@ Das Advanced Community Paket enthält folgende Module:
 - Surferseite (Surfer Page)
 -- Optimierte Ausgabe von Surferdetails des aktiven Surfers oder eines gewählten Surfers
 -- Unterstützt das Kommentarmodul, siehe oben
+
+- Surfereditor (Surfer Editor Page)
+-- eine leicht erweiterte Version von community->content_profile
+-- sie sollten dieses Modul nutzen, da sie sonst kein Caching in Surfer Page und Surfer Status Box
+   nutzen können
 
 - Surferlisten Seite (Surfer List Page)
 -- zeigt Kontakte, gestellte Kontaktanfragen und empfangene Kontaktanfragen an
@@ -153,12 +158,13 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Surfer Gallery Upload Box = box_acommunity.xsl
 - Surfer Gallery Page = page_gallery.xsl
 - Surfer Page = page_acommunity.xsl
+- Surfer Editor Page = page_community.xsl
 - Message Page = page_acommunity.xsl
 - Message Conversations Box = box_acommunity.xsl
 - Notification Settings Page = page_acommunity.xsl
 - Surfer Status Box = box_acommunity.xsl
 - Surfers List Box = box_acommunity.xsl
-- Surfers List Oage = page_acommunity.xsl
+- Surfers List Page = page_acommunity.xsl
 
 == Boxen und Seiten einrichten ==
 
@@ -173,14 +179,15 @@ Modulpakets:
 --- die Anzeige von dynamischen Datengruppen im Eingabeformular wurde optimiert
 - Login-Seite, zum Anmelden
 -- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10.html#N18935
-- "Mixed user data"-Seite, zum Bearbeiten von Benutzerdaten mit aktivem Login
--- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10s12.html
+- Profil-Seite, zum Bearbeiten von Benutzerdaten mit aktivem Login
+-- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10s10.html
 -- Im Advanced Community Paket ist eine verbesserte Version enthalten
---- die Anzeige von dynamischen Datengruppen im Eingabeformular wurde optimiert
+--- die Anzeige von dynamischen Daten/-gruppen im Eingabeformular wurde hinzugefügt
+--- es wurden Beschreibungen für das Feld "Old password" hinzugefügt
+-- die Profilseite benötigt auch eine "Profile Change Confirmations"-Seite
+-- nutzen sie hier das Modul "Surfer Editor Page" das content_profile entspricht
 
-Derzeit fehlen Verlinkungen in Advanced Community Modulen zu diesen Seitentypen.
-Für die Zukunft ist eine "Surfer Status Box" geplant, die Links zur Registrierungs- und Login-Seite
-enthält, bzw. bei aktivem Login einen Link zur Userdata-Seite.
+Diese Seiten können
 
 === Advanced Community Module ==
 
@@ -345,15 +352,11 @@ Löschen eines Surfers folgende Aktionen aus:
 -- im Kommentiererranking werden gelöschte Surfer ignoriert
 - Surferkommentare zum gelöschten Surfer werden komplett gelöscht
 - Surfergallerien werden mitsamt aller Ordner, Bilder und Bildkommentaren gelöscht
+- Mitteilungen des gelöschten Surfers werden gelöscht
 
 === Seitendaten löschen ===
 
-Zuerst müssen sie die Datei papaya-lib/system/base_topic_edit.php bearbeiten. Nehmen sie den Inhalt
-der Datei base_topic_edit_destroy_replacement.php und ersetzen sie die Methode destroy() komplett.
-Der Replacement-Code enthält einen gültigen Action Dispatcher-Aufruf um Seitendaten zu löschen.
-Diese Aktion müssen sie bei jedem papaya CMS Update das sie durchführen wiederholen.
-
-Sie brauchen danach im Action Dispatcher noch eine Gruppe "system" und eine Aktion "onDeletePages".
+Sie brauchen im Action Dispatcher eine Gruppe "system" und eine Aktion "onDeletePages".
 Dann können sie die Observerklasse "ACommunityConnector" der Aktion hinzufügen.
 
 Der Advanced Community Connector führt über den Action Dispatcher beim
@@ -384,7 +387,7 @@ z.B. mit dem "Show user"-Modul der Community kompatibel, dessen Parametergruppe 
 Es gibt noch weitere Page ID-Einstellungen in den Moduloptionen des Connectors:
 - Login Page = Seiten ID der Anmeldeseite, wird in "Surfer Status Box" genutzt
 - Registration Page = Seiten ID der Registrierungsseite, wird in "Surfer Status Box" genutzt
-- Editor Page = Seiten ID des "Mixed user data"-Moduls, wird in "Surfer Status Box" genutzt
+- Editor Page = Seiten ID der Profilseite, wird in "Surfer Status Box" genutzt
 - Contacts Page = Seiten ID eines "Surfer List Page"-Moduls mit einer Ausgabe von Kontakten
 -- wird in "Surfer Status Box" genutzt
 - Messages / Notifications Page = Seiten ID eines "Message Page"-Moduls mit Ausgabe von Mitteilungen
@@ -425,3 +428,157 @@ Es gibt drei Benachrichtigungen die unterstützt werden:
 
 Die Versandeinstellungen dieser Benachrichtigungen kann jeder Surfer auf einer
 "Notification Settings Page" ändern.
+
+== Performance / Caching ==
+
+Sie können die Performance ihrer Communityseite steigern indem sie Seiten und Boxen cachen.
+Die Einstellungen zum Cache finden sie unter Menüpunkt "Einstellungen" -> "Optionen" -> "Cache".
+Die einzelnen Optionen werden hier beschrieben:
+http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch33s02s12.html
+
+Ich empfehle PAPAYA_CACHE_BOXES = on und PAPAYA_CACHE_PAGES = on zu setzten.
+Die Zeiteinstellungen sollten sie je Seite und Box individuell einstellen.
+
+=== Caching Community ===
+
+Das Cachen der Login-, Registrierungs- und Profilseite eignet sich nicht, da die Module Daten
+dynamisch laden und speichern.
+
+=== Caching Advanced Community ===
+
+Bei vielen Modulen kann eine hohe Cachezeit eingestellt sein, da der Cacheinhalt sich automatisch
+bei Veränderung von Daten aktualisiert. Bei einer hohen Benutzeraktivität können die Cachzeiten daher
+real sehr viel niedriger sein als in den Vorschlägen angegeben. Die hohen Cachezeiten eignen sich
+allerdings für Bereiche in denen wenig Aktivität der Benutzer zu verzeichnen ist, wogegen die Anzahl
+von Hits hoch bleibt.
+
+Hier eine Liste mit Vorschlägen für Cachezeiten je Modul:
+
+- Surfer Page
+-- z.B. 604800 Sekunden
+-- die Seite erkennt wann sich ein Surferaufruf ändert
+-- die Seite erkennt wann sich Kontaktdaten zwichen dem aktiven und gewählten Benutzer verändern
+-- die Seite erkennt wann sich Daten des gewählten Benutzers verändern
+--- dieses Feature ist noch nicht vollständig implementiert
+-- sobald ein aktiver Benutzer einen "command" ausführt wird das Caching deaktiviert um Änderungen
+   an Kontaktdaten zu ermöglichen
+
+- Surfer Editor Page
+-- der Cache wird stets deaktiviert da Daten stets dynamisch geladen und gespeichert werden
+
+- Surfer Status Box
+-- z.B. 604800 Sekunden
+-- die Box erkennt wann sich relevante Daten ändern
+--- beachtet aktiven Surfer und die letzte Änderung von Kontaktdaten
+
+- Commenters Ranking Box
+-- z.B. 1800 Sekunden
+-- die Box erkennt nicht wann sich relevante Daten in der Liste ändern, da eine Erfassung aller
+   Veränderungen in Listenelemente für die Cacheberechnung zu aufwendig wäre
+--- sie können durch eine kleinere Cachezeit die Aktualität der Liste steigern, wägen sie ab wie
+    aktuell sie die Box halten möchten
+--- da die Box kein Paging enthält, können keine Inkonsistenzen in der Liste entstehen
+
+- Page Comments Box, Surfer Comments Box und Image Comments Box
+-- z.B. 604800 Sekunden
+-- für angemeldete Surfer ist wird der Cache deaktiviert, da das Formular zum Antworten stets einen
+    gültigen Token braucht
+-- für alle anderen Surfer wird der Cache aktiviert
+--- die Box erkennt wann sich relevante Daten in der Liste ändern
+---- beachtet RessourceTyp (Page/Surfer/Image), RessourceId, Zeitstämpel der letzten Änderung von
+     Kommentaren der aktiven Ressource
+---- beachtet Parameter command, comment_id und alle comment_page-Parameter
+
+-- Comments Ranking Box
+-- z.B. 604800 Sekunden
+-- die Box erkennt wann zuletzt sich Kommentare verändert haben und erneuert den Cache daraufhin
+
+- Surfer Contacts Page (Kontakte und Kontaktanfragen)
+-- z.B. 604800 Sekunden
+-- diese Seite erkennt wann sich relevante Daten ändern
+--- beachtet SurferId und letzte Änderungszeit aller Kontakttypen
+--- beachtet Parameter command, surfer_handle und alle ..._list_page-Parameter
+--- bei Parameter command wird das Caching deaktiviert um Änderungen an Kontaktdaten zu ermöglichen
+
+- Surfer Contacts Box
+-- z.B. 604800 Sekunden
+-- diese Box erkennt wann sich relevante Daten ändern
+--- beachtet SurferId, letzte Änderungszeit von Surferkontakten und Parameter contacts_list_page
+-- sie können in papaya-lib/modules/externale/ACommunity/Surfers/Box.php die Konstante
+    PAPAYA_ACOMMUNITY_CACHE_CONTACTS_BOX_USE_LAST_CHANGE_TIME auf 0 setzten wenn sie dieses Modul
+    ohne Paging nutzen und ihnen die Aktualität der Liste nicht so wichtig ist.
+    Die Option ignoriert die letzte Änderungszeit von Kontakten, somit reagiert der Cache nicht auf
+    Veränderungen der Listenlänge.
+--- in diesem Fall sollten sie die Cachezeit auf z.B. 1800 Sekunden stellen, um eine relativ aktuelle
+    Liste je Surfer zu erhalten
+
+- Surfers Last Action Box
+-- z.B. 604800 Sekunden
+-- diese Box erkennt, wann sich relevante Daten ändern
+--- beachtet letzten Zeitstempel der Surfereigenschaft "lastaction" und Parameter lastaction_list_page
+-- je nach Aktivität der gesamten Community kann die Aktualisierungsrate der Box sehr hoch sein,
+    oder beachten sie den nächsten Punkt um die Aktualisierungsrate generell gering zu halten
+-- sie können in papaya-lib/modules/externale/ACommunity/Surfers/Box.php die Konstante
+    PAPAYA_ACOMMUNITY_CACHE_LAST_ACTIONS_BOX_USE_LAST_TIME auf 0 setzten wenn sie dieses Modul ohne
+    Paging nutzen und ihnen die Aktualität der Liste nicht so wichtig ist. Die Option ignoriert
+    Veränderungen des neusten Eintrags, somit reagiert der Cache nicht auf Veränderungen der gesamten
+    Liste.
+--- in diesem Fall sollten sie die Cachezeit auf z.B. 300 Sekunden stellen, um eine ralativ aktuelle
+    Liste zu erhalten
+
+- Surfers Registrations Box
+-- z.B. 604800 Sekunden
+-- diese Box erkennt, wann sich relevante Daten ändern
+--- beachtet letzten Zeitstempel der Surfereigenschaft "registration" und Parameter registration_list_page
+-- je nach Beliebtheit der gesamten Community kann die Aktualisierungsrate der Box hoch sein,
+    oder beachten sie den nächsten Punkt um die Aktualisierungsrate generell gering zu halten
+-- sie können in papaya-lib/modules/externale/ACommunity/Surfers/Box.php die Konstante
+    PAPAYA_ACOMMUNITY_CACHE_REGISTRATIONS_BOX_USE_LAST_TIME auf 0 setzten wenn sie dieses Modul ohne
+    Paging nutzen und ihnen die Aktualität der Liste nicht so wichtig ist. Die Option ignoriert
+    Veränderungen des neusten Eintrags, somit reagiert der Cache nicht auf Veränderungen der gesamten
+    Liste.
+--- in diesem Fall sollten sie die Cachezeit auf z.B. 1800 Sekunden stellen, um eine ralativ aktuelle
+    Liste zu erhalten
+
+- Surfer Gallery Page
+-- z.B. 604800 Sekunden
+-- das Caching beachtet Änderungen relvanter Daten
+--- beachtet wird die Surferauswahl, die Ordnerauswahl, der Zeitstempel der letzten Bildänderung
+    in einem Ordner, sowie die Parameter idx, img und mode
+
+- Surfer Gallery Folders Box
+-- z.B. 604800 Sekunden
+-- der Cache wird deaktiviert, wenn ein Benutzer angemeldet ist und das Formular zum
+   "Ordner hinzufügen" aktiviert, da dabei stets ein gültiger Token gebraucht wird
+-- ansonsten ist der Cache aktiv und beachtet Änderungen relevanter Daten
+--- beachtet die letzte Änderungszeit der Ordner und die Parameter command und folder_id
+
+- Surfer Gallery Upload Box
+-- z.B. 604800 Sekunden
+-- der Cache wird deaktiviert, wenn das Uploadformular angezeigt wird, da stets ein gültiger Token
+   gebraucht wird
+-- wenn das Formular nicht angezeigt wird kann ein Cache aktiv sein
+--- der Mehrnutzen zwischen aktivem und inaktivem Cache ist gering, da nur wenige Prozesse vermieden
+    werden
+
+- Surfer Gallery Teaser Box
+-- z.B. 604800 Sekunden
+-- beim Caching wird der gewählte Surfer und die letzte Änderungszeit von Bildern im Basisordner
+   beachtet
+
+- Message Conversations Box
+-- z.B. 604800 Sekunden
+-- diese Box erkennt, wann sich relevante Daten ändern
+--- beachtet aktiven Surfer und letzten Zeitstempel einer Mittelung in der Unterhaltungen-Liste
+
+- Messages Page
+-- z.B. 604800 Sekunden
+-- für Mitteilungen zwischen Benutzern wird der Cache deaktiviert, da das Formular zum Antworten
+   stets einen gültigen Token braucht
+-- für die Benachrichtigungsliste wird der Cache aktiviert
+--- dieser Modus erkennt wann sich relevante Daten ändern
+--- beachtet den aktiven Surfer, den letzten Zeitstempel einer Mitteilung in
+    der Benachrichtigungsliste und Parameter messages_page
+
+- Notification Settings Page
+-- der Cache wird stets deaktiviert, da die Seite stets dynamisch Daten lädt und speichert

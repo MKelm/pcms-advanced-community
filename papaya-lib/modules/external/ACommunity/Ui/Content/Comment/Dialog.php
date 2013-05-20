@@ -121,6 +121,7 @@ class ACommunityUiContentCommentDialog
         'ressource_type' => $ressource['type'],
         'time' => time(),
         'votes_score' => 0,
+        'last_vote_time' => 0,
         'deleted_surfer' => 0
       )
     );
@@ -172,6 +173,17 @@ class ACommunityUiContentCommentDialog
         }
       }
     }
+    // set last change of comment ressource
+    $lastChange = clone $this->data()->lastChange();
+    $lastChange->assign(
+      array(
+        'ressource' => 'comments:'.$ressource['type'].'_'.$ressource['id'], 'time' => time()
+      )
+    );
+    $lastChange->save();
+    $this->data()->lastChange()->assign(array('ressource' => 'comments', 'time' => time()));
+    $this->data()->lastChange()->save();
+
   }
 
   /**

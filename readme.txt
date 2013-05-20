@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 |  Adavanced community modules for papaya CMS 5.5.2 or higher         |
-|  Version: 0.10 (18.05.2013)                                         |
+|  Version: 0.11 (19.05.2013)                                         |
 |  Author: Martin Kelm                                                |
 -----------------------------------------------------------------------
 
@@ -11,7 +11,7 @@ This package contains modules to extend your papaya CMS community.
 -----------
 
 - Some improvements
-- Calender integration, t.b.d.
+- Caching features and cache invalidation
 - Administration
 
 -----------
@@ -31,6 +31,24 @@ in a seperate folder, you have to perform the patch command in each folder.
 -----------
 | Changes |
 -----------
+
+Revision 0.11 (19.05.2013)
+- Added last changes table to detect changes for caching
+-- Added change detection for surfer_gallery_folders and surfer_gallery_images in gallery modules
+--- set last change of folders and images in folders and upload module
+-- Added change detection for all types of contacts in contact modules
+--- set last change of contacts for all types in Surfer/Contact/Changes.php
+-- Added change detection for surfer in surfer page
+- Changed surfers page to surfer contacts page only, use boxes for the deprecated display modes
+- Added constants in surfers boxes to use dynamic cache identifier values or not
+- Splitted surfers box into surfers last action, surfers registration and contacts box to
+  get valid cache ids for each display mode
+- Splitted comments box into page comments box, surfer comments box and image comments box to
+  get valid cache ids for each output type
+- Added cache identifier definitions to modules
+- Added show paging option to surfers page module
+- Added dynamic data categories option to surfer page module
+- Added patches for community/content_profile module
 
 Revision 0.10 (18.05.2013)
 - Added notify-method in connector to support notifications from other module packages

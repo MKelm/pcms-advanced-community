@@ -27,24 +27,25 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityCommentsBox extends base_actionbox {
+class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acc';
+  public $paramName = 'accb';
+
+  /**
+   * Ressource type
+   * @var string
+   */
+  protected $_ressourceType = 'page';
 
   /**
    * Edit fields
    * @var array $editFields
    */
   public $editFields = array(
-    'ressource_type' => array(
-      'Ressource Type', 'isAlpha', TRUE, 'combo',
-      array('page' => 'Page', 'surfer' => 'Surfer', 'image' => 'Image'),
-      NULL, 'page'
-    ),
     'comments_per_page' => array(
       'Comments Per Page', 'isNum', TRUE, 'input', 30, '0 for all comments', 10
     ),
@@ -93,12 +94,59 @@ class ACommunityCommentsBox extends base_actionbox {
   protected $_comments = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
+        $this->papaya()->surfer->surfer['surfer_id'] : NULL;
+      if (!empty($currentSurferId)) {
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+      } else {
+        $ressource = $this->setRessourceData();
+        $referenceParameters = $this->comments()->data()->referenceParameters();
+        $parameterNames = array_merge(
+          array('command', 'comment_id'), array_keys($referenceParameters)
+        );
+        unset($referenceParameters);
+        include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+        $values = new ACommunityCacheIdentifierValues();
+        $definitionValues = array('acommunity_comments_box');
+        if (!empty($ressource)) {
+          $definitionValues[] = $ressource['type'];
+          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = $values->lastChangeTime(
+            'comments:'.$ressource['type'].'_'.$ressource['id']
+          );
+        }
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
+        );
+      }
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Get ressource data to load corresponding comments
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    $this->comments()->data()->ressource(
-      $this->data['ressource_type'],
+    return $this->comments()->data()->ressource(
+      $this->_ressourceType,
       $this,
       array('surfer' => array('user_name', 'user_handle', 'surfer_handle'))
     );
@@ -116,14 +164,6 @@ class ACommunityCommentsBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Comments.php');
       $this->_comments = new ACommunityComments();
       $this->_comments->parameterGroup($this->paramName);
-      $this->_comments->data()->setPluginData(
-        $this->data,
-        array(
-          'caption_dialog_text', 'caption_dialog_button', 'caption_command_reply',
-          'caption_command_vote_up', 'caption_command_vote_down'
-        ),
-        array('message_dialog_input_error')
-      );
       $this->_comments->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_comments;
@@ -135,9 +175,17 @@ class ACommunityCommentsBox extends base_actionbox {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
+    $this->setDefaultData();
     $this->setRessourceData();
+    $this->comments()->data()->setPluginData(
+      $this->data,
+      array(
+        'caption_dialog_text', 'caption_dialog_button', 'caption_command_reply',
+        'caption_command_vote_up', 'caption_command_vote_down'
+      ),
+      array('message_dialog_input_error')
+    );
     return $this->comments()->getXml();
   }
 }

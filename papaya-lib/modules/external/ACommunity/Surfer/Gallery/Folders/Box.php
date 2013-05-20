@@ -27,14 +27,14 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryFoldersBox extends base_actionbox {
-  
+class ACommunitySurferGalleryFoldersBox extends base_actionbox implements PapayaPluginCacheable {
+
   /**
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acg';
-  
+  public $paramName = 'acsg';
+
   /**
    * Edit fields
    * @var array $editFields
@@ -59,40 +59,85 @@ class ACommunitySurferGalleryFoldersBox extends base_actionbox {
     ),
     'Messages',
     'message_dialog_input_error' => array(
-      'Dialog Input Error', 'isNoHTML', TRUE, 'input', 200, '', 
+      'Dialog Input Error', 'isNoHTML', TRUE, 'input', 200, '',
       'Invalid input. Please check the field(s) "%s".'
     ),
     'message_dialog_error_folder_data' => array(
-      'Dialog Error Folder Data', 'isNoHTML', TRUE, 'input', 200, '', 
+      'Dialog Error Folder Data', 'isNoHTML', TRUE, 'input', 200, '',
       'Missing some folder data to proceed.'
     ),
     'message_dialog_error_add_folder' => array(
-      'Dialog Error Add Folder', 'isNoHTML', TRUE, 'input', 200, '', 
+      'Dialog Error Add Folder', 'isNoHTML', TRUE, 'input', 200, '',
       'Could not add folder.'
     )
   );
-  
+
   /**
    * Gallery folders object
    * @var ACommunitySurferGalleryFolders
    */
   protected $_folders = NULL;
-  
+
+  /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefinition = $definition;
+    } elseif (NULL == $this->_cacheDefinition) {
+      $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
+          $this->papaya()->surfer->surfer['surfer_id'] : NULL;
+      $command = $this->folders()->parameters()->get('command', NULL);
+      if (!empty($currentSurferId) && $command == 'add_folder') {
+        $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+      } else {
+        $ressource = $this->setRessourceData();
+        $definitionValues = array('acommunity_surfer_gallery_folders', $currentSurferId);
+        if (!empty($ressource)) {
+          include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $ressource['type'];
+          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = $values->lastChangeTime(
+            'surfer_gallery_folders:surfer_'.$ressource['id']
+          );
+        } else {
+          $definitionValues[] = 'surfer';
+          $definitionValues[] = 'null';
+        }
+        $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters(
+            array('command', 'folder_id'), $this->paramName
+          )
+        );
+      }
+    }
+    return $this->_cacheDefinition;
+  }
+
   /**
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $this->folders()->data()->ressource(
-      'surfer', 
-      $this, 
-      array('surfer' => 'surfer_handle'), 
-      array('surfer' => 'surfer_handle')
+    return $this->folders()->data()->ressource(
+      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_handle')
     );
   }
-  
+
   /**
-  * Get (and, if necessary, initialize) the ACommunitySurferGalleryFolders object 
-  * 
+  * Get (and, if necessary, initialize) the ACommunitySurferGalleryFolders object
+  *
   * @return ACommunitySurferGalleryFolders $folders
   */
   public function folders(ACommunitySurferGalleryFolders $folders = NULL) {
@@ -102,18 +147,6 @@ class ACommunitySurferGalleryFoldersBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Folders.php');
       $this->_folders = new ACommunitySurferGalleryFolders();
       $this->_folders->parameterGroup($this->paramName);
-      $captionNames = array(
-        'caption_base_folder', 'caption_add_folder', 'caption_delete_folder',
-        'caption_dialog_button', 'caption_dialog_folder_name'
-      );
-      $messageNames = array(
-        'message_dialog_input_error',
-        'message_dialog_error_folder_data',
-        'message_dialog_error_add_folder'
-      );
-      $this->_folders->data()->setPluginData(
-        $this->data, $captionNames, $messageNames
-      );
       $this->_folders->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_folders;
@@ -125,10 +158,19 @@ class ACommunitySurferGalleryFoldersBox extends base_actionbox {
    * @return string $result XML
    */
   public function getParsedData() {
-    $this->setDefaultData();
     $this->initializeParams();
     $this->setRessourceData();
+    $this->setDefaultData();
+    $captionNames = array(
+      'caption_base_folder', 'caption_add_folder', 'caption_delete_folder',
+      'caption_dialog_button', 'caption_dialog_folder_name'
+    );
+    $messageNames = array(
+      'message_dialog_input_error',
+      'message_dialog_error_folder_data',
+      'message_dialog_error_add_folder'
+    );
+    $this->folders()->data()->setPluginData($this->data, $captionNames, $messageNames);
     return $this->folders()->getXml();
   }
-  
 }

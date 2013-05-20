@@ -39,9 +39,10 @@ class ACommunityContentComment extends PapayaDatabaseRecord {
     'time' => 'comment_time',
     'text' => 'comment_text',
     'votes_score' => 'comment_votes_score',
+    'last_vote_time' => 'comment_last_vote_time',
     'deleted_surfer' => 'comment_deleted_surfer'
   );
-  
+
   /**
    * Table containing book
    *

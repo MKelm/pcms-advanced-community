@@ -59,6 +59,8 @@ class ACommunitySurferData extends ACommunityUiContentData {
    */
   public $sendMessageLink = NULL;
 
+  protected $_dynamicDataCategories = NULL;
+
   /**
    * Set data by plugin object
    *
@@ -73,6 +75,7 @@ class ACommunitySurferData extends ACommunityUiContentData {
     );
     $this->_surferAvatarSize = (int)$data['avatar_size'];
     $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
+    $this->_dynamicDataCategories = $data['dynamic_data_categories'];
     parent::setPluginData($data, $captionNames, $messageNames);
   }
 
@@ -93,21 +96,23 @@ class ACommunitySurferData extends ACommunityUiContentData {
     if (!empty($details)) {
       $groupIds = $this->owner->communityConnector()->getProfileDataClasses();
       foreach ($groupIds as $groupId) {
-        $groupCaptions = $this->owner->communityConnector()->getProfileDataClassTitles($groupId);
-        if (!empty($groupCaptions[$this->languageId])) {
-          $this->surferDetails[$groupId] = array(
-            'caption' => $groupCaptions[$this->languageId],
-            'details' => array()
-          );
-          $detailNames = $this->owner->communityConnector()->getProfileFieldNames($groupId);
-          foreach ($detailNames as $detailName) {
-            $this->surferDetails[$groupId]['details'][$detailName] = NULL;
-            $detailCaptions = $this->owner->communityConnector()->getProfileFieldTitles($detailName);
-            if (!empty($detailCaptions[$this->languageId])) {
-              $this->surferDetails[$groupId]['details'][$detailName] = array(
-                'caption' => $detailCaptions[$this->languageId],
-                'value' => isset($details[$detailName]) ? $details[$detailName] : NULL
-              );
+        if (in_array($groupId, $this->_dynamicDataCategories)) {
+          $groupCaptions = $this->owner->communityConnector()->getProfileDataClassTitles($groupId);
+          if (!empty($groupCaptions[$this->languageId])) {
+            $this->surferDetails[$groupId] = array(
+              'caption' => $groupCaptions[$this->languageId],
+              'details' => array()
+            );
+            $detailNames = $this->owner->communityConnector()->getProfileFieldNames($groupId);
+            foreach ($detailNames as $detailName) {
+              $this->surferDetails[$groupId]['details'][$detailName] = NULL;
+              $detailCaptions = $this->owner->communityConnector()->getProfileFieldTitles($detailName);
+              if (!empty($detailCaptions[$this->languageId])) {
+                $this->surferDetails[$groupId]['details'][$detailName] = array(
+                  'caption' => $detailCaptions[$this->languageId],
+                  'value' => isset($details[$detailName]) ? $details[$detailName] : NULL
+                );
+              }
             }
           }
         }

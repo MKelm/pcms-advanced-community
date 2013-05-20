@@ -23,7 +23,7 @@
  * @subpackage External-ACommunity
  */
 class ACommunityContentComments extends PapayaDatabaseRecords {
-  
+
   /**
    * Map field names to more convinient property names
    *
@@ -55,7 +55,7 @@ class ACommunityContentComments extends PapayaDatabaseRecords {
    * @var array(string)
    */
   protected $_identifierProperties = array('id');
-  
+
   /**
    * Order by properties
    * @var array
@@ -63,7 +63,7 @@ class ACommunityContentComments extends PapayaDatabaseRecords {
   protected $_orderByProperties = array(
     'time' => PapayaDatabaseInterfaceOrder::DESCENDING
   );
-  
+
   /**
    * Set order by to get ranking of comments
    */
