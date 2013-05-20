@@ -7,6 +7,7 @@
 >
 
   <xsl:import href="./Ui/Content/Dialog.xsl"/>
+  <xsl:import href="./Ui/Content/Surfers/List.xsl"/>
   <xsl:import href="./Ui/Content/Comments/List.xsl"/>
 
   <xsl:template match="acommunity-comments">
@@ -54,6 +55,19 @@
               <a class="surferLogout" href="{active-surfer/logout-link}"><xsl:value-of select="active-surfer/logout-link/@caption" /></a>
             </div>
             <xsl:call-template name="float-fix" />
+            <xsl:if test="active-surfer/contacts-link or active-surfer/contact-requests-link or active-surfer/contact-own-requests-link">
+              <div class="surferContactLinks">
+                <xsl:if test="active-surfer/contacts-link">
+                 <a class="surferContactsLink" href="{active-surfer/contacts-link/text()}"><xsl:value-of select="active-surfer/contacts-link/@caption" /></a>
+                </xsl:if>
+                <xsl:if test="active-surfer/contact-own-requests-link">
+                 <a class="surferContactOwnRequestsLink" href="{active-surfer/contact-own-requests-link/text()}"><xsl:value-of select="active-surfer/contact-own-requests-link/@caption" /></a>
+                </xsl:if>
+                <xsl:if test="active-surfer/contact-requests-link">
+                 <a class="surferContactRequestsLink" href="{active-surfer/contact-requests-link/text()}"><xsl:value-of select="active-surfer/contact-requests-link/@caption" /></a>
+                </xsl:if>
+              </div>
+            </xsl:if>
           </xsl:when>
           <xsl:otherwise>
             <xsl:copy-of select="message[@type = 'no-login']/node()" />
@@ -64,27 +78,9 @@
   </xsl:template>
 
   <xsl:template match="acommunity-surfers-list">
-    <xsl:if test="count(surfer) &gt; 0">
-      <ul class="surfersList">
-        <xsl:for-each select="surfer">
-          <li>
-            <span class="surferAvatar"><a href="{@page-link}"><img src="{@avatar}" alt="" /></a></span>
-            <xsl:text> </xsl:text>
-            <span class="surferDetails">
-            <span class="surferName"><a href="{@page-link}"><xsl:value-of select="@givenname" />
-            <xsl:text> '</xsl:text><xsl:value-of select="@handle" />
-            <xsl:text>' </xsl:text><xsl:value-of select="@surname" /></a></span>
-            <xsl:text> </xsl:text>
-            <span class="surferLastTime"><xsl:value-of select="last-time/@caption" />:
-            <xsl:text> </xsl:text><xsl:call-template name="format-date-time">
-              <xsl:with-param name="dateTime" select="last-time/text()" />
-            </xsl:call-template></span>
-            </span>
-            <xsl:call-template name="float-fix" />
-          </li>
-        </xsl:for-each>
-      </ul>
-    </xsl:if>
+    <xsl:call-template name="acommunity-surfers-list">
+      <xsl:with-param name="content" select="." />
+    </xsl:call-template>
   </xsl:template>
 
   <xsl:template match="acommunity-surfer-gallery-upload">

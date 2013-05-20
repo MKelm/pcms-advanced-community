@@ -2,8 +2,8 @@
  CSS rules for ACommunitySurferPage
 */
 .surferPage .surferAvatar {
-  float: left; 
-  margin-right: 1em; 
+  float: left;
+  margin-right: 1em;
   margin-bottom: 0.8em;
 }
 
@@ -12,16 +12,58 @@
 }
 
 .surferPage .surferGender {
-  float: left; 
+  float: left;
   margin-right: 0.5em;
 }
 
-.surferPage .surferStatus {
+.surferPage .surferStatus,
+.surferPage .surferContact {
   margin-top: 1.2em;
 }
 
 .surferPage .surferDetailsGroup {
-  float: left; 
-  width: 200px; 
+  float: left;
+  width: 200px;
   margin-right: 0.5em;
+}
+
+/*
+ CSS rules for ACommunitySurfersListPage
+*/
+#content .surfersListMessage {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+#content ul.surfersList {
+  list-style-type: none;
+}
+
+#content ul.surfersList li {
+ padding-left: 0 !important;
+ background: none !important;
+}
+
+#content ul.surfersList li .surferAvatar,
+#content ul.surfersList li .surferDetails {
+  display: block;
+  float: left;
+}
+
+#content ul.surfersList li .surferName,
+#content ul.surfersList li .surferLastTime {
+  display: block;
+}
+
+#content ul.surfersList li .surferAvatar {
+  margin-right: 0.5em;
+}
+
+#content ul.surfersList li .surferName {
+  margin-top: 0.7em;
+  font-size: 1.2em;
+}
+
+#content ul.surfersList li .surferCommand {
+  margin-right: 0.7em;
 }

@@ -29,6 +29,12 @@ Das Advanced Community Paket enthält folgende Module:
 -- Optimierte Ausgabe von Surferdetails des aktiven Surfers oder eines gewählten Surfers
 -- Unterstützt das Kommentarmodul, siehe oben
 
+- Surferlisten Seite (Surfer List Page)
+-- zeigt Kontakte, gestellte Kontaktanfragen und empfangene Kontaktanfragen an
+--- enthält Links zum entfernen von Kontakten und/oder aktzeptieren, ablehnen von Anfragen
+--- enthält Links zu den Surferseiten
+-- oder zeigt Surfer nach Aktivität oder Registrierungszeit an und verlinkt auf die Surferseiten
+
 - Surfergallerie (Surfer Gallery Page)
 -- Zeigt eine Thumbnailgallerie für einen gewählten Surfer an
 --- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
@@ -38,9 +44,12 @@ Das Advanced Community Paket enthält folgende Module:
 -- zeigt einen Login / Registrierungslink bei inaktivem Login an
 -- zeigt Benutzeravatar und -name bei aktivem Login an
 --- enthält zudem einen Surferseiten- und Logoutlink
+-- zeigt Anzahl von Kontakten und Kontaktanfragen an
+--- enthält passende Links zur Kontakteseite
 
 - Surferlisten Box (Surfer List Box)
 -- zeigt Surfer nach Aktivität oder Registrierungszeit an und verlinkt auf die Surferseiten
+-- oder zeigt Kontakte eines gewählten oder des aktiven Surfers an
 
 - Surfergallerie Teaser (Surfer Gallery Teaser Box)
 -- Zeigt auf einer Surferseite eine Auswahl von maximal n Thumbnails an
@@ -118,6 +127,7 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Surfer Page = page_acommunity.xsl
 - Surfer Status Box = box_acommunity.xsl
 - Surfers List Box = box_acommunity.xsl
+- Surfers List Oage = page_acommunity.xsl
 
 == Boxen und Seiten einrichten ==
 
@@ -183,6 +193,15 @@ enthält, bzw. bei aktivem Login einen Link zur Userdata-Seite.
 -- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Seite
 
+- Surferlistenseite (Surfer List Page)
+-- Wählen sie den Menüpunkt "Ändern" um eine Seite zu erstellen
+-- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
+-- Danach bennen sie die neue Unterseite eindeutig
+-- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
+-- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
+--- sie brauchen maximal drei Seiten um alle Ausgabemodi in ihrem Angebot zu verlinken
+-- Publizieren sie die Seite
+
 - Surfergallerie (Surfer Gallery Page)
 -- Wählen sie den Menüpunkt "Dateien"
 -- Erstellen sie einen neuen (Unter-)Ordner für Surfergallerien
@@ -214,11 +233,14 @@ enthält, bzw. bei aktivem Login einen Link zur Userdata-Seite.
 
 - Surferstatus Box (Surfers List Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
--- Wählen sie die Boxengruppe "after-content"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie die Boxengruppe "after-content" oder "additional-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennenen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt"
---- Wählen sie die "Ordnung" nach letzter Aktion (Aktivität) oder Registrierungszeit
----- Sie benötigen zwei dieser Boxen um beide Ausgabetypen auf z.B. einer Seite einzuhängen
+--- Wählen sie den "Anzeigemodus"
+---- sie benötigen zwei dieser Boxen um die Ausgabemodi "Surfers by last action time" und
+     "Surfers by registration time" auf z.B. einer Seite einzuhängen
+---- sie benötigen eine weitere Box um den Ausgabemodus "Surfer contacts of current or selected surfer"
+     auf z.B. der Surferseite einzuhängen
 --- ändern sie bei Bedarf weiter Einstellungen
 -- Publizieren sie die Box
 -- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
@@ -285,15 +307,15 @@ Löschen einer Seite folgende Aktionen aus:
 
 == Verlinkungen von Surferseiten ==
 
-Um Surfer in Kommentarboxen und Surfergallerien in Gallerieteaserboxen korrekt zu verlinken
-müssen sie die Moduloptionen des Connectors anpassen. Sie benötigen zuvor eine Seite mit dem
-Modul "Surfer Page" und "Surfer Gallery Page".
+Um Surfer in Kommentarboxen oder Surferlistenboxen und Surfergallerien in Gallerieteaserboxen
+korrekt zu verlinken, müssen sie die Moduloptionen des Connectors anpassen.
+Sie benötigen zuvor eine Seite mit dem Modul "Surfer Page" und "Surfer Gallery Page".
 Moduloptionen ändern:
 - Öffnen sie die Modulübersicht im Menüpunkt "Module"
 - Öffnen sie das Paket "Advanced Community"
 - Wählen sie das Modul "Connector" aus
 - Wählen sie rechts den Punkt "Optionen" aus
-- Setzen sie die Option "Surfer Page" -> "Page ID" und "Surfer Gallery Page" -> "Page ID" korrekt
+- Setzen sie die Option "Page IDs" -> "Surfer Page" und "Page IDs" -> "Surfer Gallery Page" korrekt
 - Danach können sie von Kommentarboxen aus die Surferdetailseite erreichen
 -- Beispiel-URL: infis-page.70.de.html?acs:surfer_handle=infi
 - Danach können sie von Gallerieteaserboxen aus die Surfergallerie erreichen
@@ -302,3 +324,10 @@ Moduloptionen ändern:
 Sie können auch die Parametergruppe der Surferseiten einstellen. Sie brauchen jedoch nur eine andere
 Parametergruppe, wenn sie ein anderes Seitenmodul als "Surfer Page" nutzen. Dieser Ansatz ist
 z.B. mit dem "Show user"-Modul der Community kompatibel, dessen Parametergruppe "bab" lautet.
+
+Es gibt noch weitere Page ID-Einstellungen in den Moduloptionen des Connectors:
+- Login Page = Seiten ID der Anmeldeseite, wird in "Surfer Status Box" genutzt
+- Registration Page = Seiten ID der Registrierungsseite, wird in "Surfer Status Box" genutzt
+- Editor Page = Seiten ID des "Mixed user data"-Moduls, wird in "Surfer Status Box" genutzt
+- Contacts Page = Seiten ID eines "Surfer List Page"-Moduls mit einer Ausgabe von Kontakten
+-- wird in "Surfer Status Box" genutzt

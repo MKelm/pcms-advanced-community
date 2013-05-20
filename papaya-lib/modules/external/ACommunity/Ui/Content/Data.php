@@ -37,6 +37,12 @@ class ACommunityUiContentData extends PapayaObject {
   public $languageId = 0;
 
   /**
+  * Current surfer id
+  * @var string
+  */
+  protected $_currentSurferId = NULL;
+
+  /**
    * A list of captions to be used
    * @var array
    */
@@ -298,6 +304,24 @@ class ACommunityUiContentData extends PapayaObject {
       }
     }
     return $this->_reference;
+  }
+
+  /**
+  * Get/set current surfer id
+  *
+  * @param string $currentSurferId
+  * @return string
+  */
+  public function currentSurferId($currentSurferId = NULL) {
+    if (isset($currentSurferId)) {
+      $this->_currentSurferId = $currentSurferId;
+    } elseif (is_null($this->_currentSurferId)) {
+      $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
+      if ($currentSurfer->isValid && !empty($currentSurfer->surfer['surfer_id'])) {
+        $this->_currentSurferId = $currentSurfer->surfer['surfer_id'];
+      }
+    }
+    return $this->_currentSurferId;
   }
 
 }

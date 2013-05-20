@@ -773,16 +773,16 @@ class surfer_admin extends base_db {
           );
         }
       }
-
-      if ($isMultiples) {
-        // case 1: multiples ids
-        return $result;
-      } else if (count($result) > 0) {
-        // case 2: one id lookup
-        return reset($result);
-      }
     }
-    return '';
+    if ($isMultiples) {
+      // case 1: multiples ids
+      return $result;
+    } elseif (count($result) > 0) {
+      // case 2: one id lookup
+      return reset($result);
+    } else {
+      return '';
+    }
   }
 
   /**
@@ -3541,7 +3541,7 @@ class surfer_admin extends base_db {
     if ($fieldCondition != '') {
       $fieldCondition = " AND ".$fieldCondition;
     }
-    
+
     if ($getClasses = TRUE) {
       $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
       $joinSurferDataClassTitles = sprintf(
@@ -3556,7 +3556,7 @@ class surfer_admin extends base_db {
       $joinSurferDataClassTitles = '';
       $orderBySurferDataClassTitle = '';
     }
-    
+
     $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
                    d.surferdata_values, d.surferdata_check, d.surferdata_class,
                    d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
@@ -3593,7 +3593,7 @@ class surfer_admin extends base_db {
         }
       }
     }
-    
+
     // Create the edit fields
     $dynamicEditFields = array();
     $lastClassTitle = NULL;

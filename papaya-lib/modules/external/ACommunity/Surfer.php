@@ -54,6 +54,46 @@ class ACommunitySurfer extends ACommunityUiContentObject {
   }
 
   /**
+   * Perform commands to change surfer contact
+   */
+  protected function _performCommands() {
+    $command = $this->parameters()->get('command', NULL);
+    $ressource = $this->data()->ressource();
+    if (!empty($ressource['id']) && $this->data()->ressourceIsActiveSurfer == FALSE) {
+      $currentSurferId = $this->data()->currentSurferId();
+      if (!empty($currentSurferId)) {
+        switch ($command) {
+          case 'request_contact':
+            $this->data()->contactChanges()->addContactRequest(
+              $currentSurferId, $ressource['id']
+            );
+            break;
+          case 'remove_contact_request':
+            $this->data()->contactChanges()->deleteContactRequest(
+              $currentSurferId, $ressource['id']
+            );
+            break;
+          case 'accept_contact_request':
+            $this->data()->contactChanges()->acceptContactRequest(
+              $currentSurferId, $ressource['id']
+            );
+            break;
+          case 'decline_contact_request':
+            $this->data()->contactChanges()->declineContactRequest(
+              $currentSurferId, $ressource['id']
+            );
+            break;
+          case 'remove_contact':
+            $this->data()->contactChanges()->deleteContact(
+              $currentSurferId, $ressource['id']
+            );
+            break;
+        }
+      }
+    }
+  }
+
+  /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
   *
@@ -62,6 +102,7 @@ class ACommunitySurfer extends ACommunityUiContentObject {
   public function appendTo(PapayaXmlElement $parent) {
     $page = $parent->appendElement('surfer-page');
     if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
+      $this->_performCommands();
       $this->data()->initialize();
       $details = $page->appendElement('details');
       $baseDetails = $details->appendElement(
@@ -82,6 +123,26 @@ class ACommunitySurfer extends ACommunityUiContentObject {
           $detailsGroup->appendElement(
             'detail', array('name' => $detailName, 'caption' => $detail['caption']),
             PapayaUtilStringXml::escape($detail['value'])
+          );
+        }
+      }
+      if (!empty($this->data()->contact)) {
+        $contactStatus = $this->data()->contact['status'];
+        $contact = $page->appendElement(
+          'contact',
+          array(
+            'status' => $contactStatus,
+            'status-caption' => $this->data()->captions['contact_status_'.$contactStatus],
+          )
+        );
+        foreach ($this->data()->contact['commands'] as $commandName => $commandLink) {
+          $contact->appendElement(
+            'command',
+            array(
+              'name' => $commandName,
+              'caption' => $this->data()->captions['command_'.$commandName]
+            ),
+            PapayaUtilStringXml::escape($commandLink)
           );
         }
       }

@@ -1,27 +1,58 @@
-ul.surfersList {
+.box .surfersListMessage {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.box ul.surfersList {
   list-style-type: none;
 }
 
-ul.surfersList li {
+.box ul.surfersList li {
  padding-left: 0;
 }
 
-ul.surfersList li .surferAvatar,
-ul.surfersList li .surferDetails {
+.box ul.surfersList li .surferAvatar,
+.box ul.surfersList li .surferDetails {
   display: block;
   float: left;
 }
 
-ul.surfersList li .surferName,
-ul.surfersList li .surferLastTime {
+.box ul.surfersList li .surferName,
+.box ul.surfersList li .surferLastTime {
   display: block;
 }
 
-ul.surfersList li .surferAvatar {
+.box ul.surfersList li .surferAvatar {
   margin-right: 0.5em;
 }
 
-ul.surfersList li .surferName {
+.box ul.surfersList li .surferName {
   margin-top: 0.7em;
   font-size: 1.2em;
+}
+
+.box ul.surfersList li .surferCommand {
+  margin-right: 0.7em;
+}
+
+/**
+* box group additional
+*/
+#pageAdditional .box ul.surfersList {
+  margin: 0;
+}
+
+#pageAdditional .box ul.surfersList li {
+  margin: 0;
+}
+
+#pageAdditional .box ul.surfersList li .surferAvatar {
+  margin-right: 1em;
+  margin-bottom: 1em;
+}
+
+#pageAdditional .box ul.surfersList li .surferName {
+  margin-top: 0;
+  font-size: 1em;
+  width: 7.5em;
 }

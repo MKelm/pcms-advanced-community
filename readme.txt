@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 |  Adavanced community modules for papaya CMS 5.5                     |
-|  Version: 0.5 (12.05.2013)                                          |
+|  Version: 0.6 (14.05.2013)                                          |
 |  Author: Martin Kelm                                                |
 -----------------------------------------------------------------------
 
@@ -10,16 +10,22 @@ This package contains modules to extend your papaya CMS community.
 |  Todos  |
 -----------
 
-- Further extensions of surfer status box module
-- Further extensions of surfer page module
-- Surfer contacts, advanced modules to handle surfer contacts
+- Add paging to surfer lists
 - Messages, manage, compose and show messages between surfers
+- Add messages page link to surfer status box module
 - Notifications, notify surfers on events by system-messages or email
 - Administration
 
 -----------
 | Changes |
 -----------
+
+Revision 0.6 (14.05.2013)
+- Added surfer contacts display mode in surfers list box
+- Added surfer contacts statistic and contact page links in surfer status box
+- Added surfers list page with surfer contacts and contact requests display mode
+-- additionally this module supports the last action time and registration time display mode
+- Added surfer contact handling in surfer page
 
 Revision 0.5 (12.05.2013)
 - Added surfers list box

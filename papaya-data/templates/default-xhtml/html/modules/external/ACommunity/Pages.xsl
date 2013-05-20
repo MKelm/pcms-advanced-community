@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml">
 
+  <xsl:import href="./Ui/Content/Surfers/List.xsl"/>
+
   <xsl:template name="page-styles">
     <xsl:call-template name="link-style">
       <xsl:with-param name="file">page_acommunity.css</xsl:with-param>
@@ -13,6 +15,11 @@
       <xsl:when test="$pageContent/@module = 'ACommunitySurferPage'">
         <xsl:call-template name="module-content-acommunity-surfer-page">
           <xsl:with-param name="pageContent" select="$pageContent/surfer-page"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="$pageContent/@module = 'ACommunitySurfersListPage'">
+        <xsl:call-template name="acommunity-surfers-list">
+          <xsl:with-param name="content" select="$pageContent/acommunity-surfers-list"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:otherwise>
@@ -31,6 +38,9 @@
           <xsl:call-template name="module-content-acommunity-surfer-page-base-details">
             <xsl:with-param name="baseDetails" select="$pageContent/details/group[@id = 0]" />
           </xsl:call-template>
+          <xsl:call-template name="module-content-acommunity-surfer-page-contact">
+            <xsl:with-param name="pageContent" select="$pageContent" />
+          </xsl:call-template>
           <xsl:call-template name="float-fix" />
           <xsl:for-each select="$pageContent/details/group[@id != 0]">
             <xsl:call-template name="module-content-acommunity-surfer-page-details">
@@ -44,6 +54,28 @@
         <div class="message"><xsl:value-of select="$pageContent/message[@type = 'no-surfer']" /></div>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <xsl:template name="module-content-acommunity-surfer-page-contact">
+    <xsl:param name="pageContent" />
+
+    <xsl:if test="$pageContent/contact">
+      <xsl:variable name="contact" select="$pageContent/contact" />
+      <div class="surferContact">
+        <xsl:choose>
+          <xsl:when test="$contact/@status = 'none' or $contact/@status = 'own_pending' or $contact/@status = 'direct'">
+            <a href="{$contact/command/text()}" title="{$contact/command/@caption}" ><xsl:value-of select="$contact/@status-caption" /></a>
+          </xsl:when>
+          <xsl:when test="$contact/@status = 'pending'">
+            <xsl:value-of select="$contact/@status-caption" />
+            <xsl:for-each select="$contact/command">
+              <xsl:text> </xsl:text><a href="{text()}"><xsl:value-of select="@caption" /></a>
+            </xsl:for-each>
+          </xsl:when>
+        </xsl:choose>
+      </div>
+
+    </xsl:if>
   </xsl:template>
 
   <xsl:template name="module-content-acommunity-surfer-page-base-details">

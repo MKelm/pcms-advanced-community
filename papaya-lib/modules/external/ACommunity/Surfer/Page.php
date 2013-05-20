@@ -90,6 +90,35 @@ class ACommunitySurferPage extends base_content {
     'caption_surfer_group' => array(
       'Surfer Group', 'isNoHTML', TRUE, 'input', 200, '', 'Group'
     ),
+    'Contact Status Captions',
+    'contact_status_none' => array(
+      'Is no contact', 'isNoHTML', TRUE, 'input', 200, '', 'Request contact'
+    ),
+    'contact_status_direct' => array(
+      'Is contact', 'isNoHTML', TRUE, 'input', 200, '', 'Contact accepted'
+    ),
+    'contact_status_pending' => array(
+      'Is request', 'isNoHTML', TRUE, 'input', 200, '', 'Contact request pending'
+    ),
+    'contact_status_own_pending' => array(
+      'Is own request', 'isNoHTML', TRUE, 'input', 200, '', 'Own contact request pending'
+    ),
+    'Command Captions',
+    'caption_command_request_contact' => array(
+      'Request contact', 'isNoHTML', TRUE, 'input', 200, '', 'Request'
+    ),
+    'caption_command_accept_contact_request' => array(
+      'Accept contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Accept'
+    ),
+    'caption_command_decline_contact_request' => array(
+      'Decline contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Decline'
+    ),
+    'caption_command_remove_contact_request' => array(
+      'Remove contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Remove contact request'
+    ),
+    'caption_command_remove_contact' => array(
+      'Remove contact', 'isNoHTML', TRUE, 'input', 200, '', 'Remove contact'
+    ),
     'Message',
     'message_no_surfer' => array(
       'No Surfer', 'isNoHTML', TRUE, 'input', 200, '', 'No surfer selected.'
@@ -126,7 +155,11 @@ class ACommunitySurferPage extends base_content {
         'caption_surfer_handle', 'caption_surfer_givenname', 'caption_surfer_surname',
         'caption_surfer_email', 'caption_surfer_gender', 'caption_surfer_avatar',
         'caption_surfer_lastlogin', 'caption_surfer_lastaction', 'caption_surfer_registration',
-        'caption_surfer_group'
+        'caption_surfer_group',
+        'contact_status_none', 'contact_status_direct', 'contact_status_pending',
+        'contact_status_own_pending', 'caption_command_request_contact',
+        'caption_command_accept_contact_request', 'caption_command_decline_contact_request',
+        'caption_command_remove_contact_request', 'caption_command_remove_contact'
       );
       $this->_surfer->data()->setPluginData($this->data, $captionNames, array('message_no_surfer'));
       $this->_surfer->data()->languageId = $this->papaya()->request->languageId;

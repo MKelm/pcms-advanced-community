@@ -1,8 +1,6 @@
 <?php
 /**
- * Advanced community surfers list box
- *
- * Offers status information of logged in user and links to certain surfer pages
+ * Advanced community surfer page
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -19,21 +17,21 @@
  */
 
 /**
- * Basic box class
- */
-require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
+* Basic class page module
+*/
+require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
 
 /**
- * Advanced community surfers list box
+ * Advanced community surfer page
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurfersListBox extends base_actionbox {
+class ACommunitySurfersListPage extends base_content {
 
   /**
-   * Parameter prefix name
-   * @var string $paramName
+   * Use a advanced community parameter group name
+   * @var string
    */
   public $paramName = 'acs';
 
@@ -54,24 +52,49 @@ class ACommunitySurfersListBox extends base_actionbox {
     'display_mode' => array(
       'Display Mode', 'isAlpha', TRUE, 'translatedcombo',
        array(
-         'contacts' => 'Surfer contacts of current or selected surfer',
+         'contacts_and_requests' => 'Surfer contacts and contact requests of current surfer',
          'lastaction' => 'Surfers by last action Time',
          'registration' => 'Surfer by registration Time'
-       ), '', 'lastaction'
+       ), '', 'contacts_and_requests'
     ),
     'timeframe' => array(
       'Timeframe in days', 'isNum', TRUE, 'input', 30,
       'Get surfers by last action or registration time in a specified timeframe.', 365
     ),
     'limit' => array(
-      'Limit', 'isNum', TRUE, 'input', 30,'', 5
+      'Limit', 'isNum', TRUE, 'input', 30,
+      "Note: The contacts display mode has three lists for contacts,
+      received contact requests and sent contact requests.",
+      5
     ),
     'Captions',
+    'caption_contacts' => array(
+      'Contacts', 'isNoHTML', TRUE, 'input', 200, '', 'Contacts'
+    ),
+    'caption_own_contact_requests' => array(
+      'Sent contact requests', 'isNoHTML', TRUE, 'input', 200, '', 'Sent contact requests'
+    ),
+    'caption_contact_requests' => array(
+      'Received contact requests', 'isNoHTML', TRUE, 'input', 200, '', 'Received contact requests'
+    ),
     'caption_last_action' => array(
       'Last Action', 'isNoHTML', TRUE, 'input', 200, '', 'Last action'
     ),
     'caption_registration' => array(
       'Registered Since', 'isNoHTML', TRUE, 'input', 200, '', 'Registered sine'
+    ),
+    'Command Captions',
+    'caption_command_accept_contact_request' => array(
+      'Accept contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Accept contact request'
+    ),
+    'caption_command_decline_contact_request' => array(
+      'Decline contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Decline contact request'
+    ),
+    'caption_command_remove_contact_request' => array(
+      'Remove contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Remove contact request'
+    ),
+    'caption_command_remove_contact' => array(
+      'Remove contact', 'isNoHTML', TRUE, 'input', 200, '', 'Remove contact'
     ),
     'Messages',
     'message_empty_list' => array(
@@ -89,9 +112,7 @@ class ACommunitySurfersListBox extends base_actionbox {
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->surfersList()->data()->ressource(
-      'surfer', $this, array('surfer' => array('surfer_handle'))
-    );
+    $this->surfersList()->data()->ressource('surfer', $this);
   }
 
   /**
@@ -109,7 +130,10 @@ class ACommunitySurfersListBox extends base_actionbox {
       $this->_list->data()->setPluginData(
         $this->data,
         array(
-          'caption_last_action', 'caption_registration'
+          'caption_last_action', 'caption_registration',
+          'caption_contacts', 'caption_own_contact_requests', 'caption_contact_requests',
+          'caption_command_accept_contact_request', 'caption_command_decline_contact_request',
+          'caption_command_remove_contact_request', 'caption_command_remove_contact'
         ),
         array('message_empty_list')
       );

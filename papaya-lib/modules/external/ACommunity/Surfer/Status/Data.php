@@ -92,11 +92,46 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
         'avatar' => $this->owner->communityConnector()->getAvatar(
           $ressource['id'], $this->_avatarSize, TRUE, $this->_avatarResizeMode
         ),
-        'page-link' => $this->owner->acommunityConnector()->getSurferPageLink($ressource['id']),
-        'edit-link' => $this->owner->acommunityConnector()->getSurferEditorPageLink($surfer['surfer_handle']),
-        'logout-link' => $logoutLink
+        'page_link' => $this->owner->acommunityConnector()->getSurferPageLink($ressource['id']),
+        'edit_link' => $this->owner->acommunityConnector()->getSurferEditorPageLink($surfer['surfer_handle']),
+        'logout_link' => $logoutLink
       );
       unset($surfer);
+
+      $contactsCount = $this->owner->communityConnector()->getContactNumber($ressource['id']);
+      if ($contactsCount > 0) {
+        $this->captions['contacts_link'] = sprintf(
+          $this->captions['contacts_link'], $contactsCount
+        );
+        $this->surfer['contacts_link'] =
+          $this->owner->acommunityConnector()->getSurferContactsPageLink($ressource['id'], 'contacts');
+      } else {
+        unset($this->captions['contacts_link']);
+      }
+      $requestsReceivedCount = $this->owner->communityConnector()->getContactRequestsReceivedNumber(
+        $ressource['id']
+      );
+      if ($requestsReceivedCount > 0) {
+        $this->captions['contact_requests_link'] = sprintf(
+          $this->captions['contact_requests_link'], $requestsReceivedCount
+        );
+        $this->surfer['contact_requests_link'] =
+          $this->owner->acommunityConnector()->getSurferContactsPageLink($ressource['id'], 'contact_requests');
+      } else {
+        unset($this->captions['contact_requests_link']);
+      }
+      $ownRequestsCount = $this->owner->communityConnector()->getContactRequestsSentNumber(
+        $ressource['id']
+      );
+      if ($ownRequestsCount > 0) {
+        $this->captions['contact_own_requests_link'] = sprintf(
+          $this->captions['contact_own_requests_link'], $ownRequestsCount
+        );
+        $this->surfer['contact_own_requests_link'] =
+          $this->owner->acommunityConnector()->getSurferContactsPageLink($ressource['id'], 'own_contact_requests');
+      } else {
+        unset($this->captions['contact_own_requests_link']);
+      }
     }
 
     $loginLink = $this->owner->acommunityConnector()->getSurferLoginPageLink();

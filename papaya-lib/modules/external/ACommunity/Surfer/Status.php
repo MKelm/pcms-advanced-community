@@ -78,15 +78,33 @@ class ACommunitySurferStatus extends ACommunityUiContentObject {
       );
       $activeSurfer->appendElement(
         'edit-link', array('caption' => $this->data()->captions['edit_link']),
-        PapayaUtilStringXml::escape($this->data()->surfer['edit-link'])
+        PapayaUtilStringXml::escape($this->data()->surfer['edit_link'])
       );
+      if (isset($this->data()->captions['contacts_link'])) {
+        $activeSurfer->appendElement(
+          'contacts-link', array('caption' => $this->data()->captions['contacts_link']),
+          PapayaUtilStringXml::escape($this->data()->surfer['contacts_link'])
+        );
+      }
+      if (isset($this->data()->captions['contact_requests_link'])) {
+        $activeSurfer->appendElement(
+          'contact-requests-link', array('caption' => $this->data()->captions['contact_requests_link']),
+          PapayaUtilStringXml::escape($this->data()->surfer['contact_requests_link'])
+        );
+      }
+      if (isset($this->data()->captions['contact_own_requests_link'])) {
+        $activeSurfer->appendElement(
+          'contact-own-requests-link', array('caption' => $this->data()->captions['contact_own_requests_link']),
+          PapayaUtilStringXml::escape($this->data()->surfer['contact_own_requests_link'])
+        );
+      }
       $activeSurfer->appendElement(
         'page-link', array('caption' => ''),
-        PapayaUtilStringXml::escape($this->data()->surfer['page-link'])
+        PapayaUtilStringXml::escape($this->data()->surfer['page_link'])
       );
       $activeSurfer->appendElement(
         'logout-link', array('caption' => $this->data()->captions['logout_link']),
-        PapayaUtilStringXml::escape($this->data()->surfer['logout-link'])
+        PapayaUtilStringXml::escape($this->data()->surfer['logout_link'])
       );
     }
   }

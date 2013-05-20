@@ -28,34 +28,52 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
  * @subpackage External-ACommunity
  */
 class ACommunitySurferData extends ACommunityUiContentData {
-  
+
   /**
    * Gender titles
    * @var array
    */
   protected $_genderTitles = array();
-  
+
   /**
    * Surfer base details
    * @var array
    */
   public $surferBaseDetails = array();
-  
+
+  /**
+   * Further surfer details by data classes/groups
+   * @var array
+   */
+  public $surferDetails = array();
+
   /**
    * Avatar size
    * @var integer
    */
   protected $_avatarSize = 0;
-  
+
   /**
    * Avatar resize mode
    * @var string
    */
   protected $_avatarResizeMode = 'mincrop';
-  
+
+  /**
+   * Current contact status with status value, commands and command links
+   * @var array
+   */
+  public $contact = array();
+
+  /**
+   * Perform changes to contact data
+   * @var ACommunitySurferContactChanges
+   */
+  protected $_contactChanges = NULL;
+
   /**
    * Set data by plugin object
-   * 
+   *
    * @param array $data
    * @param array $captionNames
    * @param array $messageNames
@@ -69,14 +87,14 @@ class ACommunitySurferData extends ACommunityUiContentData {
     $this->_avatarResizeMode = $data['avatar_resize_mode'];
     parent::setPluginData($data, $captionNames, $messageNames);
   }
-  
+
   /**
    * Intitialize surfer data
    */
   public function initialize() {
     $ressource = $this->ressource();
     $surferDetails = $this->owner->communityConnector()->loadSurfer($ressource['id']);
-    
+
     $this->surferBaseDetails = array(
       'handle' => $surferDetails['surfer_handle'],
       'givenname' => $surferDetails['surfer_givenname'],
@@ -92,7 +110,7 @@ class ACommunitySurferData extends ACommunityUiContentData {
       'group' => $surferDetails['surfergroup_title']
     );
     unset($surferDetails);
-    
+
     $this->surferDetails = array();
     $details = $this->owner->communityConnector()->getProfileData($ressource['id']);
     if (!empty($details)) {
@@ -118,7 +136,63 @@ class ACommunitySurferData extends ACommunityUiContentData {
         }
       }
     }
-    
+
+    if ($this->ressourceIsActiveSurfer == FALSE) {
+      $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
+      $currentSurferId = $currentSurfer->surfer['surfer_id'];
+      unset($currentSurfer);
+      if (!empty($currentSurferId)) {
+        $contactStatus = 'none';
+        $commandNames = array('request_contact');
+        $isContact = $this->owner->communityConnector()->isContact(
+          $currentSurferId, $ressource['id'], FALSE, TRUE
+        );
+        switch ($isContact) {
+          case SURFERCONTACT_PENDING + SURFERCONTACT_OWNREQUEST:
+            $contactStatus = 'own_pending';
+            $commandNames = array('remove_contact_request');
+            break;
+          case SURFERCONTACT_PENDING:
+            $contactStatus = 'pending';
+            $commandNames = array('accept_contact_request', 'decline_contact_request');
+            break;
+          case SURFERCONTACT_DIRECT:
+            $contactStatus = 'direct';
+            $commandNames = array('remove_contact');
+            break;
+          default:
+        }
+
+        $this->contact = array(
+          'status' => $contactStatus,
+          'commands' => array()
+        );
+        foreach ($commandNames as $commandName) {
+          $reference = clone $this->reference();
+          $reference->setParameters(
+            array('command' => $commandName), $this->owner->parameterGroup()
+          );
+          $this->contact['commands'][$commandName] = $reference->getRelative();
+        }
+      }
+    }
+  }
+
+  /**
+  * Perform changes to contact data
+  *
+  * @param ACommunitySurferContactChanges $changes
+  * @return ACommunitySurferContactChanges
+  */
+  public function contactChanges(ACommunitySurferContactChanges $changes = NULL) {
+    if (isset($changes)) {
+      $this->_changes = $changes;
+    } elseif (is_null($this->_changes)) {
+      include_once(dirname(__FILE__).'/Contact/Changes.php');
+      $this->_changes = new ACommunitySurferContactChanges();
+      $this->_changes->papaya($this->papaya());
+    }
+    return $this->_changes;
   }
 
 }

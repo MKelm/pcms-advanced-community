@@ -50,6 +50,9 @@ class ACommunityConnector extends base_connector {
     'surfer_page_id' => array(
       'Surfer', 'isNum', TRUE, 'pageid', 30, NULL, NULL
     ),
+    'surfer_contacts_page_id' => array(
+      'Surfer Contacts', 'isNum', TRUE, 'pageid', 30, '', NULL
+    ),
     'surfer_gallery_page_id' => array(
       'Surfer Gallery', 'isNum', TRUE, 'pageid', 30, NULL, NULL
     ),
@@ -173,6 +176,27 @@ class ACommunityConnector extends base_connector {
       return base_object::getWebLink(
         $pageId, NULL, NULL, array('surfer_handle' => $handle), $parameterGroup, $handle.'s-page'
       );
+    }
+    return NULL;
+  }
+
+  /**
+   * Get link to surfer contacts page by surfer id
+   *
+   * @var string $surferId
+   * @return string|NULL
+   */
+  public function getSurferContactsPageLink($surferId, $anchor = '') {
+    $handle = $this->communityConnector()->getHandleById($surferId);
+    if (!empty($handle)) {
+      $pageId = papaya_module_options::readOption($this->_guid, 'surfer_contacts_page_id', NULL);
+      $result = base_object::getWebLink(
+        $pageId, NULL, NULL, NULL, NULL, $handle.'s-contacts'
+      );
+      if (!empty($result) && !empty($anchor)) {
+        return $result.'#'.$anchor;
+      }
+      return $result;
     }
     return NULL;
   }

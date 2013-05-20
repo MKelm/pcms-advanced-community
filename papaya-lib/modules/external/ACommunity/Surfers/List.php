@@ -54,6 +54,34 @@ class ACommunitySurfersList extends ACommunityUiContentObject {
   }
 
   /**
+   * Perform commands to change surfer contact
+   */
+  protected function _performCommands() {
+    $this->data()->ressource();
+    $surferId = $this->communityConnector()->getIdByHandle(
+      $this->parameters()->get('surfer_handle', NULL)
+    );
+    if ($this->data()->ressourceIsActiveSurfer == TRUE && !empty($surferId)) {
+      $currentSurferId = $this->data()->currentSurferId();
+      $command = $this->parameters()->get('command', NULL);
+      switch ($command) {
+        case 'remove_contact_request':
+          $this->data()->contactChanges()->deleteContactRequest($currentSurferId, $surferId);
+          break;
+        case 'accept_contact_request':
+          $this->data()->contactChanges()->acceptContactRequest($currentSurferId, $surferId);
+          break;
+        case 'decline_contact_request':
+          $this->data()->contactChanges()->declineContactRequest($currentSurferId, $surferId);
+          break;
+        case 'remove_contact':
+          $this->data()->contactChanges()->deleteContact($currentSurferId, $surferId);
+          break;
+      }
+    }
+  }
+
+  /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
   *
@@ -61,33 +89,83 @@ class ACommunitySurfersList extends ACommunityUiContentObject {
   */
   public function appendTo(PapayaXmlElement $parent) {
     $listElement = $parent->appendElement('acommunity-surfers-list');
-    $this->data()->initialize();
-    foreach ($this->data()->surfers as $surfer) {
-      $surferElement = $listElement->appendElement(
-        'surfer',array(
-          'handle' => $surfer['handle'],
-          'givenname' => $surfer['givenname'],
-          'surname' => $surfer['surname'],
-          'avatar' => PapayaUtilStringXml::escapeAttribute($surfer['avatar']),
-          'page-link' => PapayaUtilStringXml::escapeAttribute($surfer['page_link'])
-        )
-      );
-      if (!empty($surfer['last_action'])) {
-        $surferElement->appendElement(
-          'last-time',
-          array('caption' => $this->data()->captions['last_action']),
-          $surfer['last_action']
+    if ($this->data()->displayMode == 'contacts_and_requests') {
+      $this->_performCommands();
+      $this->data()->initialize();
+      foreach ($this->data()->surfers as $groupName => $surfers) {
+        $groupElement = $listElement->appendElement(
+          'group', array('name' => $groupName, 'caption' => $this->data()->captions[$groupName])
+        );
+        if (empty($surfers)) {
+          $groupElement->appendElement(
+            'message',
+            array('type' => 'empty-list'),
+            $this->data()->messages['empty_list']
+          );
+        } else {
+          foreach ($surfers as $surfer) {
+            $this->_appendSurferTo($groupElement, $surfer);
+          }
+        }
+      }
+    } else {
+      $this->data()->initialize();
+      if (empty($this->data()->surfers)) {
+        $listElement->appendElement(
+          'message',
+          array('type' => 'empty-list'),
+          $this->data()->messages['empty_list']
         );
       } else {
+        foreach ($this->data()->surfers as $surfer) {
+          $this->_appendSurferTo($listElement, $surfer);
+        }
+      }
+    }
+  }
+
+  /**
+   * Append surfer data node structure to parent element
+   *
+   * @param PapayaXmlElement $parent
+   * @param array $surfer
+   */
+  protected function _appendSurferTo(papayaXmlElement $parent, $surfer) {
+    $surferElement = $parent->appendElement(
+      'surfer',
+      array(
+        'handle' => $surfer['handle'],
+        'givenname' => $surfer['givenname'],
+        'surname' => $surfer['surname'],
+        'avatar' => PapayaUtilStringXml::escapeAttribute($surfer['avatar']),
+        'page-link' => PapayaUtilStringXml::escapeAttribute($surfer['page_link'])
+      )
+    );
+    if (!empty($surfer['last_action'])) {
+      $surferElement->appendElement(
+        'last-time',
+        array('caption' => $this->data()->captions['last_action']),
+        $surfer['last_action']
+      );
+    } elseif (!empty($surfer['last_action'])) {
+      $surferElement->appendElement(
+        'last-time',
+        array('caption' => $this->data()->captions['registration']),
+        $surfer['registration']
+      );
+    }
+    if (!empty($surfer['commands'])) {
+      foreach ($surfer['commands'] as $commandName => $commandLink) {
         $surferElement->appendElement(
-          'last-time',
-          array('caption' => $this->data()->captions['registration']),
-          $surfer['registration']
+          'command',
+          array(
+            'name' => $commandName,
+            'caption' => $this->data()->captions['command_'.$commandName]
+          ),
+          PapayaUtilStringXml::escape($commandLink)
         );
       }
-
     }
-
   }
 
 }

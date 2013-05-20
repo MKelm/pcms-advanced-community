@@ -52,7 +52,12 @@
             guid="f8a474b038784358bc7169a71e396225"
             name="Surfer Page"
             class="ACommunitySurferPage"
-            file="Surfer/Page.php">Surfer page to show profile data and related links</module>
+            file="Surfer/Page.php">Shows surfer's base data, dynamic data and links to modify contact status</module>
+    <module type="page"
+            guid="4acf2b522199438f95cab490e8b400b1"
+            name="Surfer List Page"
+            class="ACommunitySurfersListPage"
+            file="Surfers/List/Page.php">Shows surfer's contacts or a list of surfers by registration or last action time</module>
     <module type="connector"
             guid="0badeb14ea2d41d5bcfd289e9d190534"
             name="Connector"

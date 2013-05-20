@@ -11,3 +11,7 @@
   float: left;
   margin-right: 0.7em;
 }
+
+.surferStatus .surferContactLinks a {
+  display: block;
+}
