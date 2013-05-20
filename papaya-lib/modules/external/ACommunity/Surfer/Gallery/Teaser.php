@@ -19,7 +19,7 @@
 /**
  * Base ui content object
  */
-require_once(dirname(__FILE__).'/../../Ui/Content/Object.php');
+require_once(dirname(__FILE__).'/../../Ui/Content.php');
 
 /**
  * Advanced community surfer gallery teaser
@@ -27,14 +27,14 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Object.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryTeaser extends ACommunityUiContentObject {
-  
+class ACommunitySurferGalleryTeaser extends ACommunityUiContent {
+
   /**
    * Surfer gallery folders data
    * @var ACommunitySurferGalleryTeaserData
    */
   protected $_data = NULL;
-  
+
   /**
    * Get/set surfer gallery teaser data
    *
@@ -52,7 +52,7 @@ class ACommunitySurferGalleryTeaser extends ACommunityUiContentObject {
     }
     return $this->_data;
   }
-  
+
   /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
@@ -73,7 +73,7 @@ class ACommunitySurferGalleryTeaser extends ACommunityUiContentObject {
             include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
             $thumbnail = new base_thumbnail;
             $images[] = 'media.thumb.'.$thumbnail->getThumbnail(
-              $file['file_id'], NULL, $this->data()->thumbnailSize, $this->data()->thumbnailSize, 
+              $file['file_id'], NULL, $this->data()->thumbnailSize, $this->data()->thumbnailSize,
               $this->data()->thumbnailResizeMode
             );
           }
@@ -81,7 +81,7 @@ class ACommunitySurferGalleryTeaser extends ACommunityUiContentObject {
       }
       if (empty($images) && $this->data()->ressourceIsActiveSurfer) {
         $galleryTeaser->appendElement(
-          'add-new-images-link', 
+          'add-new-images-link',
           array('href' => $this->acommunityConnector()->getSurferGalleryPageLink($ressource['id'])),
           $this->data()->captions['add_new_images_link']
         );

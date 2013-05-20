@@ -79,7 +79,15 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
         'avatar' => $surfer['avatar'],
         'page_link' => $surfer['page_link'],
         'edit_link' => $this->owner->acommunityConnector()->getSurferEditorPageLink($ressource['id']),
-        'messages_link' => $this->owner->acommunityConnector()->getMessagesPageLink($ressource['id'], TRUE),
+        'messages_link' => $this->owner->acommunityConnector()->getMessagesPageLink(
+          $ressource['id'], 'overview'
+        ),
+        'notifications_link' => $this->owner->acommunityConnector()->getMessagesPageLink(
+          $ressource['id'], 'notifications'
+        ),
+        'notification_settings_link' => $this->owner->acommunityConnector()->getNotificationSettingsPageLink(
+          $ressource['id']
+        ),
         'logout_link' => $logoutLink
       );
       unset($surfer);

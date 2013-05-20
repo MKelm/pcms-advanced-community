@@ -40,10 +40,15 @@ Das Advanced Community Paket enthält folgende Module:
 --- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
 -- Unterstützt das Kommentarmodul, siehe oben
 
-- Mitteilungen (Messages Page)
+- Mitteilungen / Benachrichtigungen (Messages Page)
 -- Zeigt eine Liste mit Mitteilungen zwischen Surfer an sofern eine Unterhaltung gewählt wurde
 --- zum Navigieren zwischen Unterhaltungen wir eine "Message Conversation Box" benötigt
--- Zeigt einen Dialog zum schreiben von Mitteilungen an
+--- zeigt einen Dialog zum Antworten an
+-- oder zeigt eine Liste von (System-)Benachrichtigungen an
+
+- Benachrichtigungseinstellungen (Notification Settings Page)
+-- Zeigt eine Liste von Einstellungen zu allen verfügbaren Benachrichtigungen an
+--- erlaubt die Wahl des Versands als Mitteilung und/oder E-Mail
 
 - Unterhaltungen Box (Message Conversations Box)
 -- Zeigt eine Liste mit Surfern an zu denen Mitteilungen existieren
@@ -137,6 +142,7 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Surfer Page = page_acommunity.xsl
 - Message Page = page_acommunity.xsl
 - Message Conversations Box = box_acommunity.xsl
+- Notification Settings Page = page_acommunity.xsl
 - Surfer Status Box = box_acommunity.xsl
 - Surfers List Box = box_acommunity.xsl
 - Surfers List Oage = page_acommunity.xsl
@@ -214,7 +220,15 @@ enthält, bzw. bei aktivem Login einen Link zur Userdata-Seite.
 --- sie brauchen maximal drei Seiten um alle Ausgabemodi in ihrem Angebot zu verlinken
 -- Publizieren sie die Seite
 
-- Mitteilungen (Messages Page)
+- Mitteilungen / Benachrichtigungen (Messages Page)
+-- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
+-- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
+-- Danach bennen sie die neue Unterseite eindeutig
+-- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
+-- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Seite
+
+- Benachrichtigungseinstellungen (Notification Settings Page)
 -- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
 -- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
 -- Danach bennen sie die neue Unterseite eindeutig
@@ -360,8 +374,11 @@ Es gibt noch weitere Page ID-Einstellungen in den Moduloptionen des Connectors:
 - Editor Page = Seiten ID des "Mixed user data"-Moduls, wird in "Surfer Status Box" genutzt
 - Contacts Page = Seiten ID eines "Surfer List Page"-Moduls mit einer Ausgabe von Kontakten
 -- wird in "Surfer Status Box" genutzt
-- Messages Page = Seiten ID eines "Message Page"-Modules mit Ausgabe von Mitteilungen
--- wird in "Surfer Status Box" genutzt
+- Messages / Notifications Page = Seiten ID eines "Message Page"-Moduls mit Ausgabe von Mitteilungen
+-- wird in "Surfer Status Box" für die Verlinkung "Messages" und "Notifications" genutzt
+-- wird in der "Message Conversations Box" für Verlinkungen genutzt
+- Notification Settings Page = Seiten ID eines "Notification Settings Page"-Moduöls
+-- wird in der "Surfer Status Box" für die Verlinkung "Notification settings" genutzt
 
 == Benachrichtigungen ==
 
@@ -388,8 +405,10 @@ die Einstellungen für Benachrichtigungen (Notifications) ändern:
 - Notify By Message, Benachrichtigungen an (neue) Benutzer ohne Einstellungen mittels Mitteilung ja/nein
 - Notify By E-Mail, Benachrichtigungen an (neue) Benutzer ohne Einstellungen mittels E-Mail ja/nein
 
-Derzeit gibt es noch kein Modul in dem Benutzer ihre Benachrichtigungen Einstellen können.
 Es gibt drei Benachrichtigungen die unterstützt werden:
 - new-surfer-comment, wenn ein fremder Surfer auf einer Surferseite ein Kommentar abgibt
 - new-surfer-image-comment, wenn ein fremder Surfer ein Bild in einer Surfergallerie kommentiert
 - new-contact-request, wenn ein Surfer bei einem anderen Surfer eine Kontaktanfrage stellt
+
+Die Versandeinstellungen dieser Benachrichtigungen kann jeder Surfer auf einer
+"Notification Settings Page" ändern.

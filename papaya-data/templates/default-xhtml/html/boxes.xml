@@ -40,7 +40,7 @@
     <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
     <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
     <file module="ACommunitySurferStatusBox" file="box_acommunity_surfer_status.css" />
-    <file module="ACommunitySurfersListBox" file="box_acommunity_surfers_list.css" />
+    <file module="ACommunitySurfersBox" file="box_acommunity_surfers.css" />
     <file module="ACommunityMessageConversationsBox" file="box_acommunity_message_conversations.css" />
     <file module="ACommunitySurferGalleryTeaserBox" file="box_acommunity_surfer_gallery_teaser.css" />
     <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />

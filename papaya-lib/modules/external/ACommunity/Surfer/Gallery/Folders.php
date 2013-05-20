@@ -19,7 +19,7 @@
 /**
  * Base ui content object
  */
-require_once(dirname(__FILE__).'/../../Ui/Content/Object.php');
+require_once(dirname(__FILE__).'/../../Ui/Content.php');
 
 /**
  * Advanced community surfer gallery folders
@@ -27,14 +27,14 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Object.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
-    
+class ACommunitySurferGalleryFolders extends ACommunityUiContent {
+
   /**
    * Surfer gallery folders data
    * @var ACommunitySurferGalleryFoldersData
    */
   protected $_data = NULL;
-  
+
   /**
    * Ui content surfer gallery folder dialog
    * @var ACommunityUiContentSurferGalleryFolderDialog
@@ -46,7 +46,7 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
    * @var ACommunitySurferGalleryDeletion
    */
   protected $_galleryDeletion = NULL;
-  
+
   /**
    * Get/set surfer gallery folders data
    *
@@ -64,7 +64,7 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
     }
     return $this->_data;
   }
-  
+
   /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
@@ -75,7 +75,7 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
     $galleryFolders = $parent->appendElement('acommunity-surfer-gallery-folders');
     $ressource = $this->data()->ressource();
     if (!empty($ressource)) {
-      
+
       if ($this->data()->ressourceIsActiveSurfer) {
         $command = $this->parameters()->get('command', NULL);
         switch ($command) {
@@ -96,21 +96,21 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
             break;
         }
       }
-        
+
       $this->data()->loadFolders();
       $folders = $galleryFolders->appendElement('folders');
       foreach ($this->data()->folders as $id => $folder) {
         $folders->appendElement(
-          'folder', 
+          'folder',
           array(
             'id' => $id,
-            'name' => $folder['name'], 
+            'name' => $folder['name'],
             'href' => PapayaUtilStringXml::escapeAttribute($folder['href']),
             'selected' => $folder['selected']
           )
         );
       }
-      
+
       if ($this->data()->ressourceIsActiveSurfer) {
         $this->data()->loadCommandLinks();
         $commandLinks = $galleryFolders->appendElement('command-links');
@@ -119,14 +119,14 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
           if (is_array($link['href'])) {
             foreach ($link['href'] as $folderId => $linkHref) {
               $commandLinks->appendElement(
-                'command-link', 
+                'command-link',
                 array('name' => $command, 'caption' => $link['caption'], 'folder_id' => $folderId),
                 PapayaUtilStringXml::escape($linkHref)
               );
             }
           } else {
             $commandLinks->appendElement(
-              'command-link', 
+              'command-link',
               array('name' => $command, 'caption' => $link['caption']),
               PapayaUtilStringXml::escape($link['href'])
             );
@@ -135,7 +135,7 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
       }
     }
   }
-  
+
   /**
   * Access to the ui content surfer gallery folder dialog control
   *
@@ -172,5 +172,5 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
     }
     return $this->_galleryDeletion;
   }
-  
+
 }

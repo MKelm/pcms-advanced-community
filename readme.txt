@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 |  Adavanced community modules for papaya CMS 5.5                     |
-|  Version: 0.8 (16.05.2013)                                          |
+|  Version: 0.9 (17.05.2013)                                          |
 |  Author: Martin Kelm                                                |
 -----------------------------------------------------------------------
 
@@ -10,12 +10,21 @@ This package contains modules to extend your papaya CMS community.
 |  Todos  |
 -----------
 
-- Notification settings page
+- Some improvements
+- Calender integration, t.b.d.
 - Administration
 
 -----------
 | Changes |
 -----------
+
+Revision 0.9 (17.05.2013)
+- Added links to notifications and notification settings in surfer status box
+- Added notifications view in messages page
+- Added notification settings page
+- Fixed some notice errors in surfer page and commenters ranking box
+- Change, filter all content ressource parameters on empty array in filter parameter
+- Moved and renamed some files to get "Surfers List" to "Surfers"
 
 Revision 0.8 (16.05.2013)
 - Added notification handler to notify surfers by system message or email

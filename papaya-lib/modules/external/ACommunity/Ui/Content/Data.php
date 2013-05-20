@@ -184,7 +184,7 @@ class ACommunityUiContentData extends PapayaObject {
             array(
               'gender' => isset($this->_surferGenderTitles[$details[$loadId]['surfer_gender']]) ?
                 $this->_surferGenderTitles[$details[$loadId]['surfer_gender']] : $details[$loadId]['surfer_gender'],
-              'email' => $details['surfer_email'],
+              'email' => $details[$loadId]['surfer_email'],
               'lastlogin' => date('Y-m-d H:i:s', $details[$loadId]['surfer_lastlogin']),
               'lastaction' => date('Y-m-d H:i:s', $details[$loadId]['surfer_lastaction']),
               'registration' => date('Y-m-d H:i:s', $details[$loadId]['surfer_registration']),
@@ -252,9 +252,9 @@ class ACommunityUiContentData extends PapayaObject {
   public function ressource(
           $type = NULL,
           $module = NULL,
-          $parameterNames = array(),
-          $filterParameterNames = array(),
-          $stopParameterNames = array()
+          $parameterNames = NULL,
+          $filterParameterNames = NULL,
+          $stopParameterNames = NULL
          ) {
     if ($this->_ressource === NULL && isset($type)) {
       $isBoxModule = is_a($module, 'base_actionbox');
@@ -292,11 +292,11 @@ class ACommunityUiContentData extends PapayaObject {
           }
         }
         // filter parameters to use in reference later
-        $filterParameterNames = isset($filterParameterNames[$type]) ? $filterParameterNames[$type] : array();
-        if (!empty($filterParameterNames) && !is_array($filterParameterNames)) {
+        $filterParameterNames = isset($filterParameterNames[$type]) ? $filterParameterNames[$type] : NULL;
+        if (isset($filterParameterNames) && !is_array($filterParameterNames)) {
           $filterParameterNames = array($filterParameterNames);
         }
-        if (!empty($filterParameterNames)) {
+        if (isset($filterParameterNames)) {
           $oldParameters = $parameters;
           $parameters = array();
           foreach ($filterParameterNames as $parameterName) {

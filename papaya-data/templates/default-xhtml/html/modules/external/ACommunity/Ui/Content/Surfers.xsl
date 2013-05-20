@@ -6,43 +6,43 @@
   exclude-result-prefixes="#default"
 >
 
-  <xsl:import href="../Paging.xsl"/>
+  <xsl:import href="Paging.xsl"/>
 
-  <xsl:template name="acommunity-surfers-list">
+  <xsl:template name="acommunity-surfers">
     <xsl:param name="content" />
     <xsl:choose>
       <xsl:when test="count($content/group) &gt; 0">
         <xsl:for-each select="$content/group">
           <a name="{@name}"><xsl:text> </xsl:text></a>
-          <div class="surfersListGroup">
+          <div class="surfersGroup">
             <h2><xsl:value-of select="@caption" /></h2>
-            <xsl:call-template name="acommunity-surfers-list-surfer">
+            <xsl:call-template name="acommunity-surfers-surfer">
               <xsl:with-param name="content" select="." />
             </xsl:call-template>
             <xsl:call-template name="acommunity-content-paging">
               <xsl:with-param name="paging" select="paging" />
-              <xsl:with-param name="additionalClass" select="'surfersListPaging'" />
+              <xsl:with-param name="additionalClass" select="'surfersPaging'" />
             </xsl:call-template>
           </div>
         </xsl:for-each>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:call-template name="acommunity-surfers-list-surfer">
+        <xsl:call-template name="acommunity-surfers-surfer">
           <xsl:with-param name="content" select="$content" />
         </xsl:call-template>
         <xsl:call-template name="acommunity-content-paging">
           <xsl:with-param name="paging" select="paging" />
-          <xsl:with-param name="additionalClass" select="'surfersListPaging'" />
+          <xsl:with-param name="additionalClass" select="'surfersPaging'" />
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template name="acommunity-surfers-list-surfer">
+  <xsl:template name="acommunity-surfers-surfer">
     <xsl:param name="content" />
     <xsl:choose>
       <xsl:when test="count($content/surfer) &gt; 0">
-        <ul class="surfersList">
+        <ul class="surfers">
           <xsl:for-each select="$content/surfer">
             <li>
               <span class="surferAvatar"><a href="{@page-link}"><img src="{@avatar}" alt="" /></a></span>
@@ -68,7 +68,7 @@
         </ul>
       </xsl:when>
       <xsl:otherwise>
-        <div class="surfersListMessage message"><xsl:value-of select="$content/message/text()" /></div>
+        <div class="surfersMessage message"><xsl:value-of select="$content/message/text()" /></div>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>

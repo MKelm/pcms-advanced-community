@@ -57,7 +57,10 @@ class ACommunityConnector extends base_connector {
       'Surfer Gallery', 'isNum', TRUE, 'pageid', 30, NULL, NULL
     ),
     'messages_page_id' => array(
-      'Messages', 'isNum', TRUE, 'pageid', 30, '', NULL
+      'Messages / Notifications', 'isNum', TRUE, 'pageid', 30, '', NULL
+    ),
+    'notification_settings_page_id' => array(
+      'Notification Settings', 'isNum', TRUE, 'pageid', 30, '', NULL
     ),
     'Parameter Groups',
     'surfer_page_parameter_group' => array(
@@ -265,15 +268,35 @@ class ACommunityConnector extends base_connector {
   }
 
   /**
-   * Get link to messages page by surfer id
+   * Get link to messages / notifications page by surfer id
    *
-   * @var string $surferId
+   * @param string $surferId
+   * @param string $target surfer (default), overview, or notifications
    * @return string|NULL
    */
-  public function getMessagesPageLink($surferId, $overview = FALSE) {
+  public function getMessagesPageLink($surferId, $target = 'surfer') {
     $parameterNamePostfix = $overview ? 's-messages' : '-messages';
+    if ($target == 'overview') {
+      $parameters = array();
+    } elseif ($target == 'notifications') {
+      $parameters = array('notifications' => 1);
+    } else {
+      $parameters = TRUE;
+    }
     return $this->_getPageLink(
-      'messages_page_id', $surferId, !$overview, 'acm', $parameterNamePostfix
+      'messages_page_id', $surferId, $parameters, 'acm', $parameterNamePostfix
+    );
+  }
+
+  /**
+   * Get link to notification settings page
+   *
+   * @param string $surferId to generate page name
+   * @return string|NULL
+   */
+  public function getNotificationSettingsPageLink($surferId) {
+    return $this->_getPageLink(
+      'notification_settings_page_id', $surferId, FALSE, NULL, 's-notification-settings'
     );
   }
 
@@ -282,14 +305,14 @@ class ACommunityConnector extends base_connector {
    *
    * @param string $optionName by module options
    * @param string $surferId destination surfer
-   * @param boolean $withParameters activate surfer_handle parameter
+   * @param boolean|array $parameters flag to activate surfer_handle parameter or add custom parameters
    * @param string $parameterGroup
    * @param string $pageNamePostfix
    * @param string $anchor
    * @return string|NULL
    */
   protected function _getPageLink(
-              $optionName, $surferId = NULL, $withParameters = FALSE, $parameterGroup = NULL,
+              $optionName, $surferId = NULL, $parameters = FALSE, $parameterGroup = NULL,
               $pageNamePostfix = 'page', $anchor = NULL
             ) {
     if (!empty($optionName)) {
@@ -303,9 +326,13 @@ class ACommunityConnector extends base_connector {
         $proceed = TRUE;
       }
       if ($proceed) {
-        if ($withParameters && !empty($handle)) {
-          $parameters = array('surfer_handle' => $handle);
-        } else {
+        if ($parameters === TRUE) {
+          if (!empty($handle)) {
+            $parameters = array('surfer_handle' => $handle);
+          } else {
+            $parameters = array();
+          }
+        } elseif ($parameters === FALSE) {
           $parameters = array();
         }
         if (!empty($handle)) {

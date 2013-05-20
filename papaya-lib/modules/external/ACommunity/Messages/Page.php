@@ -40,6 +40,12 @@ class ACommunityMessagesPage extends base_content {
   * @var array $editFields
   */
   public $editFields = array(
+    'page_title_messages' => array(
+      'Title Messages',  'isNoHTML', TRUE, 'input', 200, '', 'Messages'
+    ),
+    'page_title_notifications' => array(
+      'Title Notifications', 'isNoHTML', TRUE, 'input', 200, '', 'Notifications'
+    ),
     'avatar_size' => array(
       'Avatar Size', 'isNum', TRUE, 'input', 30, '', 40
     ),
@@ -87,7 +93,10 @@ class ACommunityMessagesPage extends base_content {
    */
   public function setRessourceData() {
     $this->messages()->data()->ressource(
-      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_handle')
+      'surfer',
+      $this,
+      array('surfer' => 'surfer_handle'),
+      array('surfer' => array('surfer_handle', 'notifications'))
     );
   }
 

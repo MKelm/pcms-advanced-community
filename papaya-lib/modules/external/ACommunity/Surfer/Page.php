@@ -148,8 +148,7 @@ class ACommunitySurferPage extends base_content {
       $this->_surfer = new ACommunitySurfer();
       $this->_surfer->parameterGroup($this->paramName);
       $captionNames = array(
-        'caption_base_details',
-        'caption_surfer_handle', 'caption_surfer_givenname', 'caption_surfer_surname',
+        'caption_base_details', 'caption_surfer_name',
         'caption_surfer_email', 'caption_surfer_gender', 'caption_surfer_avatar',
         'caption_surfer_lastlogin', 'caption_surfer_lastaction', 'caption_surfer_registration',
         'caption_surfer_group', 'caption_send_message',

@@ -8,11 +8,11 @@
 
   <xsl:import href="./Ui/Content/Dialog.xsl"/>
   <xsl:import href="./Ui/Content/Paging.xsl"/>
-  <xsl:import href="./Ui/Content/Surfers/List.xsl"/>
-  <xsl:import href="./Ui/Content/Comments/List.xsl"/>
+  <xsl:import href="./Ui/Content/Surfers.xsl"/>
+  <xsl:import href="./Ui/Content/Comments.xsl"/>
 
   <xsl:template match="acommunity-comments">
-    <xsl:call-template name="acommunity-comments-list">
+    <xsl:call-template name="acommunity-comments">
       <xsl:with-param name="commandName" select="command/@name" />
       <xsl:with-param name="commandCommentId" select="command/@comment_id" />
       <xsl:with-param name="comments" select="comments" />
@@ -99,7 +99,9 @@
                 </xsl:if>
               </div>
             </xsl:if>
-            <a class="surferMessages" href="{active-surfer/messages-link}"><xsl:value-of select="active-surfer/messages-link/@caption" /></a>
+            <a class="surferMessagesLink" href="{active-surfer/messages-link}"><xsl:value-of select="active-surfer/messages-link/@caption" /></a>
+            <a class="surferNotificationsLink" href="{active-surfer/notifications-link}"><xsl:value-of select="active-surfer/notifications-link/@caption" /></a>
+            <a class="surferNotificationSettingsLink" href="{active-surfer/notification-settings-link}"><xsl:value-of select="active-surfer/notification-settings-link/@caption" /></a>
           </xsl:when>
           <xsl:otherwise>
             <xsl:copy-of select="message[@type = 'no-login']/node()" />
@@ -109,8 +111,8 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="acommunity-surfers-list">
-    <xsl:call-template name="acommunity-surfers-list">
+  <xsl:template match="acommunity-surfers">
+    <xsl:call-template name="acommunity-surfers">
       <xsl:with-param name="content" select="." />
     </xsl:call-template>
   </xsl:template>

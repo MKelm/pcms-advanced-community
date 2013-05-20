@@ -2,16 +2,17 @@
   float: left;
   margin-right: 1em;
 }
-
 .surferStatus .surferMainLinks {
   margin-top: 0.5em;
 }
-
 .surferStatus .surferMainLinks .surferEdit {
   float: left;
   margin-right: 0.7em;
 }
-
-.surferStatus .surferContactLinks a {
+.surferStatus .surferContactLinks a,
+.surferStatus .surferMessagesLink,
+.surferStatus .surferNotificationsLink,
+.surferStatus .surferNotificationSettingsLink {
   display: block;
 }
+

@@ -19,7 +19,7 @@
 /**
  * Base ui content object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Object.php');
+require_once(dirname(__FILE__).'/../Ui/Content.php');
 
 /**
  * Advanced community  commenters ranking
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Object.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityCommentersRanking extends ACommunityUiContentObject {
+class ACommunityCommentersRanking extends ACommunityUiContent {
 
   /**
    * Comments data

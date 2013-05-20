@@ -19,7 +19,7 @@
 /**
  * Base ui content object
  */
-require_once(dirname(__FILE__).'/Ui/Content/Object.php');
+require_once(dirname(__FILE__).'/Ui/Content.php');
 
 /**
  * Advanced community messages
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/Ui/Content/Object.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityMessages extends ACommunityUiContentObject {
+class ACommunityMessages extends ACommunityUiContent {
 
   /**
    * Comments data
@@ -87,9 +87,20 @@ class ACommunityMessages extends ACommunityUiContentObject {
     $currentSurferId = $this->data()->currentSurferId();
     if ($this->mode == 'messages') {
       $messages = $parent->appendElement('acommunity-messages');
+      $showNotifications = (boolean)$this->parameters()->get('notifications', FALSE);
+      if (isset($this->data()->pageTitles)) {
+        $messages->appendElement(
+          'title',
+          array(),
+          $showNotifications ?
+            $this->data()->pageTitles['notifications'] : $this->data()->pageTitles['messages']
+        );
+      }
       if (!empty($currentSurferId)) {
-        if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE &&
-            $this->data()->ressourceIsActiveSurfer == FALSE) {
+        $ressource = $this->data()->ressource();
+        if ($showNotifications == TRUE) {
+          $this->uiContentMessagesList()->appendTo($messages);
+        } elseif (!empty($ressource) && $this->data()->ressourceIsActiveSurfer == FALSE) {
           $this->uiContentMessageDialog()->appendTo($messages);
           $errorMessage = $this->uiContentMessageDialog()->errorMessage();
           if (!empty($errorMessage)) {

@@ -52,7 +52,7 @@
         <fieldset>
           <xsl:copy-of select="$dialog/input[@type='hidden']" />
           <xsl:for-each select="$dialog/field">
-            <div class="commentDialogField">
+            <div>
               <xsl:attribute name="class">
                 <xsl:value-of select="$className" /><xsl:text>Field</xsl:text>
               </xsl:attribute>
@@ -74,7 +74,18 @@
                     <xsl:attribute name="id"><xsl:value-of select="@id" /></xsl:attribute>
                   </input>
                 </xsl:when>
+                <xsl:when test="select[@type = 'checkboxes']">
+                  <xsl:variable name="name" select="select/@name" />
+                  <xsl:for-each select="select/option">
+                    <input type="checkbox" name="{$name}[]" value="{@value}">
+                      <xsl:if test="@selected = 'selected'">
+                        <xsl:attribute name="checked" select="'checked'" />
+                      </xsl:if>
+                    </input><xsl:text> </xsl:text><xsl:value-of select="text()" />
+                  </xsl:for-each>
+                </xsl:when>
               </xsl:choose>
+              <xsl:call-template name="float-fix" />
             </div>
           </xsl:for-each>
         </fieldset>

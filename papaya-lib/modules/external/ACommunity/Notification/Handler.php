@@ -149,10 +149,11 @@ class ACommunityNotificationHandler extends PapayaObject {
   protected function _sendEmail($surferId, $title, $text) {
     $surfer = $this->communityConnector()->getNameById($surferId);
     $surferEmail = $this->communityConnector()->getMailById($surferId);
-    if (!empty($surfer) && !empty($email)) {
+    if (!empty($surfer) && !empty($surferEmail)) {
       $sender = $this->acommunityConnector()->getNotificationSender();
+      include_once(PAPAYA_INCLUDE_PATH.'system/sys_email.php');
       $email = new email();
-      $email->setSender($sender['name'], $sender['email']);
+      $email->setSender($sender['email'], $sender['name']);
       $email->addAddress($surferEmail, $this->_getSurferName($surfer));
       $email->setSubject($title);
       $email->setBody($text);

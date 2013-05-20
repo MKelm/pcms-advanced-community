@@ -30,8 +30,8 @@ class ACommunityContentNotificationSetting extends PapayaDatabaseRecord {
    * @var array(string=>string)
    */
   protected $_fields = array(
-	  'notification_id' => 'notification_id',
     'surfer_id' => 'surfer_id',
+	  'notification_id' => 'notification_id',
     'by_message' => 'notification_by_message',
     'by_email' => 'notification_by_email'
   );
@@ -42,4 +42,15 @@ class ACommunityContentNotificationSetting extends PapayaDatabaseRecord {
    * @var string
    */
   protected $_tableName = 'acommunity_notification_settings';
+
+  /**
+  * Create a standard autoincrement key object for the property "id".
+  *
+  * @return PapayaDatabaseRecordKeyFields
+  */
+  protected function _createKey() {
+    return new PapayaDatabaseRecordKeyFields(
+      $this, $this->_tableName, array('surfer_id', 'notification_id')
+    );
+  }
 }

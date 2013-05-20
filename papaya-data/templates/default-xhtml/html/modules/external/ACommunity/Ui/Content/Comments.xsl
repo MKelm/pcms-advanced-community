@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml">
 
-  <xsl:import href="../Dialog.xsl"/>
-  <xsl:import href="../Paging.xsl"/>
+  <xsl:import href="Dialog.xsl"/>
+  <xsl:import href="Paging.xsl"/>
 
-  <xsl:template name="acommunity-comments-list">
+  <xsl:template name="acommunity-comments">
     <xsl:param name="commandName" select="'reply'" />
     <xsl:param name="commandCommentId" select="0" />
     <xsl:param name="commentId" select="0" />
@@ -53,7 +53,7 @@
               </div>
               <div class="commentText">
                 <div class="commentTextParagraph"><xsl:value-of select="text" disable-output-escaping="yes" /></div>
-                <xsl:call-template name="acommunity-comments-list-comment-extras">
+                <xsl:call-template name="acommunity-comments-comment-extras">
                   <xsl:with-param name="commandLinks" select="command-links/link" />
                   <xsl:with-param name="anchor" select="$anchor" />
                 </xsl:call-template>
@@ -63,7 +63,7 @@
             </div>
             <xsl:call-template name="float-fix" />
 
-            <xsl:call-template name="acommunity-comments-list">
+            <xsl:call-template name="acommunity-comments">
               <xsl:with-param name="commandName" select="$commandName" />
               <xsl:with-param name="commandCommentId" select="$commandCommentId" />
               <xsl:with-param name="commentId" select="@id" />
@@ -86,7 +86,7 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template name="acommunity-comments-list-comment-extras">
+  <xsl:template name="acommunity-comments-comment-extras">
     <xsl:param name="commandLinks" />
     <xsl:param name="anchor" />
 

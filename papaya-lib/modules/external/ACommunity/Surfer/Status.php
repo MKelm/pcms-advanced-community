@@ -19,7 +19,7 @@
 /**
  * Base ui content object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Object.php');
+require_once(dirname(__FILE__).'/../Ui/Content.php');
 
 /**
  * Advanced community surfer status
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Object.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferStatus extends ACommunityUiContentObject {
+class ACommunitySurferStatus extends ACommunityUiContent {
 
   /**
    * Surfer status data
@@ -92,13 +92,23 @@ class ACommunitySurferStatus extends ACommunityUiContentObject {
       }
       if (isset($this->data()->captions['contact_own_requests_link'])) {
         $activeSurfer->appendElement(
-          'contact-own-requests-link', array('caption' => $this->data()->captions['contact_own_requests_link']),
+          'contact-own-requests-link',
+          array('caption' => $this->data()->captions['contact_own_requests_link']),
           PapayaUtilStringXml::escape($this->data()->surfer['contact_own_requests_link'])
         );
       }
       $activeSurfer->appendElement(
         'messages-link', array('caption' => $this->data()->captions['messages_link']),
         PapayaUtilStringXml::escape($this->data()->surfer['messages_link'])
+      );
+      $activeSurfer->appendElement(
+        'notifications-link', array('caption' => $this->data()->captions['notifications_link']),
+        PapayaUtilStringXml::escape($this->data()->surfer['notifications_link'])
+      );
+      $activeSurfer->appendElement(
+        'notification-settings-link',
+        array('caption' => $this->data()->captions['notification_settings_link']),
+        PapayaUtilStringXml::escape($this->data()->surfer['notification_settings_link'])
       );
       $activeSurfer->appendElement(
         'page-link', array('caption' => ''),

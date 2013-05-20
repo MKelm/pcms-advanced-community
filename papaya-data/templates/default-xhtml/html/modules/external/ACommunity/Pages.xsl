@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml">
 
-  <xsl:import href="./Ui/Content/Surfers/List.xsl"/>
+  <xsl:import href="./Ui/Content/Surfers.xsl"/>
   <xsl:import href="./Ui/Content/Dialog.xsl"/>
   <xsl:import href="./Ui/Content/Paging.xsl"/>
 
@@ -14,6 +14,11 @@
   <xsl:template name="content-area">
     <xsl:param name="pageContent" select="content/topic"/>
     <xsl:choose>
+      <xsl:when test="$pageContent/@module = 'ACommunityNotificationSettingsPage'">
+        <xsl:call-template name="module-content-acommunity-notification-settings-page">
+          <xsl:with-param name="pageContent" select="$pageContent"/>
+        </xsl:call-template>
+      </xsl:when>
       <xsl:when test="$pageContent/@module = 'ACommunityMessagesPage'">
         <xsl:call-template name="module-content-acommunity-messages-page">
           <xsl:with-param name="pageContent" select="$pageContent/acommunity-messages"/>
@@ -24,9 +29,9 @@
           <xsl:with-param name="pageContent" select="$pageContent/surfer-page"/>
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="$pageContent/@module = 'ACommunitySurfersListPage'">
-        <xsl:call-template name="acommunity-surfers-list">
-          <xsl:with-param name="content" select="$pageContent/acommunity-surfers-list"/>
+      <xsl:when test="$pageContent/@module = 'ACommunitySurfersPage'">
+        <xsl:call-template name="acommunity-surfers">
+          <xsl:with-param name="content" select="$pageContent/acommunity-surfers"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:otherwise>
@@ -37,8 +42,35 @@
     </xsl:choose>
   </xsl:template>
 
+  <xsl:template name="module-content-acommunity-notification-settings-page">
+    <xsl:param name="pageContent" />
+    <xsl:if test="$pageContent/title/text() != ''">
+      <h1><xsl:value-of select="$pageContent/title/text()" /></h1>
+    </xsl:if>
+    <xsl:if test="$pageContent/message">
+      <div>
+        <xsl:attribute name="class">
+          <xsl:choose>
+            <xsl:when test="$pageContent/message[@type = 'error']">message error</xsl:when>
+            <xsl:otherwise>message</xsl:otherwise>
+          </xsl:choose>
+        </xsl:attribute>
+        <xsl:value-of select="$pageContent/message/text()" />
+      </div>
+    </xsl:if>
+    <xsl:call-template name="acommunity-content-dialog">
+      <xsl:with-param name="dialog" select="$pageContent/notification-settings/dialog-box" />
+      <xsl:with-param name="dialogMessage" select="$pageContent/notification-settings/dialog-message" />
+      <xsl:with-param name="className" select="'dialogNotficationSettings'" />
+    </xsl:call-template>
+  </xsl:template>
+
   <xsl:template name="module-content-acommunity-messages-page">
     <xsl:param name="pageContent" />
+
+    <xsl:if test="$pageContent/title/text() != ''">
+      <h1><xsl:value-of select="$pageContent/title/text()" /></h1>
+    </xsl:if>
 
     <xsl:call-template name="acommunity-content-dialog">
       <xsl:with-param name="dialog" select="$pageContent/dialog-box" />

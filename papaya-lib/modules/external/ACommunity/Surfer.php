@@ -19,7 +19,7 @@
 /**
  * Base ui content object
  */
-require_once(dirname(__FILE__).'/Ui/Content/Object.php');
+require_once(dirname(__FILE__).'/Ui/Content.php');
 
 /**
  * Advanced community surfer
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/Ui/Content/Object.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurfer extends ACommunityUiContentObject {
+class ACommunitySurfer extends ACommunityUiContent {
 
   /**
    * Comments data
@@ -132,11 +132,14 @@ class ACommunitySurfer extends ACommunityUiContentObject {
         'group', array('id' => 0, 'caption' => $this->data()->captions['base_details'])
       );
       foreach ($this->data()->surferBaseDetails as $name => $value) {
-        $baseDetails->appendElement(
-          'detail',
-          array('name' => $name, 'caption' => $this->data()->captions['surfer_'.$name]),
-          PapayaUtilStringXml::escape($value)
-        );
+        $ignoreDetails = array('id', 'page_link', 'handle', 'givenname', 'surname');
+        if (!in_array($name, $ignoreDetails)) {
+          $baseDetails->appendElement(
+            'detail',
+            array('name' => $name, 'caption' => $this->data()->captions['surfer_'.$name]),
+            PapayaUtilStringXml::escape($value)
+          );
+        }
       }
       foreach ($this->data()->surferDetails as $groupId => $group) {
         $detailsGroup = $details->appendElement(

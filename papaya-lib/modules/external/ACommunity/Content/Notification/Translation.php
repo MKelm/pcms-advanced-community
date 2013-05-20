@@ -31,8 +31,8 @@ class ACommunityContentNotificationTranslation extends PapayaDatabaseRecord {
    */
   protected $_fields = array(
 	  'notification_id' => 'nt.notification_id',
-    'name' => 'n.notification_name',
     'language_id' => 'nt.language_id',
+    'name' => 'n.notification_name',
     'title' => 'nt.notification_title',
     'text' => 'nt.notification_text'
   );
@@ -60,9 +60,6 @@ class ACommunityContentNotificationTranslation extends PapayaDatabaseRecord {
     if ($filter instanceOf PapayaDatabaseConditionElement) {
       $condition = $filter->getSql();
     } else {
-      if (!is_array($filter)) {
-        $filter = array('id' => $filter);
-      }
       $generator = new PapayaDatabaseConditionGenerator($this, $this->mapping());
       $condition = (string)$generator->fromArray($filter);
     }
@@ -77,5 +74,16 @@ class ACommunityContentNotificationTranslation extends PapayaDatabaseRecord {
       $this->getDatabaseAccess()->getTableName($this->_tableNameTranslation)
     );
     return $this->_loadRecord($sql, $parameters);
+  }
+
+  /**
+  * Create a standard autoincrement key object for the property "id".
+  *
+  * @return PapayaDatabaseRecordKeyFields
+  */
+  protected function _createKey() {
+    return new PapayaDatabaseRecordKeyFields(
+      $this, $this->_tableNameTranslation, array('notification_id', 'language_id')
+    );
   }
 }

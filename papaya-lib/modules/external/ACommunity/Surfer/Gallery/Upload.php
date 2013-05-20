@@ -15,11 +15,11 @@
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
- 
+
 /**
  * Base ui content object
  */
-require_once(dirname(__FILE__).'/../../Ui/Content/Object.php');
+require_once(dirname(__FILE__).'/../../Ui/Content.php');
 
 /**
  * Advanced community surfer gallery upload
@@ -27,20 +27,20 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Object.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryUpload extends ACommunityUiContentObject {
-  
+class ACommunitySurferGalleryUpload extends ACommunityUiContent {
+
   /**
    * Surfer gallery upload data
    * @var ACommunitySurferGalleryUploadData
    */
   protected $_data = NULL;
-  
+
   /**
    * Ui content surfer gallery upload dialog
    * @var ACommunityUiContentSurferGalleryUploadDialog
    */
   protected $_uiContentUploadDialog = NULL;
-  
+
   /**
    * Get/set surfer gallery upload data
    *
@@ -58,7 +58,7 @@ class ACommunitySurferGalleryUpload extends ACommunityUiContentObject {
     }
     return $this->_data;
   }
-  
+
   /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
@@ -78,7 +78,7 @@ class ACommunitySurferGalleryUpload extends ACommunityUiContentObject {
       }
     }
   }
-  
+
   /**
   * Access to the ui content surfer gallery upload dialog control
   *
@@ -99,5 +99,5 @@ class ACommunitySurferGalleryUpload extends ACommunityUiContentObject {
     }
     return $this->_uiContentUploadDialog;
   }
-    
+
 }

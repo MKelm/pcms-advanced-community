@@ -23,7 +23,7 @@
  * @subpackage External-ACommunity
  */
 class ACommunityContentCommentersRanking extends PapayaDatabaseRecords {
-  
+
   /**
    * Map field names to more convinient property names
    *
@@ -48,7 +48,7 @@ class ACommunityContentCommentersRanking extends PapayaDatabaseRecords {
    * @var array(string)
    */
   protected $_identifierProperties = array('surfer_id');
-  
+
   /**
    * Order by properties
    * @var array
@@ -56,7 +56,7 @@ class ACommunityContentCommentersRanking extends PapayaDatabaseRecords {
   protected $_orderByProperties = array(
     'comments_amount' => PapayaDatabaseInterfaceOrder::DESCENDING
   );
-  
+
   /**
   * Load pages defined by filter conditions.
   *
@@ -76,5 +76,4 @@ class ACommunityContentCommentersRanking extends PapayaDatabaseRecords {
     );
     return $this->_loadRecords($sql, $parameters, $limit, $offset, 'surfer_id');
   }
-
 }

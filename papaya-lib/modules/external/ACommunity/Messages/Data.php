@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitymessagesData extends ACommunityUiContentData {
+class ACommunityMessagesData extends ACommunityUiContentData {
 
   /**
    * Data to display paging
@@ -85,6 +85,12 @@ class ACommunitymessagesData extends ACommunityUiContentData {
   public $lastMessageMaxLength = NULL;
 
   /**
+   * Page titles for messages and notifications
+   * @var array
+   */
+  public $pageTitles = NULL;
+
+  /**
    * Set data by plugin object
    *
    * @param array $data
@@ -102,6 +108,10 @@ class ACommunitymessagesData extends ACommunityUiContentData {
     $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
     if (isset($data['last_message_max_length'])) {
       $this->lastMessageMaxLength = (int)$data['last_message_max_length'];
+    }
+    if (isset($data['page_title_messages']) && isset($data['page_title_notifications'])) {
+      $this->pageTitles['messages'] = $data['page_title_messages'];
+      $this->pageTitles['notifications'] = $data['page_title_notifications'];
     }
     parent::setPluginData($data, $captionNames, $messageNames);
   }
@@ -199,16 +209,19 @@ class ACommunitymessagesData extends ACommunityUiContentData {
     $listData = array();
     $page = $this->owner->parameters()->get('messages_page', 0);
     $ressource = $this->ressource();
+    $showNotifications = (boolean)$this->owner->parameters()->get('notifications', FALSE);
     $this->messages()->load(
       array(
         'current_surfer_id' => $this->currentSurferId(),
-        'selected_surfer_id' => $ressource['id']
+        'selected_surfer_id' => $showNotifications ? 'system' : $ressource['id']
       ),
       $this->paging['messages_per_page'],
       ($page > 0) ? ($page - 1) * $this->paging['messages_per_page'] : 0
     );
     $listData['abs_count'] = (int)$this->messages()->absCount();
-    $listData['data'] = $this->_getListDataByMessages($this->messages()->toArray());
+    $listData['data'] = $this->_getListDataByMessages(
+      $this->messages()->toArray(), 'surfer-page', $showNotifications
+    );
     return $listData;
   }
 
@@ -258,23 +271,29 @@ class ACommunitymessagesData extends ACommunityUiContentData {
    * @param string $linkMode
    * @return array
    */
-  protected function _getListDataByMessages($messages, $linkMode = 'surfer-page') {
+  protected function _getListDataByMessages($messages, $linkMode = 'surfer-page', $notifications = FALSE) {
     $data = array();
     foreach ($messages as $id => $message) {
-      if ($linkMode == 'surfer-page') {
-        $contactSurferId = $message['sender'];
-      } elseif ($linkMode == 'messages-page') {
-        $contactSurferId = $message['sender'] == $this->currentSurferId() ?
-          $message['recipient'] : $message['sender'];
-        if (!isset($this->_messagesPageLinks[$contactSurferId])) {
-          $message['messages_page_link'] = $this->owner->acommunityConnector()->getMessagesPageLink(
-            $contactSurferId
-          );
-        } else {
-          $message['messages_page_link'] = $this->_messagesPageLinks[$contactSurferId];
+      if ($notifications == FALSE) {
+        if ($linkMode == 'surfer-page') {
+          $contactSurferId = $message['sender'];
+        } elseif ($linkMode == 'messages-page') {
+          $contactSurferId = $message['sender'] == $this->currentSurferId() ?
+            $message['recipient'] : $message['sender'];
+          if (!isset($this->_messagesPageLinks[$contactSurferId])) {
+            $message['messages_page_link'] = $this->owner->acommunityConnector()->getMessagesPageLink(
+              $contactSurferId
+            );
+          } else {
+            $message['messages_page_link'] = $this->_messagesPageLinks[$contactSurferId];
+          }
         }
+        $message['surfer'] = $this->getSurfer($contactSurferId);
+      } else {
+        preg_match_all('~([A-Za-z ]+)\: (.+)~is', $message['text'], $parts);
+        $message['surfer'] = array('name' => $parts[1][0]);
+        $message['text'] = $parts[2][0];
       }
-      $message['surfer'] = $this->getSurfer($contactSurferId);
       $data[$id] = $message;
     }
     return $data;

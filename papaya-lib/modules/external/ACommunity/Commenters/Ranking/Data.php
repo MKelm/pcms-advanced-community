@@ -49,12 +49,6 @@ class ACommunityCommentersRankingData extends ACommunityUiContentData {
    * @param array $messageNames
    */
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
-    $this->paging['comments_per_page'] = $data['comments_per_page'];
-    if (isset($data['comments_per_comment'])) {
-      $this->paging['comments_per_comment'] = $data['comments_per_comment'];
-    } else {
-      $this->paging['comments_per_comment'] = NULL;
-    }
     $this->commentersLimit = $data['commenters_limit'];
     $this->_surferAvatarSize = (int)$data['avatar_size'];
     $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
