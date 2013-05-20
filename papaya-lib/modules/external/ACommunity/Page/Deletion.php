@@ -1,7 +1,7 @@
 <?php
 /**
  * Advanced community page deletion
- * 
+ *
  * This class offers methods to delete and modify community data on page deletion
  *
  * @copyright 2013 by Martin Kelm
@@ -25,19 +25,25 @@
  * @subpackage External-ACommunity
  */
 class ACommunityPageDeletion extends PapayaObject {
-  
+
   /**
   * Stored database access object
   * @var PapayaDatabaseAccess
   */
   protected $_databaseAccess = NULL;
-  
+
   /**
    * Table name of comments
    * @var string
    */
   protected $_tableNameComments = 'acommunity_comments';
-  
+
+  /**
+   * Table name of last changes
+   * @var string
+   */
+  protected $_tableNameLastChanges = 'acommunity_last_changes';
+
   /**
   * Set/get database access object
   *
@@ -51,10 +57,10 @@ class ACommunityPageDeletion extends PapayaObject {
     }
     return $this->_databaseAccess;
   }
-  
+
   /**
    * Delete all page comments by page ids
-   * 
+   *
    * @param array $pageIds
    */
   public function deletePageComments($pageIds) {
@@ -63,5 +69,18 @@ class ACommunityPageDeletion extends PapayaObject {
       array('comment_ressource_id' => $pageIds, 'comment_ressource_type' => 'page')
     );
   }
-  
+
+  /**
+   * Delete all page comments last changes by page ids
+   *
+   * @param array $pageIds
+   */
+  public function deletePageCommentsLastChanges($pageIds) {
+    foreach ($pageIds as $pageId) {
+      $this->databaseAccess()->deleteRecord(
+        $this->databaseAccess()->getTableName($this->_tableNameLastChanges),
+        array('ressource' => 'comments:page_'.$pageId)
+      );
+    }
+  }
 }

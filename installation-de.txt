@@ -352,7 +352,9 @@ Löschen eines Surfers folgende Aktionen aus:
 -- im Kommentiererranking werden gelöschte Surfer ignoriert
 - Surferkommentare zum gelöschten Surfer werden komplett gelöscht
 - Surfergallerien werden mitsamt aller Ordner, Bilder und Bildkommentaren gelöscht
+-- Zeitstempel von letzten Bildkommentaränderungen, der zu löschenden Bilder, werden gelöscht
 - Mitteilungen des gelöschten Surfers werden gelöscht
+- Zeitstempel von letzten Änderungen, des zu löschenden Surfers, werden gelöscht
 
 === Seitendaten löschen ===
 
@@ -362,6 +364,7 @@ Dann können sie die Observerklasse "ACommunityConnector" der Aktion hinzufügen
 Der Advanced Community Connector führt über den Action Dispatcher beim
 Löschen einer Seite folgende Aktionen aus:
 - Seitenkommentare zur gelöschten Seite werden komplett gelöscht
+- Zeitstempel von letzten Kommentaränderungen, der zu löschenden Seiten, werden gelöscht
 
 == Verlinkungen von Surferseiten ==
 
@@ -564,7 +567,7 @@ Hier eine Liste mit Vorschlägen für Cachezeiten je Modul:
 - Surfer Gallery Teaser Box
 -- z.B. 604800 Sekunden
 -- beim Caching wird der gewählte Surfer und die letzte Änderungszeit von Bildern im Basisordner
-   beachtet
+   beachtet, zudem ob der gewählte Surfer auch der aktive Surfer ist
 
 - Message Conversations Box
 -- z.B. 604800 Sekunden
@@ -582,3 +585,14 @@ Hier eine Liste mit Vorschlägen für Cachezeiten je Modul:
 
 - Notification Settings Page
 -- der Cache wird stets deaktiviert, da die Seite stets dynamisch Daten lädt und speichert
+
+== URL-Verarbeitung in Texten ==
+
+Textinhalte in Kommentaren und Mitteilungen werden über einen Filter automatisch verarbeitet.
+Dabei werden URLs identifiziert und verlinkt:
+- Normale URLs erhalten einen a-Tag
+- Bild URLs erhalten einen a-Tag
+-- optional können in "Module" -> Paket: "Advanced Community" -> Modul: "Connector" -> "Optionen"
+   die Optionen für "Text Thumbnails" aktiviert werden
+--- dabei werden zusätzlich Thumbnails der verlinkten Bilder erstellt und ans Ende des Textinhalts
+    in einem gesonderte DIV-Element abgelegt

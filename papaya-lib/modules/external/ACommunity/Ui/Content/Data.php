@@ -327,13 +327,13 @@ class ACommunityUiContentData extends PapayaObject {
           } else {
             $parameterId = NULL;
           }
-          $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
           if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
             $this->ressourceIsActiveSurfer = $parameterId == $this->papaya()->surfer->surfer['surfer_id'];
             if ($this->_ressourceNeedsActiveSurfer == FALSE  || empty($parameterId) ||
                 ($this->_ressourceNeedsActiveSurfer == TRUE && $this->ressourceIsActiveSurfer == TRUE)) {
               if (empty($id)) {
                 $id = $this->papaya()->surfer->surfer['surfer_id'];
+                $parameterValue = $this->papaya()->surfer->surfer['surfer_handle'];
                 $this->ressourceParameters($parameterGroup, $parameters);
                 $this->ressourceIsActiveSurfer = $id == $this->papaya()->surfer->surfer['surfer_id'];
               }
@@ -358,7 +358,7 @@ class ACommunityUiContentData extends PapayaObject {
           break;
       }
       if (!empty($id)) {
-        $this->_ressource = array('type' => $type, 'id' => $id);
+        $this->_ressource = array('type' => $type, 'id' => $id, 'surfer_handle' => $parameterValue);
       } else {
         $this->_ressource = FALSE;
       }

@@ -92,6 +92,7 @@ class ACommunitySurferGalleryTeaserBox extends base_actionbox implements PapayaP
         if (!empty($ressource)) {
           include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $this->teaser()->data()->ressourceIsActiveSurfer;
           $definitionValues[] = $ressource['type'];
           $definitionValues[] = $ressource['id'];
           $definitionValues[] = $values->lastChangeTime(

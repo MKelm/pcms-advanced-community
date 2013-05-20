@@ -45,6 +45,20 @@ class ACommunityMessagesDeletion extends PapayaObject {
   protected $_tableNameMessageSurfers = 'acommunity_message_surfers';
 
   /**
+  * Set/get database access object
+  *
+  * @return PapayaDatabaseAccess
+  */
+  public function databaseAccess(PapayaDatabaseAccess $databaseAccess = NULL) {
+    if (isset($databaseAccess)) {
+      $this->_databaseAccess = $databaseAccess;
+    } elseif (is_null($this->_databaseAccess)) {
+      $this->_databaseAccess = $this->papaya()->database->createDatabaseAccess($this);
+    }
+    return $this->_databaseAccess;
+  }
+
+  /**
    * Delete messages by surfer
    *
    * @param string $surferId

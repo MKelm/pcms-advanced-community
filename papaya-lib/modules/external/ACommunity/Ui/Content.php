@@ -120,4 +120,41 @@ class ACommunityUiContent extends PapayaObjectInteractive
     }
     return $this->_notificationHandler;
   }
+
+  /**
+   * Check url file name in for page modules and return new url if the current file name is invalid
+   *
+   * @param base_content $pageModule
+   * @param string $currentFileName
+   * @param string $outputMode
+   * @param string $pageNamePostfix
+   * @param string $handle
+   * @return string|FALSE
+   */
+  public function checkURLFileName(
+           $pageModule, $currentFileName, $outputMode, $pageNamePostfix, $handle = NULL
+         ) {
+    $ressource = $this->data()->ressource();
+    if (!empty($handle) || !empty($ressource['surfer_handle'])) {
+      $handle = empty($handle) ? $ressource['surfer_handle'] : $handle;
+      $ressourcePageName = $pageModule->parentObj->escapeForFilename($handle.$pageNamePostfix);
+      if ($currentFileName == $ressourcePageName) {
+        return FALSE;
+      } else {
+        return $pageModule->getWebLink(
+          $pageModule->parentObj->topic['topic_id'], NULL, $outputMode,
+          array('surfer_handle' => $ressource['surfer_handle']),
+          $pageModule->paramName, $ressourcePageName
+        );
+      }
+    }
+    $pageFileName = $pageModule->parentObj->escapeForFilename(
+      $pageModule->parentObj->topic['TRANSLATION']['topic_title'],
+      'index',
+      $pageModule->parentObj->currentLanguage['lng_ident']
+    );
+    return $pageModule->getWebLink(
+      $pageModule->parentObj->topic['topic_id'], NULL, $outputMode, NULL, NULL, $pageFileName
+    );
+  }
 }

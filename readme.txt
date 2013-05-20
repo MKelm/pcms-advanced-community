@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 |  Adavanced community modules for papaya CMS 5.5.2 or higher         |
-|  Version: 0.11 (19.05.2013)                                         |
+|  Version: 0.12 (20.05.2013)                                         |
 |  Author: Martin Kelm                                                |
 -----------------------------------------------------------------------
 
@@ -31,6 +31,18 @@ in a seperate folder, you have to perform the patch command in each folder.
 -----------
 | Changes |
 -----------
+
+Revision 0.12 (20.05.2013)
+- Fixed a caching bug in surfer gallery teaser box
+- Fixed a ressource detection bug in surfer gallery page
+- Added extended text filter with URL to link replacement for comments and messages
+-- Added optional thumbnail links feature for comment and message text
+- Fixed an error with =-chars in PapayaFilterText, in patches
+- Fixed some errors in onDeleteSurfer methods
+- Added deletion methods for last changes timestamps in onDeleteSurfer and onDeletePages methods
+- Added pages connector in connector->getPageLink-method to get login / registration page title
+- Improved ressource handling in surfer gallery page
+- Added checkURLFilename-Methods to avoid URL Fixation
 
 Revision 0.11 (19.05.2013)
 - Added last changes table to detect changes for caching

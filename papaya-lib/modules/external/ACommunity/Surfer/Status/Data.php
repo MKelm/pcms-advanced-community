@@ -128,8 +128,8 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
       }
 
     } else {
-      $loginLink = $this->owner->acommunityConnector()->getSurferLoginPageLink();
-      $registrationLink = $this->owner->acommunityConnector()->getSurferRegistrationPageLink();
+      $loginLink = $this->owner->acommunityConnector()->getSurferLoginPageLink($this->languageId);
+      $registrationLink = $this->owner->acommunityConnector()->getSurferRegistrationPageLink($this->languageId);
       $simpleTemplate = new base_simpletemplate();
 
       $this->messages['no_login'] = $simpleTemplate->parse(
@@ -145,5 +145,4 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
       );
     }
   }
-
 }

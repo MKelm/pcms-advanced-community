@@ -92,6 +92,19 @@ class ACommunityNotificationSettingsPage extends base_content implements PapayaP
   }
 
   /**
+   * Check url name to fix wrong page names
+   *
+   * @param string $currentFileName
+   * @param string $outputMode
+   */
+  public function checkURLFileName($currentFileName, $outputMode) {
+    $this->setRessourceData();
+    $this->settings()->checkURLFileName(
+      $this, $currentFileName, $outputMode, 's-notification-settings'
+    );
+  }
+
+  /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {

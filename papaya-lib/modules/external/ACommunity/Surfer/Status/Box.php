@@ -103,7 +103,7 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
    * Cache definition
    * @var PapayaCacheIdentifierDefinition
    */
-  protected $_cacheDefiniton = NULL;
+  protected $_cacheDefinition = NULL;
 
   /**
    * Define the cache definition for output.
@@ -114,19 +114,19 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
    */
   public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
     if (isset($definition)) {
-      $this->_cacheDefiniton = $definition;
-    } elseif (NULL == $this->_cacheDefiniton) {
+      $this->_cacheDefinition = $definition;
+    } elseif (NULL == $this->_cacheDefinition) {
       $ressource = $this->setRessourceData();
       include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
       $values = new ACommunityCacheIdentifierValues();
-      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionValues(
+      $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues(
         'acommunity_surfer_status_box',
         !empty($ressource['id']) ? $ressource['id'] : NULL,
         !empty($ressource['id']) ? $values->lastChangeTime('surfer:surfer_'.$ressource['id']) : 0,
         !empty($ressource['id']) ? $values->lastChangeTime('contacts:surfer_'.$ressource['id']) : 0
       );
     }
-    return $this->_cacheDefiniton;
+    return $this->_cacheDefinition;
   }
 
   /**

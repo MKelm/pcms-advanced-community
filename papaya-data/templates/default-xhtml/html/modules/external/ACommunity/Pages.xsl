@@ -100,9 +100,15 @@
               </div>
               <xsl:call-template name="float-fix" />
             </div>
-            <div class="messageText">
-              <xsl:value-of select="text" disable-output-escaping="yes" />
-            </div>
+            <div class="messageText"><xsl:copy-of select="text/node()" /><xsl:text> </xsl:text></div>
+            <xsl:if test="text-thumbnail-links">
+              <div class="textThumbnailLinks">
+                <xsl:for-each select="text-thumbnail-links/a">
+                  <xsl:copy-of select="." />
+                </xsl:for-each>
+              </div>
+              <xsl:call-template name="float-fix" />
+            </xsl:if>
           </div>
           <xsl:call-template name="float-fix" />
         </div>

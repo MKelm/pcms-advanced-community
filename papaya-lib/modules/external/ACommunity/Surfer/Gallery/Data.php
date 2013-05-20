@@ -28,26 +28,26 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Data.php');
  * @subpackage External-ACommunity
  */
 class ACommunitySurferGalleryData extends ACommunityUiContentData {
-  
+
   /**
    * Ressource needs active surfer
    * @var boolean
    */
-  protected $_ressourceNeedsActiveSurfer = TRUE;
-  
+  protected $_ressourceNeedsActiveSurfer = FALSE;
+
   /**
    * Gallery database record
-   *  
+   *
    * @var ACommunityContentSurferGallery
    */
   protected $_gallery = NULL;
-  
+
   /**
    * Surfer galleries database records
    * @var object
    */
   protected $_galleries = NULL;
-  
+
   /**
    * Media db edit object
    * @var object
@@ -70,7 +70,7 @@ class ACommunitySurferGalleryData extends ACommunityUiContentData {
     }
     return $this->_gallery;
   }
-  
+
   /**
   * Access to the surfer galleries database records data
   *
@@ -87,10 +87,10 @@ class ACommunitySurferGalleryData extends ACommunityUiContentData {
     }
     return $this->_galleries;
   }
-  
+
   /**
    * Media DB Edit to save image uploads
-   * 
+   *
    * @param base_mediadb_edit $mediaDBEdit
    * @return base_mediadb_edit
    */
@@ -103,5 +103,5 @@ class ACommunitySurferGalleryData extends ACommunityUiContentData {
     }
     return $this->_mediaDBEdit;
   }
-  
+
 }

@@ -126,10 +126,7 @@ class ACommunityUiContentMessage extends PapayaUiControlCollectionItem {
       $this->papaya()->options->get('PAPAYA_INCLUDE_PATH', '/').
       'system/sys_base_object.php'
     );
-    $text = $message->appendElement('text');
-    $text->appendXml(
-      base_object::getXHTMLString($this->text, TRUE)
-    );
+    $message->appendXml($this->text);
     $message->appendElement(
       'surfer',
       array(

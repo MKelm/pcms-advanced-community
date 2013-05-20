@@ -131,6 +131,22 @@ class ACommunityMessagesPage extends base_content implements PapayaPluginCacheab
   }
 
   /**
+   * Check url name to fix wrong page names
+   *
+   * @param string $currentFileName
+   * @param string $outputMode
+   */
+  public function checkURLFileName($currentFileName, $outputMode) {
+    $this->setRessourceData();
+    $pageNamePostfix = (empty($this->params['surfer_handle']) && empty($this->params['notifications'])) ?
+      's-messages' : '-messages';
+    $handle = empty($this->params['notifications']) ? NULL : 'system';
+    return $this->messages()->checkURLFileName(
+      $this, $currentFileName, $outputMode, $pageNamePostfix, $handle
+    );
+  }
+
+  /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {

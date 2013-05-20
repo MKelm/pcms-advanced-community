@@ -89,4 +89,15 @@ class ACommunitySurferContactsPage extends ACommunitySurfersPage {
       'No Entries', 'isNoHTML', TRUE, 'input', 200, '', 'No entries.'
     )
   );
+
+  /**
+   * Check url name to fix wrong page names
+   *
+   * @param string $currentFileName
+   * @param string $outputMode
+   */
+  public function checkURLFileName($currentFileName, $outputMode) {
+    $this->setRessourceData();
+    return $this->surfers()->checkURLFileName($this, $currentFileName, $outputMode, 's-contacts');
+  }
 }

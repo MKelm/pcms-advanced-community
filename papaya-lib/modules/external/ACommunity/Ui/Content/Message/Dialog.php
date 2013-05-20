@@ -82,13 +82,16 @@ class ACommunityUiContentMessageDialog
     );
     $dialog->caption = NULL;
 
+    $ressource = $this->data()->ressource();
+    include_once(dirname(__FILE__).'/../../../Filter/Text/Extended.php');
     $dialog->fields[] = $field = new PapayaUiDialogFieldTextarea(
       $this->data()->captions['dialog_text'],
       'text',
       3,
       '',
-      new PapayaFilterText(
-        PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES
+      new ACommunityFilterTextExtended(
+        PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
+        'surfer_'.$this->data()->currentSurferId().':surfer_'.$ressource['id']
       )
     );
     $field->setMandatory(TRUE);

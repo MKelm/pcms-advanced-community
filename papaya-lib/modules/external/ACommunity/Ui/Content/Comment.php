@@ -196,10 +196,7 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
       $this->papaya()->options->get('PAPAYA_INCLUDE_PATH', '/').
       'system/sys_base_object.php'
     );
-    $text = $comment->appendElement('text');
-    $text->appendXml(
-      base_object::getXHTMLString($this->text, TRUE)
-    );
+    $comment->appendXml($this->text);
 
     $comment->appendElement(
       'surfer',

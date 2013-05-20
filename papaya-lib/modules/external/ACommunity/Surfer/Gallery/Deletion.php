@@ -45,6 +45,12 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
   protected $_tableNameSurferGalleries = 'acommunity_surfer_galleries';
 
   /**
+   * Table name of last changes
+   * @var string
+   */
+  protected $_tableNameLastChanges = 'acommunity_last_changes';
+
+  /**
    * Media db edit object
    * @var object
    */
@@ -123,16 +129,38 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
     if (!empty($files)) {
       foreach ($files as $file) {
         $this->mediaDBEdit()->deleteFile($file['file_id']);
-        $this->databaseAccess()->deleteRecord(
-          $this->databaseAccess()->getTableName($this->_tableNameComments),
-          array(
-            'comment_ressource_type' => 'image',
-            'comment_ressource_id' => $file['file_id']
-          )
-        );
+        $this->_deleteImageCommentsLastChanges($file['file_id']);
+        $this->_deleteImageComments($file['file_id']);
       }
     }
     return $this->mediaDBEdit()->deleteFolder($folderId);
+  }
+
+  /**
+   * Delete all image comments
+   *
+   * @param string $imageId
+   */
+  protected function _deleteImageComments($imageId) {
+    $this->databaseAccess()->deleteRecord(
+      $this->databaseAccess()->getTableName($this->_tableNameComments),
+      array(
+        'comment_ressource_type' => 'image',
+        'comment_ressource_id' => $file['file_id']
+      )
+    );
+  }
+
+  /**
+   * Delete image comments last changes timestamp by image id
+   *
+   * @param string $imageId
+   */
+  protected function _deleteImageCommentsLastChanges($imageId) {
+    $this->databaseAccess()->deleteRecord(
+      $this->databaseAccess()->getTableName($this->_tableNameLastChanges),
+      array('ressource' => 'comments:image_'.$imageId)
+    );
   }
 
   /**
@@ -161,7 +189,7 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
     if (isset($galleries)) {
       $this->_surferGalleries = $galleries;
     } elseif (is_null($this->_surferGalleries)) {
-      include_once(dirname(__FILE__).'/../Content/Surfer/Galleries.php');
+      include_once(dirname(__FILE__).'/../../Content/Surfer/Galleries.php');
       $this->_surferGalleries = new ACommunityContentSurferGalleries();
       $this->_surferGalleries->papaya($this->papaya());
     }

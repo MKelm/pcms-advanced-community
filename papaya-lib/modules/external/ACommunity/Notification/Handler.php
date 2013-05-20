@@ -128,6 +128,12 @@ class ACommunityNotificationHandler extends PapayaObject {
    * @param string $text
    */
   protected function _sendMessage($surferId, $title, $text) {
+    include_once(dirname(__FILE__).'/../Filter/Text/Extended.php');
+    $filter = new ACommunityFilterTextExtended(
+      PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
+      'surfer_'.$surferId
+    );
+    $text = $filter->filter($text);
     $text = $title.': '.$text;
     // assign / save message data
     $message = $this->message();

@@ -15,7 +15,7 @@
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
- 
+
 // Gallery data object
 require_once(dirname(__FILE__).'/../Data.php');
 
@@ -26,5 +26,11 @@ require_once(dirname(__FILE__).'/../Data.php');
  * @subpackage External-ACommunity
  */
 class ACommunitySurferGalleryUploadData extends ACommunitySurferGalleryData {
+
+  /**
+   * Ressource needs active surfer
+   * @var boolean
+   */
+  protected $_ressourceNeedsActiveSurfer = TRUE;
 
 }

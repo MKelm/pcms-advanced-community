@@ -64,6 +64,24 @@ class ACommunitySurferEditorPage extends content_profile implements PapayaPlugin
   }
 
   /**
+   * Check url name to fix wrong page names
+   *
+   * @param string $currentFileName
+   * @param string $outputMode
+   */
+  public function checkURLFileName($currentFileName, $outputMode) {
+    $this->setRessourceData();
+    return $this->surfer()->checkURLFileName($this, $currentFileName, $outputMode, 's-editor');
+  }
+
+  /**
+   * Set surfer ressource data to load corresponding surfer
+   */
+  public function setRessourceData() {
+    return $this->surfer()->data()->ressource('surfer', $this);
+  }
+
+  /**
   * Get (and, if necessary, initialize) the ACommunitySurfer object
   *
   * @return ACommunitySurfer $surfer

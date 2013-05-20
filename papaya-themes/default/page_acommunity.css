@@ -1,4 +1,16 @@
 /*
+ CSS rules for text thumbnail links
+*/
+.textThumbnailLinks {
+  margin-top: 0.4em;
+}
+.textThumbnailLinks a {
+  margin-right: 0.4em;
+  margin-bottom: 0.4em;
+  float: left;
+}
+
+/*
  CSS rules for ACommunitySurferPage
 */
 #content .surferPage .surferAvatar {

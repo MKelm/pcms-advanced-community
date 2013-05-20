@@ -39,6 +39,12 @@ class ACommunitySurferDeletion extends PapayaObject {
   protected $_tableNameComments = 'acommunity_comments';
 
   /**
+   * Table name of last changes
+   * @var string
+   */
+  protected $_tableNameLastChanges = 'acommunity_last_changes';
+
+  /**
   * Set/get database access object
   *
   * @return PapayaDatabaseAccess
@@ -77,6 +83,17 @@ class ACommunitySurferDeletion extends PapayaObject {
   }
 
   /**
+   * Delete all last change timestamps by surfer
+   *
+   * @param string $surferId
+   */
+  public function deleteSurferLastChanges($surferId) {
+    $sql = "DELETE FROM %s WHERE change_ressource LIKE '%%surfer_%s%%'";
+    $params = array($this->databaseAccess()->getTableName($this->_tableNameLastChanges), $surferId);
+    $this->databaseAccess()->queryFmtWrite($sql, $params);
+  }
+
+  /**
    * Set deleted surfer flag in comments for comments filter
    *
    * @param string $surferId
@@ -100,5 +117,4 @@ class ACommunitySurferDeletion extends PapayaObject {
     $deletion->papaya($this->papaya());
     $deletion->deleteMessages($surferId);
   }
-
 }

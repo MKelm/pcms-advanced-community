@@ -93,6 +93,22 @@ class ACommunityConnector extends base_connector {
     ),
     'notification_by_email' => array(
       'Notify By E-Mail', 'isNum', TRUE, 'yesno', NULL, 'Default value for new surfers.', 0
+    ),
+    'Text Thumbnails',
+    'text_thumbnails' => array(
+      'Active', 'isNum', TRUE, 'yesno', NULL, 'Show thumbnails for image links.', 1
+    ),
+    'text_thumbnails_folder' => array(
+      'Folder', 'isNum', TRUE, 'mediafolder', NULL, 'Media DB folder to get thumbnails for image links.'
+    ),
+    'text_thumbnails_size' => array(
+      'Size', 'isNum', TRUE, 'input', 200, NULL, '100'
+    ),
+    'text_thumbnails_resize_mode' => array(
+      'Resize Mode', 'isAlpha', TRUE, 'translatedcombo',
+       array(
+         'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
+       ), '', 'mincrop'
     )
   );
 
@@ -113,6 +129,12 @@ class ACommunityConnector extends base_connector {
    * @var connector_surfers
    */
   protected $_communityConnector = NULL;
+
+  /**
+   * Pages connector
+   * @var connector_surfers
+   */
+  protected $_pagesConnector = NULL;
 
   /**
    * Notification handler object
@@ -178,19 +200,21 @@ class ACommunityConnector extends base_connector {
     $this->surferDeletion()->deleteSurferComments($surferId);
     $this->surferDeletion()->deleteSurferGalleries($surferId);
     $this->surferDeletion()->deleteMessages($surferId);
+    $this->surferDeletion()->deleteSurferLastChanges($surferId);
   }
 
   /**
    * Action dispatcher function to delete pages' dependend data
    *
-   * Note: You have to add an action dispatcher call in base_topic_edit->destroy()
-   * to make onDeletePages available for dispatching. See base_topic_edit_destroy_replacement.txt
-   * for a replacement of the whole destroy() method which contains a valid call.
+   * Note: You need an action dispatcher call in base_topic_edit->destroy()
+   * to make onDeletePages available for dispatching. Please use the papaya CMS patches from the
+   * Advanced Community package to get it.
    *
    * @param array $pageIds
    */
   public function onDeletePages($pageIds) {
     $this->pageDeletion()->deletePageComments($pageIds);
+    $this->pageDeletion()->deletePageCommentsLastChanges($pageIds);
   }
 
   /**
@@ -231,8 +255,10 @@ class ACommunityConnector extends base_connector {
    *
    * @return string
    */
-  public function getSurferRegistrationPageLink() {
-    return $this->_getPageLink('surfer_registration_page_id', NULL, FALSE, NULL, 'registration-page');
+  public function getSurferRegistrationPageLink($languageId) {
+    return $this->_getPageLink(
+      'surfer_registration_page_id', NULL, FALSE, NULL, NULL, NULL, NULL, $languageId
+    );
   }
 
   /**
@@ -240,8 +266,10 @@ class ACommunityConnector extends base_connector {
    *
    * @return string
    */
-  public function getSurferLoginPageLink() {
-    return $this->_getPageLink('surfer_login_page_id', NULL, FALSE, NULL, 'login-page');
+  public function getSurferLoginPageLink($languageId) {
+    return $this->_getPageLink(
+      'surfer_login_page_id', NULL, FALSE, NULL, NULL, NULL, NULL, $languageId
+    );
   }
 
   /**
@@ -297,16 +325,18 @@ class ACommunityConnector extends base_connector {
    * @return string|NULL
    */
   public function getMessagesPageLink($surferId, $target = 'surfer') {
-    $parameterNamePostfix = $overview ? 's-messages' : '-messages';
+    $parameterNamePostfix = $target == 'overview' ? 's-messages' : '-messages';
+    $handle = NULL;
     if ($target == 'overview') {
       $parameters = array();
     } elseif ($target == 'notifications') {
       $parameters = array('notifications' => 1);
+      $handle = 'system';
     } else {
       $parameters = TRUE;
     }
     return $this->_getPageLink(
-      'messages_page_id', $surferId, $parameters, 'acmp', $parameterNamePostfix
+      'messages_page_id', $surferId, $parameters, 'acmp', $parameterNamePostfix, NULL, $handle
     );
   }
 
@@ -328,18 +358,20 @@ class ACommunityConnector extends base_connector {
    * @param string $optionName by module options
    * @param string $surferId destination surfer
    * @param boolean|array $parameters flag to activate surfer_handle parameter or add custom parameters
-   * @param string $parameterGroup
-   * @param string $pageNamePostfix
-   * @param string $anchor
+   * @param string $parameterGroup a valid parameter group
+   * @param string $pageNamePostfix postfix to set after handle or page name without handle
+   * @param string $anchor add an anchor to the page link
+   * @param string $handle to use a customized handle in links
+   * @param integer $languageId for page names by pages connector
    * @return string|NULL
    */
   protected function _getPageLink(
               $optionName, $surferId = NULL, $parameters = FALSE, $parameterGroup = NULL,
-              $pageNamePostfix = 'page', $anchor = NULL
+              $pageNamePostfix = 'page', $anchor = NULL, $handle = NULL, $languageId = NULL
             ) {
     if (!empty($optionName)) {
       $proceed = FALSE;
-      if (!empty($surferId)) {
+      if (empty($handle) && !empty($surferId)) {
         $handle = $this->communityConnector()->getHandleById($surferId);
         if (!empty($handle)) {
           $proceed = TRUE;
@@ -358,12 +390,20 @@ class ACommunityConnector extends base_connector {
           $parameters = array();
         }
         if (!empty($handle)) {
-          $pageName = $handle.$pageNamePostfix;
-        } else {
+          $pageName = base_object::escapeForFilename($handle).$pageNamePostfix;
+        } elseif (!empty($pageNamePostfix)) {
           $pageName = $pageNamePostfix;
+        } else {
+          $pageName = NULL;
         }
         $pageId = papaya_module_options::readOption($this->_guid, $optionName, NULL);
         if (!empty($pageId)) {
+          if (empty($pageName) && !empty($languageId)) {
+            $titles = $this->pagesConnector()->getTitles($pageId, $languageId);
+            if (!empty($titles[$pageId])) {
+              $pageName = base_object::escapeForFilename($titles[$pageId]);
+            }
+          }
           $result = base_object::getWebLink($pageId, NULL, NULL, $parameters, $parameterGroup, $pageName);
           if (!empty($anchor)) {
             return $result.'#'.$anchor;
@@ -393,6 +433,22 @@ class ACommunityConnector extends base_connector {
   }
 
   /**
+   * Get text options to generate thumbnails for image links
+   *
+   * @return array
+   */
+  public function getTextOptions() {
+    return array(
+      'thumbnails' => papaya_module_options::readOption($this->_guid, 'text_thumbnails', NULL),
+      'thumbnails_folder' => papaya_module_options::readOption($this->_guid, 'text_thumbnails_folder', NULL),
+      'thubmnails_size' => papaya_module_options::readOption($this->_guid, 'text_thumbnails_size', NULL),
+      'thubmnails_resize_mode' => papaya_module_options::readOption(
+        $this->_guid, 'text_thumbnails_resize_mode', NULL
+      )
+    );
+  }
+
+  /**
    * Get/set community connector
    *
    * @param object $connector
@@ -408,5 +464,23 @@ class ACommunityConnector extends base_connector {
       );
     }
     return $this->_communityConnector;
+  }
+
+  /**
+   * Get/set pages connector
+   *
+   * @param object $connector
+   * @return object
+   */
+  public function pagesConnector(PapayaBasePagesConnector $connector = NULL) {
+    if (isset($connector)) {
+      $this->_pagesConnector = $connector;
+    } elseif (is_null($this->_pagesConnector)) {
+      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
+      $this->_pagesConnector = base_pluginloader::getPluginInstance(
+        '69db080d0bb7ce20b52b04e7192a60bf', $this
+      );
+    }
+    return $this->_pagesConnector;
   }
 }
