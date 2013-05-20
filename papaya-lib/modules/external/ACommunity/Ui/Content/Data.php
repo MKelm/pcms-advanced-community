@@ -443,9 +443,8 @@ class ACommunityUiContentData extends PapayaObject {
     if (isset($currentSurferId)) {
       $this->_currentSurferId = $currentSurferId;
     } elseif (is_null($this->_currentSurferId)) {
-      $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
-      if ($currentSurfer->isValid && !empty($currentSurfer->surfer['surfer_id'])) {
-        $this->_currentSurferId = $currentSurfer->surfer['surfer_id'];
+      if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
+        $this->_currentSurferId = $this->papaya()->surfer->surfer['surfer_id'];
       }
     }
     return $this->_currentSurferId;
