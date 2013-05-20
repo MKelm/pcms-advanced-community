@@ -1,0 +1,8 @@
+"notification_id","language_id","notification_title","notification_text"
+"1","2","Neues Benutzerkommentar","{%CONTEXT_SURFER%} hat dir ein neues Kommentar geschrieben.
+Link zu deiner Benutzerseite: 
+{%PAGE_URL%}"
+"2","2","Neues Bildkommentar","{%CONTEXT_SURFER%} hat dir ein neues Bildkommentar geschrieben.
+Link zum Bild in deiner Gallerie:{%PAGE_URL%}"
+"3","2","Neue Kontaktanfrage","{%CONTEXT_SURFER%} hat einen Kontakt zu dir angefrage. 
+Zur Kontakteseite:{%PAGE_URL%}"

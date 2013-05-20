@@ -45,31 +45,7 @@ class ACommunityCommentsData extends ACommunityUiContentData {
    * Handle of deleted surfer to replace surfer ids
    * @var string
    */
-  protected $_handleDeletedSurfer = NULL;
-
-  /**
-   * A list of surfer ids used by comments list
-   * @var array
-   */
-  protected $_surferIds = array();
-
-  /**
-   * A list of surfer handles used by comments list
-   * @var array
-   */
-  protected $_surferHandles = NULL;
-
-  /**
-   * A list of surfer avatars used by comments list
-   * @var array
-   */
-  protected $_surferAvatars = NULL;
-
-  /**
-   * A list of surfer page links used by comments list
-   * @var array
-   */
-  protected $_surferPageLinks = NULL;
+  protected $_deletedSurferHandle = NULL;
 
   /**
    * Buffer for current voting cookie data
@@ -84,10 +60,10 @@ class ACommunityCommentsData extends ACommunityUiContentData {
   public $_commentsList = NULL;
 
   /**
-   * Contains links to be used
+   * Contains command links by comment id to be used
    * @var array
    */
-  public $_links = NULL;
+  public $_commandLinks = NULL;
 
   /**
    * Comments database records
@@ -121,7 +97,9 @@ class ACommunityCommentsData extends ACommunityUiContentData {
     } else {
       $this->paging['comments_per_comment'] = NULL;
     }
-    $this->_handleDeletedSurfer = $data['handle_deleted_surfer'];
+    $this->_deletedSurferHandle = $data['deleted_surfer_handle'];
+    $this->_surferAvatarSize = (int)$data['avatar_size'];
+    $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
     parent::setPluginData($data, $captionNames, $messageNames);
   }
 
@@ -182,87 +160,37 @@ class ACommunityCommentsData extends ACommunityUiContentData {
   }
 
   /**
-   * Set/get surfer handles depending on loaded surfer ids
-   *
-   * @var array $surferHandles
-   * @return array
-   */
-  public function surferHandles($surferHandles = NULL) {
-    if (isset($surferHandles)) {
-      $this->_surferHandles = $surferHandles;
-    } elseif (is_null($surferHandles)) {
-      $this->_surferHandles = array();
-      if (!empty($this->_surferIds)) {
-        $surferIds = array_keys($this->_surferIds);
-        $surferHandles = $this->owner->communityConnector()->getHandleById($surferIds);
-        foreach ($surferIds as $surferId) {
-          if (!empty($surferHandles[$surferId])) {
-            $this->_surferHandles[$surferId] = $surferHandles[$surferId];
-          } else {
-            $this->_surferHandles[$surferId] = $this->_handleDeletedSurfer;
-          }
-        }
-      }
-    }
-    return $this->_surferHandles;
-  }
-
-  /**
-   * Set/get surfer avatars depending on loaded surfer ids
-   *
-   * @var array $surferHandles
-   * @return array
-   */
-  public function surferAvatars($surferAvatars = NULL) {
-    if (isset($surferAvatars)) {
-      $this->_surferAvatars = $surferAvatars;
-    } elseif (is_null($surferAvatars)) {
-      $this->_surferAvatars = array();
-      if (!empty($this->_surferIds)) {
-        $surferIds = array_keys($this->_surferIds);
-        $surferAvatars = $this->owner->communityConnector()->getAvatar($surferIds);
-        foreach ($surferIds as $surferId) {
-          if (!empty($surferAvatars[$surferId])) {
-            $this->_surferAvatars[$surferId] = $surferAvatars[$surferId];
-          } else {
-            $this->_surferAvatars[$surferId] = NULL;
-          }
-        }
-      }
-    }
-    return $this->_surferAvatars;
-  }
-
-  /**
-   * Get/set links depending on loaded comments
+   * Get/set command links depending on loaded comments
    *
    * @param array $links
    * @return array
    */
-  public function links($links = NULL) {
+  public function commandLinks($links = NULL) {
     if (isset($links)) {
-      $this->_links = $links;
-    } elseif (is_null($this->_links)) {
-      $this->_links = array('comment_links' => array());
-      $votingCookieData = $this->votingCookie();
-      $commentsList = $this->commentsList();
-      $this->_getCommentLinks($this->_links, $commentsList, $votingCookieData);
+      $this->_commandLinks = $links;
+    } elseif (is_null($this->_commandLinks)) {
+      $this->_commandLinks = array();
+      if ($this->mode == 'list') {
+        $votingCookieData = $this->votingCookie();
+        $commentsList = $this->commentsList();
+        $this->_getCommandLinks($this->_commandLinks, $commentsList, $votingCookieData);
+      }
     }
-    return $this->_links;
+    return $this->_commandLinks;
   }
 
   /**
-   * Get comments links
+   * Get command links by loaded comments list
    *
    * @param reference $links
    * @param array $commentsList
    * @param array $votingCookieData
    */
-  protected function _getCommentLinks(&$links, $commentsList, $votingCookieData) {
+  protected function _getCommandLinks(&$links, $commentsList, $votingCookieData) {
     if (!empty($commentsList['data'])) {
       foreach ($commentsList['data'] as $id => $comment) {
 
-        $links['comment_links'][$id]['reply'] = NULL;
+        $links[$id]['reply'] = NULL;
         if (isset($comment['childs'])) {
           $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
           if ($currentSurfer->isValid) {
@@ -274,7 +202,7 @@ class ACommunityCommentsData extends ACommunityUiContentData {
               ),
               $this->owner->parameterGroup()
             );
-            $links['comment_links'][$id]['reply'] = $reference->getRelative();
+            $links[$id]['reply'] = $reference->getRelative();
           }
         }
 
@@ -287,7 +215,7 @@ class ACommunityCommentsData extends ACommunityUiContentData {
             ),
             $this->owner->parameterGroup()
           );
-          $links['comment_links'][$id]['vote_up'] = $reference->getRelative();
+          $links[$id]['vote_up'] = $reference->getRelative();
 
           $reference = clone $this->reference();
           $reference->setParameters(
@@ -297,14 +225,14 @@ class ACommunityCommentsData extends ACommunityUiContentData {
             ),
             $this->owner->parameterGroup()
           );
-          $links['comment_links'][$id]['vote_down'] = $reference->getRelative();
+          $links[$id]['vote_down'] = $reference->getRelative();
         } else {
-          $links['comment_links'][$id]['vote_up'] = NULL;
-          $links['comment_links'][$id]['vote_down'] = NULL;
+          $links[$id]['vote_up'] = NULL;
+          $links[$id]['vote_down'] = NULL;
         }
 
         if (isset($comment['childs'])) {
-          $this->_getCommentLinks($links, $comment['childs'], $votingCookieData);
+          $this->_getCommandLinks($links, $comment['childs'], $votingCookieData);
         }
       }
     }
@@ -367,15 +295,8 @@ class ACommunityCommentsData extends ACommunityUiContentData {
         $comment['childs'] = array();
         $this->_getCommentsList($comment['childs'], $comment['id']);
       }
-      if (!isset($this->_surferPageLinks[$comment['surfer_id']])) {
-        $comment['surfer_page_link'] = $this->owner->acommunityConnector()->getSurferPageLink(
-          $comment['surfer_id']
-        );
-      } else {
-        $comment['surfer_page_link'] = $this->_surferPageLinks[$comment['surfer_id']];
-      }
+      $comment['surfer'] = $this->getSurfer($comment['surfer_id'], $this->_deletedSurferHandle);
       $listData['data'][$id] = $comment;
-      $this->_surferIds[$comment['surfer_id']] = 1;
     }
     return $listData;
   }

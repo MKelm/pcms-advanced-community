@@ -1,82 +1,52 @@
-.comments .commentUser,
-.comments .commentText,
-.comments .commentTextParagraph,
-.comments .commentExtras {
+.comments {
+  margin-top: 1em;
+}
+.comments .comment {
+  margin-bottom: 0.5em;
+}
+.comments .comment .commentSurferAvatar {
+  float: left;
+  margin-right: 1em;
+  margin-bottom: 1em;
+}
+.comments .comment .commentContainer {
   float: left;
 }
-
-.comments.indent,
-.commentDialog.indent,
-.commentDialogMessage.indent {
-  margin-left: 25px;
+.comments .comment .commentHeader,
+.comments .comment .commentText {
+  width: 33.1em;
 }
-.comments.indent .paging {
+.comments .comment .commentSurferName {
+  float: left;
+}
+.comments .comment .commentTime {
+  float: right;
+  color: #8A8A8A;
+}
+.comments .comment .commentExtras .commentExtrasVotesScore,
+.comments .comment .commentExtras .commentExtrasVoting {
+  float: left;
+  margin-right: 0.5em;
+}
+.comments .comment .commentExtras .commentExtrasReply {
   float: right;
 }
-
-.comments .comment {
-  margin-top: 10px;
+.comments.indent {
+  margin-top: 1em;
+  margin-left: 1.5em;
+}
+.comments.indent .comment .commentHeader,
+.comments.indent .comment .commentText {
+  width: 31.6em;
 }
 
-.comments .commentUser,
-.comments .commentText {
-  background-color: #EEF5CE;
-  display: block;
+.commentDialog fieldset {
+  margin-top: 1em;
 }
-
-.comments .commentUserAvatar {
-  margin-bottom: 5px;
-}
-
-.comments .commentUser {
-  width: 8.7em;
-  padding: 5px;
-}
-
-.comments .commentUserHandle {
-  line-height: 1em;
-}
-
-.comments .commentTime {
-  font-size: 0.89em;
-  line-height: 1.3em;
-}
-
-.comments .commentText {
-  margin-left: 10px;
-  width: 26.5em;
-  padding: 5px;
-}
-.comments.indent .commentText {
-  width: 24.2em;
-}
-
-.comments .commentTextParagraph {
-  width: 21em;
-}
-.comments.indent .commentTextParagraph {
-  width: 18.7em;
-}
-
-.comments .commentExtras {
-  float: right;
-  margin-left: 10px;
-  width: 4.5em;
-}
-
-.comments .commentExtrasReply {
-  margin-top: 20px;
-  display: block;
-}
-
-.comments .paging {
-  margin-top: 15px;
-}
-
 .commentDialogMessage {
-  margin-top: 15px !important;
-  margin-bottom: 15px !important;
+  margin-top: 1.5em !important;
+  margin-bottom: 1.5em !important;
 }
 .commentDialogField textarea {
-  height: 50px;
+  height: 5em;
 }

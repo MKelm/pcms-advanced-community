@@ -78,6 +78,9 @@
     <table name="acommunity_comments"/>
     <table name="acommunity_messages"/>
     <table name="acommunity_message_surfers"/>
+    <table name="acommunity_notifications"/>
+    <table name="acommunity_notification_settings"/>
+    <table name="acommunity_notification_trans"/>
     <table name="acommunity_surfer_galleries"/>
   </tables>
 </modulegroup>

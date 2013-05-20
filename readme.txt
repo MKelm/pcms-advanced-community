@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 |  Adavanced community modules for papaya CMS 5.5                     |
-|  Version: 0.7 (15.05.2013)                                          |
+|  Version: 0.8 (16.05.2013)                                          |
 |  Author: Martin Kelm                                                |
 -----------------------------------------------------------------------
 
@@ -10,12 +10,22 @@ This package contains modules to extend your papaya CMS community.
 |  Todos  |
 -----------
 
-- Notifications, notify surfers on events by system-messages or email
+- Notification settings page
 - Administration
 
 -----------
 | Changes |
 -----------
+
+Revision 0.8 (16.05.2013)
+- Added notification handler to notify surfers by system message or email
+- Added three notifications, new-surfer-comment, new-surfer-image-comment and new-contact-request
+-- added csv files for notifcations data import
+- Refactored modules to get surfer data with support for display mode surfer name
+- Added new module option, display mode for surfer names
+- Improved comments and comments ranking output, reworked css styling and added surfer page links
+- Added messages deletion in connector module -> onDeleteSurfer for action dispatcher
+- Refactored page links generation in connector module
 
 Revision 0.7 (15.05.2013)
 - Added messages page link to surfer status box

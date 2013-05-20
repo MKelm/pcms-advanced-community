@@ -1,7 +1,7 @@
 <?php
 /**
  * Advanced community surfer deletion
- * 
+ *
  * This class offers methods to delete and modify community data on surfer deletion
  *
  * @copyright 2013 by Martin Kelm
@@ -25,19 +25,19 @@
  * @subpackage External-ACommunity
  */
 class ACommunitySurferDeletion extends PapayaObject {
-  
+
   /**
   * Stored database access object
   * @var PapayaDatabaseAccess
   */
   protected $_databaseAccess = NULL;
-  
+
   /**
    * Table name of comments
    * @var string
    */
   protected $_tableNameComments = 'acommunity_comments';
-  
+
   /**
   * Set/get database access object
   *
@@ -51,10 +51,10 @@ class ACommunitySurferDeletion extends PapayaObject {
     }
     return $this->_databaseAccess;
   }
-  
+
   /**
    * Delete all surfer galleries and related data by one surfer id
-   * 
+   *
    * @param string $surferId
    */
   public function deleteSurferGalleries($surferId) {
@@ -63,10 +63,10 @@ class ACommunitySurferDeletion extends PapayaObject {
     $deletion->papaya($this->papaya());
     $deletion->deleteSurferGalleries($surferId);
   }
-  
+
   /**
    * Set deleted surfer flag in comments for comments filter
-   * 
+   *
    * @param string $surferId
    */
   public function deleteSurferComments($surferId) {
@@ -75,10 +75,10 @@ class ACommunitySurferDeletion extends PapayaObject {
       array('comment_ressource_id' => $surferId, 'comment_ressource_type' => 'surfer')
     );
   }
-  
+
   /**
    * Set deleted surfer flag in comments for comments filter
-   * 
+   *
    * @param string $surferId
    */
   public function setDeletedSurferInPageComments($surferId) {
@@ -88,5 +88,17 @@ class ACommunitySurferDeletion extends PapayaObject {
       array('surfer_id' => $surferId, 'comment_ressource_type' => 'page')
     );
   }
-  
+
+  /**
+   * Delete messages by surfer
+   *
+   * @param string $surferId
+   */
+  public function deleteMessages($surferId) {
+    include_once(dirname(__FILE__).'/../Messages/Deletion.php');
+    $deletion = new ACommunityMessagesDeletion();
+    $deletion->papaya($this->papaya());
+    $deletion->deleteMessages($surferId);
+  }
+
 }

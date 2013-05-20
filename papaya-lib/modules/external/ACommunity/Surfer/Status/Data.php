@@ -35,17 +35,6 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
    */
   public $surfer = NULL;
 
-  /**
-   * Avatar size
-   * @var integer
-   */
-  protected $_avatarSize = 0;
-
-  /**
-   * Avatar resize mode
-   * @var string
-   */
-  protected $_avatarResizeMode = 'mincrop';
 
   /**
    * Page Id to redirect after logout
@@ -61,8 +50,8 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
    * @param array $messageNames
    */
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
-    $this->_avatarSize = (int)$data['avatar_size'];
-    $this->_avatarResizeMode = $data['avatar_resize_mode'];
+    $this->_surferAvatarSize = (int)$data['avatar_size'];
+    $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
     $this->_logoutRedirectionPageId = $data['logout_redirection_page_id'];
     parent::setPluginData($data, $captionNames, $messageNames);
   }
@@ -84,16 +73,12 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
       $reference->setParameters(array($logoutParameters), NULL);
       $logoutLink = $reference->getRelative();
 
-      $surfer = $this->owner->communityConnector()->loadSurfer($ressource['id']);
+      $surfer = $this->getSurfer($ressource['id']);
       $this->surfer = array(
-        'handle' => $surfer['surfer_handle'],
-        'givenname' => $surfer['surfer_givenname'],
-        'surname' => $surfer['surfer_surname'],
-        'avatar' => $this->owner->communityConnector()->getAvatar(
-          $ressource['id'], $this->_avatarSize, TRUE, $this->_avatarResizeMode
-        ),
-        'page_link' => $this->owner->acommunityConnector()->getSurferPageLink($ressource['id']),
-        'edit_link' => $this->owner->acommunityConnector()->getSurferEditorPageLink($surfer['surfer_handle']),
+        'name' => $surfer['name'],
+        'avatar' => $surfer['avatar'],
+        'page_link' => $surfer['page_link'],
+        'edit_link' => $this->owner->acommunityConnector()->getSurferEditorPageLink($ressource['id']),
         'messages_link' => $this->owner->acommunityConnector()->getMessagesPageLink($ressource['id'], TRUE),
         'logout_link' => $logoutLink
       );
@@ -133,23 +118,24 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
       } else {
         unset($this->captions['contact_own_requests_link']);
       }
-    }
 
-    $loginLink = $this->owner->acommunityConnector()->getSurferLoginPageLink();
-    $registrationLink = $this->owner->acommunityConnector()->getSurferRegistrationPageLink();
-    $simpleTemplate = new base_simpletemplate();
+    } else {
+      $loginLink = $this->owner->acommunityConnector()->getSurferLoginPageLink();
+      $registrationLink = $this->owner->acommunityConnector()->getSurferRegistrationPageLink();
+      $simpleTemplate = new base_simpletemplate();
 
-    $this->messages['no_login'] = $simpleTemplate->parse(
-      $this->messages['no_login'],
-      array(
-        'login_link' => sprintf(
-          '<a href="%s">%s</a>', $loginLink, $this->captions['login_link']
-        ),
-        'registration_link' => sprintf(
-          '<a href="%s">%s</a>', $registrationLink, $this->captions['registration_link']
+      $this->messages['no_login'] = $simpleTemplate->parse(
+        $this->messages['no_login'],
+        array(
+          'login_link' => sprintf(
+            '<a href="%s">%s</a>', $loginLink, $this->captions['login_link']
+          ),
+          'registration_link' => sprintf(
+            '<a href="%s">%s</a>', $registrationLink, $this->captions['registration_link']
+          )
         )
-      )
-    );
+      );
+    }
   }
 
 }

@@ -28,35 +28,44 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @subpackage External-ACommunity
  */
 class ACommunityCommentsRankingBox extends base_actionbox {
-  
+
   /**
    * Parameter prefix name
    * @var string $paramName
    */
   public $paramName = 'acc';
-  
+
   /**
    * Edit fields
    * @var array $editFields
    */
   public $editFields = array(
     'comments_per_page' => array(
-      'Comments per page', 'isNum', TRUE, 'input', 30, '0 for all comments', 10
+      'Comments Per Page', 'isNum', TRUE, 'input', 30, '0 for all comments', 10
     ),
-    'handle_deleted_surfer' => array(
-      'Handle of deleted surfer', 'isAlphaNumChar', TRUE, 'input', 200, '', 'Deleted user'
+    'deleted_surfer_handle' => array(
+      'Deleted Surfer Handle', 'isAlphaNumChar', TRUE, 'input', 200, '', 'Deleted user'
+    ),
+    'avatar_size' => array(
+      'Avatar Size', 'isNum', TRUE, 'input', 30, '', 40
+    ),
+    'avatar_resize_mode' => array(
+      'Avatar Resize Mode', 'isAlpha', TRUE, 'translatedcombo',
+       array(
+         'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
+       ), '', 'mincrop'
     )
   );
-  
+
   /**
    * Comments object
    * @var ACommunityComments
    */
   protected $_comments = NULL;
-  
+
   /**
-  * Get (and, if necessary, initialize) the ACommunityComments object 
-  * 
+  * Get (and, if necessary, initialize) the ACommunityComments object
+  *
   * @return ACommunityComments $comments
   */
   public function comments(ACommunityComments $comments = NULL) {

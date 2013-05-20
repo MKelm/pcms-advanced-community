@@ -36,12 +36,6 @@ class ACommunitymessagesData extends ACommunityUiContentData {
   public $paging = array();
 
   /**
-   * A list of surfer page links used by messages list
-   * @var array
-   */
-  protected $_surferPageLinks = NULL;
-
-  /**
    * A list of messages page links used by message surfers list
    * The message page links contain a surfer handle to identify the message contact
    * @var array
@@ -62,13 +56,13 @@ class ACommunitymessagesData extends ACommunityUiContentData {
 
   /**
    * Message database record
-   * @var object
+   * @var ACommunityContentMessage
    */
   protected $_message = NULL;
 
   /**
    * Message surfer database record
-   * @var object
+   * @var ACommunityContentMessageSurfer
    */
   protected $_messageSurfer = NULL;
 
@@ -83,18 +77,6 @@ class ACommunitymessagesData extends ACommunityUiContentData {
    * @var object
    */
   protected $_messageConversations = NULL;
-
-  /**
-   * Size of avatar
-   * @var integer
-   */
-  protected $_surferAvatarSize = NULL;
-
-  /**
-   * Resize mode for avatar
-   * @var string
-   */
-  protected $_surferAvatarResizeMode = NULL;
 
   /**
    * Length of last message text to show in conversations list
@@ -281,13 +263,6 @@ class ACommunitymessagesData extends ACommunityUiContentData {
     foreach ($messages as $id => $message) {
       if ($linkMode == 'surfer-page') {
         $contactSurferId = $message['sender'];
-        if (!isset($this->_surferPageLinks[$contactSurferId])) {
-          $message['surfer_page_link'] = $this->owner->acommunityConnector()->getSurferPageLink(
-            $contactSurferId
-          );
-        } else {
-          $message['surfer_page_link'] = $this->_surferPageLinks[$contactSurferId];
-        }
       } elseif ($linkMode == 'messages-page') {
         $contactSurferId = $message['sender'] == $this->currentSurferId() ?
           $message['recipient'] : $message['sender'];
@@ -299,13 +274,7 @@ class ACommunitymessagesData extends ACommunityUiContentData {
           $message['messages_page_link'] = $this->_messagesPageLinks[$contactSurferId];
         }
       }
-      $surferName = $this->owner->communityConnector()->getNameById($contactSurferId);
-      $message['surfer_handle'] = $surferName['surfer_handle'];
-      $message['surfer_givenname'] = $surferName['surfer_givenname'];
-      $message['surfer_surname'] = $surferName['surfer_surname'];
-      $message['surfer_avatar'] = $this->owner->communityConnector()->getAvatar(
-        $contactSurferId, $this->_surferAvatarSize, TRUE, $this->_surferAvatarResizeMode
-      );
+      $message['surfer'] = $this->getSurfer($contactSurferId);
       $data[$id] = $message;
     }
     return $data;

@@ -28,34 +28,40 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @subpackage External-ACommunity
  */
 class ACommunityCommentsBox extends base_actionbox {
-  
+
   /**
    * Parameter prefix name
    * @var string $paramName
    */
   public $paramName = 'acc';
-  
+
   /**
    * Edit fields
    * @var array $editFields
    */
   public $editFields = array(
     'ressource_type' => array(
-      'Ressource type', 'isAlpha', TRUE, 'combo', 
-      array('page' => 'Page', 'surfer' => 'Surfer', 'image' => 'Image'), 
+      'Ressource Type', 'isAlpha', TRUE, 'combo',
+      array('page' => 'Page', 'surfer' => 'Surfer', 'image' => 'Image'),
       NULL, 'page'
     ),
     'comments_per_page' => array(
-      'Comments per page', 'isNum', TRUE, 'input', 30, '0 for all comments', 10
-    ),
-    'comments_per_page' => array(
-      'Comments per page', 'isNum', TRUE, 'input', 30, '0 for all comments', 10
+      'Comments Per Page', 'isNum', TRUE, 'input', 30, '0 for all comments', 10
     ),
     'comments_per_comment' => array(
-      'Comments per comment', 'isNum', TRUE, 'input', 30, '0 for all comments', 5
+      'Comments Per Comment', 'isNum', TRUE, 'input', 30, '0 for all comments', 5
     ),
-    'handle_deleted_surfer' => array(
-      'Handle of deleted surfer', 'isAlphaNumChar', TRUE, 'input', 200, '', 'Deleted user'
+    'deleted_surfer_handle' => array(
+      'Deleted Surfer Handle', 'isAlphaNumChar', TRUE, 'input', 200, '', 'Deleted user'
+    ),
+    'avatar_size' => array(
+      'Avatar Size', 'isNum', TRUE, 'input', 30, '', 40
+    ),
+    'avatar_resize_mode' => array(
+      'Avatar Resize Mode', 'isAlpha', TRUE, 'translatedcombo',
+       array(
+         'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
+       ), '', 'mincrop'
     ),
     'Captions',
     'caption_dialog_text' => array(
@@ -64,34 +70,43 @@ class ACommunityCommentsBox extends base_actionbox {
     'caption_dialog_button' => array(
       'Dialog Button', 'isNoHTML', TRUE, 'input', 200, '', 'Add'
     ),
+    'caption_command_reply' => array(
+      'Reply', 'isNoHTML', TRUE, 'input', 200, '', 'Reply'
+    ),
+    'caption_command_vote_up' => array(
+      'Vote Up', 'isNoHTML', TRUE, 'input', 200, '', '[ + ]'
+    ),
+    'caption_command_vote_down' => array(
+      'Vote Down', 'isNoHTML', TRUE, 'input', 200, '', '[ - ]'
+    ),
     'Messages',
     'message_dialog_input_error' => array(
-      'Dialog Input Error', 'isNoHTML', TRUE, 'input', 200, '', 
+      'Dialog Input Error', 'isNoHTML', TRUE, 'input', 200, '',
       'Invalid input. Please check the field(s) "%s".'
     )
   );
-  
+
   /**
    * Comments object
    * @var ACommunityComments
    */
   protected $_comments = NULL;
-  
+
   /**
    * Get ressource data to load corresponding comments
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
     $this->comments()->data()->ressource(
-      $this->data['ressource_type'], 
-      $this, 
+      $this->data['ressource_type'],
+      $this,
       array('surfer' => array('user_name', 'user_handle', 'surfer_handle'))
     );
   }
-  
+
   /**
-  * Get (and, if necessary, initialize) the ACommunityComments object 
-  * 
+  * Get (and, if necessary, initialize) the ACommunityComments object
+  *
   * @return ACommunityComments $comments
   */
   public function comments(ACommunityComments $comments = NULL) {
@@ -103,7 +118,10 @@ class ACommunityCommentsBox extends base_actionbox {
       $this->_comments->parameterGroup($this->paramName);
       $this->_comments->data()->setPluginData(
         $this->data,
-        array('caption_dialog_text', 'caption_dialog_button'),
+        array(
+          'caption_dialog_text', 'caption_dialog_button', 'caption_command_reply',
+          'caption_command_vote_up', 'caption_command_vote_down'
+        ),
         array('message_dialog_input_error')
       );
       $this->_comments->data()->languageId = $this->papaya()->request->languageId;

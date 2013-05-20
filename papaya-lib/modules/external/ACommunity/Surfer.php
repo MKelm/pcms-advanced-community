@@ -64,9 +64,24 @@ class ACommunitySurfer extends ACommunityUiContentObject {
       if (!empty($currentSurferId)) {
         switch ($command) {
           case 'request_contact':
-            $this->data()->contactChanges()->addContactRequest(
+            $result = $this->data()->contactChanges()->addContactRequest(
               $currentSurferId, $ressource['id']
             );
+            if ($result == TRUE) {
+              $url = $this->papaya()->request->url->getHostUrl().'/'.
+                $this->acommunityConnector()->getSurferContactsPageLink(
+                  $ressource['id'], 'contact_requests'
+                );
+              $this->data()->owner->notificationHandler()->notify(
+                'new-contact-request',
+                $ressource['id'],
+                array(
+                  'recipient_surfer' => $ressource['id'],
+                  'context_surfer' => $currentSurferId,
+                  'page_url' => $url
+                )
+              );
+            }
             break;
           case 'remove_contact_request':
             $this->data()->contactChanges()->deleteContactRequest(

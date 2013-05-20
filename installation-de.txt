@@ -362,3 +362,34 @@ Es gibt noch weitere Page ID-Einstellungen in den Moduloptionen des Connectors:
 -- wird in "Surfer Status Box" genutzt
 - Messages Page = Seiten ID eines "Message Page"-Modules mit Ausgabe von Mitteilungen
 -- wird in "Surfer Status Box" genutzt
+
+== Benachrichtigungen ==
+
+Um Benachrichtigungen (Notifications) zu nutzen, müssen sie die Dateien aus dem Ordner "import-data"
+in ihre Datenbank importieren.
+
+- Öffnen sie dazu papaya CMS, gehen sie auf den Menüpunkt "Module", Pakete -> "Advanced Community"
+  und wählen sie die Tabelle "papaya_acommunity_notifications" aus
+- Gehen sie auf den Menüpunkt "Daten importieren" oben rechts
+- Wählen sie die passende CSV Datei aus dem Ordner "import-data"
+- Bestätigen sie das Formular
+- Wählen sie die Tabelle "papaya_acommunity_notification_trans" aus
+- Gehen sie auf den Menüpunkt "Daten importieren" oben rechts
+- Wählen sie die passende CSV Datei aus dem Ordner "import-data"
+- Bestätigen sie das Formular
+
+Danach werden in ihrer Community Benachrichtigungen über Mitteilungen versendet.
+Per Standard ist der Versand für neue Benutzer via E-Mail deaktiviert.
+
+Sie können jedoch unter Pakete -> "Advanced Community", Modul -> "Connector" -> Menüpunkt "Optionen"
+die Einstellungen für Benachrichtigungen (Notifications) ändern:
+- Sender E-Mail, eine Adresse die als Absender in Benachrichtigungmails genutzt wird
+- Sender Name, ein Name der als Absender in Benachrichtigungmails genutzt wird
+- Notify By Message, Benachrichtigungen an (neue) Benutzer ohne Einstellungen mittels Mitteilung ja/nein
+- Notify By E-Mail, Benachrichtigungen an (neue) Benutzer ohne Einstellungen mittels E-Mail ja/nein
+
+Derzeit gibt es noch kein Modul in dem Benutzer ihre Benachrichtigungen Einstellen können.
+Es gibt drei Benachrichtigungen die unterstützt werden:
+- new-surfer-comment, wenn ein fremder Surfer auf einer Surferseite ein Kommentar abgibt
+- new-surfer-image-comment, wenn ein fremder Surfer ein Bild in einer Surfergallerie kommentiert
+- new-contact-request, wenn ein Surfer bei einem anderen Surfer eine Kontaktanfrage stellt

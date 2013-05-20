@@ -30,12 +30,6 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
 class ACommunitySurferData extends ACommunityUiContentData {
 
   /**
-   * Gender titles
-   * @var array
-   */
-  protected $_genderTitles = array();
-
-  /**
    * Surfer base details
    * @var array
    */
@@ -46,18 +40,6 @@ class ACommunitySurferData extends ACommunityUiContentData {
    * @var array
    */
   public $surferDetails = array();
-
-  /**
-   * Avatar size
-   * @var integer
-   */
-  protected $_avatarSize = 0;
-
-  /**
-   * Avatar resize mode
-   * @var string
-   */
-  protected $_avatarResizeMode = 'mincrop';
 
   /**
    * Current contact status with status value, commands and command links
@@ -85,12 +67,12 @@ class ACommunitySurferData extends ACommunityUiContentData {
    * @param array $messageNames
    */
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
-    $this->_genderTitles = array(
+    $this->_surferGenderTitles = array(
       'm' => $data['title_gender_male'],
       'f' => $data['title_gender_female']
     );
-    $this->_avatarSize = (int)$data['avatar_size'];
-    $this->_avatarResizeMode = $data['avatar_resize_mode'];
+    $this->_surferAvatarSize = (int)$data['avatar_size'];
+    $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
     parent::setPluginData($data, $captionNames, $messageNames);
   }
 
@@ -99,23 +81,7 @@ class ACommunitySurferData extends ACommunityUiContentData {
    */
   public function initialize() {
     $ressource = $this->ressource();
-    $surferDetails = $this->owner->communityConnector()->loadSurfer($ressource['id']);
-
-    $this->surferBaseDetails = array(
-      'handle' => $surferDetails['surfer_handle'],
-      'givenname' => $surferDetails['surfer_givenname'],
-      'surname' => $surferDetails['surfer_surname'],
-      'email' => $surferDetails['surfer_email'],
-      'gender' => $this->_genderTitles[$surferDetails['surfer_gender']],
-      'avatar' => $this->owner->communityConnector()->getAvatar(
-        $ressource['id'], $this->_avatarSize, TRUE, $this->_avatarResizeMode
-      ),
-      'lastlogin' => date('Y-m-d H:i:s', $surferDetails['surfer_lastlogin']),
-      'lastaction' => date('Y-m-d H:i:s', $surferDetails['surfer_lastaction']),
-      'registration' => date('Y-m-d H:i:s', $surferDetails['surfer_registration']),
-      'group' => $surferDetails['surfergroup_title']
-    );
-    unset($surferDetails);
+    $this->surferBaseDetails = $this->getSurfer($ressource['id'], NULL, TRUE);
     if ($this->ressourceIsActiveSurfer == FALSE) {
       $this->sendMessageLink = $this->owner->acommunityConnector()->getMessagesPageLink(
         $ressource['id']

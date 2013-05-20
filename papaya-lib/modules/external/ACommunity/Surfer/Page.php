@@ -60,14 +60,8 @@ class ACommunitySurferPage extends base_content {
     'caption_base_details' => array(
       'Base Details', 'isNoHTML', TRUE, 'input', 200, '', 'Base'
     ),
-    'caption_surfer_handle' => array(
-      'Surfer Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'
-    ),
-    'caption_surfer_givenname' => array(
-      'Surfer Givenname', 'isNoHTML', TRUE, 'input', 200, '', 'Givenname'
-    ),
-    'caption_surfer_surname' => array(
-      'Surfer Surname', 'isNoHTML', TRUE, 'input', 200, '', 'Surname'
+    'caption_surfer_name' => array(
+      'Surfer Name', 'isNoHTML', TRUE, 'input', 200, '', 'Name'
     ),
     'caption_surfer_email' => array(
       'Surfer E-Mail', 'isNoHTML', TRUE, 'input', 200, '', 'E-Mail'

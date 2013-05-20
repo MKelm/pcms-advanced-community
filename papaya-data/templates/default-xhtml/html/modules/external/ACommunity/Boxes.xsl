@@ -33,9 +33,7 @@
               <span class="surferAvatar"><a href="{messages-page-link/text()}"><img src="{surfer-contact/@avatar}" alt="" /></a></span>
               <xsl:text> </xsl:text>
               <span class="right">
-                <span class="surferName"><a href="{messages-page-link/text()}"><xsl:value-of select="surfer-contact/@givenname" />
-                <xsl:text> '</xsl:text><xsl:value-of select="surfer-contact/@handle" />
-                <xsl:text>' </xsl:text><xsl:value-of select="surfer-contact/@surname" /></a></span>
+                <span class="surferName"><a href="{messages-page-link/text()}"><xsl:value-of select="surfer-contact/@name" /></a></span>
                 <xsl:text> </xsl:text>
                 <span class="lastMessageText"><xsl:value-of select="last-message/text()" /></span>
                 <xsl:text> </xsl:text>
@@ -72,6 +70,7 @@
           <a class="surferGalleryTeaserMoreImages" href="{more-images-link/@href}"><xsl:value-of select="more-images-link/text()" /></a>
         </xsl:if>
       </div>
+      <xsl:call-template name="float-fix" />
     </xsl:if>
   </xsl:template>
 
@@ -81,9 +80,7 @@
         <xsl:choose>
           <xsl:when test="active-surfer">
             <div class="surferAvatar"><a href="{active-surfer/page-link}"><img src="{active-surfer/@avatar}" alt="" /></a></div>
-            <div class="surferName"><a href="{active-surfer/page-link}"><xsl:value-of select="active-surfer/@givenname" />
-            <xsl:text> '</xsl:text><xsl:value-of select="active-surfer/@handle" />
-            <xsl:text>' </xsl:text><xsl:value-of select="active-surfer/@surname" /></a></div>
+            <div class="surferName"><a href="{active-surfer/page-link}"><xsl:value-of select="active-surfer/@name" /></a></div>
             <div class="surferMainLinks">
               <a class="surferEdit" href="{active-surfer/edit-link}"><xsl:value-of select="active-surfer/edit-link/@caption" /></a>
               <a class="surferLogout" href="{active-surfer/logout-link}"><xsl:value-of select="active-surfer/logout-link/@caption" /></a>
@@ -166,10 +163,10 @@
       <xsl:if test="count(commenter) &gt; 0">
         <xsl:for-each select="commenter">
           <div class="commenter">
-            <div class="commenterAvatar"><a href="{@surfer_page_link}"><img alt="" src="{@surfer_avatar}" /></a></div>
-            <div class="commenterUserName"><a href="{@surfer_page_link}"><xsl:value-of select="@surfer_handle" /></a></div>
-            <div class="commenterCommentsAmount">
-              <xsl:value-of select="@comments_amount" /><xsl:text> </xsl:text><xsl:value-of select="@comments_amount_caption" />
+            <div class="commenterAvatar"><a href="{surfer/@page-link}"><img alt="" src="{surfer/@avatar}" /></a></div>
+            <div class="commenterSurferName"><a href="{surfer/@page-link}"><xsl:value-of select="surfer/@name" /></a></div>
+            <div class="commenterComments">
+              <xsl:value-of select="comments/@amount" /><xsl:text> </xsl:text><xsl:value-of select="comments/@caption" />
             </div>
             <xsl:call-template name="float-fix" />
           </div>

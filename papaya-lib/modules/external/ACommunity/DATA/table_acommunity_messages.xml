@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <table name="acommunity_messages" prefix="yes">
-<fields>
-<field name="message_id" type="integer" size="4" null="no" autoinc="yes"/>
-<field name="message_sender" type="string" size="32" null="no"/>
-<field name="message_recipient" type="string" size="32" null="no"/>
-<field name="message_time" type="integer" size="4" null="no"/>
-<field name="message_text" type="string" size="65535" null="no"/>
-</fields>
-<keys>
-  <primary-key>
-    <field>message_id</field>
-  </primary-key>
-  <key name="message_sender">
-    <field>message_sender</field>
-  </key>
-  <key name="message_recipient">
-    <field>message_recipient</field>
-  </key>
-  <key name="message_time">
-    <field>message_time</field>
-  </key>
-</keys>
+  <fields>
+    <field name="message_id" type="integer" size="4" null="no" autoinc="yes"/>
+    <field name="message_sender" type="string" size="32" null="no"/>
+    <field name="message_recipient" type="string" size="32" null="no"/>
+    <field name="message_time" type="integer" size="4" null="no"/>
+    <field name="message_text" type="string" size="65535" null="no"/>
+  </fields>
+  <keys>
+    <primary-key>
+      <field>message_id</field>
+    </primary-key>
+    <key name="message_sender">
+      <field>message_sender</field>
+    </key>
+    <key name="message_recipient">
+      <field>message_recipient</field>
+    </key>
+    <key name="message_time">
+      <field>message_time</field>
+    </key>
+  </keys>
 </table>

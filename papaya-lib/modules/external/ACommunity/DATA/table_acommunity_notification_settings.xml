@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<table name="acommunity_notification_settings" prefix="yes">
+  <fields>
+    <field name="notification_id" type="integer" size="4" null="no" />
+    <field name="surfer_id" type="string" size="32" null="no" />
+    <field name="notification_by_message" type="integer" size="2" null="no"/>
+    <field name="notification_by_email" type="integer" size="2" null="no"/>
+  </fields>
+  <keys>
+    <primary-key>
+      <field>notification_id</field>
+      <field>surfer_id</field>
+    </primary-key>
+  </keys>
+</table>

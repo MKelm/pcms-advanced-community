@@ -97,6 +97,127 @@ class ACommunityUiContentData extends PapayaObject {
   protected $_reference = NULL;
 
   /**
+   * Buffer for surfers' data:
+   * - Surfer name, depends on display mode for names module option
+   * - Surfer avatar, depends on avatar size and resize mode if set
+   * - Surfer page link, depends on surfer page id module option
+   * @var array
+   */
+  protected $_surfers = NULL;
+
+  /**
+   * Size of surfer avatars
+   * @var integer
+   */
+  protected $_surferAvatarSize = NULL;
+
+  /**
+   * Resize mode for surfer avatars
+   * @var string
+   */
+  protected $_surferAvatarResizeMode = NULL;
+
+  /**
+   * Surfer gender titles
+   * @var array
+   */
+  protected $_surferGenderTitles = array();
+
+  /**
+   * Get surfer data by id depending on some module options
+   *
+   * @param array|string $surferId one id or multiple ids
+   * @return array
+   */
+  public function getSurfer($surferId, $deletedSurferHandle = NULL, $extendedDetails = FALSE) {
+    $loadIds = array();
+    if (is_array($surferId)) {
+      foreach ($surferId as $id) {
+        if (!isset($this->_surfers[$id])) {
+          $loadIds[] = $id;
+        }
+      }
+    } else {
+      if (!isset($this->_surfers[$surferId])) {
+        $loadIds = array($surferId);
+      }
+    }
+    $this->_loadSurfers($loadIds, $deletedSurferHandle, $extendedDetails);
+    if (is_array($surferId)) {
+      $result = array();
+      foreach ($surferId as $id) {
+        $result[$id] = $this->_surfers[$id];
+      }
+      return $result;
+    } else {
+      return $this->_surfers[$surferId];
+    }
+  }
+
+  /**
+   * Helper method for getSurfer to load surfers by loadIds
+   *
+   * @param array $loadIds
+   * @param string $deletedSurferHandle
+   * @param boolean $extendedDetails
+   */
+  protected function _loadSurfers($loadIds, $deletedSurferHandle, $extendedDetails) {
+    if (!empty($loadIds)) {
+      $avatarSize = isset($this->_surferAvatarSize) ? $this->_surferAvatarSize : 0;
+      $avatarResizeMode = isset($this->_surferAvatarResizeMode) ? $this->_surferAvatarResizeMode : 'mincrop';
+      $avatars = $this->owner->communityConnector()->getAvatar($loadIds, $avatarSize, TRUE, $avatarResizeMode);
+      $details = $extendedDetails ?
+        $this->owner->communityConnector()->loadSurfers($loadIds) :
+        $this->owner->communityConnector()->getNameById($loadIds);
+      $displayModeName = $this->owner->acommunityConnector()->getDisplayModeSurferName();
+      foreach ($loadIds as $loadId) {
+        $surfer = array(
+          'id' => $loadId,
+          'name' => NULL,
+          'avatar' => $avatars[$loadId],
+          'page_link' => $this->owner->acommunityConnector()->getSurferPageLink($loadId)
+        );
+
+        if ($extendedDetails) {
+          $surfer = array_merge(
+            $surfer,
+            array(
+              'gender' => isset($this->_surferGenderTitles[$details[$loadId]['surfer_gender']]) ?
+                $this->_surferGenderTitles[$details[$loadId]['surfer_gender']] : $details[$loadId]['surfer_gender'],
+              'email' => $details['surfer_email'],
+              'lastlogin' => date('Y-m-d H:i:s', $details[$loadId]['surfer_lastlogin']),
+              'lastaction' => date('Y-m-d H:i:s', $details[$loadId]['surfer_lastaction']),
+              'registration' => date('Y-m-d H:i:s', $details[$loadId]['surfer_registration']),
+              'group' => $details[$loadId]['surfergroup_title']
+            )
+          );
+        }
+        $surfer['handle'] = isset($details[$loadId]['surfer_handle']) ? $details[$loadId]['surfer_handle'] : $deletedSurferHandle;
+        $surfer['givenname'] = isset($details[$loadId]['surfer_givenname']) ? $details[$loadId]['surfer_givenname'] : NULL;
+        $surfer['surname'] = isset($details[$loadId]['surfer_surname']) ? $details[$loadId]['surfer_surname'] : NULL;
+        switch ($displayModeName) {
+          case 'all':
+            $surfer['name'] = sprintf("%s '%s' %s", $surfer['givenname'], $surfer['handle'], $surfer['surname']);
+            break;
+          case 'names':
+            $surfer['name'] = sprintf("%s %s", $surfer['givenname'], $surfer['surname']);
+            break;
+          case 'handle':
+            $surfer['name'] = $surfer['handle'];
+            break;
+          case 'givenname':
+            $surfer['name'] = $surfer['givenname'];
+            break;
+          case 'surname':
+            $surfer['name'] = $surfer['surname'];
+            break;
+        }
+        $this->_surfers[$loadId] = $surfer;
+      }
+    }
+  }
+
+  /**
    * Set data by plugin object
    *
    * @param array $data

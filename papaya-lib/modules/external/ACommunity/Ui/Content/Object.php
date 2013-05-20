@@ -24,19 +24,25 @@
  */
 class ACommunityUiContentObject extends PapayaObjectInteractive
   implements PapayaXmlAppendable {
-  
+
   /**
    * Community connector
    * @var connector_surfers
    */
   protected $_communityConnector = NULL;
-  
+
   /**
    * Advanced Community connector
    * @var ACommunityConnector
    */
   protected $_acommunityConnector = NULL;
-    
+
+  /**
+   * Notification handler
+   * @var ACommunityNotificationHandler
+   */
+  protected $_notificationHandler = NULL;
+
   /**
    * Create dom node structure of the given object and append it to the given xml
    * element node.
@@ -45,10 +51,10 @@ class ACommunityUiContentObject extends PapayaObjectInteractive
    */
   public function appendTo(PapayaXmlElement $parent) {
   }
-  
+
   /**
    * Compile output xml.
-   * 
+   *
    * @return string
    */
   public function getXml() {
@@ -61,10 +67,10 @@ class ACommunityUiContentObject extends PapayaObjectInteractive
     }
     return $xml;
   }
-  
+
   /**
    * Get/set community connector
-   * 
+   *
    * @param object $connector
    * @return object
    */
@@ -79,10 +85,10 @@ class ACommunityUiContentObject extends PapayaObjectInteractive
     }
     return $this->_communityConnector;
   }
-  
+
   /**
    * Get/set advanced community connector
-   * 
+   *
    * @param object $connector
    * @return object
    */
@@ -96,5 +102,22 @@ class ACommunityUiContentObject extends PapayaObjectInteractive
       );
     }
     return $this->_acommunityConnector;
+  }
+
+  /**
+   * Get/set notification handler
+   *
+   * @param ACommunityNotificationHandler $handler
+   * @return ACommunityNotificationHandler
+   */
+  public function notificationHandler(ACommunityNotificationHandler $handler = NULL) {
+    if (isset($handler)) {
+      $this->_notificationHandler = $handler;
+    } elseif (is_null($this->_notificationHandler)) {
+      include_once(dirname(__FILE__).'/../../Notification/Handler.php');
+      $this->_notificationHandler = new ACommunityNotificationHandler();
+      $this->_notificationHandler->papaya($this->papaya());
+    }
+    return $this->_notificationHandler;
   }
 }

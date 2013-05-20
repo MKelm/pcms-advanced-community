@@ -71,13 +71,11 @@ class ACommunityUiContentMessagesList extends PapayaUiControl {
         $message = new ACommunityUiContentMessage(
           $messageData['id'],
           $messageData['text'],
-          $messageData['surfer_handle'],
-          $messageData['surfer_givenname'],
-          $messageData['surfer_surname'],
           $messageData['time']
         );
-        $message->surferPageLink = $messageData['surfer_page_link'];
-        $message->surferAvatar = $messageData['surfer_avatar'];
+        $message->surferName = $messageData['surfer']['name'];
+        $message->surferPageLink = $messageData['surfer']['page_link'];
+        $message->surferAvatar = $messageData['surfer']['avatar'];
         $this->messages[] = $message;
       }
     }

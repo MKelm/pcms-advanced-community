@@ -37,35 +37,27 @@
           </xsl:variable>
           <a name="{$anchor}"><xsl:text> </xsl:text></a>
           <div class="comment">
-            <div class="commentUser">
-              <div class="commentUserAvatar"><img src="{@surfer_avatar}" alt="" /></div>
-              <div class="commentUserHandle"><xsl:value-of select="@surfer_handle" /></div>
-              <div class="commentTime">
-                <xsl:call-template name="format-date">
-                  <xsl:with-param name="date" select="@time" />
-                </xsl:call-template><xsl:text>, </xsl:text>
-                <xsl:call-template name="format-time">
-                  <xsl:with-param name="time" select="substring(@time, 12, 8)" />
-                </xsl:call-template>
-              </div>
-            </div>
-            <div class="commentText">
-              <div class="commentTextParagraph"><xsl:value-of select="text" disable-output-escaping="yes" /></div>
-              <div class="commentExtras">
-                <div class="commentExtrasVotesScore"><xsl:value-of select="@votes_score" /></div>
-                <xsl:if test="count(links/link[@name = 'vote_up']) &gt; 0 and count(links/link[@name = 'vote_down']) &gt; 0">
-                  <div class="commentExtrasVoting">
-                    <a class="commentExtrasVotingLinkVoteUp" href="{links/link[@name = 'vote_up']/text()}#{$anchor}">[ + ]</a>
-                    <a class="commentExtrasVotingLinkVoteDown" href="{links/link[@name = 'vote_down']/text()}#{$anchor}">[ - ]</a>
-                    <xsl:call-template name="float-fix" />
-                  </div>
-                </xsl:if>
-                <div class="commentExtrasReply">
-                  <xsl:if test="count(links/link[@name = 'reply']) &gt; 0">
-                    <a class="commentExtrasReplyLink" href="{links/link[@name = 'reply']/text()}#{$anchor}">Antworten</a>
-                  </xsl:if>
-                  <xsl:text> </xsl:text>
+            <div class="commentSurferAvatar"><a href="{surfer/@page-link}"><img src="{surfer/@avatar}" alt="" /></a></div>
+            <div class="commentContainer">
+              <div class="commentHeader">
+                <div class="commentSurferName"><a href="{surfer/@page-link}"><xsl:value-of select="surfer/@name" /></a></div>
+                <div class="commentTime">
+                  <xsl:call-template name="format-date">
+                    <xsl:with-param name="date" select="@time" />
+                  </xsl:call-template><xsl:text>, </xsl:text>
+                  <xsl:call-template name="format-time">
+                    <xsl:with-param name="time" select="substring(@time, 12, 8)" />
+                  </xsl:call-template>
                 </div>
+                <xsl:call-template name="float-fix" />
+              </div>
+              <div class="commentText">
+                <div class="commentTextParagraph"><xsl:value-of select="text" disable-output-escaping="yes" /></div>
+                <xsl:call-template name="acommunity-comments-list-comment-extras">
+                  <xsl:with-param name="commandLinks" select="command-links/link" />
+                  <xsl:with-param name="anchor" select="$anchor" />
+                </xsl:call-template>
+                <xsl:call-template name="float-fix" />
               </div>
               <xsl:call-template name="float-fix" />
             </div>
@@ -92,6 +84,28 @@
 
       </div>
     </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="acommunity-comments-list-comment-extras">
+    <xsl:param name="commandLinks" />
+    <xsl:param name="anchor" />
+
+    <div class="commentExtras">
+      <div class="commentExtrasVotesScore"><xsl:value-of select="@votes_score" /></div>
+      <xsl:if test="$commandLinks[@name = 'vote_up'] and $commandLinks[@name = 'vote_down']">
+        <div class="commentExtrasVoting">
+          <a class="commentExtrasVotingLinkVoteUp" href="{$commandLinks[@name = 'vote_up']/text()}#{$anchor}"><xsl:value-of select="$commandLinks[@name = 'vote_up']/@caption" /></a>
+          <a class="commentExtrasVotingLinkVoteDown" href="{$commandLinks[@name = 'vote_down']/text()}#{$anchor}"><xsl:value-of select="$commandLinks[@name = 'vote_down']/@caption" /></a>
+          <xsl:call-template name="float-fix" />
+        </div>
+      </xsl:if>
+      <div class="commentExtrasReply">
+        <xsl:if test="$commandLinks[@name = 'reply']">
+          <a class="commentExtrasReplyLink" href="{$commandLinks[@name = 'reply']/text()}#{$anchor}"><xsl:value-of select="$commandLinks[@name = 'reply']/@caption" /></a>
+        </xsl:if>
+        <xsl:text> </xsl:text>
+      </div>
+    </div>
   </xsl:template>
 
 </xsl:stylesheet>

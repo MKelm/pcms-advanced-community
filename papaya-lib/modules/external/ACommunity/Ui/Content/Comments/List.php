@@ -23,20 +23,20 @@
  * @subpackage External-ACommunity
  */
 class ACommunityUiContentCommentsList extends PapayaUiControl {
-  
+
   /**
   * Object buffer for comments
   *
   * @var ACommunityUiContentComments
   */
   protected $_comments = NULL;
-  
+
   /**
   * Comments data
   * @var ACommunityCommentsData
   */
   protected $_data = NULL;
-  
+
   /**
   * Declared public properties, see property annotaiton of the class for documentation.
   *
@@ -45,7 +45,7 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
   protected $_declaredProperties = array(
     'comments' => array('comments', 'comments')
   );
-  
+
   /**
    * Get/set comments data
    *
@@ -66,25 +66,33 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
     $commentsList = $this->data()->commentsList();
     if (count($commentsList['data']) > 0) {
       $this->comments()->absCount = $commentsList['abs_count'];
-      $links = $this->data()->links();
-      $surferHandles = $this->data()->surferHandles();
-      $surferAvatars = $this->data()->surferAvatars();
+      $commandLinks = $this->data()->commandLinks();
       foreach ($commentsList['data'] as $id => $commentData) {
         if (isset($commentData['childs'])) {
           include_once(dirname(__FILE__).'/../Comment.php');
           $comment = new ACommunityUiContentComment(
             $commentData['id'],
             $commentData['text'],
-            $surferHandles[$commentData['surfer_id']],
             $commentData['time'],
             $commentData['votes_score']
           );
-          $comment->surferPageLink = $commentData['surfer_page_link'];
-          $comment->surferAvatar = $surferAvatars[$commentData['surfer_id']];
-          $comment->linkReply = $links['comment_links'][$id]['reply'];
-          $comment->linkVoteUp = $links['comment_links'][$id]['vote_up'];
-          $comment->linkVoteDown = $links['comment_links'][$id]['vote_down'];
-          
+          $comment->surferName = $commentData['surfer']['name'];
+          $comment->surferPageLink = $commentData['surfer']['page_link'];
+          $comment->surferAvatar = $commentData['surfer']['avatar'];
+
+          if (isset($commandLinks[$id]['reply'])) {
+            $comment->linkReply = $commandLinks[$id]['reply'];
+            $comment->linkReplyCaption = $this->data()->captions['command_reply'];
+          }
+          if (isset($commandLinks[$id]['vote_up'])) {
+            $comment->linkVoteUp = $commandLinks[$id]['vote_up'];
+            $comment->linkVoteUpCaption = $this->data()->captions['command_vote_up'];
+          }
+          if (isset($commandLinks[$id]['vote_down'])) {
+            $comment->linkVoteDown = $commandLinks[$id]['vote_down'];
+            $comment->linkVoteDownCaption = $this->data()->captions['command_vote_down'];
+          }
+
           if (!empty($commentData['childs']['data'])) {
             include_once(dirname(__FILE__).'/../Comments.php');
             $subComments = new ACommunityUiContentComments($comment);
@@ -96,27 +104,34 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
             );
             $subComments->reference($this->data()->reference());
             $subComments->absCount = $commentData['childs']['abs_count'];
-            
+
             foreach ($commentData['childs']['data'] as $subCommentId => $subCommentData) {
               $subComment = new ACommunityUiContentComment(
                 $subCommentData['id'],
                 $subCommentData['text'],
-                $surferHandles[$subCommentData['surfer_id']],
                 $subCommentData['time'],
                 $subCommentData['votes_score']
               );
-              $subComment->surferPageLink = $subCommentData['surfer_page_link'];
-              $subComment->surferAvatar = $surferAvatars[$subCommentData['surfer_id']];
-              $subComment->linkVoteUp = $links['comment_links'][$subCommentId]['vote_up'];
-              $subComment->linkVoteDown = $links['comment_links'][$subCommentId]['vote_down'];
-              
+              $subComment->surferName = $subCommentData['surfer']['name'];
+              $subComment->surferPageLink = $subCommentData['surfer']['page_link'];
+              $subComment->surferAvatar = $subCommentData['surfer']['avatar'];
+
+              if (isset($commandLinks[$subCommentId]['vote_up'])) {
+                $subComment->linkVoteUp = $commandLinks[$subCommentId]['vote_up'];
+                $subComment->linkVoteUpCaption = $this->data()->captions['command_vote_up'];
+              }
+              if (isset($commandLinks[$subCommentId]['vote_down'])) {
+                $subComment->linkVoteDown = $commandLinks[$subCommentId]['vote_down'];
+                $subComment->linkVoteDownCaption = $this->data()->captions['command_vote_down'];
+              }
+
               $subComments[] = $subComment;
             }
 
             $comment->subComments($subComments);
           }
-          
-          $this->comments[] = $comment; 
+
+          $this->comments[] = $comment;
         }
       }
     }
@@ -131,7 +146,7 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
     $this->fill();
     $this->comments()->appendTo($parent);
   }
-  
+
   /**
   * The list of comments
   *
@@ -150,5 +165,5 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
     }
     return $this->_comments;
   }
-  
+
 }

@@ -37,7 +37,6 @@ class ACommunityUiContentMessageConversationsList extends PapayaUiControl {
   */
   protected $_paging = NULL;
 
-
   /**
    * Get/set comments data
    *
@@ -96,10 +95,8 @@ class ACommunityUiContentMessageConversationsList extends PapayaUiControl {
         $conversationElement->appendElement(
           'surfer-contact',
           array(
-            'handle' => $conversation['surfer_handle'],
-            'givenname' => $conversation['surfer_givenname'],
-            'surname' => $conversation['surfer_surname'],
-            'avatar' => PapayaUtilStringXml::escapeAttribute($conversation['surfer_avatar'])
+            'name' => $conversation['surfer']['name'],
+            'avatar' => PapayaUtilStringXml::escapeAttribute($conversation['surfer']['avatar'])
           )
         );
         $conversationElement->appendElement(

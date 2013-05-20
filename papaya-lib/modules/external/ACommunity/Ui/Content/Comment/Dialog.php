@@ -98,6 +98,7 @@ class ACommunityUiContentCommentDialog
     $field->setId('dialogCommentText');
     $dialog->buttons[] = new PapayaUiDialogButtonSubmit($buttonCaption);
 
+    $this->callbacks()->onExecuteSuccessful = array($this, 'callbackExecuteSuccessful');
     $this->callbacks()->onExecuteFailed = array($this, 'callbackShowError');
     return $dialog;
   }
@@ -110,25 +111,67 @@ class ACommunityUiContentCommentDialog
   */
   public function callbackBeforeSaveRecord($context, $record) {
     $commentId = (int)$this->parameters()->get('comment_id', 0);
-    $command = $this->parameters()->get('command', '');
-    $ressourceData = $this->data()->ressource();
+    $ressource = $this->data()->ressource();
     $record->assign(
       array(
         'language_id' => $this->data()->languageId,
         'parent_id' => $commentId,
         'surfer_id' => $this->data()->currentSurferId(),
-        'ressource_id' => $ressourceData['id'],
-        'ressource_type' => $ressourceData['type'],
+        'ressource_id' => $ressource['id'],
+        'ressource_type' => $ressource['type'],
         'time' => time(),
         'votes_score' => 0,
         'deleted_surfer' => 0
       )
     );
+    return TRUE;
+  }
+
+  /**
+  * Perform actions on success
+  *
+  * @param object $context
+  * @param PapayaUiDialog $dialog
+  */
+  public function callbackExecuteSuccessful($context, $dialog) {
+    // activate dialog reset on sub-command reply
+    $commentId = (int)$this->parameters()->get('comment_id', 0);
+    $command = $this->parameters()->get('command', '');
     if ($command == 'reply' && $commentId > 0) {
       $this->parameters()->set('comment_id', 0);
       $this->parameters()->set('reset_dialog', 1);
     }
-    return TRUE;
+    // send notification on surfer or image comment
+    $ressource = $this->data()->ressource();
+    if ($ressource['id'] != $this->data()->currentSurferId()) {
+      if ($ressource['type'] == 'surfer') {
+        $this->data()->owner->notificationHandler()->notify(
+          'new-surfer-comment',
+          $ressource['id'],
+          array(
+            'recipient_surfer' => $ressource['id'],
+            'context_surfer' => $this->data()->currentSurferId(),
+            'page_url' => $this->data()->reference()->url()->getUrl()
+          )
+        );
+      } elseif ($ressource['type'] == 'image') {
+        $ressourceParameters = $this->data()->ressourceParameters();
+        if (isset($ressourceParameters['acg']['surfer_handle'])) {
+          $imageOwnerId = $this->data()->owner->communityConnector()->getIdByHandle(
+            $ressourceParameters['acg']['surfer_handle']
+          );
+          $this->data()->owner->notificationHandler()->notify(
+            'new-surfer-image-comment',
+            $imageOwnerId,
+            array(
+              'recipient_surfer' => $imageOwnerId,
+              'context_surfer' => $this->data()->currentSurferId(),
+              'page_url' => $this->data()->reference()->url()->getUrl()
+            )
+          );
+        }
+      }
+    }
   }
 
   /**

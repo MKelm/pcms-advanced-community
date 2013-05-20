@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<table name="acommunity_notifications" prefix="yes">
+  <fields>
+    <field name="notification_id" type="integer" size="4" null="no" autoinc="yes"/>
+    <field name="notification_name" type="string" size="50" null="no"/>
+  </fields>
+  <keys>
+    <primary-key>
+      <field>notification_id</field>
+    </primary-key>
+  </keys>
+</table>

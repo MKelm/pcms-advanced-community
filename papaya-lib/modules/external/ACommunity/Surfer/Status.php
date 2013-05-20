@@ -70,9 +70,7 @@ class ACommunitySurferStatus extends ACommunityUiContentObject {
       $activeSurfer = $status->appendElement(
         'active-surfer',
         array(
-          'handle' => $this->data()->surfer['handle'],
-          'givenname' => $this->data()->surfer['givenname'],
-          'surname' => $this->data()->surfer['surname'],
+          'name' => $this->data()->surfer['name'],
           'avatar' => PapayaUtilStringXml::escapeAttribute($this->data()->surfer['avatar'])
         )
       );

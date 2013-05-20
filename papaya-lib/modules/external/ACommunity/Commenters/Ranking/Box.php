@@ -28,13 +28,13 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  * @subpackage External-ACommunity
  */
 class ACommunityCommentersRankingBox extends base_actionbox {
-  
+
   /**
    * Parameter prefix name
    * @var string $paramName
    */
   public $paramName = 'acc';
-  
+
   /**
    * Edit fields
    * @var array $editFields
@@ -43,23 +43,30 @@ class ACommunityCommentersRankingBox extends base_actionbox {
     'commenters_limit' => array(
       'Commenters limit', 'isNum', TRUE, 'input', 30, '0 for all commenters', 10
     ),
-    'surfer_avatar_size' => array(
-      'Surfer avatar size', 'isNum', TRUE, 'input', 30, '', 60
+    'avatar_size' => array(
+      'Avatar Size', 'isNum', TRUE, 'input', 30, '', 40
     ),
-    'comments_amount_caption' => array(
-      'Comments amount caption', 'isNoHTML', TRUE, 'input', 200, '', 'Comments'
+    'avatar_resize_mode' => array(
+      'Avatar Resize Mode', 'isAlpha', TRUE, 'translatedcombo',
+       array(
+         'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
+       ), '', 'mincrop'
+    ),
+    'Captions',
+    'caption_comments' => array(
+      'Comments', 'isNoHTML', TRUE, 'input', 200, '', 'Comment(s)'
     )
   );
-  
+
   /**
    * Ranking object
    * @var ACommunityCommentersRanking
    */
   protected $_ranking = NULL;
-  
+
   /**
-  * Get (and, if necessary, initialize) the ACommunityCommentersRanking object 
-  * 
+  * Get (and, if necessary, initialize) the ACommunityCommentersRanking object
+  *
   * @return ACommunityCommentersRanking $ranking
   */
   public function ranking(ACommunityCommentersRanking $ranking = NULL) {
@@ -69,9 +76,7 @@ class ACommunityCommentersRankingBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Ranking.php');
       $this->_ranking = new ACommunityCommentersRanking();
       $this->_ranking->parameterGroup($this->paramName);
-      $this->_ranking->commentersLimit = $this->data['commenters_limit'];
-      $this->_ranking->surferAvatarSize = $this->data['surfer_avatar_size'];
-      $this->_ranking->commentsAmountCaption = $this->data['comments_amount_caption'];
+      $this->_ranking->data()->setPluginData($this->data, array('caption_comments'));
     }
     return $this->_ranking;
   }
@@ -86,5 +91,5 @@ class ACommunityCommentersRankingBox extends base_actionbox {
     $this->initializeParams();
     return $this->ranking()->getXml();
   }
-  
+
 }

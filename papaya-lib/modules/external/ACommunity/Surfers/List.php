@@ -151,9 +151,7 @@ class ACommunitySurfersList extends ACommunityUiContentObject {
     $surferElement = $parent->appendElement(
       'surfer',
       array(
-        'handle' => $surfer['handle'],
-        'givenname' => $surfer['givenname'],
-        'surname' => $surfer['surname'],
+        'name' => $surfer['name'],
         'avatar' => PapayaUtilStringXml::escapeAttribute($surfer['avatar']),
         'page-link' => PapayaUtilStringXml::escapeAttribute($surfer['page_link'])
       )

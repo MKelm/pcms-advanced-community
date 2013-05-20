@@ -48,9 +48,7 @@
               <span class="surferAvatar"><a href="{@page-link}"><img src="{@avatar}" alt="" /></a></span>
               <xsl:text> </xsl:text>
               <span class="surferDetails">
-                <span class="surferName"><a href="{@page-link}"><xsl:value-of select="@givenname" />
-                <xsl:text> '</xsl:text><xsl:value-of select="@handle" />
-                <xsl:text>' </xsl:text><xsl:value-of select="@surname" /></a></span>
+                <span class="surferName"><a href="{@page-link}"><xsl:value-of select="@name" /></a></span>
                 <xsl:text> </xsl:text>
                 <xsl:if test="last-time/text()">
                   <span class="surferLastTime"><xsl:value-of select="last-time/@caption" />:

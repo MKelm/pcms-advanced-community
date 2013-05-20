@@ -32,11 +32,11 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
   protected $_id = NULL;
 
   /**
-  * Surfer
+  * Surfer name
   *
   * @var string
   */
-  protected $_surferHandle = NULL;
+  protected $_surferName = NULL;
 
   /**
   * Surfer avatar image
@@ -81,6 +81,13 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
   protected $_linkReply = NULL;
 
   /**
+  * Link to reply caption
+  *
+  * @var string
+  */
+  protected $_linkReplyCaption = NULL;
+
+  /**
   * Link to vote up
   *
   * @var string
@@ -88,11 +95,25 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
   protected $_linkVoteUp = NULL;
 
   /**
+  * Link to vote up caption
+  *
+  * @var string
+  */
+  protected $_linkVoteUpCaption = NULL;
+
+  /**
   * Link to vote down
   *
   * @var string
   */
   protected $_linkVoteDown = NULL;
+
+  /**
+  * Link to vote down caption
+  *
+  * @var string
+  */
+  protected $_linkVoteDownCaption = NULL;
 
   /**
   * Sub comments
@@ -109,14 +130,17 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
   protected $_declaredProperties = array(
     'id' => array('_id', '_id'),
     'text' => array('_text', '_text'),
-    'surferHandle' => array('_surferHandle', '_surferHandle'),
+    'surferName' => array('_surferName', '_surferName'),
     'surferAvatar' => array('_surferAvatar', '_surferAvatar'),
     'surferPageLink' => array('_surferPageLink', '_surferPageLink'),
     'time' => array('_time', 'setTime'),
     'votesScore' => array('_votesScore', '_votesScore'),
     'linkReply' => array('_linkReply', '_linkReply'),
+    'linkReplyCaption' => array('_linkReplyCaption', '_linkReplyCaption'),
     'linkVoteUp' => array('_linkVoteUp', '_linkVoteUp'),
+    'linkVoteUpCaption' => array('_linkVoteUpCaption', '_linkVoteUpCaption'),
     'linkVoteDown' => array('_linkVoteDown', '_linkVoteDown'),
+    'linkVoteDownCaption' => array('_linkVoteDownCaption', '_linkVoteDownCaption'),
     'subComments' => array('subComments', 'subComments')
   );
 
@@ -125,14 +149,12 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
   *
   * @param integer $id
   * @param string $text
-  * @param string $surferHandle
   * @param integer $time
   * @param integer $votesScore
   */
-  public function __construct($id, $text, $surferHandle, $time, $votesScore) {
+  public function __construct($id, $text, $time, $votesScore) {
     $this->id = $id;
     $this->text = $text;
-    $this->surferHandle = $surferHandle;
     $this->time = $time;
     $this->votesScore = $votesScore;
   }
@@ -166,9 +188,6 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
       'comment',
       array(
         'id' => $this->id,
-        'surfer_handle' => $this->surferHandle,
-        'surfer_avatar' => $this->_surferAvatar,
-        'surfer_page_link' => $this->_surferPageLink,
         'time' => $this->time,
         'votes_score' => $this->votesScore
       )
@@ -182,15 +201,33 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
       base_object::getXHTMLString($this->text, TRUE)
     );
 
-    $links = $comment->appendElement('links');
+    $comment->appendElement(
+      'surfer',
+      array(
+        'name' => $this->surferName,
+        'avatar' => PapayaUtilStringXml::escapeAttribute($this->surferAvatar),
+        'page-link' => PapayaUtilStringXml::escapeAttribute($this->surferPageLink)
+      )
+    );
+
+    $links = $comment->appendElement('command-links');
     if (!is_null($this->linkReply)) {
-      $links->appendElement('link', array('name' => 'reply'), $this->linkReply);
+      $links->appendElement(
+        'link', array('name' => 'reply', 'caption' => $this->linkReplyCaption),
+        PapayaUtilStringXml::escape($this->linkReply)
+      );
     }
     if (!is_null($this->linkVoteUp)) {
-      $links->appendElement('link', array('name' => 'vote_up'), $this->linkVoteUp);
+      $links->appendElement(
+        'link', array('name' => 'vote_up', 'caption' => $this->linkVoteUpCaption),
+        PapayaUtilStringXml::escape($this->linkVoteUp)
+      );
     }
     if (!is_null($this->linkVoteDown)) {
-      $links->appendElement('link', array('name' => 'vote_down'), $this->linkVoteDown);
+      $links->appendElement(
+        'link', array('name' => 'vote_down', 'caption' => $this->linkVoteDownCaption),
+        PapayaUtilStringXml::escape($this->linkVoteDown)
+      );
     }
 
     $this->subComments()->appendTo($comment);

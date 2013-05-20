@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <table name="acommunity_comments" prefix="yes">
-<fields>
-<field name="comment_id" type="integer" size="4" null="no" autoinc="yes"/>
-<field name="language_id" type="integer" size="4" null="no"/>
-<field name="surfer_id" type="string" size="32" null="no"/>
-<field name="comment_parent_id" type="integer" size="4" null="no"/>
-<field name="comment_ressource_id" type="string" size="32" null="no"/>
-<field name="comment_ressource_type" type="string" size="25" null="no"/>
-<field name="comment_time" type="integer" size="4" null="no"/>
-<field name="comment_text" type="string" size="65535" null="no"/>
-<field name="comment_votes_score" type="integer" size="4" null="no"/>
-<field name="comment_deleted_surfer" type="integer" size="2" null="no"/>
-</fields>
-<keys>
-  <primary-key>
-    <field>comment_id</field>
-  </primary-key>
-  <key name="language_id">
-    <field>language_id</field>
-  </key>
-  <key name="surfer_id">
-    <field>surfer_id</field>
-  </key>
-  <key name="comment_ressource_id">
-    <field>comment_ressource_id</field>
-  </key>
-  <key name="comment_ressource_type">
-    <field>comment_ressource_type</field>
-  </key>
-  <key name="comment_votes_score">
-    <field>comment_ressource_type</field>
-  </key>
-  <key name="comment_deleted_surfer">
-    <field>comment_deleted_surfer</field>
-  </key>
-</keys>
+  <fields>
+    <field name="comment_id" type="integer" size="4" null="no" autoinc="yes"/>
+    <field name="language_id" type="integer" size="4" null="no"/>
+    <field name="surfer_id" type="string" size="32" null="no"/>
+    <field name="comment_parent_id" type="integer" size="4" null="no"/>
+    <field name="comment_ressource_id" type="string" size="32" null="no"/>
+    <field name="comment_ressource_type" type="string" size="25" null="no"/>
+    <field name="comment_time" type="integer" size="4" null="no"/>
+    <field name="comment_text" type="string" size="65535" null="no"/>
+    <field name="comment_votes_score" type="integer" size="4" null="no"/>
+    <field name="comment_deleted_surfer" type="integer" size="2" null="no"/>
+  </fields>
+  <keys>
+    <primary-key>
+      <field>comment_id</field>
+    </primary-key>
+    <key name="language_id">
+      <field>language_id</field>
+    </key>
+    <key name="surfer_id">
+      <field>surfer_id</field>
+    </key>
+    <key name="comment_ressource_id">
+      <field>comment_ressource_id</field>
+    </key>
+    <key name="comment_ressource_type">
+      <field>comment_ressource_type</field>
+    </key>
+    <key name="comment_votes_score">
+      <field>comment_ressource_type</field>
+    </key>
+    <key name="comment_deleted_surfer">
+      <field>comment_deleted_surfer</field>
+    </key>
+  </keys>
 </table>

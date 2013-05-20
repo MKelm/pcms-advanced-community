@@ -32,25 +32,11 @@ class ACommunityUiContentMessage extends PapayaUiControlCollectionItem {
   protected $_id = NULL;
 
   /**
-  * Surfer handle
+  * Surfer name
   *
   * @var string
   */
-  protected $_surferHandle = NULL;
-
-  /**
-  * Surfer givenname
-  *
-  * @var string
-  */
-  protected $_surferGivenname = NULL;
-
-  /**
-  * Surfer surname
-  *
-  * @var string
-  */
-  protected $_surferSurname = NULL;
+  protected $_surferName = NULL;
 
   /**
   * Surfer avatar image
@@ -88,9 +74,7 @@ class ACommunityUiContentMessage extends PapayaUiControlCollectionItem {
   protected $_declaredProperties = array(
     'id' => array('_id', '_id'),
     'text' => array('_text', '_text'),
-    'surferHandle' => array('_surferHandle', '_surferHandle'),
-    'surferGivenname' => array('_surferGivenname', '_surferGivenname'),
-    'surferSurname' => array('_surferSurname', '_surferSurname'),
+    'surferName' => array('_surferName', '_surferName'),
     'surferAvatar' => array('_surferAvatar', '_surferAvatar'),
     'surferPageLink' => array('_surferPageLink', '_surferPageLink'),
     'time' => array('_time', 'setTime')
@@ -104,12 +88,9 @@ class ACommunityUiContentMessage extends PapayaUiControlCollectionItem {
   * @param string $surferHandle
   * @param integer $time
   */
-  public function __construct($id, $text, $surferHandle, $surferGivenname, $surferSurname, $time) {
+  public function __construct($id, $text, $time) {
     $this->id = $id;
     $this->text = $text;
-    $this->surferHandle = $surferHandle;
-    $this->surferGivenname = $surferGivenname;
-    $this->surferSurname = $surferSurname;
     $this->time = $time;
   }
 
@@ -152,9 +133,7 @@ class ACommunityUiContentMessage extends PapayaUiControlCollectionItem {
     $message->appendElement(
       'surfer',
       array(
-        'handle' => $this->surferHandle,
-        'givenname' => $this->surferGivenname,
-        'surname' => $this->surferSurname,
+        'name' => $this->surferName,
         'avatar' => PapayaUtilStringXml::escapeAttribute($this->surferAvatar),
         'page-link' => $this->surferPageLink
       )

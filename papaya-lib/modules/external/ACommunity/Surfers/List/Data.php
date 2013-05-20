@@ -36,18 +36,6 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
   public $surfers = NULL;
 
   /**
-   * Avatar size
-   * @var integer
-   */
-  protected $_avatarSize = 0;
-
-  /**
-   * Avatar resize mode
-   * @var string
-   */
-  protected $_avatarResizeMode = 'mincrop';
-
-  /**
    * Display surfers by last action time or registration time or surfer contacts
    * @var string
    */
@@ -98,8 +86,8 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
    * @param array $messageNames
    */
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
-    $this->_avatarSize = (int)$data['avatar_size'];
-    $this->_avatarResizeMode = $data['avatar_resize_mode'];
+    $this->_surferAvatarSize = (int)$data['avatar_size'];
+    $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
     $this->displayMode = $data['display_mode'];
     $this->_timeframe = $data['timeframe'];
     $this->pagingItemsPerPage = (int)$data['limit'];
@@ -113,6 +101,7 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
   public function initialize() {
     $timeframe = 60 * 60 * 24 * $this->_timeframe;
     $ressource = $this->ressource();
+    $surfers = array();
 
     if ($this->displayMode == 'lastaction') {
       $page = $this->owner->parameters()->get('lastaction_list_page', 0);
@@ -124,6 +113,7 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
       if (!empty($surfers)) {
         $this->pagingItemsAbsCount = $surfers[1];
         $surfers = $surfers[0];
+        $this->getSurfer(array_keys($surfers));
       }
 
     } elseif ($this->displayMode == 'registration') {
@@ -134,13 +124,13 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
         $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
       $this->pagingItemsAbsCount = $this->owner->communityConnector()->surferAdmin->surfersAbsCount;
+      $this->getSurfer(array_keys($surfers));
 
     } elseif ($this->displayMode == 'contacts_and_requests' &&
               $this->ressourceIsActiveSurfer == TRUE) {
       $this->pagingItemsAbsCount = array();
-      $data = array();
       $page = $this->owner->parameters()->get('contacts_list_page', 0);
-      $data['contacts'] = $this->owner->communityConnector()->getContacts(
+      $surfers['contacts'] = $this->owner->communityConnector()->getContacts(
         $this->currentSurferId(),
         FALSE,
         $this->pagingItemsPerPage,
@@ -148,7 +138,7 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
       );
       $this->pagingItemsAbsCount['contacts'] = $this->owner->communityConnector()->contactsAbsCount;
       $page = $this->owner->parameters()->get('own_contact_requests_list_page', 0);
-      $data['own_contact_requests'] = $this->owner->communityConnector()->getContactRequestsSent(
+      $surfers['own_contact_requests'] = $this->owner->communityConnector()->getContactRequestsSent(
         $this->currentSurferId(),
         FALSE,
         $this->pagingItemsPerPage,
@@ -156,73 +146,67 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
       );
       $this->pagingItemsAbsCount['own_contact_requests'] = $this->owner->communityConnector()->contactsAbsCount;
       $page = $this->owner->parameters()->get('contact_requests_list_page', 0);
-      $data['contact_requests'] = $this->owner->communityConnector()->getContactRequestsReceived(
+      $surfers['contact_requests'] = $this->owner->communityConnector()->getContactRequestsReceived(
         $this->currentSurferId(),
         FALSE,
         $this->pagingItemsPerPage,
         $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
       $this->pagingItemsAbsCount['contact_requests'] = $this->owner->communityConnector()->contactsAbsCount;
-      $surfers = array(
-        'contacts' => $data['contacts'],
-        'own_contact_requests' => $data['own_contact_requests'],
-        'contact_requests' => $data['contact_requests']
-      );
-      unset($data);
+
       $contactSurferIds = array_flip($surfers['contacts']);
       $ownRequestSurferIds = array_flip($surfers['own_contact_requests']);
       $requestSurferIds = array_flip($surfers['contact_requests']);
       $surferIds = array_keys(array_merge(
         $contactSurferIds, $ownRequestSurferIds, $requestSurferIds
       ));
-      $surfers['data'] = $this->owner->communityConnector()->getNameById($surferIds);
+      $this->getSurfer($surferIds);
+      $surfers['links'] = array();
       foreach ($surferIds as $surferId) {
-        if (isset($surfers['data'][$surferId])) {
-          $reference = clone $this->reference();
-          if (isset($ownRequestSurferIds[$surferId])) {
-            $reference->setParameters(
-              array(
-                'command' => 'remove_contact_request',
-                'surfer_handle' => $surfers['data'][$surferId]['surfer_handle']
-              ),
-              $this->owner->parameterGroup()
-            );
-            $surfers['data'][$surferId]['commands'] = array(
-              'remove_contact_request' => $reference->getRelative()
-            );
-          } elseif (isset($requestSurferIds[$surferId])) {
-            $referenceAccept = $reference;
-            $referenceAccept->setParameters(
-              array(
-                'command' => 'accept_contact_request',
-                'surfer_handle' => $surfers['data'][$surferId]['surfer_handle']
-              ),
-              $this->owner->parameterGroup()
-            );
-            $referenceDecline = clone $reference;
-            $referenceDecline->setParameters(
-              array(
-                'command' => 'decline_contact_request',
-                'surfer_handle' => $surfers['data'][$surferId]['surfer_handle']
-              ),
-              $this->owner->parameterGroup()
-            );
-            $surfers['data'][$surferId]['commands'] = array(
-              'accept_contact_request' => $referenceAccept->getRelative(),
-              'decline_contact_request' => $referenceDecline->getRelative()
-            );
-          } elseif (isset($contactSurferIds[$surferId])) {
-            $reference->setParameters(
-              array(
-                'command' => 'remove_contact',
-                'surfer_handle' => $surfers['data'][$surferId]['surfer_handle']
-              ),
-              $this->owner->parameterGroup()
-            );
-            $surfers['data'][$surferId]['commands'] = array(
-              'remove_contact' => $reference->getRelative()
-            );
-          }
+        $reference = clone $this->reference();
+        if (isset($ownRequestSurferIds[$surferId])) {
+          $reference->setParameters(
+            array(
+              'command' => 'remove_contact_request',
+              'surfer_handle' => $this->_surfers[$surferId]['handle']
+            ),
+            $this->owner->parameterGroup()
+          );
+          $surfers['links'][$surferId]['commands'] = array(
+            'remove_contact_request' => $reference->getRelative()
+          );
+        } elseif (isset($requestSurferIds[$surferId])) {
+          $referenceAccept = $reference;
+          $referenceAccept->setParameters(
+            array(
+              'command' => 'accept_contact_request',
+              'surfer_handle' => $this->_surfers[$surferId]['handle']
+            ),
+            $this->owner->parameterGroup()
+          );
+          $referenceDecline = clone $reference;
+          $referenceDecline->setParameters(
+            array(
+              'command' => 'decline_contact_request',
+              'surfer_handle' => $this->_surfers[$surferId]['handle']
+            ),
+            $this->owner->parameterGroup()
+          );
+          $surfers['links'][$surferId]['commands'] = array(
+            'accept_contact_request' => $referenceAccept->getRelative(),
+            'decline_contact_request' => $referenceDecline->getRelative()
+          );
+        } elseif (isset($contactSurferIds[$surferId])) {
+          $reference->setParameters(
+            array(
+              'command' => 'remove_contact',
+              'surfer_handle' => $this->_surfers[$surferId]['handle']
+            ),
+            $this->owner->parameterGroup()
+          );
+          $surfers['links'][$surferId]['commands'] = array(
+            'remove_contact' => $reference->getRelative()
+          );
         }
       }
 
@@ -235,13 +219,11 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
         $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
       $this->pagingItemsAbsCount = $this->owner->communityConnector()->contactsAbsCount;
-      $surfers = $this->owner->communityConnector()->getNameById($contactIds);
-      foreach ($surfers as $surferId => $surfer) {
-        $surfers[$surferId]['surfer_id'] = $surferId;
-      }
+      $surfers = $this->getSurfer($contactIds);
     }
 
     $this->surfers = array();
+
     if (!empty($surfers)) {
       if ($this->displayMode == 'contacts_and_requests') {
         $this->surfers = array(
@@ -251,11 +233,11 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
         );
         foreach ($this->surfers as $groupName => $surfer) {
           foreach ($surfers[$groupName] as $surferId) {
-            $this->surfers[$groupName][] = $this->_getSurfer($surferId, $surfers['data'][$surferId]);
+            $this->surfers[$groupName][] = $this->_getSurfer($surferId, $surfers['links'][$surferId]);
           }
         }
       } else {
-        foreach ($surfers as $surfer) {
+        foreach ($surfers as $surfer) {;
           $this->surfers[] = $this->_getSurfer($surfer['surfer_id'], $surfer);
         }
       }
@@ -271,17 +253,13 @@ class ACommunitySurfersListData extends ACommunityUiContentData {
    */
   protected function _getSurfer($surferId, $surfer) {
     return array(
-      'handle' => $surfer['surfer_handle'],
-      'givenname' => $surfer['surfer_givenname'],
-      'surname' => $surfer['surfer_surname'],
+      'name' => isset($surfer['name']) ? $surfer['name'] : $this->_surfers[$surferId]['name'],
       'last_action' => !empty($surfer['surfer_lastaction']) ?
         date('Y-m-d H:i:s', $surfer['surfer_lastaction']) : NULL,
       'registration' => !empty($surfer['surfer_registration']) ?
         date('Y-m-d H:i:s', $surfer['surfer_registration']) : NULL,
-      'avatar' => $this->owner->communityConnector()->getAvatar(
-        $surferId, $this->_avatarSize, TRUE, $this->_avatarResizeMode
-      ),
-      'page_link' => $this->owner->acommunityConnector()->getSurferPageLink($surferId),
+      'avatar' => isset($surfer['avatar']) ? $surfer['avatar'] : $this->_surfers[$surferId]['avatar'],
+      'page_link' => isset($surfer['page_link']) ? $surfer['page_link'] : $this->_surfers[$surferId]['page_link'],
       'commands' => !empty($surfer['commands']) ? $surfer['commands'] : NULL
     );
   }

@@ -62,6 +62,34 @@ class ACommunityConnector extends base_connector {
     'Parameter Groups',
     'surfer_page_parameter_group' => array(
       'Surfer Login', 'isAlpha', TRUE, 'input', 30, NULL, 'acs'
+    ),
+    'Display Modes',
+    'display_mode_surfer_name' => array(
+      'Surfer Name', 'isAlpha',
+      TRUE,
+      'combo',
+      array(
+        'all' => "Givenname 'Handle' Surname",
+        'names' => 'Givenname Surname',
+        'handle' => 'Handle',
+        'givenname' => 'Givenname',
+        'surname' => 'Surname'
+      ),
+      'How to display names in outputs',
+      'names'
+    ),
+    'Notifications',
+    'notification_sender_email' => array(
+      'Sender E-Mail', 'isEmail', TRUE, 'input', 200, 'Sender address for use in notification emails.', ''
+    ),
+    'notification_sender_name' => array(
+      'Sender Name', 'isAlphaNumChar', TRUE, 'input', 200, 'Sender name for use in notifcation emails.', ''
+    ),
+    'notification_by_message' => array(
+      'Notify By Message', 'isNum', TRUE, 'yesno', NULL, 'Default value for new surfers.', 1
+    ),
+    'notification_by_email' => array(
+      'Notify By E-Mail', 'isNum', TRUE, 'yesno', NULL, 'Default value for new surfers.', 0
     )
   );
 
@@ -124,6 +152,7 @@ class ACommunityConnector extends base_connector {
     $this->surferDeletion()->setDeletedSurferInPageComments($surferId);
     $this->surferDeletion()->deleteSurferComments($surferId);
     $this->surferDeletion()->deleteSurferGalleries($surferId);
+    $this->surferDeletion()->deleteMessages($surferId);
   }
 
   /**
@@ -140,15 +169,45 @@ class ACommunityConnector extends base_connector {
   }
 
   /**
+   * Sender data for notification emails
+   *
+   * @return array
+   */
+  public function getNotificationSender() {
+    return array(
+      'email' => papaya_module_options::readOption($this->_guid, 'notification_sender_email', NULL),
+      'name' => papaya_module_options::readOption($this->_guid, 'notification_sender_name', NULL)
+    );
+  }
+
+  /**
+   * Default setting for notifications
+   *
+   * @return array
+   */
+  public function getNotificationDefaultSetting() {
+    return array(
+      'by_message' => papaya_module_options::readOption($this->_guid, 'notification_by_message', NULL),
+      'by_email' => papaya_module_options::readOption($this->_guid, 'notification_by_email', NULL)
+    );
+  }
+
+  /**
+   * Display mode for surfer names
+   *
+   * @return string
+   */
+  public function getDisplayModeSurferName() {
+    return papaya_module_options::readOption($this->_guid, 'display_mode_surfer_name', 'names');
+  }
+
+  /**
    * Get link to surfer registration page
    *
    * @return string
    */
   public function getSurferRegistrationPageLink() {
-    $pageId = papaya_module_options::readOption($this->_guid, 'surfer_registration_page_id', NULL);
-    return base_object::getWebLink(
-      $pageId, NULL, NULL, NULL, NULL, 'registration-page'
-    );
+    return $this->_getPageLink('surfer_registration_page_id', NULL, FALSE, NULL, 'registration-page');
   }
 
   /**
@@ -157,10 +216,7 @@ class ACommunityConnector extends base_connector {
    * @return string
    */
   public function getSurferLoginPageLink() {
-    $pageId = papaya_module_options::readOption($this->_guid, 'surfer_login_page_id', NULL);
-    return base_object::getWebLink(
-      $pageId, NULL, NULL, NULL, NULL, 'login-page'
-    );
+    return $this->_getPageLink('surfer_login_page_id', NULL, FALSE, NULL, 'login-page');
   }
 
   /**
@@ -170,17 +226,10 @@ class ACommunityConnector extends base_connector {
    * @return string|NULL
    */
   public function getSurferPageLink($surferId) {
-    $handle = $this->communityConnector()->getHandleById($surferId);
-    if (!empty($handle)) {
-      $pageId = papaya_module_options::readOption($this->_guid, 'surfer_page_id', NULL);
-      $parameterGroup = papaya_module_options::readOption(
-        $this->_guid, 'surfer_page_parameter_group', 'acs'
-      );
-      return base_object::getWebLink(
-        $pageId, NULL, NULL, array('surfer_handle' => $handle), $parameterGroup, $handle.'s-page'
-      );
-    }
-    return NULL;
+    $parameterGroup = papaya_module_options::readOption(
+      $this->_guid, 'surfer_page_parameter_group', 'acs'
+    );
+    return $this->_getPageLink('surfer_page_id', $surferId, TRUE, $parameterGroup, 's-page');
   }
 
   /**
@@ -190,18 +239,7 @@ class ACommunityConnector extends base_connector {
    * @return string|NULL
    */
   public function getSurferContactsPageLink($surferId, $anchor = '') {
-    $handle = $this->communityConnector()->getHandleById($surferId);
-    if (!empty($handle)) {
-      $pageId = papaya_module_options::readOption($this->_guid, 'surfer_contacts_page_id', NULL);
-      $result = base_object::getWebLink(
-        $pageId, NULL, NULL, NULL, NULL, $handle.'s-contacts'
-      );
-      if (!empty($result) && !empty($anchor)) {
-        return $result.'#'.$anchor;
-      }
-      return $result;
-    }
-    return NULL;
+    return $this->_getPageLink('surfer_contacts_page_id', $surferId, FALSE, NULL, 's-contacts', $anchor);
   }
 
   /**
@@ -209,16 +247,11 @@ class ACommunityConnector extends base_connector {
    *
    * The default editor page is a content_userdata page
    *
+   * @param string $surferId
    * @return string|NULL
    */
-  public function getSurferEditorPageLink($surferHandle) {
-    if (!empty($surferHandle)) {
-      $pageId = papaya_module_options::readOption($this->_guid, 'surfer_editor_page_id', NULL);
-      return base_object::getWebLink(
-        $pageId, NULL, NULL, NULL, NULL, $surferHandle.'s-editor'
-      );
-    }
-    return NULL;
+  public function getSurferEditorPageLink($surferId) {
+    return $this->_getPageLink('surfer_editor_page_id', $surferId, FALSE, NULL, 's-editor');
   }
 
   /**
@@ -228,14 +261,7 @@ class ACommunityConnector extends base_connector {
    * @return string|NULL
    */
   public function getSurferGalleryPageLink($surferId) {
-    $handle = $this->communityConnector()->getHandleById($surferId);
-    if (!empty($handle)) {
-      $pageId = papaya_module_options::readOption($this->_guid, 'surfer_gallery_page_id', NULL);
-      return base_object::getWebLink(
-        $pageId, NULL, NULL, array('surfer_handle' => $handle), 'acg', $handle.'s-gallery'
-      );
-    }
-    return NULL;
+    return $this->_getPageLink('surfer_gallery_page_id', $surferId, TRUE, 'acg', 's-gallery');
   }
 
   /**
@@ -245,17 +271,57 @@ class ACommunityConnector extends base_connector {
    * @return string|NULL
    */
   public function getMessagesPageLink($surferId, $overview = FALSE) {
-    $handle = $this->communityConnector()->getHandleById($surferId);
-    if (!empty($handle)) {
-      $pageId = papaya_module_options::readOption($this->_guid, 'messages_page_id', NULL);
-      if ($overview == FALSE) {
-        $parameters = array('surfer_handle' => $handle);
-        $pageName = $handle.'-messages';
+    $parameterNamePostfix = $overview ? 's-messages' : '-messages';
+    return $this->_getPageLink(
+      'messages_page_id', $surferId, !$overview, 'acm', $parameterNamePostfix
+    );
+  }
+
+  /**
+   * Get page links by option with additional parameters
+   *
+   * @param string $optionName by module options
+   * @param string $surferId destination surfer
+   * @param boolean $withParameters activate surfer_handle parameter
+   * @param string $parameterGroup
+   * @param string $pageNamePostfix
+   * @param string $anchor
+   * @return string|NULL
+   */
+  protected function _getPageLink(
+              $optionName, $surferId = NULL, $withParameters = FALSE, $parameterGroup = NULL,
+              $pageNamePostfix = 'page', $anchor = NULL
+            ) {
+    if (!empty($optionName)) {
+      $proceed = FALSE;
+      if (!empty($surferId)) {
+        $handle = $this->communityConnector()->getHandleById($surferId);
+        if (!empty($handle)) {
+          $proceed = TRUE;
+        }
       } else {
-        $parameters = array();
-        $pageName = $handle.'s-messages';
+        $proceed = TRUE;
       }
-      return base_object::getWebLink($pageId, NULL, NULL, $parameters, 'acm', $pageName);
+      if ($proceed) {
+        if ($withParameters && !empty($handle)) {
+          $parameters = array('surfer_handle' => $handle);
+        } else {
+          $parameters = array();
+        }
+        if (!empty($handle)) {
+          $pageName = $handle.$pageNamePostfix;
+        } else {
+          $pageName = $pageNamePostfix;
+        }
+        $pageId = papaya_module_options::readOption($this->_guid, $optionName, NULL);
+        if (!empty($pageId)) {
+          $result = base_object::getWebLink($pageId, NULL, NULL, $parameters, $parameterGroup, $pageName);
+          if (!empty($anchor)) {
+            return $result.'#'.$anchor;
+          }
+          return $result;
+        }
+      }
     }
     return NULL;
   }

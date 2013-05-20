@@ -56,9 +56,7 @@
           <div class="messageSurferAvatar"><a href="{surfer/@page-link}"><img src="{surfer/@avatar}" alt="" /></a></div>
           <div class="messageContainer">
             <div class="messageHeader">
-              <div class="messageSurferName"><a href="{surfer/@page-link}"><xsl:value-of select="surfer/@givenname" />
-                <xsl:text> '</xsl:text><xsl:value-of select="surfer/@handle" /><xsl:text>' </xsl:text>
-                <xsl:value-of select="surfer/@surname" /></a>
+              <div class="messageSurferName"><a href="{surfer/@page-link}"><xsl:value-of select="surfer/@name" /></a>
               </div>
               <div class="messageTime">
                 <xsl:call-template name="format-date">
@@ -139,11 +137,7 @@
 
     <div class="surferBaseDetailsGroup">
       <img src="{$baseDetails/detail[@name = 'avatar']/text()}" alt="{$baseDetails/detail[@name = 'avatar']/@caption}" class="surferAvatar" />
-      <h1 class="surferTitle"><xsl:value-of select="$baseDetails/detail[@name = 'givenname']/text()" />
-      <xsl:text> '</xsl:text>
-      <xsl:value-of select="$baseDetails/detail[@name = 'handle']/text()" />
-      <xsl:text>' </xsl:text>
-      <xsl:value-of select="$baseDetails/detail[@name = 'surname']/text()" />
+      <h1 class="surferTitle"><xsl:value-of select="$baseDetails/detail[@name = 'name']/text()" />
       <xsl:text> </xsl:text>
       <span class="surferEmail"><a href="mailto:{$baseDetails/detail[@name = 'email']/text()}"><xsl:value-of select="$baseDetails/detail[@name = 'email']/@caption" /></a></span></h1>
       <div class="surferGender"><xsl:value-of select="$baseDetails/detail[@name = 'gender']/@caption" />: <xsl:value-of select="$baseDetails/detail[@name = 'gender']/text()" /></div>
