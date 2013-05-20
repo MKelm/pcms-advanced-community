@@ -17,13 +17,17 @@
  */
 
 /**
+ * Base ui content object
+ */
+require_once(dirname(__FILE__).'/../../Ui/Content/Object.php');
+
+/**
  * Advanced community surfer gallery folders
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryFolders extends PapayaObjectInteractive
-  implements PapayaXmlAppendable {
+class ACommunitySurferGalleryFolders extends ACommunityUiContentObject {
     
   /**
    * Surfer gallery folders data
@@ -130,22 +134,6 @@ class ACommunitySurferGalleryFolders extends PapayaObjectInteractive
         }
       }
     }
-  }
-  
-  /**
-  * Compile output xml.
-  * 
-  * @return string
-  */
-  public function getXml() {
-    $dom = new PapayaXmlDocument();
-    $dom->appendElement('folders');
-    $this->appendTo($dom->documentElement);
-    $xml = '';
-    foreach ($dom->documentElement->childNodes as $node) {
-      $xml .= $node->ownerDocument->saveXml($node);
-    }
-    return $xml;
   }
   
   /**

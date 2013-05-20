@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 |  Adavanced community modules for papaya CMS 5.5                     |
-|  Version: 0.2 (10.05.2013)                                          |
+|  Version: 0.3 (11.05.2013)                                          |
 |  Author: Martin Kelm                                                |
 -----------------------------------------------------------------------
 
@@ -10,7 +10,7 @@ This package contains modules to extend your papaya CMS community.
 |  Todos  |
 -----------
 
-- Surfer Page, advanced page to show surfer details
+- Further extensions of surfer page module
 - Surfer Contacts, advanced modules to handle surfer contacts
 - Messages, manage, compose and show messages between surfers
 - Notifications, notify surfers on events by system-messages or email
@@ -19,6 +19,15 @@ This package contains modules to extend your papaya CMS community.
 -----------
 | Changes |
 -----------
+
+Revision 0.3 (11.05.2013)
+- Added surfer page module
+- Correct text paragraph css sizes in comments
+- Added support for action dispatcher call onDeletePages
+-- needs an base_topic_edit->destroy() code replacement to delete page dependend data
+--- see base_topic_edit_destroy_replacement.txt
+- Added an extended version of content_thumbs with template modifications
+-- includes lightbox switch and orinal image link in image detail page and more
 
 Revision 0.2 (10.05.2013)
 - Added anchors to comments list ouput

@@ -51,6 +51,13 @@
   width: 24.2em;
 }
 
+.comments .commentTextParagraph {
+  width: 21em;
+}
+.comments.indent .commentTextParagraph {
+  width: 18.7em;
+}
+
 .comments .commentExtras {
   float: right;
   margin-left: 10px;

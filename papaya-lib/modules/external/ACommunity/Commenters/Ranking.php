@@ -17,13 +17,17 @@
  */
 
 /**
+ * Base ui content object
+ */
+require_once(dirname(__FILE__).'/../Ui/Content/Object.php');
+
+/**
  * Advanced community  commenters ranking
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityCommentersRanking extends PapayaObjectInteractive
-  implements PapayaXmlAppendable {
+class ACommunityCommentersRanking extends ACommunityUiContentObject {
 
   /**
    * Max limit of commenters
@@ -68,12 +72,6 @@ class ACommunityCommentersRanking extends PapayaObjectInteractive
   protected $_surferAvatars = NULL;
   
   /**
-   * Community connector
-   * @var connector_surfers
-   */
-  protected $_communityConnector = NULL;
-  
-  /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
   *
@@ -102,28 +100,14 @@ class ACommunityCommentersRanking extends PapayaObjectInteractive
   }
   
   /**
-  * Compile output xml.
-  * 
-  * @return string
-  */
-  public function getXml() {
-    $dom = new PapayaXmlDocument();
-    $dom->appendElement('comments');
-    $this->appendTo($dom->documentElement);
-    $xml = '';
-    foreach ($dom->documentElement->childNodes as $node) {
-      $xml .= $node->ownerDocument->saveXml($node);
-    }
-    return $xml;
-  }
-  
-  /**
   * Access to the commenters ranking database records data
   *
   * @param ACommunityContentCommentersRanking $comments
   * @return ACommunityContentCommentersRanking
   */
-  public function commentersRanking(ACommunityContentCommentersRanking $commentersRanking = NULL) {
+  public function commentersRanking(
+           ACommunityContentCommentersRanking $commentersRanking = NULL
+         ) {
     if (isset($commentersRanking)) {
       $this->_commentersRanking = $commentersRanking;
     } elseif (is_null($this->_commentersRanking)) {
@@ -186,24 +170,6 @@ class ACommunityCommentersRanking extends PapayaObjectInteractive
       }
     }
     return $this->_surferAvatars;
-  }
-  
-  /**
-   * Get/set community connector
-   * 
-   * @param object $connector
-   * @return object
-   */
-  public function communityConnector(connector_surfers $connector = NULL) {
-    if (isset($connector)) {
-      $this->_communityConnector = $connector;
-    } elseif (is_null($this->_communityConnector)) {
-      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-      $this->_communityConnector = base_pluginloader::getPluginInstance(
-        '06648c9c955e1a0e06a7bd381748c4e4', $this
-      );
-    }
-    return $this->_communityConnector;
   }
 
 }

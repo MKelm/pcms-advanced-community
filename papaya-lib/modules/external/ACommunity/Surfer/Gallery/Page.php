@@ -42,6 +42,12 @@ class ACommunitySurferGalleryPage extends content_thumbs {
   protected $_data = NULL;
   
   /**
+   * Community connector
+   * @var connector_surfers
+   */
+  protected $_communityConnector = NULL;
+  
+  /**
    * Get/set surfer gallery folders data
    *
    * @param ACommunitySurferGalleryData $data
@@ -119,7 +125,7 @@ class ACommunitySurferGalleryPage extends content_thumbs {
     
     // load media db folder depending on surfer handle
     if (isset($this->params['surfer_handle'])) {
-      $surferId = $this->data()->communityConnector()->getIdByHandle(
+      $surferId = $this->communityConnector()->getIdByHandle(
         $this->params['surfer_handle']
       );
       if (!empty($surferId)) {
@@ -161,6 +167,24 @@ class ACommunitySurferGalleryPage extends content_thumbs {
     }
     
     return parent::getParsedData();
+  }
+  
+  /**
+   * Get/set community connector
+   * 
+   * @param object $connector
+   * @return object
+   */
+  public function communityConnector(connector_surfers $connector = NULL) {
+    if (isset($connector)) {
+      $this->_communityConnector = $connector;
+    } elseif (is_null($this->_communityConnector)) {
+      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
+      $this->_communityConnector = base_pluginloader::getPluginInstance(
+        '06648c9c955e1a0e06a7bd381748c4e4', $this
+      );
+    }
+    return $this->_communityConnector;
   }
   
 }

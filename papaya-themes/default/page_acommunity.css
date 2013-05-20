@@ -1,0 +1,27 @@
+/*
+ CSS rules for ACommunitySurferPage
+*/
+.surferPage .surferAvatar {
+  float: left; 
+  margin-right: 1em; 
+  margin-bottom: 0.8em;
+}
+
+.surferPage .surferEmail {
+  font-size: 0.87em;
+}
+
+.surferPage .surferGender {
+  float: left; 
+  margin-right: 0.5em;
+}
+
+.surferPage .surferStatus {
+  margin-top: 1.2em;
+}
+
+.surferPage .surferDetailsGroup {
+  float: left; 
+  width: 200px; 
+  margin-right: 0.5em;
+}

@@ -31,6 +31,12 @@ class ACommunityConnector extends base_connector {
   protected $_surferDeletion = NULL;
   
   /**
+   * Page deletion object
+   * @var ACommunityPageDeletion
+   */
+  protected $_pageDeletion = NULL;
+  
+  /**
    * Surfer deletion object
    * 
    * @param ACommunitySurferDeletion $deletion
@@ -45,6 +51,22 @@ class ACommunityConnector extends base_connector {
     }
     return $this->_surferDeletion;
   }
+
+  /**
+   * Page deletion object
+   * 
+   * @param ACommunityPageDeletion $deletion
+   * @return ACommunityPageDeletion
+   */
+  public function pageDeletion(ACommunityPageDeletion $deletion = NULL) {
+    if (isset($deletion)) {
+      $this->_pageDeletion = $deletion;
+    } elseif (is_null($this->_pageDeletion)) {
+      include_once(dirname(__FILE__).'/Page/Deletion.php');
+      $this->_pageDeletion = new ACommunityPageDeletion();
+    }
+    return $this->_pageDeletion;
+  }
   
   /**
    * Action dispatcher function to delete surfer dependend data
@@ -52,8 +74,22 @@ class ACommunityConnector extends base_connector {
    * @param string $surferId
    */
   public function onDeleteSurfer($surferId) {
-    $this->surferDeletion()->setDeletedSurferInComments($surferId);
+    $this->surferDeletion()->setDeletedSurferInPageComments($surferId);
+    $this->surferDeletion()->deleteSurferComments($surferId);
     $this->surferDeletion()->deleteSurferGalleries($surferId);
+  }
+  
+  /**
+   * Action dispatcher function to delete pages' dependend data
+   * 
+   * Note: You have to add an action dispatcher call in base_topic_edit->destroy() 
+   * to make onDeletePages available for dispatching. See base_topic_edit_destroy_replacement.txt 
+   * for a replacement of the whole destroy() method which contains a valid call.
+   * 
+   * @param array $pageIds
+   */
+  public function onDeletePages($pageIds) {
+    $this->pageDeletion()->deletePageComments($pageIds);
   }
   
 }

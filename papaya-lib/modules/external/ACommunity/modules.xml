@@ -33,6 +33,11 @@
             name="Surfer Gallery Page" 
             class="ACommunitySurferGalleryPage" 
             file="Surfer/Gallery/Page.php">Thumbnail gallery for surfers</module>
+    <module type="page" 
+            guid="f8a474b038784358bc7169a71e396225" 
+            name="Surfer Page" 
+            class="ACommunitySurferPage" 
+            file="Surfer/Page.php">Surfer page to show profile data and related links</module>
     <module type="connector" 
             guid="0badeb14ea2d41d5bcfd289e9d190534" 
             name="Connector" 

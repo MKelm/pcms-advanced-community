@@ -15,6 +15,11 @@
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
+ 
+/**
+ * Base ui content object
+ */
+require_once(dirname(__FILE__).'/../../Ui/Content/Object.php');
 
 /**
  * Advanced community surfer gallery upload
@@ -22,8 +27,7 @@
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryUpload extends PapayaObjectInteractive
-  implements PapayaXmlAppendable {
+class ACommunitySurferGalleryUpload extends ACommunityUiContentObject {
   
   /**
    * Surfer gallery upload data
@@ -76,28 +80,14 @@ class ACommunitySurferGalleryUpload extends PapayaObjectInteractive
   }
   
   /**
-  * Compile output xml.
-  * 
-  * @return string
-  */
-  public function getXml() {
-    $dom = new PapayaXmlDocument();
-    $dom->appendElement('upload');
-    $this->appendTo($dom->documentElement);
-    $xml = '';
-    foreach ($dom->documentElement->childNodes as $node) {
-      $xml .= $node->ownerDocument->saveXml($node);
-    }
-    return $xml;
-  }
-  
-  /**
   * Access to the ui content surfer gallery upload dialog control
   *
   * @param ACommunityUiContentSurferGalleryUploadDialog $uiContentUploadDialog
   * @return ACommunityUiContentSurferGalleryUploadDialog
   */
-  public function uiContentUploadDialog(ACommunityUiContentSurferGalleryUploadDialog $uiContentUploadDialog = NULL) {
+  public function uiContentUploadDialog(
+           ACommunityUiContentSurferGalleryUploadDialog $uiContentUploadDialog = NULL
+         ) {
     if (isset($uiContentUploadDialog)) {
       $this->_uiContentUploadDialog = $uiContentUploadDialog;
     } elseif (is_null($this->_uiContentUploadDialog)) {

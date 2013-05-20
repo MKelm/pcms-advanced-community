@@ -1,8 +1,8 @@
 <?php
 /**
- * Advanced community surfer deletion
+ * Advanced community page deletion
  * 
- * This class offers methods to delete and modify community data on surfer deletion
+ * This class offers methods to delete and modify community data on page deletion
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -19,12 +19,12 @@
  */
 
 /**
- * Advanced community surfer deletion
+ * Advanced community page deletion
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferDeletion extends PapayaObject {
+class ACommunityPageDeletion extends PapayaObject {
   
   /**
   * Stored database access object
@@ -53,39 +53,14 @@ class ACommunitySurferDeletion extends PapayaObject {
   }
   
   /**
-   * Delete all surfer galleries and related data by one surfer id
+   * Delete all page comments by page ids
    * 
-   * @param string $surferId
+   * @param array $pageIds
    */
-  public function deleteSurferGalleries($surferId) {
-    include_once(dirname(__FILE__).'/Gallery/Deletion.php');
-    $deletion = new ACommunitySurferGalleryDeletion();
-    $deletion->papaya($this->papaya());
-    $deletion->deleteSurferGalleries($surferId);
-  }
-  
-  /**
-   * Set deleted surfer flag in comments for comments filter
-   * 
-   * @param string $surferId
-   */
-  public function deleteSurferComments($surferId) {
+  public function deletePageComments($pageIds) {
     $this->databaseAccess()->deleteRecord(
       $this->databaseAccess()->getTableName($this->_tableNameComments),
-      array('comment_ressource_id' => $surferId, 'comment_ressource_type' => 'surfer')
-    );
-  }
-  
-  /**
-   * Set deleted surfer flag in comments for comments filter
-   * 
-   * @param string $surferId
-   */
-  public function setDeletedSurferInPageComments($surferId) {
-    $this->databaseAccess()->updateRecord(
-      $this->databaseAccess()->getTableName($this->_tableNameComments),
-      array('comment_deleted_surfer' => 1),
-      array('surfer_id' => $surferId, 'comment_ressource_type' => 'page')
+      array('comment_ressource_id' => $pageIds, 'comment_ressource_type' => 'page')
     );
   }
   

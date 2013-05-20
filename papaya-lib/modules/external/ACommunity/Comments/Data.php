@@ -115,12 +115,6 @@ class ACommunityCommentsData extends PapayaObject {
   public $languageId = 0;
   
   /**
-   * Community connector
-   * @var connector_surfers
-   */
-  protected $_communityConnector = NULL;
-  
-  /**
    * Page and sub-page parameters to use in sub-objects' links
    * @var array
    */
@@ -184,14 +178,23 @@ class ACommunityCommentsData extends PapayaObject {
    * @param integer|string $id
    */
   public function ressource($type = NULL, $id = NULL) {
-    if (isset($type) && isset($id)) {
-      $this->_ressource['type'] = $type;
-      switch ($type) {
-        case 'surfer':
-          $id = $this->communityConnector()->getIdByHandle($id);
-          break;
+    if (isset($type)) {
+      if ($type == 'surfer') {
+        if (empty($id)) {
+          $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
+          if (!empty($currentSurfer->surfer['surfer_id']) && $currentSurfer->isValid) {
+            $id = $currentSurfer->surfer['surfer_id'];
+          }
+        } else {
+          $id = $this->owner->communityConnector()->getIdByHandle($id);
+        }
       }
-      $this->_ressource['id'] = $id;
+      if (!empty($id)) {
+        $this->_ressource = array(
+          'type' => $type,
+          'id' => $id
+        );
+      }
     }
     return $this->_ressource;
   }
@@ -253,24 +256,6 @@ class ACommunityCommentsData extends PapayaObject {
   }
   
   /**
-   * Get/set community connector
-   * 
-   * @param object $connector
-   * @return object
-   */
-  public function communityConnector(connector_surfers $connector = NULL) {
-    if (isset($connector)) {
-      $this->_communityConnector = $connector;
-    } elseif (is_null($this->_communityConnector)) {
-      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-      $this->_communityConnector = base_pluginloader::getPluginInstance(
-        '06648c9c955e1a0e06a7bd381748c4e4', $this
-      );
-    }
-    return $this->_communityConnector;
-  }
-  
-  /**
    * Set/get surfer handles depending on loaded surfer ids
    * 
    * @var array $surferHandles
@@ -283,7 +268,7 @@ class ACommunityCommentsData extends PapayaObject {
       $this->_surferHandles = array();
       if (!empty($this->_surferIds)) {
         $surferIds = array_keys($this->_surferIds);
-        $surferHandles = $this->communityConnector()->getHandleById($surferIds);
+        $surferHandles = $this->owner->communityConnector()->getHandleById($surferIds);
         foreach ($surferIds as $surferId) {
           if (!empty($surferHandles[$surferId])) {
             $this->_surferHandles[$surferId] = $surferHandles[$surferId];
@@ -309,7 +294,7 @@ class ACommunityCommentsData extends PapayaObject {
       $this->_surferAvatars = array();
       if (!empty($this->_surferIds)) {
         $surferIds = array_keys($this->_surferIds);
-        $surferAvatars = $this->communityConnector()->getAvatar($surferIds);
+        $surferAvatars = $this->owner->communityConnector()->getAvatar($surferIds);
         foreach ($surferIds as $surferId) {
           if (!empty($surferAvatars[$surferId])) {
             $this->_surferAvatars[$surferId] = $surferAvatars[$surferId];
@@ -353,7 +338,7 @@ class ACommunityCommentsData extends PapayaObject {
 
         $links['comment_links'][$id]['reply'] = NULL;
         if (isset($comment['childs'])) {
-          $currentSurfer = $this->communityConnector()->getCurrentSurfer();
+          $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
           if ($currentSurfer->isValid) {
             $reference = clone $this->reference();
             $reference->setParameters(
@@ -530,7 +515,7 @@ class ACommunityCommentsData extends PapayaObject {
     if (isset($surferId)) {
       $this->_surferId = $surferId;
     } elseif (is_null($this->_surferId)) {
-      $currentSurfer = $this->communityConnector()->getCurrentSurfer();
+      $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
       $this->_surferId = $currentSurfer->surfer['surfer_id'];
     }
     return $this->_surferId;

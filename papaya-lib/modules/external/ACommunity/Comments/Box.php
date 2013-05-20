@@ -80,8 +80,6 @@ class ACommunityCommentsBox extends base_actionbox {
   /**
    * Get ressource data to load corresponding comments
    * Overwrite this method for customized ressources
-   * 
-   * @return array
    */
   public function setRessourceData() {
     switch ($this->data['ressource_type']) {
@@ -107,6 +105,8 @@ class ACommunityCommentsBox extends base_actionbox {
               $this->parentObj->moduleObj->paramName,
               $surferParameters
             );
+          } else {
+            $this->comments()->data()->ressource('surfer', NULL);  
           }
         }
         break;
@@ -123,7 +123,6 @@ class ACommunityCommentsBox extends base_actionbox {
         }
         break;
     }
-    
   }
   
   /**

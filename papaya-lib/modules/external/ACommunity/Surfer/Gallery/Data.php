@@ -79,12 +79,6 @@ class ACommunitySurferGalleryData extends PapayaObject {
   protected $_ressourceParameters = array();
   
   /**
-   * Community connector
-   * @var connector_surfers
-   */
-  protected $_communityConnector = NULL;
-  
-  /**
    * Gallery database record
    *  
    * @var ACommunityContentSurferGallery
@@ -131,8 +125,8 @@ class ACommunitySurferGalleryData extends PapayaObject {
    */
   public function ressource($type = NULL, $id = NULL) {
     if (isset($type) && isset($id)) {
-      $id = $this->communityConnector()->getIdByHandle($id);
-      $currentSurfer = $this->communityConnector()->getCurrentSurfer();
+      $id = $this->owner->communityConnector()->getIdByHandle($id);
+      $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
       $this->ressourceIsActiveSurfer = 
         $id == $currentSurfer->surfer['surfer_id'] && $currentSurfer->isValid;
       if ($this->_ressourceNeedsActiveSurfer == FALSE || $this->ressourceIsActiveSurfer) {
@@ -178,25 +172,7 @@ class ACommunitySurferGalleryData extends PapayaObject {
     }
     return $this->_reference;
   }
-  
-  /**
-   * Get/set community connector
-   * 
-   * @param object $connector
-   * @return object
-   */
-  public function communityConnector(connector_surfers $connector = NULL) {
-    if (isset($connector)) {
-      $this->_communityConnector = $connector;
-    } elseif (is_null($this->_communityConnector)) {
-      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-      $this->_communityConnector = base_pluginloader::getPluginInstance(
-        '06648c9c955e1a0e06a7bd381748c4e4', $this
-      );
-    }
-    return $this->_communityConnector;
-  }
-  
+
   /**
   * Access to the surfer gallery database record data
   *

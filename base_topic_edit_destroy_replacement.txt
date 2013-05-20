@@ -1,0 +1,57 @@
+  /**
+  * Delete this entry and all subentries, all versions and all additional data
+  *
+  * @return boolean
+  */
+  function destroy() {
+    //load Ids
+    $ids = FALSE;
+    $oldPath = $this->topic["prev_path"].$this->topic["prev"].
+      ';'.$this->topic["topic_id"].';';
+    $sql = "SELECT topic_id
+              FROM %s
+             WHERE topic_id = %d
+                OR prev = '%d'
+                OR prev_path like '%s%%'";
+    $params = array($this->tableTopics, $this->topicId,
+      $this->topicId, $oldPath);
+    if ($res = $this->databaseQueryFmt($sql, $params)) {
+      while ($row = $res->fetchRow()) {
+        $ids[] = $row[0];
+      }
+    }
+    if (isset($ids) && is_array($ids)) {
+      $filter = array("topic_id" =>$ids);
+      //delete boxes
+      if (FALSE !== $this->databaseDeleteRecord(
+            $this->tableBoxesLinks, $filter)) {
+        //delete public pages
+        if (FALSE !== $this->databaseDeleteRecord(
+              $this->tableTopicsPublicTrans, $filter)) {
+          if (FALSE !== $this->databaseDeleteRecord(
+                $this->tableTopicsPublic, $filter)) {
+            //delete backups
+            if (FALSE !== $this->databaseDeleteRecord(
+                  $this->tableTopicsVersionsTrans, $filter)) {
+              if (FALSE !== $this->databaseDeleteRecord(
+                    $this->tableTopicsVersions, $filter)) {
+                //delete page
+                if (FALSE !== $this->databaseDeleteRecord(
+                      $this->tableTopicsTrans, $filter)) {
+                  if (FALSE !== $this->databaseDeleteRecord(
+                        $this->tableTopics, $filter)) {
+                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
+                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
+                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
+                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
+                    return TRUE;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return FALSE;
+  }

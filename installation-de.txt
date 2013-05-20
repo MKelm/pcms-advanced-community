@@ -25,6 +25,10 @@ Das Advanced Community Paket enthält folgende Module:
 - Kommentierer-Rangliste (Commenters Ranking Box)
 -- Zeigt eine Liste mit Kommentierern sortiert nach Kommentaranzahl an
 
+- Surferseite (Surfer Page)
+-- Optimierte Ausgabe von Surferdetails des aktiven Surfers oder eines gewählten Surfers
+-- Unterstützt das Kommentarmodul, siehe oben
+
 - Surfergallerie (Surfer Gallery Page)
 -- Zeigt eine Thumbnailgallerie für einen gewählten Surfer an
 --- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
@@ -42,17 +46,30 @@ Das Advanced Community Paket enthält folgende Module:
 - Conntector 
 -- Enthält eine onDeleteSurfer Methode für den Action Dispatcher
 
+- Erweiterte Version von "content_thumbs"
+-- In dem freien Modul content_thumbs wurden einige Optionen hinzugefügt um eine erweiterte Anzeige
+   im Surfergalleriemodul zu ermöglichen
+-- die Erweiterung ist solange Bestandteil dieses Pakets bis ein papaya CMS Update erfolgt
+
 == Dateien kopieren ==
 
 Die in dem Paket enthaltenen Dateien sind je papaya CMS Ordner sortiert.
 Es reicht die Hauptordner in das papaya CMS Basisverzeichnis zu kopieren.
 Wenn papaya-data und papaya-lib in einem externen Verzeichnis liegen,
-müssen die entsprechenden Paketordner dorthin kopiert werden. 
-In dem papaya-data Verzeichnis sind einige Änderungen an der boxes.xml,
-page_gallery.xsl und modules/free/thumbs/content_thumbs.xsl enthalten.
+müssen die entsprechenden Paketordner dorthin kopiert werden.
+Das Paket enthält einige Änderungen an bestehenden papaya CMS Dateien:
+- papaya-data/templates/default-xhtml/html/boxes.xml
+- papaya-data/templates/default-xhtml/html/page_gallery.xsl
+- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl
+- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
+- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
+- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
+- papaya-lib/modules/free/thumbs/content_thumbs.php
+- papaya-themes/default/page_thumbs.css
 Beim Kopieren werden die alten Versionen dieser Dateien überschrieben.
 Im Normalfall sollte die Kompatibilität mit dem aktuellen default-Theme
-bestehen bleiben.
+bestehen bleiben. Sie müssen die Dateien bei jedem papaya CMS Update, das sie durchführen, 
+aus dem Advanced Community Paket erneut kopieren.
 
 == Module einrichten ==
 
@@ -78,8 +95,10 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Commenters Ranking Box = box_acommunity.xsl
 - Comments Box = box_acommunity.xsl
 - Comments Ranking Box = box_acommunity.xsl
+- Surfer Gallery Folders Box = box_acommunity.xsl
 - Surfer Gallery Upload Box = box_acommunity.xsl
 - Surfer Gallery Page = page_gallery.xsl
+- Surfer Page = page_acommunity.xsl
 
 == Boxen und Seiten einrichten ==
 
@@ -115,6 +134,14 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 -- Publizieren sie die Box
 -- Hängen sie die Box in einer Seite unter dem Punkt "Boxen" ein
 
+- Surferseite (Surfer Page)
+-- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
+-- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
+-- Danach bennen sie die neue Unterseite eindeutig
+-- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
+-- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Seite
+
 - Surfergallerie (Surfer Gallery Page)
 -- Wählen sie den Menüpunkt "Dateien"
 -- Erstellen sie einen neuen (Unter-)Ordner für Surfergallerien
@@ -123,6 +150,16 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 -- Danach bennen sie die neue Unterseite eindeutig
 -- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
 -- Gehen sie zu "Inhalt" und wählen sie unter "Ordner" den zuvor erstellen Dateiordner
+-- Ändern sie auch folgende Optionen um eine optimale Anzeige der Surfergallerie zu ermöglichen
+--- Vorschaubilder, Anzahl Vorschaubilder auf 4
+--- Vorschaubilder, Spaltenanzahl auf 2
+--- Vorschaubilder, Größe verändern auf "Minimum cropped"
+--- Vorschaubilder, Breite und Höhe auf 200
+--- Bilder, Display in Lightbox? auf "Nein"
+---- Die Lightbox kann aktiviert werden, wenn keine Kommentarbox in der Surfergallerie genutzt wird
+--- Bilder, Anzeigemodues auf "Resized Image" oder "Resized image with download link" oder
+    "Resized image with original image link"
+--- Bilder, Breite und Höhe auf 410
 -- Ändern sie bei Bedarf weitere Einstellungen
 -- Publizieren sie die Seite
 
@@ -144,22 +181,39 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 
 == Action Dispatcher einrichten ==
 
-Der Action Dispatcher sollte eingerichtet werden um Daten gelöschter Surfer 
+Der Action Dispatcher sollte eingerichtet werden um Daten gelöschter Surfer und Seiten 
 in der Advanced Community korrekt zu handhaben.
 
-Bitte lesen sie zuerst die Action Dispatcher Anleitung auf 
+Bitte lesen sie auch die Action Dispatcher Anleitung auf 
 http://de.wiki.papaya-cms.com/wiki/Action_Dispatcher
 
-Sie brauchen eine Gruppe "community" und eine Aktion "onDeleteSurfer"
+=== Surferdaten löschen ===
+
+Sie brauchen im Action Dispatcher eine Gruppe "community" und eine Aktion "onDeleteSurfer"
 danach können sie die Observerklasse "ACommunityConnector" der Aktion
 hinzufügen.
 
 Der Advanced Community Connector führt über den Action Dispatcher beim
 Löschen eines Surfers folgende Aktionen aus:
-- Kommentare werden mit einem Flag versehen, dass der Surfer gelöscht wurde
+- Seitenkommentare werden mit einem Flag versehen, dass der Surfer gelöscht wurde
 -- in den Kommentarlisten werden später Surferhandles mit "Deleted user" ö.ä. ersetzt
 -- im Kommentiererranking werden gelöschte Surfer ignoriert
-- Surfergallerien werden mitsamt aller Dateien und Dateiordner gelöscht
+- Surferkommentare zum gelöschten Surfer werden komplett gelöscht
+- Surfergallerien werden mitsamt aller Ordner, Bilder und Bildkommentaren gelöscht
+
+=== Seitendaten löschen ===
+
+Zuerst müssen sie die Datei papaya-lib/system/base_topic_edit.php bearbeiten. Nehmen sie den Inhalt
+der Datei base_topic_edit_destroy_replacement.php und ersetzen sie die Methode destroy() komplett.
+Der Replacement-Code enthält einen gültigen Action Dispatcher-Aufruf um Seitendaten zu löschen.
+Diese Aktion müssen sie bei jedem papaya CMS Update das sie durchführen wiederholen.
+
+Sie brauchen danach im Action Dispatcher noch eine Gruppe "system" und eine Aktion "onDeletePages".
+Dann können sie die Observerklasse "ACommunityConnector" der Aktion hinzufügen.
+
+Der Advanced Community Connector führt über den Action Dispatcher beim
+Löschen einer Seite folgende Aktionen aus:
+- Seitenkommentare zur gelöschten Seite werden komplett gelöscht
 
 == Verlinkungen von Surferseiten ==
 

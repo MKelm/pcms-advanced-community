@@ -17,13 +17,17 @@
  */
 
 /**
+ * Base ui content object
+ */
+require_once(dirname(__FILE__).'/Ui/Content/Object.php');
+
+/**
  * Advanced community comments containing comments tree
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityComments extends PapayaObjectInteractive
-  implements PapayaXmlAppendable {
+class ACommunityComments extends ACommunityUiContentObject {
   
   /**
    * Comments data
@@ -116,7 +120,7 @@ class ACommunityComments extends PapayaObjectInteractive
       $this->performCommands();
       $comments = $parent->appendElement('acommunity-comments');
       if ($this->data()->mode == 'list') {
-        $currentSurfer = $this->data()->communityConnector()->getCurrentSurfer();
+        $currentSurfer = $this->communityConnector()->getCurrentSurfer();
         if ($currentSurfer->isValid) {
                   
           $dom = new PapayaXmlDocument();
@@ -152,24 +156,7 @@ class ACommunityComments extends PapayaObjectInteractive
       );
     }
   }
-  
-  /**
-  * Compile output xml.
-  * 
-  * @return string
-  */
-  public function getXml() {
-    $dom = new PapayaXmlDocument();
-    $dom->appendElement('comments');
 
-    $this->appendTo($dom->documentElement);
-    $xml = '';
-    foreach ($dom->documentElement->childNodes as $node) {
-      $xml .= $node->ownerDocument->saveXml($node);
-    }
-    return $xml;
-  }
-  
   /**
   * Access to the ui content comment dialog control
   *
@@ -177,7 +164,10 @@ class ACommunityComments extends PapayaObjectInteractive
   * @param boolean $reset
   * @return ACommunityUiContentCommentDialog
   */
-  public function uiContentCommentDialog(ACommunityUiContentCommentDialog $uiContentCommentDialog = NULL, $reset = FALSE) {
+  public function uiContentCommentDialog(
+           ACommunityUiContentCommentDialog $uiContentCommentDialog = NULL, 
+           $reset = FALSE
+         ) {
     if (isset($uiContentCommentDialog)) {
       $this->_uiContentCommentDialog = $uiContentCommentDialog;
     } elseif (is_null($this->_uiContentCommentDialog) || $reset == TRUE) {
@@ -198,7 +188,9 @@ class ACommunityComments extends PapayaObjectInteractive
   * @param ACommunityUiContentCommentsList $uiCommentsList
   * @return ACommunityUiContentCommentsList
   */
-  public function uiCommentsList(ACommunityUiContentCommentsList $uiCommentsList = NULL) {
+  public function uiCommentsList(
+           ACommunityUiContentCommentsList $uiCommentsList = NULL
+         ) {
     if (isset($uiCommentsList)) {
       $this->_uiCommentsList = $uiCommentsList;
     } elseif (is_null($this->_uiCommentsList)) {

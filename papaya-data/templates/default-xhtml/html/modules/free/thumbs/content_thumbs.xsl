@@ -19,7 +19,7 @@
 </xsl:template>
 
 <xsl:template name="page-scripts-lazy">
-  <xsl:if test="not(/page/content/topic/@module = 'ACommunitySurferGalleryPage')">
+  <xsl:if test="/page/content/topic/options/mode/@lightbox = '1'">
     <xsl:call-template name="link-script">
       <xsl:with-param name="file">papaya/jquery.xmlns.js</xsl:with-param>
     </xsl:call-template>
@@ -74,6 +74,8 @@
           <xsl:with-param name="image" select="$pageContent/image" />
           <xsl:with-param name="imageTitle" select="$pageContent/imagetitle" />
           <xsl:with-param name="imageComment" select="$pageContent/imagecomment" />
+          <xsl:with-param name="originalImage" select="$pageContent/originalimage" />
+          <xsl:with-param name="imageDownload" select="$pageContent/imagedownload" />
           <xsl:with-param name="navigation" select="$pageContent/navigation" />
         </xsl:call-template>
       </xsl:when>
@@ -96,11 +98,11 @@
            style="width: {$options/thumbwidth}px; height: {$options/thumbheight}px;"
            href="{a/@href}"
            title="{image/@title}">
-          <img src="{a/img/@src}" style="{a/img/@style}" alt="{a/img/@alt}"/>
+          <img src="{a/img/@src}" alt="{a/img/@alt}"/>
         </a>
       </div>
     </xsl:for-each>
-    <xsl:if test="not(/page/content/topic/@module = 'ACommunitySurferGalleryPage')">
+    <xsl:if test="$options/mode/@lightbox = '1'">
       <script type="text/javascript"><xsl:comment>
         jQuery('#gallery').children().hide();
         var galleryMapping = {
@@ -129,17 +131,19 @@
   <xsl:param name="image" />
   <xsl:param name="imageTitle" />
   <xsl:param name="imageComment" />
+  <xsl:param name="originalImage" />
+  <xsl:param name="imageDownload" />
   <xsl:param name="navigation" />
   <xsl:if test="$image">
     <div class="galleryImage">
       <xsl:choose>
         <xsl:when test="$navigation/navlink[@dir='index']">
           <a href="{$navigation/navlink[@dir='index']/@href}">
-            <img src="{$image/img/@src}" style="{$image/img/@style}" alt="{$image/img/@alt}"/>
+            <img src="{$image/img/@src}" alt="{$image/img/@alt}"/>
           </a>
         </xsl:when>
         <xsl:otherwise>
-          <img src="{$image/img/@src}" style="{$image/img/@style}" alt="{$image/img/@alt}"/>
+          <img src="{$image/img/@src}" alt="{$image/img/@alt}"/>
         </xsl:otherwise>
       </xsl:choose>
       <xsl:if test="$imageTitle">
@@ -149,6 +153,16 @@
         <div class="comment">
           <xsl:apply-templates select="$imageComment/node()"/>
         </div>
+      </xsl:if>
+      <xsl:if test="$originalImage">
+        <div class="originalImage"><a href="{$originalImage/@href}"><xsl:call-template name="language-text">
+          <xsl:with-param name="text" select="'ORIGINAL_IMAGE'"/>
+        </xsl:call-template></a></div>
+      </xsl:if>
+      <xsl:if test="$imageDownload">
+        <div class="imageDownload"><a href="{$imageDownload/@href}"><xsl:call-template name="language-text">
+          <xsl:with-param name="text" select="'IMAGE_DOWNLOAD'"/>
+        </xsl:call-template></a></div>
       </xsl:if>
     </div>
   </xsl:if>
