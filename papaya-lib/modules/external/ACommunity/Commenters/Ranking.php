@@ -91,6 +91,7 @@ class ACommunityCommentersRanking extends ACommunityUiContentObject {
           array(
             'surfer_handle' => $surferHandles[$id], 
             'surfer_avatar' => $surferAvatars[$id],
+            'surfer_page_link' => $this->acommunityConnector()->getSurferPageLink($id),
             'comments_amount' => $commenter['comments_amount'],
             'comments_amount_caption' => $this->commentsAmountCaption
           )

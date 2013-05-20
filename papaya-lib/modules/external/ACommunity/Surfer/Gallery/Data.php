@@ -188,7 +188,7 @@ class ACommunitySurferGalleryData extends PapayaObject {
       $this->_gallery->papaya($this->papaya());
     }
     return $this->_gallery;
-  }  
+  }
   
   /**
   * Access to the surfer galleries database records data
@@ -205,7 +205,7 @@ class ACommunitySurferGalleryData extends PapayaObject {
       $this->_galleries->papaya($this->papaya());
     }
     return $this->_galleries;
-  }  
+  }
   
   /**
    * Media DB Edit to save image uploads

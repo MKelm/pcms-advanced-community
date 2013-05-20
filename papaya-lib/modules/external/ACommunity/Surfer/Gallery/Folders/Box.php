@@ -22,7 +22,7 @@
 require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
 
 /**
- * Advanced community surfer folders upload box
+ * Advanced community gallery folders box
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity

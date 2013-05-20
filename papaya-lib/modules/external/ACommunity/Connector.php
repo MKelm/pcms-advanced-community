@@ -25,6 +25,29 @@
 class ACommunityConnector extends base_connector {
   
   /**
+   * Guid of connector to get module options
+   */
+  protected $_guid = '0badeb14ea2d41d5bcfd289e9d190534';
+  
+  /**
+  * Plugin option fields to set module options
+  * @var array
+  */
+  public $pluginOptionFields = array(
+    'Surfer Page',
+    'surfer_page_parameter_group' => array(
+      'Parameter Group', 'isAlpha', TRUE, 'input', 30, NULL, 'acs'
+    ),
+    'surfer_page_id' => array(
+      'Page ID', 'isNum', TRUE, 'pageid', 30, NULL, NULL
+    ),
+    'Surfer Gallery Page',
+    'surfer_gallery_page_id' => array(
+      'Page ID', 'isNum', TRUE, 'pageid', 30, NULL, NULL
+    )
+  );
+  
+  /**
    * Surfer deletion object
    * @var ACommunitySurferDeletion
    */
@@ -35,6 +58,12 @@ class ACommunityConnector extends base_connector {
    * @var ACommunityPageDeletion
    */
   protected $_pageDeletion = NULL;
+  
+  /**
+   * Community connector
+   * @var connector_surfers
+   */
+  protected $_communityConnector = NULL;
   
   /**
    * Surfer deletion object
@@ -90,6 +119,59 @@ class ACommunityConnector extends base_connector {
    */
   public function onDeletePages($pageIds) {
     $this->pageDeletion()->deletePageComments($pageIds);
+  }
+  
+  /**
+   * Get link to surfer page by surfer id
+   * 
+   * @param string $surferId
+   */
+  public function getSurferPageLink($surferId) {
+    $handle = $this->communityConnector()->getHandleById($surferId);
+    if (!empty($handle)) {
+      $pageId = papaya_module_options::readOption($this->_guid, 'surfer_page_id', NULL);
+      $parameterGroup = papaya_module_options::readOption(
+        $this->_guid, 'surfer_page_parameter_group', 'acs'
+      );
+      return base_object::getWebLink(
+        $pageId, NULL, NULL, array('surfer_handle' => $handle), $parameterGroup, $handle.'s-page'
+      );
+    }
+    return NULL;
+  }
+  
+  /**
+   * Get link to surfer gallery page by surfer id
+   * 
+   * @param string $surferId
+   */
+  public function getSurferGalleryPageLink($surferId) {
+    $handle = $this->communityConnector()->getHandleById($surferId);
+    if (!empty($handle)) {
+      $pageId = papaya_module_options::readOption($this->_guid, 'surfer_gallery_page_id', NULL);
+      return base_object::getWebLink(
+        $pageId, NULL, NULL, array('surfer_handle' => $handle), 'acg', $handle.'s-gallery'
+      );
+    }
+    return NULL;
+  }
+  
+  /**
+   * Get/set community connector
+   * 
+   * @param object $connector
+   * @return object
+   */
+  public function communityConnector(connector_surfers $connector = NULL) {
+    if (isset($connector)) {
+      $this->_communityConnector = $connector;
+    } elseif (is_null($this->_communityConnector)) {
+      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
+      $this->_communityConnector = base_pluginloader::getPluginInstance(
+        '06648c9c955e1a0e06a7bd381748c4e4', $this
+      );
+    }
+    return $this->_communityConnector;
   }
   
 }

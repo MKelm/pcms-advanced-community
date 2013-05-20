@@ -79,6 +79,7 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
             $commentData['time'],
             $commentData['votes_score']
           );
+          $comment->surferPageLink = $commentData['surfer_page_link'];
           $comment->surferAvatar = $surferAvatars[$commentData['surfer_id']];
           $comment->linkReply = $links['comment_links'][$id]['reply'];
           $comment->linkVoteUp = $links['comment_links'][$id]['vote_up'];
@@ -104,6 +105,7 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
                 $subCommentData['time'],
                 $subCommentData['votes_score']
               );
+              $subComment->surferPageLink = $subCommentData['surfer_page_link'];
               $subComment->surferAvatar = $surferAvatars[$subCommentData['surfer_id']];
               $subComment->linkVoteUp = $links['comment_links'][$subCommentId]['vote_up'];
               $subComment->linkVoteDown = $links['comment_links'][$subCommentId]['vote_down'];

@@ -79,6 +79,12 @@ class ACommunityCommentsData extends PapayaObject {
   protected $_surferAvatars = NULL;
   
   /**
+   * A list of surfer page links used by comments list
+   * @var array
+   */
+  protected $_surferPageLinks = NULL;
+  
+  /**
    * A list of captions to be used
    * @var array
    */
@@ -440,6 +446,13 @@ class ACommunityCommentsData extends PapayaObject {
       if ($parentId == 0) {
         $comment['childs'] = array();
         $this->_getCommentsList($comment['childs'], $comment['id']);
+      }
+      if (!isset($this->_surferPageLinks[$comment['surfer_id']])) {
+        $comment['surfer_page_link'] = $this->owner->acommunityConnector()->getSurferPageLink(
+          $comment['surfer_id']
+        );
+      } else {
+        $comment['surfer_page_link'] = $this->_surferPageLinks[$comment['surfer_id']];
       }
       $listData['data'][$id] = $comment;
       $this->_surferIds[$comment['surfer_id']] = 1;

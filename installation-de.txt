@@ -34,6 +34,10 @@ Das Advanced Community Paket enthält folgende Module:
 --- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
 -- Unterstützt das Kommentarmodul, siehe oben
 
+- Surfergallerie Teaser (Surfer Gallery Teaser Box)
+-- Zeigt auf einer Surferseite eine Auswahl von maximal n Thumbnails an
+-- Verlinkt auf die Gallerieseite
+
 - Surfergallerie Ordner (Surfer Gallery Folders Box)
 -- Zeigt in der Surfergallerie alle Ordner des jeweiligen Surfers an
 -- Enthält Links zum Löschen und Hinzufügen von Ordnern wenn der angemeldete
@@ -95,6 +99,7 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Commenters Ranking Box = box_acommunity.xsl
 - Comments Box = box_acommunity.xsl
 - Comments Ranking Box = box_acommunity.xsl
+- Surfer Gallery Teaser Box = box_acommunity.xsl
 - Surfer Gallery Folders Box = box_acommunity.xsl
 - Surfer Gallery Upload Box = box_acommunity.xsl
 - Surfer Gallery Page = page_gallery.xsl
@@ -163,6 +168,14 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 -- Ändern sie bei Bedarf weitere Einstellungen
 -- Publizieren sie die Seite
 
+- Surfergallerie Teaser (Surfer Gallery Teaser Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
+-- Wählen sie die Boxengruppe "after-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box auf ihrer Surferseite unter dem Punkt "Boxen" ein
+
 - Surfergallerie Ordner (Surfer Gallery Folders Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
 -- Wählen sie die Boxengruppe "before-content"
@@ -217,10 +230,20 @@ Löschen einer Seite folgende Aktionen aus:
 
 == Verlinkungen von Surferseiten ==
 
-Für die Zukunft sind verschiedene Ansätze von Verlinkungen z.B. zwischen
-Surferseiten und Surfergallerien u.ä. geplant. Derzeit müssen die Verlinkungen
-noch manuell gesetzt werden. Die Verlinkungen können einfach im Richtext-Editor
-über den Menüpunkt "Link einfügen/bearbeiten" gesetzt werden.
+Um Surfer in Kommentarboxen und Surfergallerien in Gallerieteaserboxen korrekt zu verlinken 
+müssen sie die Moduloptionen des Connectors anpassen. Sie benötigen zuvor eine Seite mit dem 
+Modul "Surfer Page" und "Surfer Gallery Page".
+Moduloptionen ändern:
+- Öffnen sie die Modulübersicht im Menüpunkt "Module"
+- Öffnen sie das Paket "Advanced Community" 
+- Wählen sie das Modul "Connector" aus
+- Wählen sie rechts den Punkt "Optionen" aus
+- Setzen sie die Option "Surfer Page" -> "Page ID" und "Surfer Gallery Page" -> "Page ID" korrekt
+- Danach können sie von Kommentarboxen aus die Surferdetailseite erreichen
+-- Beispiel-URL: infis-page.70.de.html?acs:surfer_handle=infi
+- Danach können sie von Gallerieteaserboxen aus die Surfergallerie erreichen
+-- Beispiel-URL: infis-gallery.71.de.html?acg:surfer_handle=infi
 
-Eine Surfergallerie ist z.B. folgendermaßen anzusteueren:
-papaya.11.html?acg:surfer_handle=dasIstEinSurferHandle
+Sie können auch die Parametergruppe der Surferseiten einstellen. Sie brauchen jedoch nur eine andere
+Parametergruppe, wenn sie ein anderes Seitenmodul als "Surfer Page" nutzen. Dieser Ansatz ist
+z.B. mit dem "Show user"-Modul der Community kompatibel, dessen Parametergruppe "bab" lautet.

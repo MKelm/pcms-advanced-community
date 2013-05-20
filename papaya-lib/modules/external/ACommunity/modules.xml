@@ -19,6 +19,11 @@
             class="ACommunityCommentersRankingBox" 
             file="Commenters/Ranking/Box.php">Get a list of commenters orderd by submitted comments</module>
     <module type="box" 
+            guid="4e0143a6c0b344c88decd26d5a1b5ef7" 
+            name="Surfer Gallery Teaser Box" 
+            class="ACommunitySurferGalleryTeaserBox" 
+            file="Surfer/Gallery/Teaser/Box.php">An teaser box for the base surfer gallery</module>
+    <module type="box" 
             guid="f1ade379722f40668198253c179b98d8" 
             name="Surfer Gallery Upload Box" 
             class="ACommunitySurferGalleryUploadBox" 

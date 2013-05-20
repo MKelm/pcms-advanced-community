@@ -20,6 +20,11 @@ This package contains modules to extend your papaya CMS community.
 | Changes |
 -----------
 
+Revision 0.4 (11.05.2013)
+- Added surfer gallery teaser box
+- Added links to surfer page in comments, comments ranking and commenters ranking box
+- Added connector module options for surfer page id and surfer gallery page id
+
 Revision 0.3 (11.05.2013)
 - Added surfer page module
 - Correct text paragraph css sizes in comments

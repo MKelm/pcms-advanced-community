@@ -139,7 +139,7 @@ class ACommunitySurferData extends PapayaObject {
       if (empty($handle) && !empty($currentSurfer->surfer['surfer_id']) && $currentSurfer->isValid) {
         $id = $currentSurfer->surfer['surfer_id'];
         $this->ressourceIsActiveSurfer = TRUE;
-      } else {
+      } elseif (isset($id)) {
         $this->ressourceIsActiveSurfer = 
           $id == $currentSurfer->surfer['surfer_id'] && $currentSurfer->isValid;
       }

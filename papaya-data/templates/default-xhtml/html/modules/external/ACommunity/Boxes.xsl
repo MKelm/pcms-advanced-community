@@ -19,6 +19,27 @@
     </xsl:call-template>
   </xsl:template>
   
+  <xsl:template match="acommunity-surfer-gallery-teaser">
+    <xsl:if test="add-new-images-link/@href or count(images/image) &gt; 0">
+      <div class="surferGalleryTeaser">
+        <xsl:choose>
+          <xsl:when test="add-new-images-link/@href">
+            <a class="surferGalleryTeaserAddNewImages" href="{add-new-images-link/@href}"><xsl:value-of select="add-new-images-link/text()" /></a>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:variable name="moreImagesLink" select="more-images-link/@href" />
+            <xsl:for-each select="images/image">
+              <a class="surferGalleryTeaserImageLink" href="{$moreImagesLink}"><img class="surferGalleryTeaserImage" src="{@src}" alt="" /></a>
+            </xsl:for-each>
+          </xsl:otherwise>
+        </xsl:choose>
+        <xsl:if test="more-images-link/@href">
+          <a class="surferGalleryTeaserMoreImages" href="{more-images-link/@href}"><xsl:value-of select="more-images-link/text()" /></a>
+        </xsl:if>
+      </div>
+    </xsl:if>
+  </xsl:template>
+  
   <xsl:template match="acommunity-surfer-gallery-upload">
     <xsl:call-template name="acommunity-content-dialog">
       <xsl:with-param name="dialog" select="dialog-box" />
@@ -67,8 +88,8 @@
       <xsl:if test="count(commenter) &gt; 0">
         <xsl:for-each select="commenter">
           <div class="commenter">
-            <div class="commenterAvatar"><img alt="" src="{@surfer_avatar}" /></div>
-            <div class="commenterUserName"><xsl:value-of select="@surfer_handle" /></div>
+            <div class="commenterAvatar"><a href="{@surfer_page_link}"><img alt="" src="{@surfer_avatar}" /></a></div>
+            <div class="commenterUserName"><a href="{@surfer_page_link}"><xsl:value-of select="@surfer_handle" /></a></div>
             <div class="commenterCommentsAmount">
               <xsl:value-of select="@comments_amount" /><xsl:text> </xsl:text><xsl:value-of select="@comments_amount_caption" />              
             </div>

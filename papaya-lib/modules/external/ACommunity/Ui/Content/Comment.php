@@ -46,6 +46,13 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
   protected $_surferAvatar = NULL;
   
   /**
+  * Surfer page link
+  * 
+  * @var string
+  */
+  protected $_surferPageLink = NULL;
+  
+  /**
   * Text
   * 
   * @var string
@@ -104,6 +111,7 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
     'text' => array('_text', '_text'),
     'surferHandle' => array('_surferHandle', '_surferHandle'),
     'surferAvatar' => array('_surferAvatar', '_surferAvatar'),
+    'surferPageLink' => array('_surferPageLink', '_surferPageLink'),
     'time' => array('_time', 'setTime'),
     'votesScore' => array('_votesScore', '_votesScore'),
     'linkReply' => array('_linkReply', '_linkReply'),
@@ -160,6 +168,7 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
         'id' => $this->id,
         'surfer_handle' => $this->surferHandle,
         'surfer_avatar' => $this->_surferAvatar,
+        'surfer_page_link' => $this->_surferPageLink,
         'time' => $this->time,
         'votes_score' => $this->votesScore
       )
