@@ -11,7 +11,7 @@ This package contains modules to extend your papaya CMS community.
 -----------
 
 - Some improvements
-- Caching features and cache invalidation
+- Surfer gallery, delete images
 - Administration
 
 -----------
