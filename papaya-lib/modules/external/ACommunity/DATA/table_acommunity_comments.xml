@@ -13,7 +13,26 @@
 <field name="comment_deleted_surfer" type="integer" size="2" null="no"/>
 </fields>
 <keys>
-<primary-key>
-<field>comment_id</field></primary-key>
+  <primary-key>
+    <field>comment_id</field>
+  </primary-key>
+  <key name="language_id">
+    <field>language_id</field>
+  </key>
+  <key name="surfer_id">
+    <field>surfer_id</field>
+  </key>
+  <key name="comment_ressource_id">
+    <field>comment_ressource_id</field>
+  </key>
+  <key name="comment_ressource_type">
+    <field>comment_ressource_type</field>
+  </key>
+  <key name="comment_votes_score">
+    <field>comment_ressource_type</field>
+  </key>
+  <key name="comment_deleted_surfer">
+    <field>comment_deleted_surfer</field>
+  </key>
 </keys>
 </table>

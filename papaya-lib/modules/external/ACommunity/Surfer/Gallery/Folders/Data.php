@@ -94,7 +94,7 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
         $reference = clone $this->reference();
         $selected = 0;
         if ($folder['folder_name'] == $ressource['id']) {
-          $name = $this->captions['caption_base_folder'];
+          $name = $this->captions['base_folder'];
           $href = $reference->getRelative();
           if ($selectedFolderId == 0) {
             $selected = 1;
@@ -124,11 +124,11 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
   public function loadCommandLinks() {
     $this->commandLinks = array();
     $deleteFolderLinks = array(
-      'caption' => $this->captions['caption_delete_folder'],
+      'caption' => $this->captions['delete_folder'],
       'href' => array()
     );
     foreach ($this->folders as $folderId => $folder) {
-      if ($folder['name'] != $this->captions['caption_base_folder']) {
+      if ($folder['name'] != $this->captions['base_folder']) {
         $reference = clone $this->reference();
         $reference->setParameters(
           array('command' => 'delete_folder', 'folder_id' => $folderId), 
@@ -143,7 +143,7 @@ class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
       array('command' => 'add_folder'), $this->owner->parameterGroup()
     );
     $this->commandLinks['add_folder'] = array(
-      'caption' => $this->captions['caption_add_folder'],
+      'caption' => $this->captions['add_folder'],
       'href' => $reference->getRelative()
     );
   }

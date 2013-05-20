@@ -74,7 +74,7 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
   * @return PapayaUiDialog
   */
   public function createDialog() {
-    $buttonCaption = $this->data()->captions['caption_dialog_button'];
+    $buttonCaption = $this->data()->captions['dialog_button'];
 
     $dialog = new PapayaUiDialog();
 
@@ -91,7 +91,7 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
     
     include_once(dirname(__FILE__).'/../../../../Dialog/Field/Input/File.php');
     $dialog->fields[] = $field = new ACommunityUiDialogFieldInputFile(
-      $this->data()->captions['caption_dialog_image'],
+      $this->data()->captions['dialog_image'],
       $this->_imageFieldName,
       TRUE
     );
@@ -155,7 +155,7 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
                   $ressource['id']
                 );
                 if (empty($added)) {
-                  $error = 'message_dialog_error_media_db';
+                  $error = 'dialog_error_media_db';
                 } else {
                   $href = $this->data()->reference()->get();
                   $GLOBALS['PAPAYA_PAGE']->sendHTTPStatus(301);
@@ -167,22 +167,22 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
                   exit;
                 }
               } else {
-                $error = 'message_dialog_error_file_type';
+                $error = 'dialog_error_file_type';
               }
             } else {
-              $error = 'message_dialog_error_file_extension';
+              $error = 'dialog_error_file_extension';
             }
           } else {
-            $error = 'message_dialog_error_upload';
+            $error = 'dialog_error_upload';
           }
         } else {
-          $error = 'message_dialog_error_no_upload_file';
+          $error = 'dialog_error_no_upload_file';
         }
       } else {
-        $error = 'message_dialog_error_no_folder';
+        $error = 'dialog_error_no_folder';
       }
     } else {
-      $error = 'message_dialog_error_no_folder';
+      $error = 'dialog_error_no_folder';
     }
     if (!empty($error)) {
       $this->errorMessage($this->data()->messages[$error]);
@@ -198,7 +198,7 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
   public function callbackShowError($context, $dialog) {
     $this->errorMessage(
       sprintf(
-        $this->data()->messages['message_dialog_input_error'],
+        $this->data()->messages['dialog_input_error'],
         implode(', ', $dialog->errors()->getSourceCaptions())
       )
     );

@@ -17,145 +17,110 @@
  */
 
 /**
+ * Base ui content data object
+ */
+require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
+
+/**
  * Advanced community comments data class to handle all sorts of related data
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityCommentsData extends PapayaObject {
-  
-  /**
-   * Owner object
-   * @var ACommunityComments
-   */
-  public $owner = NULL;
-  
-  /**
-   * Current comments ressource by type and id
-   * @var array
-   */
-  protected $_ressource = NULL;
-  
-  /**
-   * Ressource parameters
-   * @var array
-   */
-  protected $_ressourceParameters = array();
-  
+class ACommunityCommentsData extends ACommunityUiContentData {
+
   /**
    * Data to display paging
    * @var array
    */
   public $paging = array();
-  
+
   /**
    * Current mode to display a list or a ranking of comments
    * @var string
    */
   public $mode = 'list';
-  
+
   /**
    * Handle of deleted surfer to replace surfer ids
    * @var string
    */
   protected $_handleDeletedSurfer = NULL;
-  
+
   /**
    * A list of surfer ids used by comments list
    * @var array
    */
   protected $_surferIds = array();
-  
+
   /**
    * A list of surfer handles used by comments list
    * @var array
    */
   protected $_surferHandles = NULL;
-  
+
   /**
    * A list of surfer avatars used by comments list
    * @var array
    */
   protected $_surferAvatars = NULL;
-  
+
   /**
    * A list of surfer page links used by comments list
    * @var array
    */
   protected $_surferPageLinks = NULL;
-  
-  /**
-   * A list of captions to be used
-   * @var array
-   */
-  public $captions = array();
-  
-  /**
-   * A list of messages to be used
-   * @var array
-   */
-  public $messages = array();
-  
+
   /**
    * Buffer for current voting cookie data
    * @var array
    */
   protected $_votingCookie = NULL;
-  
+
   /**
-   * Contains comments list data 
+   * Contains comments list data
    * @var array
    */
   public $_commentsList = NULL;
-  
+
   /**
    * Contains links to be used
    * @var array
    */
   public $_links = NULL;
-  
-  /**
-   * Current language id
-   * @var integer
-   */
-  public $languageId = 0;
-  
-  /**
-   * Page and sub-page parameters to use in sub-objects' links
-   * @var array
-   */
-  protected $_referenceParameters = NULL;
-  
-  /**
-  * Reference object to create urls
-  * @var PapayaUiReference
-  */
-  protected $_reference = NULL;
-  
+
   /**
   * Current surfer id
   * @var string
   */
   protected $_surferId = NULL;
-  
+
   /**
    * Comments database records
    * @var object
    */
   protected $_comments = NULL;
-  
+
   /**
    * Comment database record
    * @var object
    */
   protected $_comment = NULL;
-    
+
+  /**
+   * A regular expression to filter reference parameters
+   * @var string
+   */
+  protected $_referenceParametersExpression = 'comments_page|comment_([0-9]+)_page';
+
   /**
    * Set data by plugin object
-   * 
+   *
    * @param array $data
+   * @param array $captionNames
+   * @param array $messageNames
    */
-  public function setPluginData($data) {
+  public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
     $this->paging['comments_per_page'] = $data['comments_per_page'];
     if (isset($data['comments_per_comment'])) {
       $this->paging['comments_per_comment'] = $data['comments_per_comment'];
@@ -163,51 +128,12 @@ class ACommunityCommentsData extends PapayaObject {
       $this->paging['comments_per_comment'] = NULL;
     }
     $this->_handleDeletedSurfer = $data['handle_deleted_surfer'];
-    $mergeCaptions = array('caption_dialog_text', 'caption_dialog_button');
-    foreach ($mergeCaptions as $mergeCaption) {
-      if (isset($data[$mergeCaption])) {
-        $this->captions[$mergeCaption] = $data[$mergeCaption];
-      }
-    }
-    $mergeMessages = array('message_dialog_input_error');
-    foreach ($mergeMessages as $mergeMessage) {
-      if (isset($data[$mergeMessage])) {
-        $this->messages[$mergeMessage] = $data[$mergeMessage];
-      }
-    }
+    parent::setPluginData($data, $captionNames, $messageNames);
   }
-  
-  /**
-   * Set/get data of current comments ressource by type and id
-   * 
-   * @param string $type
-   * @param integer|string $id
-   */
-  public function ressource($type = NULL, $id = NULL) {
-    if (isset($type)) {
-      if ($type == 'surfer') {
-        if (empty($id)) {
-          $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
-          if (!empty($currentSurfer->surfer['surfer_id']) && $currentSurfer->isValid) {
-            $id = $currentSurfer->surfer['surfer_id'];
-          }
-        } else {
-          $id = $this->owner->communityConnector()->getIdByHandle($id);
-        }
-      }
-      if (!empty($id)) {
-        $this->_ressource = array(
-          'type' => $type,
-          'id' => $id
-        );
-      }
-    }
-    return $this->_ressource;
-  }
-  
+
   /**
    * Set/get voting cookie data
-   * 
+   *
    * @return array
    */
   public function votingCookie($data = NULL) {
@@ -223,7 +149,7 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $this->_votingCookie;
   }
-  
+
   /**
   * Access to comment database record data
   *
@@ -240,7 +166,7 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $this->_comment;
   }
-  
+
   /**
   * Access to the comments database records data
   *
@@ -260,10 +186,10 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $this->_comments;
   }
-  
+
   /**
    * Set/get surfer handles depending on loaded surfer ids
-   * 
+   *
    * @var array $surferHandles
    * @return array
    */
@@ -286,10 +212,10 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $this->_surferHandles;
   }
-  
+
   /**
    * Set/get surfer avatars depending on loaded surfer ids
-   * 
+   *
    * @var array $surferHandles
    * @return array
    */
@@ -312,10 +238,10 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $this->_surferAvatars;
   }
-  
+
   /**
    * Get/set links depending on loaded comments
-   * 
+   *
    * @param array $links
    * @return array
    */
@@ -330,10 +256,10 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $this->_links;
   }
-  
+
   /**
    * Get comments links
-   * 
+   *
    * @param reference $links
    * @param array $commentsList
    * @param array $votingCookieData
@@ -357,7 +283,7 @@ class ACommunityCommentsData extends PapayaObject {
             $links['comment_links'][$id]['reply'] = $reference->getRelative();
           }
         }
-        
+
         if (empty($votingCookieData[$id])) {
           $reference = clone $this->reference();
           $reference->setParameters(
@@ -368,7 +294,7 @@ class ACommunityCommentsData extends PapayaObject {
             $this->owner->parameterGroup()
           );
           $links['comment_links'][$id]['vote_up'] = $reference->getRelative();
-           
+
           $reference = clone $this->reference();
           $reference->setParameters(
             array(
@@ -382,17 +308,17 @@ class ACommunityCommentsData extends PapayaObject {
           $links['comment_links'][$id]['vote_up'] = NULL;
           $links['comment_links'][$id]['vote_down'] = NULL;
         }
-        
+
         if (isset($comment['childs'])) {
           $this->_getCommentLinks($links, $comment['childs'], $votingCookieData);
         }
       }
     }
   }
-  
+
   /**
    * Get/set comments list data
-   * 
+   *
    * @param array $list
    * @return array
    */
@@ -405,10 +331,10 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $this->_commentsList;
   }
-  
+
   /**
    * Get comments list by parameters and comment database records
-   * 
+   *
    * @param reference $listData
    * @param integer $parentId
    */
@@ -422,7 +348,7 @@ class ACommunityCommentsData extends PapayaObject {
       $commentsFilter['ressource_type'] = $ressourceData['type'];
       $commentsFilter['ressource_id'] = $ressourceData['id'];
     }
-    
+
     if ($parentId == 0) {
       $page = $this->owner->parameters()->get('comments_page', 0);
       $pagingLimit = $this->paging['comments_per_page'];
@@ -440,7 +366,7 @@ class ACommunityCommentsData extends PapayaObject {
 
     $listData['abs_count'] = (int)$this->comments()->absCount();
     $listData['data'] = array();
-    
+
     $comments = $this->comments()->toArray();
     foreach ($comments as $id => $comment) {
       if ($parentId == 0) {
@@ -459,65 +385,7 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $listData;
   }
-  
-  /**
-   * Get/ set reference parameters
-   * 
-   * @param array $parameters
-   * @retunr array
-   */
-  public function referenceParameters($parameters = NULL) {
-    if (isset($parameters)) {
-      $this->_referenceParameters = $parameters;
-    } elseif (is_null($this->_referenceParameters)) {
-      $this->_referenceParameters = array();
-      foreach ($this->owner->parameters() as $name => $value) {
-        if (preg_match('~comments_page|comment_([0-9]+)_page~i', $name)) {
-          $this->_referenceParameters[$name] = $value;
-        }
-      }
-    }
-    return $this->_referenceParameters;
-  }
-  
-  /**
-   * Set ressource parameters for use in reference object
-   * 
-   * @param string $parameterGroup
-   * @param array $parameters
-   * @return array
-   */
-  public function ressourceParameters($parameterGroup = NULL, $parameters = NULL) {
-    if (isset($parameterGroup) && isset($parameters)) {
-      $this->_ressourceParameters[$parameterGroup] = $parameters;
-    }
-    return $this->_ressourceParameters;
-  }
-  
-  /**
-  * The basic reference object used by the subobjects to create urls.
-  *
-  * @param PapayaUiReference $reference
-  * @return PapayaUiReference
-  */
-  public function reference(PapayaUiReference $reference = NULL) {
-    if (isset($reference)) {
-      $this->_reference = $reference;
-    } elseif (is_null($this->_reference)) {
-      $this->_reference = new PapayaUiReference();
-      $this->_reference->papaya($this->papaya());
-      $this->_reference->setParameters(
-        $this->referenceParameters(), $this->owner->parameterGroup()
-      );
-      foreach ($this->ressourceParameters() as $parameterGroup => $parameters) {
-        $this->_reference->setParameters(
-          $parameters, $parameterGroup
-        );
-      }
-    }
-    return $this->_reference;
-  }
-  
+
   /**
   * Get/set current surfer id
   *
@@ -533,5 +401,5 @@ class ACommunityCommentsData extends PapayaObject {
     }
     return $this->_surferId;
   }
-  
+
 }

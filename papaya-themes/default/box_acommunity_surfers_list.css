@@ -1,0 +1,27 @@
+ul.surfersList {
+  list-style-type: none;
+}
+
+ul.surfersList li {
+ padding-left: 0;
+}
+
+ul.surfersList li .surferAvatar,
+ul.surfersList li .surferDetails {
+  display: block;
+  float: left;
+}
+
+ul.surfersList li .surferName,
+ul.surfersList li .surferLastTime {
+  display: block;
+}
+
+ul.surfersList li .surferAvatar {
+  margin-right: 0.5em;
+}
+
+ul.surfersList li .surferName {
+  margin-top: 0.7em;
+  font-size: 1.2em;
+}

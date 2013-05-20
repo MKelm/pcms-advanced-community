@@ -75,7 +75,7 @@ class ACommunityUiContentSurferGalleryFolderDialog
   * @return PapayaUiDialog
   */
   public function createDialog() {
-    $buttonCaption = $this->data()->captions['caption_dialog_button'];
+    $buttonCaption = $this->data()->captions['dialog_button'];
 
     $dialog = new PapayaUiDialogDatabaseSave($this->record());
     $dialog->callbacks()->onBeforeSave = array($this, 'callbackBeforeSaveRecord');
@@ -90,7 +90,7 @@ class ACommunityUiContentSurferGalleryFolderDialog
     $dialog->caption = NULL;
     
     $dialog->fields[] = $field = new PapayaUiDialogFieldInput(
-      $this->data()->captions['caption_dialog_folder_name'],
+      $this->data()->captions['dialog_folder_name'],
       'folder_name'
     );
     $field->setMandatory(TRUE);
@@ -133,10 +133,10 @@ class ACommunityUiContentSurferGalleryFolderDialog
         );
         return TRUE;
       } else {
-        $this->errorMessage($this->data()->messages['message_dialog_error_add_folder']);
+        $this->errorMessage($this->data()->messages['dialog_error_add_folder']);
       }
     } else {
-      $this->errorMessage($this->data()->messages['message_dialog_error_folder_data']);
+      $this->errorMessage($this->data()->messages['dialog_error_folder_data']);
     }
     return FALSE;
   }
@@ -153,7 +153,7 @@ class ACommunityUiContentSurferGalleryFolderDialog
     }
     $this->errorMessage(
       sprintf(
-        $this->data()->messages['message_dialog_input_error'],
+        $this->data()->messages['dialog_input_error'],
         implode(', ', $dialog->errors()->getSourceCaptions())
       )
     );

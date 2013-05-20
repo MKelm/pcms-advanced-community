@@ -82,18 +82,12 @@ class ACommunitySurferGalleryFoldersBox extends base_actionbox {
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    if (!empty($this->parentObj->moduleObj->paramName)) {
-      $parameters = $this->papaya()->request->getParameterGroup(
-        $this->parentObj->moduleObj->paramName
-      );
-      if (isset($parameters['surfer_handle'])) {
-        $this->folders()->data()->ressource('surfer', $parameters['surfer_handle']);  
-        $this->folders()->data()->ressourceParameters(
-          $this->parentObj->moduleObj->paramName,
-          array('surfer_handle' => $parameters['surfer_handle'])
-        );
-      }
-    }
+    $this->folders()->data()->ressource(
+      'surfer', 
+      $this, 
+      array('surfer' => 'surfer_handle'), 
+      array('surfer' => 'surfer_handle')
+    );
   }
   
   /**

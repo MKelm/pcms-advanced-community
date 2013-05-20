@@ -28,13 +28,13 @@ require_once(dirname(__FILE__).'/Ui/Content/Object.php');
  * @subpackage External-ACommunity
  */
 class ACommunitySurfer extends ACommunityUiContentObject {
-  
+
   /**
    * Comments data
    * @var ACommunitySurferData
    */
   protected $_data = NULL;
-  
+
   /**
    * Get/set surfer data
    *
@@ -52,7 +52,7 @@ class ACommunitySurfer extends ACommunityUiContentObject {
     }
     return $this->_data;
   }
-  
+
   /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
@@ -61,7 +61,7 @@ class ACommunitySurfer extends ACommunityUiContentObject {
   */
   public function appendTo(PapayaXmlElement $parent) {
     $page = $parent->appendElement('surfer-page');
-    if (!is_null($this->data()->ressource())) {
+    if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
       $this->data()->initialize();
       $details = $page->appendElement('details');
       $baseDetails = $details->appendElement(
@@ -69,7 +69,7 @@ class ACommunitySurfer extends ACommunityUiContentObject {
       );
       foreach ($this->data()->surferBaseDetails as $name => $value) {
         $baseDetails->appendElement(
-          'detail', 
+          'detail',
           array('name' => $name, 'caption' => $this->data()->captions['surfer_'.$name]),
           PapayaUtilStringXml::escape($value)
         );
@@ -80,12 +80,14 @@ class ACommunitySurfer extends ACommunityUiContentObject {
         );
         foreach ($group['details'] as $detailName => $detail) {
           $detailsGroup->appendElement(
-            'detail', array('name' => $detailName, 'caption' => $detail['caption']), 
+            'detail', array('name' => $detailName, 'caption' => $detail['caption']),
             PapayaUtilStringXml::escape($detail['value'])
           );
         }
       }
+    } else {
+      $page->appendElement('message', array('type' => 'no-surfer'), $this->data()->messages['no_surfer']);
     }
   }
-  
+
 }

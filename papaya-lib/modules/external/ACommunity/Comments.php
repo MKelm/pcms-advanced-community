@@ -116,7 +116,7 @@ class ACommunityComments extends ACommunityUiContentObject {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    if (!is_null($this->data()->ressource())) {
+    if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
       $this->performCommands();
       $comments = $parent->appendElement('acommunity-comments');
       if ($this->data()->mode == 'list') {

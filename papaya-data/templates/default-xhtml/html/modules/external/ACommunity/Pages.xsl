@@ -25,24 +25,30 @@
 
   <xsl:template name="module-content-acommunity-surfer-page">
     <xsl:param name="pageContent" />
-    <div class="surferPage">
-      <xsl:call-template name="module-content-acommunity-surfer-page-base-details">
-        <xsl:with-param name="baseDetails" select="$pageContent/details/group[@id = 0]" />
-      </xsl:call-template>
-      <xsl:call-template name="float-fix" />
-      <xsl:for-each select="$pageContent/details/group[@id != 0]">
-        <xsl:call-template name="module-content-acommunity-surfer-page-details">
-          <xsl:with-param name="details" select="." />
-        </xsl:call-template>
-      </xsl:for-each>
-      <xsl:call-template name="float-fix" />
-    </div>
-    
+    <xsl:choose>
+      <xsl:when test="count($pageContent/details/group) &gt; 0">
+        <div class="surferPage">
+          <xsl:call-template name="module-content-acommunity-surfer-page-base-details">
+            <xsl:with-param name="baseDetails" select="$pageContent/details/group[@id = 0]" />
+          </xsl:call-template>
+          <xsl:call-template name="float-fix" />
+          <xsl:for-each select="$pageContent/details/group[@id != 0]">
+            <xsl:call-template name="module-content-acommunity-surfer-page-details">
+              <xsl:with-param name="details" select="." />
+            </xsl:call-template>
+          </xsl:for-each>
+          <xsl:call-template name="float-fix" />
+        </div>
+      </xsl:when>
+      <xsl:otherwise>
+        <div class="message"><xsl:value-of select="$pageContent/message[@type = 'no-surfer']" /></div>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
-  
+
   <xsl:template name="module-content-acommunity-surfer-page-base-details">
     <xsl:param name="baseDetails" />
-    
+
     <div class="surferBaseDetailsGroup">
       <img src="{$baseDetails/detail[@name = 'avatar']/text()}" alt="{$baseDetails/detail[@name = 'avatar']/@caption}" class="surferAvatar" />
       <h1 class="surferTitle"><xsl:value-of select="$baseDetails/detail[@name = 'givenname']/text()" />
@@ -67,7 +73,7 @@
       </div>
     </div>
   </xsl:template>
-  
+
   <xsl:template name="module-content-acommunity-surfer-page-get-detail-name-class">
     <xsl:param name="detailName" />
     <xsl:variable name="lowerCase" select="'abcdefghijklmnopqrstuvwxyz'" />
@@ -76,10 +82,10 @@
     <xsl:value-of select="translate(substring($detailName, 1, 1), $lowerCase, $upperCase)" />
     <xsl:value-of select="substring($detailName, 2)" />
   </xsl:template>
-  
+
   <xsl:template name="module-content-acommunity-surfer-page-details">
     <xsl:param name="details" />
-    
+
     <div class="surferDetailsGroup">
       <h2><xsl:value-of select="$details/@caption" /></h2>
       <xsl:for-each select="$details/detail">
@@ -93,7 +99,7 @@
         </div>
       </xsl:for-each>
     </div>
-    
+
   </xsl:template>
 
 </xsl:stylesheet>

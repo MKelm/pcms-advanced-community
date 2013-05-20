@@ -7,7 +7,17 @@
 <field name="gallery_folder_id" type="integer" size="4" null="no"/>
 </fields>
 <keys>
-<primary-key>
-<field>gallery_id</field></primary-key>
+  <primary-key>
+    <field>gallery_id</field>
+  </primary-key>
+  <key name="surfer_id">
+    <field>surfer_id</field>
+  </key>
+  <key name="gallery_parent_folder_id">
+    <field>gallery_parent_folder_id</field>
+  </key>
+  <key name="gallery_folder_id">
+    <field>gallery_folder_id</field>
+  </key>
 </keys>
 </table>

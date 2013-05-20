@@ -81,9 +81,18 @@
       </xsl:when>
     </xsl:choose>
     <xsl:call-template name="float-fix"/>
-    <xsl:call-template name="module-content-thumbns-navigation">
-      <xsl:with-param name="navigation" select="$pageContent/navigation" />
-    </xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="count($pageContent/thumbnails/thumb) &gt; 0 or count($pageContent/image) &gt; 0">
+        <xsl:call-template name="module-content-thumbns-navigation">
+          <xsl:with-param name="navigation" select="$pageContent/navigation" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <div class="message"><xsl:call-template name="language-text">
+          <xsl:with-param name="text" select="'NO_IMAGES'"/>
+        </xsl:call-template></div>
+      </xsl:otherwise>
+    </xsl:choose>
   </div>
 </xsl:template>
 

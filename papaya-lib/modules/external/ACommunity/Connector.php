@@ -23,51 +23,63 @@
  * @subpackage External-ACommunity
  */
 class ACommunityConnector extends base_connector {
-  
+
   /**
    * Guid of connector to get module options
    */
   protected $_guid = '0badeb14ea2d41d5bcfd289e9d190534';
-  
+
   /**
   * Plugin option fields to set module options
   * @var array
   */
   public $pluginOptionFields = array(
-    'Surfer Page',
-    'surfer_page_parameter_group' => array(
-      'Parameter Group', 'isAlpha', TRUE, 'input', 30, NULL, 'acs'
+    'Page IDs',
+    'surfer_registration_page_id' => array(
+      'Surfer Registration', 'isNum', TRUE, 'pageid', 30,
+      'Use a community registration page module', NULL
+    ),
+    'surfer_login_page_id' => array(
+      'Surfer Login', 'isNum', TRUE, 'pageid', 30,
+      'Use a community login page module', NULL
+    ),
+    'surfer_editor_page_id' => array(
+      'Surfer Editor', 'isNum', TRUE, 'pageid', 30,
+      'Use a community mixed user data page module', NULL
     ),
     'surfer_page_id' => array(
-      'Page ID', 'isNum', TRUE, 'pageid', 30, NULL, NULL
+      'Surfer', 'isNum', TRUE, 'pageid', 30, NULL, NULL
     ),
-    'Surfer Gallery Page',
     'surfer_gallery_page_id' => array(
-      'Page ID', 'isNum', TRUE, 'pageid', 30, NULL, NULL
+      'Surfer Gallery', 'isNum', TRUE, 'pageid', 30, NULL, NULL
+    ),
+    'Parameter Groups',
+    'surfer_page_parameter_group' => array(
+      'Surfer Login', 'isAlpha', TRUE, 'input', 30, NULL, 'acs'
     )
   );
-  
+
   /**
    * Surfer deletion object
    * @var ACommunitySurferDeletion
    */
   protected $_surferDeletion = NULL;
-  
+
   /**
    * Page deletion object
    * @var ACommunityPageDeletion
    */
   protected $_pageDeletion = NULL;
-  
+
   /**
    * Community connector
    * @var connector_surfers
    */
   protected $_communityConnector = NULL;
-  
+
   /**
    * Surfer deletion object
-   * 
+   *
    * @param ACommunitySurferDeletion $deletion
    * @return ACommunitySurferDeletion
    */
@@ -83,7 +95,7 @@ class ACommunityConnector extends base_connector {
 
   /**
    * Page deletion object
-   * 
+   *
    * @param ACommunityPageDeletion $deletion
    * @return ACommunityPageDeletion
    */
@@ -96,10 +108,10 @@ class ACommunityConnector extends base_connector {
     }
     return $this->_pageDeletion;
   }
-  
+
   /**
    * Action dispatcher function to delete surfer dependend data
-   * 
+   *
    * @param string $surferId
    */
   public function onDeleteSurfer($surferId) {
@@ -107,24 +119,49 @@ class ACommunityConnector extends base_connector {
     $this->surferDeletion()->deleteSurferComments($surferId);
     $this->surferDeletion()->deleteSurferGalleries($surferId);
   }
-  
+
   /**
    * Action dispatcher function to delete pages' dependend data
-   * 
-   * Note: You have to add an action dispatcher call in base_topic_edit->destroy() 
-   * to make onDeletePages available for dispatching. See base_topic_edit_destroy_replacement.txt 
+   *
+   * Note: You have to add an action dispatcher call in base_topic_edit->destroy()
+   * to make onDeletePages available for dispatching. See base_topic_edit_destroy_replacement.txt
    * for a replacement of the whole destroy() method which contains a valid call.
-   * 
+   *
    * @param array $pageIds
    */
   public function onDeletePages($pageIds) {
     $this->pageDeletion()->deletePageComments($pageIds);
   }
-  
+
+  /**
+   * Get link to surfer registration page
+   *
+   * @return string
+   */
+  public function getSurferRegistrationPageLink() {
+    $pageId = papaya_module_options::readOption($this->_guid, 'surfer_registration_page_id', NULL);
+    return base_object::getWebLink(
+      $pageId, NULL, NULL, NULL, NULL, 'registration-page'
+    );
+  }
+
+  /**
+   * Get link to surfer login page
+   *
+   * @return string
+   */
+  public function getSurferLoginPageLink() {
+    $pageId = papaya_module_options::readOption($this->_guid, 'surfer_login_page_id', NULL);
+    return base_object::getWebLink(
+      $pageId, NULL, NULL, NULL, NULL, 'login-page'
+    );
+  }
+
   /**
    * Get link to surfer page by surfer id
-   * 
+   *
    * @param string $surferId
+   * @return string|NULL
    */
   public function getSurferPageLink($surferId) {
     $handle = $this->communityConnector()->getHandleById($surferId);
@@ -139,11 +176,29 @@ class ACommunityConnector extends base_connector {
     }
     return NULL;
   }
-  
+
+  /**
+   * Get link to surfer editor page by surfer id
+   *
+   * The default editor page is a content_userdata page
+   *
+   * @return string|NULL
+   */
+  public function getSurferEditorPageLink($surferHandle) {
+    if (!empty($surferHandle)) {
+      $pageId = papaya_module_options::readOption($this->_guid, 'surfer_editor_page_id', NULL);
+      return base_object::getWebLink(
+        $pageId, NULL, NULL, NULL, NULL, $surferHandle.'s-editor'
+      );
+    }
+    return NULL;
+  }
+
   /**
    * Get link to surfer gallery page by surfer id
-   * 
+   *
    * @param string $surferId
+   * @return string|NULL
    */
   public function getSurferGalleryPageLink($surferId) {
     $handle = $this->communityConnector()->getHandleById($surferId);
@@ -155,10 +210,10 @@ class ACommunityConnector extends base_connector {
     }
     return NULL;
   }
-  
+
   /**
    * Get/set community connector
-   * 
+   *
    * @param object $connector
    * @return object
    */
@@ -173,5 +228,5 @@ class ACommunityConnector extends base_connector {
     }
     return $this->_communityConnector;
   }
-  
+
 }

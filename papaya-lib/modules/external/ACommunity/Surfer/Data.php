@@ -17,66 +17,23 @@
  */
 
 /**
+ * Base ui content data object
+ */
+require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
+
+/**
  * Advanced community surfer data class to handle all sorts of related data
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferData extends PapayaObject {
-  
-  /**
-   * Owner object
-   * @var ACommunitySurferGalleryUpload
-   */
-  public $owner = NULL;
-  
-  /**
-   * A list of captions to be used
-   * @var array
-   */
-  public $captions = array();
-  
-  /**
-   * A list of messages to be used
-   * @var array
-   */
-  public $messages = array();
+class ACommunitySurferData extends ACommunityUiContentData {
   
   /**
    * Gender titles
    * @var array
    */
   protected $_genderTitles = array();
-  
-  /**
-   * Current language id
-   * @var integer
-   */
-  public $languageId = 0;
-  
-  /**
-  * Reference object to create urls
-  * @var PapayaUiReference
-  */
-  protected $_reference = NULL;
-  
-  /**
-   * Current comments ressource by type and id
-   * @var array
-   */
-  protected $_ressource = NULL;
-  
-  /**
-   * Ressource parameters
-   * @var array
-   */
-  protected $_ressourceParameters = array();
-  
-  /**
-   * Ressource is active surfer
-   * @var boolean
-   */
-  public $ressourceIsActiveSurfer = FALSE;
   
   /**
    * Surfer base details
@@ -104,67 +61,13 @@ class ACommunitySurferData extends PapayaObject {
    * @param array $messageNames
    */
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
-    foreach ($captionNames as $name) {
-      if (isset($data[$name])) {
-        $newName = str_replace('caption_', '', $name);
-        $this->captions[$newName] = $data[$name];
-      }
-    }
-    foreach ($messageNames as $name) {
-      if (isset($data[$name])) {
-        $newName = str_replace('message_', '', $name);
-        $this->messages[$newName] = $data[$name];
-      }
-    }
     $this->_genderTitles = array(
       'm' => $data['title_gender_male'],
       'f' => $data['title_gender_female']
     );
     $this->_avatarSize = (int)$data['avatar_size'];
     $this->_avatarResizeMode = $data['avatar_resize_mode'];
-  }
-  
-  /**
-   * Set/get data of current ressource by type and id
-   * 
-   * @param string $type
-   * @param string $handle
-   */
-  public function ressource($type = 'surfer', $handle = NULL) {
-    if (isset($type)) {
-      if (isset($handle)) {
-        $id = $this->owner->communityConnector()->getIdByHandle($handle);
-      }
-      $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
-      if (empty($handle) && !empty($currentSurfer->surfer['surfer_id']) && $currentSurfer->isValid) {
-        $id = $currentSurfer->surfer['surfer_id'];
-        $this->ressourceIsActiveSurfer = TRUE;
-      } elseif (isset($id)) {
-        $this->ressourceIsActiveSurfer = 
-          $id == $currentSurfer->surfer['surfer_id'] && $currentSurfer->isValid;
-      }
-      if (isset($type) && isset($id)) {
-        $this->_ressource = array(
-         'type' => $type,
-         'id' => $id
-        );
-      }
-    }
-    return $this->_ressource;
-  }
-  
-  /**
-   * Set ressource parameters for use in reference object
-   * 
-   * @param string $parameterGroup
-   * @param array $parameters
-   * @return array
-   */
-  public function ressourceParameters($parameterGroup = NULL, $parameters = NULL) {
-    if (isset($parameterGroup) && isset($parameters)) {
-      $this->_ressourceParameters[$parameterGroup] = $parameters;
-    }
-    return $this->_ressourceParameters;
+    parent::setPluginData($data, $captionNames, $messageNames);
   }
   
   /**
@@ -217,26 +120,5 @@ class ACommunitySurferData extends PapayaObject {
     }
     
   }
-  
-  
-  /**
-  * The basic reference object used by the subobjects to create urls.
-  *
-  * @param PapayaUiReference $reference
-  * @return PapayaUiReference
-  */
-  public function reference(PapayaUiReference $reference = NULL) {
-    if (isset($reference)) {
-      $this->_reference = $reference;
-    } elseif (is_null($this->_reference)) {
-      $this->_reference = new PapayaUiReference();
-      $this->_reference->papaya($this->papaya());
-      foreach ($this->ressourceParameters() as $parameterGroup => $parameters) {
-        $this->_reference->setParameters(
-          $parameters, $parameterGroup
-        );
-      }
-    }
-    return $this->_reference;
-  }
+
 }

@@ -128,44 +128,49 @@ class ACommunitySurferGalleryPage extends content_thumbs {
       $surferId = $this->communityConnector()->getIdByHandle(
         $this->params['surfer_handle']
       );
-      if (!empty($surferId)) {
-        
-        $filter = array('surfer_id' => $surferId);
-        if (!empty($this->params['folder_id'])) {
-          $filter['folder_id'] = $this->params['folder_id'];
-        } else {
-          $filter['parent_folder_id'] = 0;
-        }
-        
-        $this->data()->galleries()->load($filter, 1);
-        if (empty($this->params['folder_id']) && count($this->data()->galleries()) == 0) {
-          $languageId = $this->papaya()->request->languageId;
-          $parentFolder = $this->data()->mediaDBEdit()->getFolder($this->data['directory']);
-          if (!empty($parentFolder[$languageId])) {
-            $newFolderId = $this->data()->mediaDBEdit()->addFolder(
-              $parentFolder[$languageId]['folder_id'], 
-              $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';', 
-              $parentFolder[$languageId]['permission_mode']
-            );
-            if (!empty($newFolderId)) {
-              $this->data()->mediaDBEdit()->addFolderTranslation(
-                $newFolderId, $languageId, $surferId
-              );
-              $gallery = $this->data()->gallery();
-              $gallery['surfer_id'] = $surferId;
-              $gallery['folder_id'] = $newFolderId;
-              $gallery['parent_folder_id'] = 0;
-              $gallery->save();
-              $this->data['directory'] = $newFolderId;
-            }
-          }
-        } elseif (count($this->data()->galleries()) > 0) {
-          $gallery = reset($this->data()->galleries()->toArray());
-          $this->data['directory'] = $gallery['folder_id'];
-        }
+    }
+    if (empty($surferId)) {
+      $currentSurfer = $this->communityConnector()->getCurrentSurfer();
+      if ($currentSurfer->isValid && !empty($currentSurfer->surfer['surfer_id'])) {
+        $surferId = $currentSurfer->surfer['surfer_id'];
       }
     }
-    
+    if (!empty($surferId)) {
+      
+      $filter = array('surfer_id' => $surferId);
+      if (!empty($this->params['folder_id'])) {
+        $filter['folder_id'] = $this->params['folder_id'];
+      } else {
+        $filter['parent_folder_id'] = 0;
+      }
+      
+      $this->data()->galleries()->load($filter, 1);
+      if (empty($this->params['folder_id']) && count($this->data()->galleries()) == 0) {
+        $languageId = $this->papaya()->request->languageId;
+        $parentFolder = $this->data()->mediaDBEdit()->getFolder($this->data['directory']);
+        if (!empty($parentFolder[$languageId])) {
+          $newFolderId = $this->data()->mediaDBEdit()->addFolder(
+            $parentFolder[$languageId]['folder_id'], 
+            $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';', 
+            $parentFolder[$languageId]['permission_mode']
+          );
+          if (!empty($newFolderId)) {
+            $this->data()->mediaDBEdit()->addFolderTranslation(
+              $newFolderId, $languageId, $surferId
+            );
+            $gallery = $this->data()->gallery();
+            $gallery['surfer_id'] = $surferId;
+            $gallery['folder_id'] = $newFolderId;
+            $gallery['parent_folder_id'] = 0;
+            $gallery->save();
+            $this->data['directory'] = $newFolderId;
+          }
+        }
+      } elseif (count($this->data()->galleries()) > 0) {
+        $gallery = reset($this->data()->galleries()->toArray());
+        $this->data['directory'] = $gallery['folder_id'];
+      }
+    }    
     return parent::getParsedData();
   }
   

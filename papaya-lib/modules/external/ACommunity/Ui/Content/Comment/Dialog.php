@@ -69,7 +69,7 @@ class ACommunityUiContentCommentDialog
   * @return PapayaUiDialog
   */
   public function createDialog() {
-    $buttonCaption = $this->data()->captions['caption_dialog_button'];
+    $buttonCaption = $this->data()->captions['dialog_button'];
 
     $dialog = new PapayaUiDialogDatabaseSave($this->record());
     $dialog->callbacks()->onBeforeSave = array($this, 'callbackBeforeSaveRecord');
@@ -86,7 +86,7 @@ class ACommunityUiContentCommentDialog
     $dialog->caption = NULL;
 
     $dialog->fields[] = $field = new PapayaUiDialogFieldTextarea(
-      $this->data()->captions['caption_dialog_text'],
+      $this->data()->captions['dialog_text'],
       'text',
       3,
       '',

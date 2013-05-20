@@ -82,47 +82,11 @@ class ACommunityCommentsBox extends base_actionbox {
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    switch ($this->data['ressource_type']) {
-      case 'page':
-        $this->comments()->data()->ressource('page', $this->papaya()->request->pageId);
-        break;
-      case 'surfer':
-        if (!empty($this->parentObj->moduleObj->paramName)) {
-          $surferParameters = $this->papaya()->request->getParameterGroup(
-            $this->parentObj->moduleObj->paramName
-          );
-          $parameterNames = array('user_name', 'user_handle', 'surfer_handle');
-          $hasUser = FALSE;
-          foreach ($parameterNames as $parameterName) {
-            $value = trim($surferParameters[$parameterName]);
-            if (!empty($value)) {
-              $this->comments()->data()->ressource('surfer', $value);  
-              $hasUser = TRUE;
-            }
-          }
-          if ($hasUser == TRUE) {
-            $this->comments()->data()->ressourceParameters(
-              $this->parentObj->moduleObj->paramName,
-              $surferParameters
-            );
-          } else {
-            $this->comments()->data()->ressource('surfer', NULL);  
-          }
-        }
-        break;
-      case 'image':
-        if (!empty($this->parentObj->moduleObj->paramName)) {
-          $mediaId = $this->parentObj->moduleObj->callbackGetCurrentImageId();
-          if (!empty($mediaId)) {
-            $this->comments()->data()->ressource('image', $mediaId);
-            $this->comments()->data()->ressourceParameters(
-              $this->parentObj->moduleObj->paramName,
-              $this->parentObj->moduleObj->params
-            ); 
-          }
-        }
-        break;
-    }
+    $this->comments()->data()->ressource(
+      $this->data['ressource_type'], 
+      $this, 
+      array('surfer' => array('user_name', 'user_handle', 'surfer_handle'))
+    );
   }
   
   /**
@@ -137,7 +101,11 @@ class ACommunityCommentsBox extends base_actionbox {
       include_once(dirname(__FILE__).'/../Comments.php');
       $this->_comments = new ACommunityComments();
       $this->_comments->parameterGroup($this->paramName);
-      $this->_comments->data()->setPluginData($this->data);
+      $this->_comments->data()->setPluginData(
+        $this->data,
+        array('caption_dialog_text', 'caption_dialog_button'),
+        array('message_dialog_input_error')
+      );
       $this->_comments->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_comments;

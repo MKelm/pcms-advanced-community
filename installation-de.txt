@@ -34,6 +34,14 @@ Das Advanced Community Paket enthält folgende Module:
 --- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
 -- Unterstützt das Kommentarmodul, siehe oben
 
+- Surferstatus Box (Surfer Status Box)
+-- zeigt einen Login / Registrierungslink bei inaktivem Login an
+-- zeigt Benutzeravatar und -name bei aktivem Login an
+--- enthält zudem einen Surferseiten- und Logoutlink
+
+- Surferlisten Box (Surfer List Box)
+-- zeigt Surfer nach Aktivität oder Registrierungszeit an und verlinkt auf die Surferseiten
+
 - Surfergallerie Teaser (Surfer Gallery Teaser Box)
 -- Zeigt auf einer Surferseite eine Auswahl von maximal n Thumbnails an
 -- Verlinkt auf die Gallerieseite
@@ -47,7 +55,7 @@ Das Advanced Community Paket enthält folgende Module:
 -- Zeigt in der Surfergallerie ein Feld zum Hochladen von Bilder an
 --- der gewählte Surfer muss mit dem angemeldeten Surfer übereinstimmen
 
-- Conntector 
+- Conntector
 -- Enthält eine onDeleteSurfer Methode für den Action Dispatcher
 
 - Erweiterte Version von "content_thumbs"
@@ -64,15 +72,19 @@ müssen die entsprechenden Paketordner dorthin kopiert werden.
 Das Paket enthält einige Änderungen an bestehenden papaya CMS Dateien:
 - papaya-data/templates/default-xhtml/html/boxes.xml
 - papaya-data/templates/default-xhtml/html/page_gallery.xsl
+- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl
 - papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl
 - papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
 - papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
 - papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
+- papaya-lib/modules/_base/community/base_surfers.php
+- papaya-lib/modules/_base/community/content_userdata.php
 - papaya-lib/modules/free/thumbs/content_thumbs.php
+- papaya-themes/default/basic.css
 - papaya-themes/default/page_thumbs.css
 Beim Kopieren werden die alten Versionen dieser Dateien überschrieben.
 Im Normalfall sollte die Kompatibilität mit dem aktuellen default-Theme
-bestehen bleiben. Sie müssen die Dateien bei jedem papaya CMS Update, das sie durchführen, 
+bestehen bleiben. Sie müssen die Dateien bei jedem papaya CMS Update, das sie durchführen,
 aus dem Advanced Community Paket erneut kopieren.
 
 == Module einrichten ==
@@ -88,10 +100,10 @@ Pakettabellen mit "Erzeugen".
 Diese Anleitung geht davon aus das eine papaya CMS Standardinstalltion mit
 dem Ausgabefilter "html" besteht.
 Unter dem Menüpunkt "Ansichten" finden sie das Formular zum Erstellen von
-Ansichten. 
-In der Combobox "Modul" finden sie alle Module unter dem Abschnitt 
+Ansichten.
+In der Combobox "Modul" finden sie alle Module unter dem Abschnitt
 "Advanced Community".
-Nachdem sie eine Ansicht mit Titel erstellt haben müssen sie diese 
+Nachdem sie eine Ansicht mit Titel erstellt haben müssen sie diese
 Ansicht noch mit dem Ausgabefilter "html" verknüpfen.
 Dabei ist ein "XSL-Stylesheet" zu wählen. Hier ist eine Liste mit
 Modulbezeichnungen und zugehörigen XSL-Stylesheets:
@@ -104,8 +116,32 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Surfer Gallery Upload Box = box_acommunity.xsl
 - Surfer Gallery Page = page_gallery.xsl
 - Surfer Page = page_acommunity.xsl
+- Surfer Status Box = box_acommunity.xsl
+- Surfers List Box = box_acommunity.xsl
 
 == Boxen und Seiten einrichten ==
+
+=== Community Module ===
+
+Für eine funktionierende Community benötigen sie zuerst ein paar Seiten des regulären Community
+Modulpakets:
+- Registrierungs-Seite, zum Registrieren
+-- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10s08.html
+-- Anders als in der Anleitung unterstützt das Modul in papaya CMS 5.5 auch dynamische Datengruppen
+-- Im Advanced Community Paket ist eine verbesserte Version enthalten
+--- die Anzeige von dynamischen Datengruppen im Eingabeformular wurde optimiert
+- Login-Seite, zum Anmelden
+-- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10.html#N18935
+- "Mixed user data"-Seite, zum Bearbeiten von Benutzerdaten mit aktivem Login
+-- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10s12.html
+-- Im Advanced Community Paket ist eine verbesserte Version enthalten
+--- die Anzeige von dynamischen Datengruppen im Eingabeformular wurde optimiert
+
+Derzeit fehlen Verlinkungen in Advanced Community Modulen zu diesen Seitentypen.
+Für die Zukunft ist eine "Surfer Status Box" geplant, die Links zur Registrierungs- und Login-Seite
+enthält, bzw. bei aktivem Login einen Link zur Userdata-Seite.
+
+=== Advanced Community Module ==
 
 - Kommentare (Comments Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Kommentarbox zu erstellen
@@ -168,6 +204,25 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 -- Ändern sie bei Bedarf weitere Einstellungen
 -- Publizieren sie die Seite
 
+- Surferstatus Box (Surfer Status Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
+-- Wählen sie die Boxengruppe "additional"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
+
+- Surferstatus Box (Surfers List Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
+-- Wählen sie die Boxengruppe "after-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt"
+--- Wählen sie die "Ordnung" nach letzter Aktion (Aktivität) oder Registrierungszeit
+---- Sie benötigen zwei dieser Boxen um beide Ausgabetypen auf z.B. einer Seite einzuhängen
+--- ändern sie bei Bedarf weiter Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
+
 - Surfergallerie Teaser (Surfer Gallery Teaser Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
 -- Wählen sie die Boxengruppe "after-content"
@@ -194,10 +249,10 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 
 == Action Dispatcher einrichten ==
 
-Der Action Dispatcher sollte eingerichtet werden um Daten gelöschter Surfer und Seiten 
+Der Action Dispatcher sollte eingerichtet werden um Daten gelöschter Surfer und Seiten
 in der Advanced Community korrekt zu handhaben.
 
-Bitte lesen sie auch die Action Dispatcher Anleitung auf 
+Bitte lesen sie auch die Action Dispatcher Anleitung auf
 http://de.wiki.papaya-cms.com/wiki/Action_Dispatcher
 
 === Surferdaten löschen ===
@@ -230,12 +285,12 @@ Löschen einer Seite folgende Aktionen aus:
 
 == Verlinkungen von Surferseiten ==
 
-Um Surfer in Kommentarboxen und Surfergallerien in Gallerieteaserboxen korrekt zu verlinken 
-müssen sie die Moduloptionen des Connectors anpassen. Sie benötigen zuvor eine Seite mit dem 
+Um Surfer in Kommentarboxen und Surfergallerien in Gallerieteaserboxen korrekt zu verlinken
+müssen sie die Moduloptionen des Connectors anpassen. Sie benötigen zuvor eine Seite mit dem
 Modul "Surfer Page" und "Surfer Gallery Page".
 Moduloptionen ändern:
 - Öffnen sie die Modulübersicht im Menüpunkt "Module"
-- Öffnen sie das Paket "Advanced Community" 
+- Öffnen sie das Paket "Advanced Community"
 - Wählen sie das Modul "Connector" aus
 - Wählen sie rechts den Punkt "Optionen" aus
 - Setzen sie die Option "Surfer Page" -> "Page ID" und "Surfer Gallery Page" -> "Page ID" korrekt

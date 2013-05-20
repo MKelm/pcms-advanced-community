@@ -18,7 +18,7 @@
       <xsl:with-param name="dialogMessage" select="dialog-message" />
     </xsl:call-template>
   </xsl:template>
-  
+
   <xsl:template match="acommunity-surfer-gallery-teaser">
     <xsl:if test="add-new-images-link/@href or count(images/image) &gt; 0">
       <div class="surferGalleryTeaser">
@@ -39,7 +39,54 @@
       </div>
     </xsl:if>
   </xsl:template>
-  
+
+  <xsl:template match="acommunity-surfer-status">
+    <xsl:if test="message[@type = 'no-login'] or active-surfer">
+      <div class="surferStatus">
+        <xsl:choose>
+          <xsl:when test="active-surfer">
+            <div class="surferAvatar"><a href="{active-surfer/page-link}"><img src="{active-surfer/@avatar}" alt="" /></a></div>
+            <div class="surferName"><a href="{active-surfer/page-link}"><xsl:value-of select="active-surfer/@givenname" />
+            <xsl:text> '</xsl:text><xsl:value-of select="active-surfer/@handle" />
+            <xsl:text>' </xsl:text><xsl:value-of select="active-surfer/@surname" /></a></div>
+            <div class="surferMainLinks">
+              <a class="surferEdit" href="{active-surfer/edit-link}"><xsl:value-of select="active-surfer/edit-link/@caption" /></a>
+              <a class="surferLogout" href="{active-surfer/logout-link}"><xsl:value-of select="active-surfer/logout-link/@caption" /></a>
+            </div>
+            <xsl:call-template name="float-fix" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:copy-of select="message[@type = 'no-login']/node()" />
+          </xsl:otherwise>
+        </xsl:choose>
+      </div>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="acommunity-surfers-list">
+    <xsl:if test="count(surfer) &gt; 0">
+      <ul class="surfersList">
+        <xsl:for-each select="surfer">
+          <li>
+            <span class="surferAvatar"><a href="{@page-link}"><img src="{@avatar}" alt="" /></a></span>
+            <xsl:text> </xsl:text>
+            <span class="surferDetails">
+            <span class="surferName"><a href="{@page-link}"><xsl:value-of select="@givenname" />
+            <xsl:text> '</xsl:text><xsl:value-of select="@handle" />
+            <xsl:text>' </xsl:text><xsl:value-of select="@surname" /></a></span>
+            <xsl:text> </xsl:text>
+            <span class="surferLastTime"><xsl:value-of select="last-time/@caption" />:
+            <xsl:text> </xsl:text><xsl:call-template name="format-date-time">
+              <xsl:with-param name="dateTime" select="last-time/text()" />
+            </xsl:call-template></span>
+            </span>
+            <xsl:call-template name="float-fix" />
+          </li>
+        </xsl:for-each>
+      </ul>
+    </xsl:if>
+  </xsl:template>
+
   <xsl:template match="acommunity-surfer-gallery-upload">
     <xsl:call-template name="acommunity-content-dialog">
       <xsl:with-param name="dialog" select="dialog-box" />
@@ -48,7 +95,7 @@
       <xsl:with-param name="multipartFormData" select="true()" />
     </xsl:call-template>
   </xsl:template>
-  
+
   <xsl:template match="acommunity-surfer-gallery-folders">
     <xsl:if test="count(folders/folder) &gt; 0">
       <xsl:variable name="commandLinks" select="command-links" />
@@ -82,7 +129,7 @@
       <xsl:with-param name="className" select="'surferGalleryFolderDialog'" />
     </xsl:call-template>
   </xsl:template>
-  
+
   <xsl:template match="acommunity-commenters-ranking">
     <div class="commentersRanking">
       <xsl:if test="count(commenter) &gt; 0">
@@ -91,7 +138,7 @@
             <div class="commenterAvatar"><a href="{@surfer_page_link}"><img alt="" src="{@surfer_avatar}" /></a></div>
             <div class="commenterUserName"><a href="{@surfer_page_link}"><xsl:value-of select="@surfer_handle" /></a></div>
             <div class="commenterCommentsAmount">
-              <xsl:value-of select="@comments_amount" /><xsl:text> </xsl:text><xsl:value-of select="@comments_amount_caption" />              
+              <xsl:value-of select="@comments_amount" /><xsl:text> </xsl:text><xsl:value-of select="@comments_amount_caption" />
             </div>
             <xsl:call-template name="float-fix" />
           </div>

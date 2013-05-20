@@ -28,13 +28,13 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
  * @subpackage External-ACommunity
  */
 class ACommunitySurferPage extends base_content {
-  
+
   /**
    * Use a advanced community parameter group name
    * @var string
    */
   public $paramName = 'acs';
-  
+
   /**
   * Content edit fields
   * @var array $editFields
@@ -44,9 +44,9 @@ class ACommunitySurferPage extends base_content {
       'Avatar Size', 'isNum', TRUE, 'input', 30, '', 160
     ),
     'avatar_resize_mode' => array(
-      'Avatar Resize Mode', 'isAlpha', TRUE, 'translatedcombo', 
+      'Avatar Resize Mode', 'isAlpha', TRUE, 'translatedcombo',
        array(
-         'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',' mincrop' => 'Minimum cropped'
+         'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
        ), '', 'mincrop'
     ),
     'Titles',
@@ -89,32 +89,29 @@ class ACommunitySurferPage extends base_content {
     ),
     'caption_surfer_group' => array(
       'Surfer Group', 'isNoHTML', TRUE, 'input', 200, '', 'Group'
+    ),
+    'Message',
+    'message_no_surfer' => array(
+      'No Surfer', 'isNoHTML', TRUE, 'input', 200, '', 'No surfer selected.'
     )
   );
-  
+
   /**
    * Surfer object
    * @var ACommunitySurfer
    */
   protected $_surfer = NULL;
-  
+
   /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->surfer()->data()->ressource(
-      'surfer', !empty($this->params['surfer_handle']) ? $this->params['surfer_handle'] : NULL
-    );
-    if (!empty($this->params['surfer_handle'])) {
-      $this->surfer()->data()->ressourceParameters(
-        $this->paramName, array('surfer_handle' => $this->params['surfer_handle'])
-      );
-    }
+    $this->surfer()->data()->ressource('surfer', $this, array('surfer' => 'surfer_handle'));
   }
-  
+
   /**
-  * Get (and, if necessary, initialize) the ACommunitySurfer object 
-  * 
+  * Get (and, if necessary, initialize) the ACommunitySurfer object
+  *
   * @return ACommunitySurfer $surfer
   */
   public function surfer(ACommunityComments $surfer = NULL) {
@@ -126,21 +123,21 @@ class ACommunitySurferPage extends base_content {
       $this->_surfer->parameterGroup($this->paramName);
       $captionNames = array(
         'caption_base_details',
-        'caption_surfer_handle', 'caption_surfer_givenname', 'caption_surfer_surname', 
+        'caption_surfer_handle', 'caption_surfer_givenname', 'caption_surfer_surname',
         'caption_surfer_email', 'caption_surfer_gender', 'caption_surfer_avatar',
         'caption_surfer_lastlogin', 'caption_surfer_lastaction', 'caption_surfer_registration',
         'caption_surfer_group'
       );
-      $this->_surfer->data()->setPluginData($this->data, $captionNames);
+      $this->_surfer->data()->setPluginData($this->data, $captionNames, array('message_no_surfer'));
       $this->_surfer->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_surfer;
   }
-  
-  
+
+
   /**
   * Get parsed data
-  * 
+  *
   * @return string $result
   */
   function getParsedData() {
@@ -149,5 +146,5 @@ class ACommunitySurferPage extends base_content {
     $this->setRessourceData();
     return $this->surfer()->getXml();
   }
-  
+
 }
