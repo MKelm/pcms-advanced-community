@@ -264,6 +264,7 @@ class ACommunityUiContentData extends PapayaObject {
          ) {
     if ($this->_ressource === NULL && isset($type)) {
       $isBoxModule = is_a($module, 'base_actionbox');
+      $parameterValue = NULL;
 
       if ($type != 'page') {
         // determine parameters to get ressource data from
@@ -345,7 +346,7 @@ class ACommunityUiContentData extends PapayaObject {
            * Get a image ressource in box modules by parent page module.
            * Needs a callbackGetCurrentImageId method, see ACommunitySurferGalleryPage
            */
-          if ($isBoxModule && isset($parameters['img']) &&
+          if ($isBoxModule && isset($parameters['enlarge']) &&
               method_exists($module->parentObj->moduleObj, 'callbackGetCurrentImageId')) {
             $id = $module->parentObj->moduleObj->callbackGetCurrentImageId();
             if (!empty($id)) {

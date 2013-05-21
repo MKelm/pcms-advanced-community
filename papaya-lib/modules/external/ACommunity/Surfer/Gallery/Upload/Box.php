@@ -103,7 +103,7 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaP
     } elseif (NULL == $this->_cacheDefiniton) {
       $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
           $this->papaya()->surfer->surfer['surfer_id'] : NULL;
-      $imageSelected = $this->upload()->parameters()->get('img', NULL);
+      $imageSelected = $this->upload()->parameters()->get('enlarge', NULL);
       if (!empty($currentSurferId) && !isset($imageSelected)) {
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       } else {
@@ -124,7 +124,7 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaP
       $this,
       array('surfer' => 'surfer_handle'),
       array('surfer' => array('surfer_handle', 'folder_id')),
-      array('surfer' => 'img')
+      array('surfer' => 'enlarge')
     );
   }
 

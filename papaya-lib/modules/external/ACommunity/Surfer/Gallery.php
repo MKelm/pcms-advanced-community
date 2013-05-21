@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community gallery
+ * Advanced community surfer gallery
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,17 +17,23 @@
  */
 
 /**
- * Base ui content object
+ * MediaImageGallery class to extend
  */
-require_once(dirname(__FILE__).'/../Ui/Content.php');
+require_once(PAPAYA_INCLUDE_PATH.'modules/free/thumbs/Image/Gallery.php');
 
 /**
- * Advanced community gallery
+ * Advanced community surfer gallery
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGallery extends ACommunityUiContent {
+class ACommunitySurferGallery extends MediaImageGallery {
+
+  /**
+   * Id of current file id in enlarge view
+   * @var string
+   */
+  public $currentFileId = NULL;
 
   /**
    * Comments data
@@ -36,7 +42,41 @@ class ACommunitySurferGallery extends ACommunityUiContent {
   protected $_data = NULL;
 
   /**
-   * Get/set comments data
+   * Ui content object for further methods
+   * @var ACommunityUiContent
+   */
+  protected $_uiContent = NULL;
+
+  /**
+   * Check url file name in for page modules and return new url if the current file name is invalid
+   *
+   * @param base_content $pageModule
+   * @param string $currentFileName
+   * @param string $outputMode
+   * @param string $pageNamePostfix
+   * @param string $handle
+   * @return string|FALSE
+   */
+  public function checkURLFileName(
+           $pageModule, $currentFileName, $outputMode, $pageNamePostfix, $handle = NULL
+         ) {
+    return $this->uiContent()->checkURLFileName(
+      $pageModule, $currentFileName, $outputMode, $pageNamePostfix, $handle
+    );
+  }
+
+  /**
+   * Load gallery images / thumbnails by media db and folder properties
+   */
+  public function load() {
+    parent::load();
+    if ($this->_options['enlarge'] == 1 && count($this->_folder['files']) == 1) {
+      $this->currentFileId = reset(array_keys($this->_folder['files']));
+    }
+  }
+
+  /**
+   * Get/set gallery data
    *
    * @param ACommunitySurferGalleryData $data
    * @return ACommunitySurferGalleryData
@@ -51,5 +91,33 @@ class ACommunitySurferGallery extends ACommunityUiContent {
       $this->_data->owner = $this;
     }
     return $this->_data;
+  }
+
+  /**
+   * Get/set ui content object
+   *
+   * @param ACommunityUiContent $content
+   * @return ACommunityUiContent
+   */
+  public function uiContent(ACommunityUiContent $content = NULL) {
+    if (isset($content)) {
+      $this->_uiContent = $content;
+    } elseif (is_null($this->_uiContent)) {
+      include_once(dirname(__FILE__).'/../Ui/Content.php');
+      $this->_uiContent = new ACommunityUiContent();
+      $this->_uiContent->papaya($this->papaya());
+      $this->_uiContent->parameterGroup($this->parameterGroup());
+    }
+    return $this->_uiContent;
+  }
+
+  /**
+   * Get/set community connector
+   *
+   * @param object $connector
+   * @return object
+   */
+  public function communityConnector(connector_surfers $connector = NULL) {
+    return $this->uiContent()->communityConnector($connector);
   }
 }

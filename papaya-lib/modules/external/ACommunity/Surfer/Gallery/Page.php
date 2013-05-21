@@ -17,9 +17,9 @@
  */
 
 /**
- * content_thumbs class to extend
+ * MediaImageGalleryPage class to extend
  */
-require_once(PAPAYA_INCLUDE_PATH.'modules/free/thumbs/content_thumbs.php');
+require_once(PAPAYA_INCLUDE_PATH.'modules/free/thumbs/Image/Gallery/Page.php');
 
 /**
  * Advanced community surfer gallery page
@@ -27,7 +27,7 @@ require_once(PAPAYA_INCLUDE_PATH.'modules/free/thumbs/content_thumbs.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryPage extends content_thumbs implements PapayaPluginCacheable {
+class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements PapayaPluginCacheable {
 
   /**
    * Use a advanced community parameter group name
@@ -36,22 +36,10 @@ class ACommunitySurferGalleryPage extends content_thumbs implements PapayaPlugin
   public $paramName = 'acsg';
 
   /**
-   * Surfer gallery
-   * @var ACommunitySurferGallery
-   */
-  protected $_gallery = NULL;
-
-  /**
    * Id of elected surfer gallery folder
    * @var integer
    */
   protected $_galleryFolderId = NULL;
-
-  /**
-   * Community connector
-   * @var connector_surfers
-   */
-  protected $_communityConnector = NULL;
 
   /**
    * Cache definition
@@ -91,7 +79,7 @@ class ACommunitySurferGalleryPage extends content_thumbs implements PapayaPlugin
       $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
         new PapayaCacheIdentifierDefinitionValues($definitionValues),
         new PapayaCacheIdentifierDefinitionParameters(
-          array('mode', 'idx', 'img'), $this->paramName
+          array('enlarge', 'index', 'offset'), $this->paramName
         )
       );
     }
@@ -117,40 +105,21 @@ class ACommunitySurferGalleryPage extends content_thumbs implements PapayaPlugin
   }
 
   /**
-   * Get/set surfer gallery
-   *
-   * @param ACommunitySurferGallery $gallery
-   * @return ACommunitySurferGallery
-   */
+  * Get (and, if necessary, initialize) the ACommunitySurferGallery object
+  *
+  * @return ACommunitySurferGallery $gallery
+  */
   public function gallery(ACommunitySurferGallery $gallery = NULL) {
     if (isset($gallery)) {
       $this->_gallery = $gallery;
     } elseif (is_null($this->_gallery)) {
       include_once(dirname(__FILE__).'/../Gallery.php');
       $this->_gallery = new ACommunitySurferGallery();
-      $this->_gallery->papaya($this->papaya());
+      $this->_gallery->parameterGroup($this->paramName);
+      $this->_gallery->languageId = $this->papaya()->request->languageId;
       $this->_gallery->data()->languageId = $this->papaya()->request->languageId;
     }
     return $this->_gallery;
-  }
-
-  /**
-   * Overwrite get web link method to get surfer_handle parameter in links
-   */
-  public function getWebLink(
-                    $pageId = NULL, $lng = NULL, $mode = NULL, $params = NULL,
-                    $paramName = NULL, $text = '', $categId = NULL
-                  ) {
-    if (isset($this->params['surfer_handle'])) {
-      $params = empty($params) ? array('surfer_handle' => $this->params['surfer_handle']) :
-        array_merge($params, array('surfer_handle' => $this->params['surfer_handle']));
-    }
-    $command = isset($this->params['command']) ? $this->params['command'] : NULL;
-    if ($command != 'delete_folder' && isset($this->params['folder_id'])) {
-      $params = empty($params) ? array('folder_id' => $this->params['folder_id']) :
-        array_merge($params, array('folder_id' => $this->params['folder_id']));
-    }
-    return parent::getWebLink($pageId, $lng, $mode, $params, $paramName, $text, $categId);
   }
 
   /**
@@ -159,30 +128,7 @@ class ACommunitySurferGalleryPage extends content_thumbs implements PapayaPlugin
    * @return string
    */
   public function callbackGetCurrentImageId() {
-    $this->setDefaultData();
-    $this->initializeParams();
-    $this->setRessourceData();
-    if (isset($this->params['mode']) && isset($this->params['img']) &&
-        $this->params['mode'] == 'max' && $this->params['img'] >= 0) {
-      $mediaDB = &base_mediadb::getInstance();
-      if (isset($this->params['idx']) && (int)$this->params['idx'] >= $this->data['maxperpage']) {
-        $min = (floor($this->params['idx'] / $this->data['maxperpage']) * $this->data['maxperpage']);
-      } else {
-        $min = 0;
-      }
-      $files = $mediaDB->getFiles(
-        $this->_galleryFolderId(),
-        $this->data['maxperpage'],
-        $min,
-        isset($this->data['order']) ? $this->data['order'] : 'name',
-        isset($this->data['sort']) ? $this->data['sort'] : 'asc'
-      );
-      $files = array_values($files);
-      if (isset($files[$this->params['img']])) {
-        return $files[$this->params['img']]['file_id'];
-      }
-    }
-    return NULL;
+    return $this->gallery()->currentFileId;
   }
 
   /**
@@ -202,9 +148,12 @@ class ACommunitySurferGalleryPage extends content_thumbs implements PapayaPlugin
           $filter['parent_folder_id'] = 0;
         }
         $this->gallery()->data()->galleries()->load($filter, 1);
-        if (empty($this->params['folder_id']) && count($this->gallery()->data()->galleries()) == 0) {
+        if (empty($this->params['folder_id']) &&
+            count($this->gallery()->data()->galleries()) == 0) {
           $languageId = $this->papaya()->request->languageId;
-          $parentFolder = $this->gallery()->data()->mediaDBEdit()->getFolder($this->data['directory']);
+          $parentFolder = $this->gallery()->data()->mediaDBEdit()->getFolder(
+            $this->data['directory']
+          );
           if (!empty($parentFolder[$languageId])) {
             $newFolderId = $this->gallery()->data()->mediaDBEdit()->addFolder(
               $parentFolder[$languageId]['folder_id'],
@@ -246,24 +195,19 @@ class ACommunitySurferGalleryPage extends content_thumbs implements PapayaPlugin
     $this->initializeParams();
     $this->setRessourceData();
     $this->data['directory'] = $this->_galleryFolderId();
-    return parent::getParsedData();
-  }
-
-  /**
-   * Get/set community connector
-   *
-   * @param object $connector
-   * @return object
-   */
-  public function communityConnector(connector_surfers $connector = NULL) {
-    if (isset($connector)) {
-      $this->_communityConnector = $connector;
-    } elseif (is_null($this->_communityConnector)) {
-      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-      $this->_communityConnector = base_pluginloader::getPluginInstance(
-        '06648c9c955e1a0e06a7bd381748c4e4', $this
-      );
+    $additionalParameters = array();
+    if (isset($this->params['surfer_handle'])) {
+      $additionalParameters['surfer_handle'] = $this->params['surfer_handle'];
     }
-    return $this->_communityConnector;
+    $command = isset($this->params['command']) ? $this->params['command'] : NULL;
+    if ($command != 'delete_folder' && isset($this->params['folder_id'])) {
+      $additionalParameters['folder_id'] = $this->params['folder_id'];
+    }
+    $this->gallery()->reference()->setParameters(
+      $additionalParameters, $this->paramName
+    );
+    $this->gallery()->initialize($this, $this->data);
+    $this->gallery()->load();
+    return $this->gallery()->getXml();
   }
 }
