@@ -1,6 +1,5 @@
 -----------------------------------------------------------------------
 |  Adavanced community modules for papaya CMS 5.5.2 or higher         |
-|  Version: 0.12 (20.05.2013)                                         |
 |  Author: Martin Kelm                                                |
 |  Repository: https://github.com/MKelm/advanced-community            |
 -----------------------------------------------------------------------
@@ -12,7 +11,6 @@ This package contains modules to extend your papaya CMS community.
 -----------
 
 - Some improvements
-- Surfer gallery, delete images
 - Administration
 
 -----------
@@ -35,7 +33,14 @@ Or get the papaya CMS with patches from https://github.com/MKelm/papaya-cms
 | Changes |
 -----------
 
-Revision 0.12 (20.05.2013)
+==> 21.05.2013
+- Added delete images feature in surfer gallery page
+- Added xsl support for surfer editor and surfer gallery in page_acommunity.xsl
+- Changed surfer gallery page to use a refactored image gallery module
+- Improved getCurrentSurferId, use papaya()->surfer
+- Removed deprecated last vote time
+
+==> 20.05.2013
 - Fixed a caching bug in surfer gallery teaser box
 - Fixed a ressource detection bug in surfer gallery page
 - Added extended text filter with URL to link replacement for comments and messages
@@ -47,7 +52,7 @@ Revision 0.12 (20.05.2013)
 - Improved ressource handling in surfer gallery page
 - Added checkURLFilename-Methods to avoid URL Fixation
 
-Revision 0.11 (19.05.2013)
+==> 19.05.2013
 - Added last changes table to detect changes for caching
 -- Added change detection for surfer_gallery_folders and surfer_gallery_images in gallery modules
 --- set last change of folders and images in folders and upload module
@@ -65,12 +70,12 @@ Revision 0.11 (19.05.2013)
 - Added dynamic data categories option to surfer page module
 - Added patches for community/content_profile module
 
-Revision 0.10 (18.05.2013)
+==> 18.05.2013
 - Added notify-method in connector to support notifications from other module packages
 - Added patches files for trunk revision 38500 and release revision 38112
 - Removed replacement files in ACommunity package
 
-Revision 0.9 (17.05.2013)
+==> 17.05.2013
 - Added links to notifications and notification settings in surfer status box
 - Added notifications view in messages page
 - Added notification settings page
@@ -78,7 +83,7 @@ Revision 0.9 (17.05.2013)
 - Change, filter all content ressource parameters on empty array in filter parameter
 - Moved and renamed some files to get "Surfers List" to "Surfers"
 
-Revision 0.8 (16.05.2013)
+==> 16.05.2013
 - Added notification handler to notify surfers by system message or email
 - Added three notifications, new-surfer-comment, new-surfer-image-comment and new-contact-request
 -- added csv files for notifcations data import
@@ -88,21 +93,21 @@ Revision 0.8 (16.05.2013)
 - Added messages deletion in connector module -> onDeleteSurfer for action dispatcher
 - Refactored page links generation in connector module
 
-Revision 0.7 (15.05.2013)
+==> 15.05.2013
 - Added messages page link to surfer status box
 - Added send message link to surfer page
 - Added message conversation box to navigate between message conversations
 - Added messages page to show messages between surfers
 - Added paging to surfer lists
 
-Revision 0.6 (14.05.2013)
+==> 14.05.2013
 - Added surfer contacts display mode in surfers list box
 - Added surfer contacts statistic and contact page links in surfer status box
 - Added surfers list page with surfer contacts and contact requests display mode
 -- additionally this module supports the last action time and registration time display mode
 - Added surfer contact handling in surfer page
 
-Revision 0.5 (12.05.2013)
+==> 12.05.2013
 - Added surfers list box
 - Added surfer status box
 - Added no surfer message to surfer page
@@ -112,12 +117,10 @@ Revision 0.5 (12.05.2013)
 - Community improvement, show titles of user data classes in form output with a correct order by
 -- activated in content_registration and content_userdata
 
-Revision 0.4 (11.05.2013)
+==> 11.05.2013
 - Added surfer gallery teaser box
 - Added links to surfer page in comments, comments ranking and commenters ranking box
 - Added connector module options for surfer page id and surfer gallery page id
-
-Revision 0.3 (11.05.2013)
 - Added surfer page module
 - Correct text paragraph css sizes in comments
 - Added support for action dispatcher call onDeletePages
@@ -126,11 +129,9 @@ Revision 0.3 (11.05.2013)
 - Added an extended version of content_thumbs with template modifications
 -- includes lightbox switch and orinal image link in image detail page and more
 
-Revision 0.2 (10.05.2013)
+==> 10.05.2013
 - Added anchors to comments list ouput
 - Added surfer gallery folders box
-
-Revision 0.1 (10.05.2013):
 - Added surfer gallery upload module
 - Added surfer gallery module
 - Added commenters ranking module
