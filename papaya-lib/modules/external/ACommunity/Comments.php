@@ -30,12 +30,6 @@ require_once(dirname(__FILE__).'/Ui/Content.php');
 class ACommunityComments extends ACommunityUiContent {
 
   /**
-   * Comments data
-   * @var ACommunityCommentsData
-   */
-  protected $_data = NULL;
-
-  /**
    * Ui content comment dialog
    * @var ACommunityUiContentCommentDialog
    */

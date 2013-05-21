@@ -30,12 +30,6 @@ require_once(dirname(__FILE__).'/../../Ui/Content.php');
 class ACommunitySurferGalleryFolders extends ACommunityUiContent {
 
   /**
-   * Surfer gallery folders data
-   * @var ACommunitySurferGalleryFoldersData
-   */
-  protected $_data = NULL;
-
-  /**
    * Ui content surfer gallery folder dialog
    * @var ACommunityUiContentSurferGalleryFolderDialog
    */

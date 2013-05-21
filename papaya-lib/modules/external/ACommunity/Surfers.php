@@ -30,12 +30,6 @@ require_once(dirname(__FILE__).'/Ui/Content.php');
 class ACommunitySurfers extends ACommunityUiContent {
 
   /**
-   * Surfer status data
-   * @var ACommunitySurferStatusData
-   */
-  protected $_data = NULL;
-
-  /**
   * Paging object
   *
   * @var PapayaUiPagingCount

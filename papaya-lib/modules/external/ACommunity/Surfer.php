@@ -30,12 +30,6 @@ require_once(dirname(__FILE__).'/Ui/Content.php');
 class ACommunitySurfer extends ACommunityUiContent {
 
   /**
-   * Comments data
-   * @var ACommunitySurferData
-   */
-  protected $_data = NULL;
-
-  /**
    * Get/set surfer data
    *
    * @param ACommunitySurferData $data

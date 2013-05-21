@@ -30,12 +30,6 @@ require_once(dirname(__FILE__).'/../Ui/Content.php');
 class ACommunityCommentersRanking extends ACommunityUiContent {
 
   /**
-   * Comments data
-   * @var ACommunityCommentsData
-   */
-  protected $_data = NULL;
-
-  /**
    * Get/set commenters rankuing data
    *
    * @param ACommunityCommentersRankingData $data
