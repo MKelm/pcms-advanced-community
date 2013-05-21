@@ -79,7 +79,7 @@ class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements Papay
       $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
         new PapayaCacheIdentifierDefinitionValues($definitionValues),
         new PapayaCacheIdentifierDefinitionParameters(
-          array('enlarge', 'index', 'offset'), $this->paramName
+          array('enlarge', 'index', 'offset', 'command', 'id'), $this->paramName
         )
       );
     }

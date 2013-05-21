@@ -66,12 +66,50 @@ class ACommunitySurferGallery extends MediaImageGallery {
   }
 
   /**
+   * Initialize properties by module configuration data and data mode (all or teaser)
+   */
+  public function initialize($module, $data, $dataMode = 'all') {
+    parent::initialize($module, $data, $dataMode);
+    $command = $this->parameters()->get('command', NULL);
+    $fileId = $this->parameters()->get('id', NULL);
+    if ($command == 'delete_image' && !empty($fileId)) {
+      $this->data()->mediaDBEdit()->deleteFile($fileId);
+    }
+  }
+
+  /**
    * Load gallery images / thumbnails by media db and folder properties
    */
   public function load() {
     parent::load();
     if ($this->_options['enlarge'] == 1 && count($this->_folder['files']) == 1) {
       $this->currentFileId = reset(array_keys($this->_folder['files']));
+    }
+  }
+
+  /**
+   * Append image or image thumbnail by current file id to parent element
+   *
+   * @param PapayaXmlElement $parent
+   * @param integer $currentFileId
+   * @param integer $fileOffset of current file in folder
+   * @param boolean $thumbnail
+   */
+  protected function _appendImageTo(
+              PapayaXmlElement $parent, $fileId, $fileOffset = 0, $thumbnail = FALSE
+            ) {
+    parent::_appendImageTo($parent, $fileId, $fileOffset, $thumbnail);
+    if ($thumbnail == TRUE && $this->data()->ressourceIsActiveSurfer) {
+      $reference = clone $this->reference();
+      $reference->setParameters(
+        array(
+          'offset' => $this->parameters()->get('offset', NULL),
+          'command' => 'delete_image',
+          'id' => $fileId
+        ),
+        $this->parameterGroup()
+      );
+      $parent->appendElement('delete-image', array('href' => $reference->getRelative()));
     }
   }
 

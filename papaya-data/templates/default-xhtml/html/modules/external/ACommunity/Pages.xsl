@@ -4,10 +4,18 @@
   <xsl:import href="./Ui/Content/Surfers.xsl"/>
   <xsl:import href="./Ui/Content/Dialog.xsl"/>
   <xsl:import href="./Ui/Content/Paging.xsl"/>
+  <xsl:import href="./Ui/Content/Surfer/Gallery.xsl"/>
+  <xsl:import href="./Ui/Content/Surfer/Editor.xsl"/>
 
   <xsl:template name="page-styles">
     <xsl:call-template name="link-style">
-      <xsl:with-param name="file">page_acommunity.css</xsl:with-param>
+      <xsl:with-param name="file">
+        <xsl:choose>
+          <xsl:when test="/page/content/topic/@module = 'ACommunitySurferGalleryPage'">page_thumbs.css</xsl:when>
+          <xsl:when test="/page/content/topic/@module = 'ACommunitySurferEditorPage'">page_community.css</xsl:when>
+          <xsl:otherwise>page_acommunity.css</xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
     </xsl:call-template>
   </xsl:template>
 
@@ -27,6 +35,16 @@
       <xsl:when test="$pageContent/@module = 'ACommunitySurferPage'">
         <xsl:call-template name="module-content-acommunity-surfer-page">
           <xsl:with-param name="pageContent" select="$pageContent/surfer-page"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="$pageContent/@module = 'ACommunitySurferEditorPage'">
+        <xsl:call-template name="module-content-community-profile">
+          <xsl:with-param name="pageContent" select="$pageContent"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="$pageContent/@module = 'ACommunitySurferGalleryPage'">
+        <xsl:call-template name="module-content-image-gallery">
+          <xsl:with-param name="pageContent" select="$pageContent"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$pageContent/@module = 'ACommunitySurferContactsPage' or $pageContent/@module = 'ACommunitySurfersLastActionPage' or $pageContent/@module = 'ACommunitySurfersRegistrationPage'">
