@@ -115,6 +115,7 @@ class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements Papay
     } elseif (is_null($this->_gallery)) {
       include_once(dirname(__FILE__).'/../Gallery.php');
       $this->_gallery = new ACommunitySurferGallery();
+      $this->_gallery->papaya($this->papaya());
       $this->_gallery->parameterGroup($this->paramName);
       $this->_gallery->languageId = $this->papaya()->request->languageId;
       $this->_gallery->data()->languageId = $this->papaya()->request->languageId;

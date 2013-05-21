@@ -44,6 +44,30 @@ class ACommunityUiContent extends PapayaObjectInteractive
   protected $_notificationHandler = NULL;
 
   /**
+   * Content data
+   * @var ACommunityUiContentData
+   */
+  protected $_data = NULL;
+
+  /**
+   * Get/set content data
+   *
+   * @param ACommunityUiContentData $data
+   * @return ACommunityUiContentData
+   */
+  public function data(ACommunityUiContentData $data = NULL) {
+    if (isset($data)) {
+      $this->_data = $data;
+    } elseif (is_null($this->_data)) {
+      include_once(dirname(__FILE__).'/Content/Data.php');
+      $this->_data = new ACommunityUiContentData();
+      $this->_data->papaya($this->papaya());
+      $this->_data->owner = $this;
+    }
+    return $this->_data;
+  }
+
+  /**
    * Create dom node structure of the given object and append it to the given xml
    * element node.
    *

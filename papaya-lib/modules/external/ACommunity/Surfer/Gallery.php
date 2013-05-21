@@ -145,6 +145,7 @@ class ACommunitySurferGallery extends MediaImageGallery {
       $this->_uiContent = new ACommunityUiContent();
       $this->_uiContent->papaya($this->papaya());
       $this->_uiContent->parameterGroup($this->parameterGroup());
+      $this->_uiContent->data($this->data());
     }
     return $this->_uiContent;
   }
