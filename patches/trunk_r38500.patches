@@ -1,3 +1,32 @@
+Index: papaya-themes/default/page_community.css
+===================================================================
+--- papaya-themes/default/page_community.css	(Revision 38500)
++++ papaya-themes/default/page_community.css	(Arbeitskopie)
+@@ -48,4 +48,11 @@
+ img.communityUserAvatar {
+   margin-top: 20px;
+   margin-bottom: 20px;
++}
++div.deleteAccount,
++div.deleteAccount form div.buttons {
++  margin-top: 1em;
++}
++div.deleteAccount fieldset {
++  margin: 0;
+ }
+\ No newline at end of file
+Index: papaya-themes/default/page_thumbs.css
+===================================================================
+--- papaya-themes/default/page_thumbs.css	(Revision 38500)
++++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
+@@ -1,6 +1,6 @@
+ .galleryThumbnail {
+   float: left;
+-  padding: 20px;
++  padding: 0.4em;
+ }
+ a.galleryThumbnailFrame {
+   display: block;
 Index: papaya-themes/default/basic.css
 ===================================================================
 --- papaya-themes/default/basic.css	(Revision 38500)
@@ -95,83 +124,6 @@ Index: papaya-themes/default/basic.css
    }
 -}  
 +}
-Index: papaya-themes/default/page_community.css
-===================================================================
---- papaya-themes/default/page_community.css	(Revision 38500)
-+++ papaya-themes/default/page_community.css	(Arbeitskopie)
-@@ -48,4 +48,11 @@
- img.communityUserAvatar {
-   margin-top: 20px;
-   margin-bottom: 20px;
-+}
-+div.deleteAccount,
-+div.deleteAccount form div.buttons {
-+  margin-top: 1em;
-+}
-+div.deleteAccount fieldset {
-+  margin: 0;
- }
-\ No newline at end of file
-Index: papaya-themes/default/page_thumbs.css
-===================================================================
---- papaya-themes/default/page_thumbs.css	(Revision 38500)
-+++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
-@@ -1,6 +1,6 @@
- .galleryThumbnail {
-   float: left;
--  padding: 20px;
-+  padding: 0.4em;
- }
- a.galleryThumbnailFrame {
-   display: block;
-Index: papaya-lib/system/Papaya/Filter/Text.php
-===================================================================
---- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
-+++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
-@@ -49,7 +49,7 @@
-    * @return string^
-    */
-   private function getPattern() {
--    $result = '([^\\pL\\pP';
-+    $result = '([^\\pL\\pP=';
-     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
-       $result .= '\\p{Zs} ';
-     }
-Index: papaya-lib/system/base_topic_edit.php
-===================================================================
---- papaya-lib/system/base_topic_edit.php	(Revision 38500)
-+++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
-@@ -1600,9 +1600,14 @@
-                 //delete page
-                 if (FALSE !== $this->databaseDeleteRecord(
-                       $this->tableTopicsTrans, $filter)) {
--                  return FALSE !== $this->databaseDeleteRecord(
--                    $this->tableTopics, $filter
--                  );
-+                  if (FALSE !== $this->databaseDeleteRecord(
-+                        $this->tableTopics, $filter)) {
-+                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
-+                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-+                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
-+                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
-+                    return TRUE;
-+                  }
-                 }
-               }
-             }
-Index: papaya-lib/system/papaya_publictopic.php
-===================================================================
---- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
-+++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
-@@ -229,7 +229,7 @@
-         $definition
-       );
-     } else {
--      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
-+      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-     }
-   }
- 
 Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 ===================================================================
 --- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38500)
@@ -1347,136 +1299,6 @@ Index: papaya-lib/modules/free/thumbs/modules.xml
      <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
    </modules>
    <tables>
-Index: papaya-lib/modules/_base/community/content_register.php
-===================================================================
---- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
-@@ -1928,7 +1928,8 @@
-         $dynFields = $this->baseSurfers->getDynamicEditFields(
-           $this->data['dynamic_class'],
-           'dynamic',
--          $this->parentObj->topic['TRANSLATION']['lng_id']
-+          $this->parentObj->topic['TRANSLATION']['lng_id'],
-+          TRUE
-         );
-         $fields = array_merge($fields, $dynFields);
-       }
-Index: papaya-lib/modules/_base/community/base_surfers.php
-===================================================================
---- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
-@@ -773,16 +773,16 @@
-           );
-         }
-       }
--
--      if ($isMultiples) {
--        // case 1: multiples ids
--        return $result;
--      } else if (count($result) > 0) {
--        // case 2: one id lookup
--        return reset($result);
--      }
-     }
--    return '';
-+    if ($isMultiples) {
-+      // case 1: multiples ids
-+      return $result;
-+    } elseif (count($result) > 0) {
-+      // case 2: one id lookup
-+      return reset($result);
-+    } else {
-+      return '';
-+    }
-   }
- 
-   /**
-@@ -3517,13 +3517,13 @@
-   * @param integer $lng Language id
-   * @return array $dynamicEditFields Fields configuration
-   */
--  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
-+  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
-     // Create field condition
-     $fieldCondition = '';
-     if (is_numeric($fields) && $fields > 0) {
--      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
-+      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
-     } elseif (is_string($fields) && $fields != '0') {
--      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
-+      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
-     } elseif (is_array($fields)) {
-       // Check whether we have got an array of categories (numeric) or of names
-       $numeric = TRUE;
-@@ -3533,23 +3533,43 @@
-         }
-       }
-       if ($numeric) {
--        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
-+        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
-       } else {
--        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
-+        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
-       }
-     }
-     if ($fieldCondition != '') {
-       $fieldCondition = " AND ".$fieldCondition;
-     }
--    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
--                   surferdata_values, surferdata_check, surferdata_class,
--                   surferdata_available, surferdata_mandatory, surferdata_order
--              FROM %s
--             WHERE surferdata_available = 1".
-+
-+    if ($getClasses = TRUE) {
-+      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
-+      $joinSurferDataClassTitles = sprintf(
-+        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
-+        "AND ct.surferdataclasstitle_lang = %d)",
-+        $this->tableDataClassTitles,
-+        $lng
-+      );
-+      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
-+    } else {
-+      $fieldSurferDataClassTitle = '';
-+      $joinSurferDataClassTitles = '';
-+      $orderBySurferDataClassTitle = '';
-+    }
-+
-+    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
-+                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
-+                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
-+              FROM %s AS d
-+              %s
-+             WHERE d.surferdata_available = 1".
-                    $fieldCondition."
--          ORDER BY surferdata_order, surferdata_name";
--    $sqlParams = array($this->tableData);
-+          ORDER BY %sd.surferdata_order, d.surferdata_name";
-+    $sqlParams = array(
-+      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
-+    );
-     $fields = array();
-+
-     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
-       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-         $fields[] = $row;
-@@ -3573,9 +3593,15 @@
-         }
-       }
-     }
-+
-     // Create the edit fields
-     $dynamicEditFields = array();
-+    $lastClassTitle = NULL;
-     foreach ($fields as $field) {
-+      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
-+        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
-+        $lastClassTitle = $field['surferdataclasstitle_name'];
-+      }
-       $fieldName = $field['surferdata_name'];
-       if ($prefix != '') {
-         $fieldName = $prefix.'_'.$fieldName;
 Index: papaya-lib/modules/_base/community/content_profile.php
 ===================================================================
 --- papaya-lib/modules/_base/community/content_profile.php	(Revision 38500)
@@ -1745,6 +1567,184 @@ Index: papaya-lib/modules/_base/community/content_userdata.php
 -?>
 \ No newline at end of file
 +?>
+Index: papaya-lib/modules/_base/community/content_register.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
+@@ -1928,7 +1928,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+Index: papaya-lib/modules/_base/community/base_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
+@@ -773,16 +773,16 @@
+           );
+         }
+       }
+-
+-      if ($isMultiples) {
+-        // case 1: multiples ids
+-        return $result;
+-      } else if (count($result) > 0) {
+-        // case 2: one id lookup
+-        return reset($result);
+-      }
+     }
+-    return '';
++    if ($isMultiples) {
++      // case 1: multiples ids
++      return $result;
++    } elseif (count($result) > 0) {
++      // case 2: one id lookup
++      return reset($result);
++    } else {
++      return '';
++    }
+   }
+ 
+   /**
+@@ -3517,13 +3517,13 @@
+   * @param integer $lng Language id
+   * @return array $dynamicEditFields Fields configuration
+   */
+-  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
++  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
+     // Create field condition
+     $fieldCondition = '';
+     if (is_numeric($fields) && $fields > 0) {
+-      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
++      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
+     } elseif (is_string($fields) && $fields != '0') {
+-      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
++      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
+     } elseif (is_array($fields)) {
+       // Check whether we have got an array of categories (numeric) or of names
+       $numeric = TRUE;
+@@ -3533,23 +3533,43 @@
+         }
+       }
+       if ($numeric) {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
+       } else {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
+       }
+     }
+     if ($fieldCondition != '') {
+       $fieldCondition = " AND ".$fieldCondition;
+     }
+-    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
+-                   surferdata_values, surferdata_check, surferdata_class,
+-                   surferdata_available, surferdata_mandatory, surferdata_order
+-              FROM %s
+-             WHERE surferdata_available = 1".
++
++    if ($getClasses = TRUE) {
++      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
++      $joinSurferDataClassTitles = sprintf(
++        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
++        "AND ct.surferdataclasstitle_lang = %d)",
++        $this->tableDataClassTitles,
++        $lng
++      );
++      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
++    } else {
++      $fieldSurferDataClassTitle = '';
++      $joinSurferDataClassTitles = '';
++      $orderBySurferDataClassTitle = '';
++    }
++
++    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
++                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
++                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
++              FROM %s AS d
++              %s
++             WHERE d.surferdata_available = 1".
+                    $fieldCondition."
+-          ORDER BY surferdata_order, surferdata_name";
+-    $sqlParams = array($this->tableData);
++          ORDER BY %sd.surferdata_order, d.surferdata_name";
++    $sqlParams = array(
++      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
++    );
+     $fields = array();
++
+     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
+       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
+         $fields[] = $row;
+@@ -3573,9 +3593,15 @@
+         }
+       }
+     }
++
+     // Create the edit fields
+     $dynamicEditFields = array();
++    $lastClassTitle = NULL;
+     foreach ($fields as $field) {
++      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
++        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
++        $lastClassTitle = $field['surferdataclasstitle_name'];
++      }
+       $fieldName = $field['surferdata_name'];
+       if ($prefix != '') {
+         $fieldName = $prefix.'_'.$fieldName;
+Index: papaya-lib/system/Papaya/Filter/Text.php
+===================================================================
+--- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
++++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
+@@ -49,7 +49,7 @@
+    * @return string^
+    */
+   private function getPattern() {
+-    $result = '([^\\pL\\pP';
++    $result = '([^\\pL\\pP=';
+     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
+       $result .= '\\p{Zs} ';
+     }
+Index: papaya-lib/system/papaya_publictopic.php
+===================================================================
+--- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
++++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
+@@ -229,7 +229,7 @@
+         $definition
+       );
+     } else {
+-      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
++      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+     }
+   }
+ 
+Index: papaya-lib/system/base_topic_edit.php
+===================================================================
+--- papaya-lib/system/base_topic_edit.php	(Revision 38500)
++++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
+@@ -1600,9 +1600,14 @@
+                 //delete page
+                 if (FALSE !== $this->databaseDeleteRecord(
+                       $this->tableTopicsTrans, $filter)) {
+-                  return FALSE !== $this->databaseDeleteRecord(
+-                    $this->tableTopics, $filter
+-                  );
++                  if (FALSE !== $this->databaseDeleteRecord(
++                        $this->tableTopics, $filter)) {
++                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
++                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
++                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
++                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
++                    return TRUE;
++                  }
+                 }
+               }
+             }
 Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
 ===================================================================
 --- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38500)
@@ -1754,7 +1754,7 @@ Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
  >
  <!--
 -  @papaya:modules content_thumbs
-+  @papaya:modules MediaImageGalleryPage, ACommunitySurferGalleryPage
++  @papaya:modules MediaImageGalleryPage
  -->
  
  <!-- import main layout rules, this will import the default rules, too -->
@@ -1854,7 +1854,7 @@ Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thum
 -        <xsl:call-template name="module-content-thumbs-list">
 -          <xsl:with-param name="thumbs" select="$pageContent/thumbnails/thumb" />
 -          <xsl:with-param name="options" select="$pageContent/options" />
-+      <xsl:when test="$pageContent/@module = 'MediaImageGalleryPage' or $pageContent/@module = 'ACommunitySurferGalleryPage'">
++      <xsl:when test="$pageContent/@module = 'MediaImageGalleryPage'">
 +        <xsl:call-template name="module-content-image-gallery">
 +          <xsl:with-param name="pageContent" select="$pageContent"/>
          </xsl:call-template>
@@ -2121,15 +2121,6 @@ Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_
 ===================================================================
 --- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38500)
 +++ papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Arbeitskopie)
-@@ -20,7 +20,7 @@
-         <xsl:with-param name="pageContent" select="$pageContent"/>
-       </xsl:call-template>
-     </xsl:when>
--    <xsl:when test="$pageContent/@module = 'content_profile'">
-+    <xsl:when test="$pageContent/@module = 'content_profile' or $pageContent/@module = 'ACommunitySurferEditorPage'">
-       <xsl:call-template name="module-content-community-profile">
-         <xsl:with-param name="pageContent" select="$pageContent"/>
-       </xsl:call-template>
 @@ -605,40 +605,31 @@
    <fieldset>
      <xsl:choose>
@@ -2266,19 +2257,6 @@ Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
  </xsl:template>
  
  <xsl:template name="dialog-element-select">
-Index: papaya-data/templates/default-xhtml/html/page_community.xsl
-===================================================================
---- papaya-data/templates/default-xhtml/html/page_community.xsl	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/page_community.xsl	(Arbeitskopie)
-@@ -6,7 +6,7 @@
-   exclude-result-prefixes="#default"
- >
- <!--
--  @papaya:modules content_login, content_profile, content_userdata, content_register, content_register_dynamic, content_profile_change_confirmation
-+  @papaya:modules content_login, content_profile, ACommunitySurferEditorPage, content_userdata, content_register, content_register_dynamic, content_profile_change_confirmation
- -->
- 
- <!-- import main layout rules, this will import the default rules, too -->
 Index: papaya-data/templates/default-xhtml/html/boxes.xml
 ===================================================================
 --- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38500)
