@@ -34,6 +34,38 @@ class ACommunityConnector extends base_connector {
   * @var array
   */
   public $pluginOptionFields = array(
+    'Display Modes',
+    'display_mode_surfer_name' => array(
+      'Surfer Name', 'isAlpha',
+      TRUE,
+      'combo',
+      array(
+        'all' => "Givenname 'Handle' Surname",
+        'names' => 'Givenname Surname',
+        'handle' => 'Handle',
+        'givenname' => 'Givenname',
+        'surname' => 'Surname'
+      ),
+      'How to display names in outputs',
+      'names'
+    ),
+    'Notifications',
+    'notification_sender_email' => array(
+      'Sender E-Mail', 'isEmail', TRUE, 'input', 200, 'Sender address for use in notification emails.', ''
+    ),
+    'notification_sender_name' => array(
+      'Sender Name', 'isAlphaNumChar', TRUE, 'input', 200, 'Sender name for use in notifcation emails.', ''
+    ),
+    'notification_by_message' => array(
+      'Notify By Message', 'isNum', TRUE, 'yesno', NULL, 'Default value for new surfers.', 1
+    ),
+    'notification_by_email' => array(
+      'Notify By E-Mail', 'isNum', TRUE, 'yesno', NULL, 'Default value for new surfers.', 0
+    ),
+    'Moderators',
+    'moderator_group_id' => array(
+      'Surfer Group', 'isNum', TRUE, 'function', 'callbackSurferGroupsList'
+    ),
     'Page IDs',
     'surfer_registration_page_id' => array(
       'Surfer Registration', 'isNum', TRUE, 'pageid', 30,
@@ -65,34 +97,6 @@ class ACommunityConnector extends base_connector {
     'Parameter Groups',
     'surfer_page_parameter_group' => array(
       'Surfer', 'isAlpha', TRUE, 'input', 30, NULL, 'acsp'
-    ),
-    'Display Modes',
-    'display_mode_surfer_name' => array(
-      'Surfer Name', 'isAlpha',
-      TRUE,
-      'combo',
-      array(
-        'all' => "Givenname 'Handle' Surname",
-        'names' => 'Givenname Surname',
-        'handle' => 'Handle',
-        'givenname' => 'Givenname',
-        'surname' => 'Surname'
-      ),
-      'How to display names in outputs',
-      'names'
-    ),
-    'Notifications',
-    'notification_sender_email' => array(
-      'Sender E-Mail', 'isEmail', TRUE, 'input', 200, 'Sender address for use in notification emails.', ''
-    ),
-    'notification_sender_name' => array(
-      'Sender Name', 'isAlphaNumChar', TRUE, 'input', 200, 'Sender name for use in notifcation emails.', ''
-    ),
-    'notification_by_message' => array(
-      'Notify By Message', 'isNum', TRUE, 'yesno', NULL, 'Default value for new surfers.', 1
-    ),
-    'notification_by_email' => array(
-      'Notify By E-Mail', 'isNum', TRUE, 'yesno', NULL, 'Default value for new surfers.', 0
     ),
     'Text Thumbnails',
     'text_thumbnails' => array(
@@ -141,6 +145,43 @@ class ACommunityConnector extends base_connector {
    * @var ACommunityNotificationHandler
    */
   protected $_notifcationHandler = NULL;
+
+  /**
+  * Get form xml to select a surfer group by callback.
+  *
+  * @param string $name Field name
+  * @param array $element Field element configurations
+  * @param string $data Current field data
+  * @return string $result XML
+  */
+  public function callbackSurferGroupsList($name, $element, $data) {
+    $groups = $this->communityConnector()->getGroupsList();
+    $result = sprintf(
+      '<select name="%s[%s]" class="dialogSelect dialogScale">',
+      $this->paramName,
+      $name
+    );
+    foreach ($groups as $id => $group) {
+      $selected = $data == $id ? ' selected="selected"' : '';
+      $result .= sprintf(
+        '<option value="%d"%s>%s</option>'.LF,
+        $id,
+        $selected,
+        $group['surfergroup_title']
+      );
+    }
+    $result .= '</select>';
+    return $result;
+  }
+
+  /**
+   * Get moderator group id
+   *
+   * @return integer
+   */
+  public function getModeratorGroupId() {
+    return papaya_module_options::readOption($this->_guid, 'moderator_group_id', 0);
+  }
 
   /**
    * Surfer deletion object
