@@ -11,9 +11,6 @@ This package contains modules to extend your papaya CMS community.
 -----------
 
 - Some improvements
-- Moderator features
--- delete comments
--- delete surfer gallery images
 - Surfers page, searchable and with filters
 - Groups for surfers
 
