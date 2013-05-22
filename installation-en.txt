@@ -564,3 +564,10 @@ In this process URLs get identified and linked:
    -> Module: "Connector" -> "Options"
 --- In this mode the comment / message content gets Thumbnails of the Image URLs additionally.
     These thumbnails will be displayed below the text content after that.
+
+== Moderator features ==
+
+The module options of the connector offers an section "Moderators". You can define a surfer group
+for moderators there. Moderators have the following rights:
+- Delete images in galleries
+- Delete comments

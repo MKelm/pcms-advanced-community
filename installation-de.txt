@@ -587,3 +587,10 @@ Dabei werden URLs identifiziert und verlinkt:
    die Optionen für "Text Thumbnails" aktiviert werden
 --- dabei werden zusätzlich Thumbnails der verlinkten Bilder erstellt.
     Die Thumbnails werden danach unter dem Textinhalt ausgegeben.
+
+== Moderator Features ==
+
+In den Moduloptionen des Connectors gibt es einen Bereich "Moderators". Dort kann eine Surfergruppe
+für Moderatoren definiert werden. Moderatoren haben folgende Rechte:
+- Löschen von Galleriebildern
+- Löschen von Kommentaren
