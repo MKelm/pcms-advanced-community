@@ -93,5 +93,4 @@ class ACommunitySurferGalleryUpload extends ACommunityUiContent {
     }
     return $this->_uiContentUploadDialog;
   }
-
 }

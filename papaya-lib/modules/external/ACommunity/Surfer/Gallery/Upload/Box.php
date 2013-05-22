@@ -88,7 +88,7 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaP
    * Cache definition
    * @var PapayaCacheIdentifierDefinition
    */
-  protected $_cacheDefiniton = NULL;
+  protected $_cacheDefinition = NULL;
 
   /**
    * Define the cache definition for output.
@@ -99,20 +99,20 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaP
    */
   public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
     if (isset($definition)) {
-      $this->_cacheDefiniton = $definition;
-    } elseif (NULL == $this->_cacheDefiniton) {
+      $this->_cacheDefinition = $definition;
+    } elseif (NULL == $this->_cacheDefinition) {
       $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
           $this->papaya()->surfer->surfer['surfer_id'] : NULL;
       $imageSelected = $this->upload()->parameters()->get('enlarge', NULL);
       if (!empty($currentSurferId) && !isset($imageSelected)) {
-        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+        $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       } else {
-        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionValues(
+        $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues(
           array('acommunity_surfer_gallery_upload')
         );
       }
     }
-    return $this->_cacheDefiniton;
+    return $this->_cacheDefinition;
   }
 
   /**

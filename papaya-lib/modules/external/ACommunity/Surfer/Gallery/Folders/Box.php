@@ -82,7 +82,7 @@ class ACommunitySurferGalleryFoldersBox extends base_actionbox implements Papaya
    * Cache definition
    * @var PapayaCacheIdentifierDefinition
    */
-  protected $_cacheDefiniton = NULL;
+  protected $_cacheDefinition = NULL;
 
   /**
    * Define the cache definition for output.
