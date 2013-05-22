@@ -130,6 +130,12 @@ class ACommunityUiContentData extends PapayaObject {
   protected $_lastChange = NULL;
 
   /**
+   * Moderator status
+   * @var boolean
+   */
+  protected $_surferIsModerator = NULL;
+
+  /**
    * Get surfer data by id depending on some module options
    *
    * @param array|string $surferId one id or multiple ids
@@ -466,5 +472,23 @@ class ACommunityUiContentData extends PapayaObject {
       $this->_lastChange->papaya($this->papaya());
     }
     return $this->_lastChange;
+  }
+
+  /**
+   * Get moderator status
+   *
+   * @return boolean
+   */
+  public function surferIsModerator() {
+    if (is_null($this->_surferIsModerator)) {
+      if ($this->papaya()->surfer->isValid) {
+        $this->_surferIsModerator = !empty($this->papaya()->surfer->surfer['surfergroup_id']) &&
+          $this->papaya()->surfer->surfer['surfergroup_id'] ==
+            $this->owner->acommunityConnector()->getModeratorGroupId();
+      } else {
+        $this->_surferIsModerator = FALSE;
+      }
+    }
+    return $this->_surferIsModerator;
   }
 }
