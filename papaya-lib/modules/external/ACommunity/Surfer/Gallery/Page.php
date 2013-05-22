@@ -45,7 +45,7 @@ class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements Papay
    * Cache definition
    * @var PapayaCacheIdentifierDefinition
    */
-  protected $_cacheDefiniton = NULL;
+  protected $_cacheDefinition = NULL;
 
   /**
    * Define the cache definition for output.
@@ -57,31 +57,34 @@ class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements Papay
   public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
     if (isset($definition)) {
       $this->_cacheDefinition = $definition;
-    } elseif (NULL == $this->_cacheDefinition) {
+    } elseif (is_null($this->_cacheDefinition)) {
       $this->initializeParams();
       $ressource = $this->setRessourceData();
       $definitionValues = array('acommunity_surfer_gallery');
       if (!empty($ressource)) {
         $command = isset($this->params['command']) ? $this->params['command'] : NULL;
-        if ($command != 'delete_folder' && !empty($this->params['folder_id'])) {
-          $folder = $this->params['folder_id'];
+        if (!empty($command)) {
+          $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
         } else {
-          $folder = 'base';
+          include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = (int)$this->gallery()->data()->ressourceIsActiveSurfer;
+          $definitionValues[] = (int)(!empty($this->papaya()->surfer->surfer['surfergroup_id']) &&
+            $this->papaya()->surfer->surfer['surfergroup_id'] ==
+              $this->gallery()->acommunityConnector()->getModeratorGroupId());
+          $definitionValues[] = $folder;
+          $definitionValues[] = $values->lastChangeTime(
+            'surfer_gallery_images:folder_'.$folder.':surfer_'.$ressource['id']
+          );
+          $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
+            new PapayaCacheIdentifierDefinitionValues($definitionValues),
+            new PapayaCacheIdentifierDefinitionParameters(
+              array('enlarge', 'index', 'offset'), $this->paramName
+            )
+          );
         }
-        include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
-        $values = new ACommunityCacheIdentifierValues();
-        $definitionValues[] = $ressource['id'];
-        $definitionValues[] = $folder;
-        $definitionValues[] = $values->lastChangeTime(
-          'surfer_gallery_images:folder_'.$folder.':surfer_'.$ressource['id']
-        );
       }
-      $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
-        new PapayaCacheIdentifierDefinitionValues($definitionValues),
-        new PapayaCacheIdentifierDefinitionParameters(
-          array('enlarge', 'index', 'offset', 'command', 'id'), $this->paramName
-        )
-      );
     }
     return $this->_cacheDefinition;
   }
