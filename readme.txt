@@ -27,6 +27,13 @@ https://github.com/MKelm/pcms-advanced-community/blob/master/installation-de.txt
 | Changes |
 -----------
 
+==> 22.05.2013
+- Improved caching behaviour in surfer gallery
+- Added moderator features, delete gallery images and delete comments
+- Added englisch installation manual
+- Fixed a bug to get data in surfer gallery
+- And more minor changes
+
 ==> 21.05.2013
 - Added delete images feature in surfer gallery page
 - Added xsl support for surfer editor and surfer gallery in page_acommunity.xsl
