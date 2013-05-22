@@ -69,20 +69,18 @@ Das Advanced Community Paket enthält folgende Module:
 -- sie sollten dieses Modul nutzen, da sie sonst kein Caching in Surfer Page und Surfer Status Box
    nutzen können
 
-- Surferlisten Seite (Surfer List Page)
+- Surferkontakte Seite (Surfer Contacts Page)
 -- zeigt Kontakte, gestellte Kontaktanfragen und empfangene Kontaktanfragen an
 --- enthält Links zum entfernen von Kontakten und/oder aktzeptieren, ablehnen von Anfragen
 --- enthält Links zu den Surferseiten
--- oder zeigt Surfer nach Aktivität oder Registrierungszeit an und verlinkt auf die Surferseiten
 
 - Surfergallerie (Surfer Gallery Page)
 -- Zeigt eine Thumbnailgallerie für einen gewählten Surfer an
---- für den Surfer muss ein Seitenparameter acg:surfer_handle gesetzt sein
 -- Unterstützt das Kommentarmodul, siehe oben
 
 - Mitteilungen / Benachrichtigungen (Messages Page)
 -- Zeigt eine Liste mit Mitteilungen zwischen Surfer an sofern eine Unterhaltung gewählt wurde
---- zum Navigieren zwischen Unterhaltungen wir eine "Message Conversation Box" benötigt
+--- zum Navigieren zwischen Unterhaltungen benötigen sie eine "Message Conversations Box"
 --- zeigt einen Dialog zum Antworten an
 -- oder zeigt eine Liste von (System-)Benachrichtigungen an
 
@@ -101,13 +99,18 @@ Das Advanced Community Paket enthält folgende Module:
 -- zeigt Anzahl von Kontakten und Kontaktanfragen an
 --- enthält passende Links zur Kontakteseite
 -- enthält einen Link zur "Messages Page"
+-- enthält einen Link zur Benachrichtigungsseite (Messages Page)
+-- enthält einen Link zur Benachrichtigungseinstellungenseite
 
-- Surferlisten Box (Surfer List Box)
--- zeigt Surfer nach Aktivität oder Registrierungszeit an und verlinkt auf die Surferseiten
--- oder zeigt Kontakte eines gewählten oder des aktiven Surfers an
+- Surferliste Letzte Aktivität Box (Surfers Last Action Box)
+-- zeigt Surfer nach letzter Aktivität an und verlinkt auf die Surferseiten
+
+- Surferliste Registrierungen Box (Surfers Registration Box)
+-- zeigt Surfer nach Registrierungszeit an und verlinkt auf die Surferseiten
 
 - Surfergallerie Teaser (Surfer Gallery Teaser Box)
 -- Zeigt auf einer Surferseite eine Auswahl von maximal n Thumbnails an
+-- Muss in eine Surferseite eingehangen werden
 -- Verlinkt auf die Gallerieseite
 
 - Surfergallerie Ordner (Surfer Gallery Folders Box)
@@ -120,7 +123,9 @@ Das Advanced Community Paket enthält folgende Module:
 --- der gewählte Surfer muss mit dem angemeldeten Surfer übereinstimmen
 
 - Conntector
--- Enthält eine onDeleteSurfer Methode für den Action Dispatcher
+-- Enthält eine onDeleteSurfer / onDeletePages Methode für den Action Dispatcher
+-- Enthält Methoden zum Verlinken von Seiten
+-- Enthält Methoden um Moduloptionen zu ermitteln
 
 == Ansichten einrichten ==
 
@@ -162,43 +167,35 @@ Für eine funktionierende Community benötigen sie zuerst ein paar Seiten des re
 Modulpakets:
 - Registrierungs-Seite, zum Registrieren
 -- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10s08.html
--- Anders als in der Anleitung unterstützt das Modul in papaya CMS 5.5 auch dynamische Datengruppen
--- Im Advanced Community Paket ist eine verbesserte Version enthalten
+-- Anders als in der Anleitung unterstützt das Modul in papaya CMS 5.5.2 auch dynamische Datengruppen
+-- Die gepatchte papaya CMS Version enthält eine verbesserte Version
 --- die Anzeige von dynamischen Datengruppen im Eingabeformular wurde optimiert
 - Login-Seite, zum Anmelden
 -- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10.html#N18935
 - Profil-Seite, zum Bearbeiten von Benutzerdaten mit aktivem Login
 -- Anleitung http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch15s10s10.html
--- Im Advanced Community Paket ist eine verbesserte Version enthalten
+-- Die gepatchte papaya CMS Version enthält eine verbesserte Version
 --- die Anzeige von dynamischen Daten/-gruppen im Eingabeformular wurde hinzugefügt
 --- es wurden Beschreibungen für das Feld "Old password" hinzugefügt
 -- die Profilseite benötigt auch eine "Profile Change Confirmations"-Seite
--- nutzen sie hier das Modul "Surfer Editor Page" das content_profile entspricht
-
-Diese Seiten können
+-- nutzen sie hier stattdessen das Modul "Surfer Editor Page" das content_profile entspricht
 
 === Advanced Community Module ==
 
-- Kommentare (Comments Box)
+- Kommentare (Page/Surfer/Image Comments Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Kommentarbox zu erstellen
 -- Wählen sie die Boxengruppe "after-content"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
--- Wählen sie unter "Inhalt" einen Ressourcentyp
---- für normale papaya CMS Seiten ist der Typ "Page"
---- für Seiten mit seiner Surferauswahl (Parameter surfer_handle) ist der Typ "Surfer"
---- für Gallerien mit einer Bildauswahl ist der Typ "Image"
--- Ändern sie bei Bedarf weitere Einstellungen
--- Sie müssen maximal drei Boxen erstellen um alle Ressourcentypen zu unterstützen
--- Publizieren sie die erstellte/n Box/en
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
+-- Ändern sie bei Bedarf Einstellungen unter "Inhalt"
+-- Publizieren sie die erstellte Box
 -- Hängen sie die Box in einer Seite unter dem Punkt "Boxen" ein
 --- für Bildkommentare brauchen sie zuerst eine Surfergallerie-Seite, siehe unten
---- Surferkommentare funktionieren z.B. mit dem Communityseitenmodul "Show user"
----- ein erweitertes Surfer Page Modul für die Advanced Community ist in Planung
+--- Surferkommentare funktionieren mit dem "Surfe Page"-Modul, siehe unten
 
 - Kommentar-Rangliste (Comments Ranking Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ranglistenbox zu erstellen
 -- Wählen sie die Boxengruppe "after-content"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Box
 -- Hängen sie die Box in einer Seite unter dem Punkt "Boxen" ein
@@ -206,7 +203,7 @@ Diese Seiten können
 - Kommentierer-Rangliste (Commenters Ranking Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ranglistenbox zu erstellen
 -- Wählen sie die Boxengruppe "additional"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Box
 -- Hängen sie die Box in einer Seite unter dem Punkt "Boxen" ein
@@ -214,24 +211,23 @@ Diese Seiten können
 - Surferseite (Surfer Page)
 -- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
 -- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
--- Danach bennen sie die neue Unterseite eindeutig
+-- Danach benennen sie die neue Unterseite eindeutig
 -- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
 -- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Seite
 
-- Surferlistenseite (Surfer List Page)
+- Surferkontakteseite (Surfers Contacts Page)
 -- Wählen sie den Menüpunkt "Ändern" um eine Seite zu erstellen
 -- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
--- Danach bennen sie die neue Unterseite eindeutig
+-- Danach benennen sie die neue Unterseite eindeutig
 -- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
 -- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
---- sie brauchen maximal drei Seiten um alle Ausgabemodi in ihrem Angebot zu verlinken
 -- Publizieren sie die Seite
 
 - Mitteilungen / Benachrichtigungen (Messages Page)
 -- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
 -- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
--- Danach bennen sie die neue Unterseite eindeutig
+-- Danach benennen sie die neue Unterseite eindeutig
 -- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
 -- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Seite
@@ -239,7 +235,7 @@ Diese Seiten können
 - Benachrichtigungseinstellungen (Notification Settings Page)
 -- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
 -- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
--- Danach bennen sie die neue Unterseite eindeutig
+-- Danach benennen sie die neue Unterseite eindeutig
 -- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
 -- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Seite
@@ -247,7 +243,7 @@ Diese Seiten können
 - Unterhaltungen Box (Message Conversations Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
 -- Wählen sie die Boxengruppe "additional"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Box
 -- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
@@ -257,7 +253,7 @@ Diese Seiten können
 -- Erstellen sie einen neuen (Unter-)Ordner für Surfergallerien
 -- Wählen sie den Menüpunkt "Ändern" um eine Surfergallerie-Seite zu erstellen
 -- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
--- Danach bennen sie die neue Unterseite eindeutig
+-- Danach benennen sie die neue Unterseite eindeutig
 -- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
 -- Gehen sie zu "Inhalt" und wählen sie unter "Ordner" den zuvor erstellen Dateiordner
 -- Ändern sie auch folgende Optionen um eine optimale Anzeige der Surfergallerie zu ermöglichen
@@ -276,29 +272,15 @@ Diese Seiten können
 - Surferstatus Box (Surfer Status Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
 -- Wählen sie die Boxengruppe "additional"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
--- Publizieren sie die Box
--- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
-
-- Surferstatus Box (Surfers List Box)
--- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
--- Wählen sie die Boxengruppe "after-content" oder "additional-content"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennenen sie diese eindeutig
--- Wählen sie der Punkt "Inhalt"
---- Wählen sie den "Anzeigemodus"
----- sie benötigen zwei dieser Boxen um die Ausgabemodi "Surfers by last action time" und
-     "Surfers by registration time" auf z.B. einer Seite einzuhängen
----- sie benötigen eine weitere Box um den Ausgabemodus "Surfer contacts of current or selected surfer"
-     auf z.B. der Surferseite einzuhängen
---- ändern sie bei Bedarf weiter Einstellungen
 -- Publizieren sie die Box
 -- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
 
 - Surfergallerie Teaser (Surfer Gallery Teaser Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
 -- Wählen sie die Boxengruppe "after-content"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Box
 -- Hängen sie die Box auf ihrer Surferseite unter dem Punkt "Boxen" ein
@@ -306,18 +288,34 @@ Diese Seiten können
 - Surfergallerie Ordner (Surfer Gallery Folders Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
 -- Wählen sie die Boxengruppe "before-content"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Box
 -- Hängen sie die Box auf ihrer Surfergallerieseite unter dem Punkt "Boxen" ein
 
 - Surfergallerie Upload (Surfer Gallery Upload Box)
 -- Wählen sie den Menüpunkt "Boxen" um eine Ranglistenbox zu erstellen
--- Wählen sie die Boxengruppe "after-content"
--- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und bennen sie diese eindeutig
+-- Wählen sie die Boxengruppe "after-content" oder "before-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
 -- Wählen sie der Punkt "Inhalt" und ändern sie bei Bedarf die Einstellungen
 -- Publizieren sie die Box
 -- Hängen sie die Box auf ihrer Surfergallerieseite unter dem Punkt "Boxen" ein
+
+- Surfer nach letzte Aktivität Box (Surfers Last Action Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
+-- Wählen sie die Boxengruppe "after-content" oder "additional-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt", ändern sie bei Bedarf Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
+
+- Surfer nach Registrierung Box (Surfers Registration Box)
+-- Wählen sie den Menüpunkt "Boxen" um eine Ordnerbox zu erstellen
+-- Wählen sie die Boxengruppe "after-content" oder "additional-content"
+-- Erstellen sie eine Box mit der zugehörigen Box-Ansicht und benennen sie diese eindeutig
+-- Wählen sie der Punkt "Inhalt", ändern sie bei Bedarf Einstellungen
+-- Publizieren sie die Box
+-- Hängen sie die Box auf ihren Seiten unter dem Punkt "Boxen" ein
 
 == Action Dispatcher einrichten ==
 
@@ -354,7 +352,7 @@ Löschen einer Seite folgende Aktionen aus:
 - Seitenkommentare zur gelöschten Seite werden komplett gelöscht
 - Zeitstempel von letzten Kommentaränderungen, der zu löschenden Seiten, werden gelöscht
 
-== Verlinkungen von Surferseiten ==
+== Verlinkungen von Seiten ==
 
 Um Surfer in Boxen und Seiten korrekt zu verlinken, müssen sie die Moduloptionen des Connectors anpassen.
 Diese Moduloptionen werden von vielen Advanced Community Modulen genutzt um Links zu erzeugen.
@@ -365,7 +363,7 @@ Moduloptionen ändern, z.B. für "Surfer Page" und "Surfer Gallery Page":
 - Öffnen sie das Paket "Advanced Community"
 - Wählen sie das Modul "Connector" aus
 - Wählen sie rechts den Punkt "Optionen" aus
-- Setzen sie die Option "Page IDs" -> "Surfer Page" und "Page IDs" -> "Surfer Gallery Page" korrekt
+- Setzen sie die Option "Page IDs" -> "Surfer" und "Page IDs" -> "Surfer Gallery" korrekt
 - Danach können sie von Kommentarboxen aus die Surferdetailseite erreichen
 -- Beispiel-URL: infis-page.70.de.html?acs:surfer_handle=infi
 - Danach können sie von Gallerieteaserboxen aus die Surfergallerie erreichen
@@ -379,8 +377,7 @@ Es gibt noch weitere Page ID-Einstellungen in den Moduloptionen des Connectors:
 - Login Page = Seiten ID der Anmeldeseite, wird in "Surfer Status Box" genutzt
 - Registration Page = Seiten ID der Registrierungsseite, wird in "Surfer Status Box" genutzt
 - Editor Page = Seiten ID der Profilseite, wird in "Surfer Status Box" genutzt
-- Contacts Page = Seiten ID eines "Surfer List Page"-Moduls mit einer Ausgabe von Kontakten
--- wird in "Surfer Status Box" genutzt
+- Contacts Page = Seiten ID der Kontakteseite, wird in "Surfer Status Box" genutzt
 - Messages / Notifications Page = Seiten ID eines "Message Page"-Moduls mit Ausgabe von Mitteilungen
 -- wird in "Surfer Status Box" für die Verlinkung "Messages" und "Notifications" genutzt
 -- wird in der "Message Conversations Box" für Verlinkungen genutzt
@@ -430,6 +427,11 @@ http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch33s02s12.html
 Ich empfehle PAPAYA_CACHE_BOXES = on und PAPAYA_CACHE_PAGES = on zu setzten.
 Die Zeiteinstellungen sollten sie je Seite und Box individuell einstellen.
 
+Wenn sie php-Module installieren können, empfehle ich die APC Erweiterung zu installieren und
+die PAPAYA_CACHE_SERVICE Optionen auf APC zu stellen.
+Siehe auch http://www.papaya-cms.com/doc/papaya-cms/de/basissystem/5.1.5/ch33s02s12.html und
+http://php.net/manual/de/book.apc.php
+
 === Caching Community ===
 
 Das Cachen der Login-, Registrierungs- und Profilseite eignet sich nicht, da die Module Daten
@@ -450,9 +452,8 @@ Hier eine Liste mit Vorschlägen für Cachezeiten je Modul:
 -- die Seite erkennt wann sich ein Surferaufruf ändert
 -- die Seite erkennt wann sich Kontaktdaten zwichen dem aktiven und gewählten Benutzer verändern
 -- die Seite erkennt wann sich Daten des gewählten Benutzers verändern
---- dieses Feature ist noch nicht vollständig implementiert
--- sobald ein aktiver Benutzer einen "command" ausführt wird das Caching deaktiviert um Änderungen
-   an Kontaktdaten zu ermöglichen
+-- sobald ein aktiver Benutzer einen "command" ausführt wird das Caching deaktiviert um
+   wiederholte Änderungen an Kontaktdaten zu ermöglichen
 
 - Surfer Editor Page
 -- der Cache wird stets deaktiviert da Daten stets dynamisch geladen und gespeichert werden
@@ -535,7 +536,7 @@ Hier eine Liste mit Vorschlägen für Cachezeiten je Modul:
 -- z.B. 604800 Sekunden
 -- das Caching beachtet Änderungen relvanter Daten
 --- beachtet wird die Surferauswahl, die Ordnerauswahl, der Zeitstempel der letzten Bildänderung
-    in einem Ordner, sowie die Parameter idx, img und mode
+    in einem Ordner, sowie die Parameter command, id, index, offset, enlarge
 
 - Surfer Gallery Folders Box
 -- z.B. 604800 Sekunden
@@ -582,5 +583,5 @@ Dabei werden URLs identifiziert und verlinkt:
 - Bild URLs erhalten einen a-Tag
 -- optional können in "Module" -> Paket: "Advanced Community" -> Modul: "Connector" -> "Optionen"
    die Optionen für "Text Thumbnails" aktiviert werden
---- dabei werden zusätzlich Thumbnails der verlinkten Bilder erstellt und ans Ende des Textinhalts
-    in einem gesonderte DIV-Element abgelegt
+--- dabei werden zusätzlich Thumbnails der verlinkten Bilder erstellt.
+    Die Thumbnails werden danach unter dem Textinhalt ausgegeben.
