@@ -149,13 +149,14 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Surfer Gallery Upload Box
 - Message Conversations Box
 - Surfer Status Box
-- Surfers List Box
+- Surfers Last Action Box
+- Surfers Registration Box
 
 ==> page_acommunity.xsl für
 - Surfer Page
 - Surfer Editor Page
 - Surfer Gallery Page
-- Surfers List Page
+- Surfer Contacts Page
 - Messages Page
 - Notification Settings Page
 

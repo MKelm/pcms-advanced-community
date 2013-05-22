@@ -83,7 +83,7 @@ This package contains the following modules:
 
 - Notification Settings Page
 -- Shows a list of settings for all available notifications
---- Accepts the choise to deliver notifications by message or email
+--- Accepts the choice to deliver notifications by message or email
 
 - Message Conversations Box
 -- Shows a list of surfers for whom at least one message exists
@@ -127,7 +127,7 @@ This package contains the following modules:
 == Configure views ==
 
 This manual assumes that a default papaya CMS installtion with the output filter "html" exists.
-Go to the menu item "Vies" in the backend to find the creation form for views.
+Go to the menu item "Views" in the backend to find the creation form for views.
 You will find all modules of Advanced Community in the combo box in the corresponding section.
 After you created a view with title you have to link this view with the output filter "html".
 In this process you have to choose a XSL stylesheet. Here is a list of supported xsl stylesheets
@@ -142,13 +142,14 @@ for the Advanced Community modules:
 - Surfer Gallery Upload Box
 - Message Conversations Box
 - Surfer Status Box
-- Surfers List Box
+- Surfers Last Action Box
+- Surfers Registration Box
 
 ==> page_acommunity.xsl for
 - Surfer Page
 - Surfer Editor Page
 - Surfer Gallery Page
-- Surfers List Page
+- Surfer Contacts Page
 - Messages Page
 - Notification Settings Page
 
