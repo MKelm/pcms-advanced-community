@@ -72,31 +72,20 @@ class ACommunitySurferGallery extends MediaImageGallery {
     parent::initialize($module, $data, $dataMode);
     $command = $this->parameters()->get('command', NULL);
     $fileId = $this->parameters()->get('id', NULL);
-    if ($command == 'delete_image' && !empty($fileId)) {
-      $perform = FALSE;
-      if ($this->data()->ressourceIsActiveSurfer) {
-        $perform = TRUE;
-      } else {
-        if (!empty($this->papaya()->surfer->surfer['surfergroup_id']) &&
-            $this->papaya()->surfer->surfer['surfergroup_id'] ==
-              $this->acommunityConnector()->getModeratorGroupId()) {
-          $perform = TRUE;
+    if ($command == 'delete_image' && !empty($fileId) &&
+        ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) {
+      if ($this->data()->mediaDBEdit()->deleteFile($fileId)) {
+        $ressource = $this->data()->ressource();
+        $folderId = $this->parameters()->get('folder_id', 0);
+        if (!($folderId > 0)) {
+          $ressource = 'surfer_gallery_images:folder_base:surfer_'.$ressource['id'];
+        } else {
+          $ressource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
         }
-      }
-      if ($perform == TRUE) {
-        if ($this->data()->mediaDBEdit()->deleteFile($fileId)) {
-          $ressource = $this->data()->ressource();
-          $folderId = $this->parameters()->get('folder_id', 0);
-          if (!($folderId > 0)) {
-            $ressource = 'surfer_gallery_images:folder_base:surfer_'.$ressource['id'];
-          } else {
-            $ressource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
-          }
-          $this->data()->lastChange()->assign(
-            array('ressource' => $ressource, 'time' => time())
-          );
-          $this->data()->lastChange()->save();
-        }
+        $this->data()->lastChange()->assign(
+          array('ressource' => $ressource, 'time' => time())
+        );
+        $this->data()->lastChange()->save();
       }
     }
   }
@@ -123,10 +112,8 @@ class ACommunitySurferGallery extends MediaImageGallery {
               PapayaXmlElement $parent, $fileId, $fileOffset = 0, $thumbnail = FALSE
             ) {
     parent::_appendImageTo($parent, $fileId, $fileOffset, $thumbnail);
-    if ($thumbnail == TRUE && ($this->data()->ressourceIsActiveSurfer ||
-        (!empty($this->papaya()->surfer->surfer['surfergroup_id']) &&
-          $this->papaya()->surfer->surfer['surfergroup_id'] ==
-            $this->acommunityConnector()->getModeratorGroupId()))) {
+    if ($thumbnail == TRUE &&
+        ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) {
       $reference = clone $this->reference();
       $reference->setParameters(
         array(

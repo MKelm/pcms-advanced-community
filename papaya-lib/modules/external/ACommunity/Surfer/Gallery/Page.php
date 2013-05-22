@@ -70,9 +70,7 @@ class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements Papay
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $ressource['id'];
           $definitionValues[] = (int)$this->gallery()->data()->ressourceIsActiveSurfer;
-          $definitionValues[] = (int)(!empty($this->papaya()->surfer->surfer['surfergroup_id']) &&
-            $this->papaya()->surfer->surfer['surfergroup_id'] ==
-              $this->gallery()->acommunityConnector()->getModeratorGroupId());
+          $definitionValues[] = (int)$this->gallery()->data()->surferIsModerator();
           $definitionValues[] = $folder;
           $definitionValues[] = $values->lastChangeTime(
             'surfer_gallery_images:folder_'.$folder.':surfer_'.$ressource['id']
