@@ -100,7 +100,8 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
   public function filter($value) {
     $value = parent::filter($value);
     $this->_textOptions = $this->acommunityConnector()->getTextOptions();
-    $value = sprintf(
+    $value = sprintf('<text-raw>%s</text-raw>', $value);
+    $value .= sprintf(
       '<text>%s</text>',
       preg_replace_callback(
         $this->_urlPattern,

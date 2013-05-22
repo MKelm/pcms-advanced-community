@@ -87,11 +87,14 @@ class ACommunityUiContentMessageConversationsList extends PapayaUiControl {
       $conversationsElement = $parent->appendElement('conversations');
       foreach ($listData['data'] as $conversation) {
         $conversationElement = $conversationsElement->appendElement('conversation');
-        $conversationElement->appendElement(
+        $lastMessageElement = $conversationElement->appendElement(
           'last-message',
-          array('time' => date('Y-m-d H:i:s', $conversation['time'])),
-          PapayaUtilStringXml::escape($this->_getConversationText($conversation['text']))
+          array(
+            'time' => date('Y-m-d H:i:s', $conversation['time']),
+            'max-length' => $this->data()->lastMessageMaxLength
+          )
         );
+        $lastMessageElement->appendXml($conversation['text']);
         $conversationElement->appendElement(
           'surfer-contact',
           array(
@@ -111,18 +114,5 @@ class ACommunityUiContentMessageConversationsList extends PapayaUiControl {
         $this->data()->messages['no_message_conversations']
       );
     }
-  }
-
-  /**
-   * Get conversation text and trim message by using lastMessageMaxLength
-   *
-   * @param string $text
-   * @return string
-   */
-  protected function _getConversationText($text) {
-    if (strlen($text) > $this->data()->lastMessageMaxLength) {
-      return substr($text, 0, $this->data()->lastMessageMaxLength - 3).'...';
-    }
-    return $text;
   }
 }

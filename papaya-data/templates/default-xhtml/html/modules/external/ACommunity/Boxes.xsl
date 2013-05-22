@@ -35,7 +35,10 @@
               <span class="right">
                 <span class="surferName"><a href="{messages-page-link/text()}"><xsl:value-of select="surfer-contact/@name" /></a></span>
                 <xsl:text> </xsl:text>
-                <span class="lastMessageText"><xsl:value-of select="last-message/text()" /></span>
+                <span class="lastMessageText"><xsl:call-template name="acommunity-message-conversations-get-last-message-text">
+                  <xsl:with-param name="text" select="last-message/text-raw" />
+                  <xsl:with-param name="maxLength" select="last-message/@max-length" />
+                </xsl:call-template></span>
                 <xsl:text> </xsl:text>
                 <span class="lastMessageTime"><xsl:call-template name="format-date-time">
                   <xsl:with-param name="dateTime" select="last-message/@time" />
@@ -50,6 +53,19 @@
         </xsl:call-template>
       </xsl:if>
     </div>
+  </xsl:template>
+
+  <xsl:template name="acommunity-message-conversations-get-last-message-text">
+    <xsl:param name="text" />
+    <xsl:param name="maxLength" />
+    <xsl:choose>
+      <xsl:when test="string-length($text) &gt; $maxLength">
+        <xsl:value-of select="substring($text, 1, $maxLength - 1)" /><xsl:text>...</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="$text" />
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="acommunity-surfer-gallery-teaser">
