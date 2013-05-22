@@ -27,26 +27,11 @@ papayacms.patches ersetzen sie durch einen der folgenden Dateinamen:
 
 Falls sie den Patchvorgang nicht durchführen können, können sie sich auch eine
 gepatchte Version des papaya CMS herunterladen:
-"papaya CMS mit Patches" unter http://idx.shrt.ws/dateien.9.de.html?ldb:categ_id=8
+"papaya CMS mit Patches" unter https://github.com/MKelm/papaya-cms/archive/master.zip
 
 ==== Patches im Detail ====
 
-Folgende Patches sind enthalten:
-- Community
--- Ausgabe von Titlen dynamischer Datengruppen in content_register-/content_userdata-Formularen
---- die Sortiereung von dynamischen Feldern erfolgt nun nach Datengruppentitel, Feldsortierung
--- Bugfix für getNameById, es gab einen Fehler in der Bufferverwaltung
-- Thumbs
--- die Templatedatei page_gallery.xsl unterstützt nun auch ACommunitySurferGalleryPage
--- das Thumbnailgalleriemodul enthält neue Optionen
---- Anzeigemodus: Resized image with original image link, Resized image wie image download link
---- Kommentar in Detailansicht anzeigen ja/nein
---- Lightbox aktivieren ja/nein
--- CSS / Stylesheets
---- Verbesserungen von Formularausgaben
---- Verbesserung von Thumbnailausgabe (Gallery)
---- Unterstützung von Box-CSS-Dateien für "Advanced Community"
-- Beim Löschen von Seiten wird die ActionDispatcher-Aktion system/onDeletePages unterstützt
+Eine Liste von Änderungen ist hier zu finden: https://github.com/MKelm/papaya-cms/commits/master
 
 == Module einrichten ==
 
@@ -150,21 +135,24 @@ Ansicht noch mit dem Ausgabefilter "html" verknüpfen.
 Dabei ist ein "XSL-Stylesheet" zu wählen. Hier ist eine Liste mit
 Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 
-- Commenters Ranking Box = box_acommunity.xsl
-- Comments Box = box_acommunity.xsl
-- Comments Ranking Box = box_acommunity.xsl
-- Surfer Gallery Teaser Box = box_acommunity.xsl
-- Surfer Gallery Folders Box = box_acommunity.xsl
-- Surfer Gallery Upload Box = box_acommunity.xsl
-- Surfer Gallery Page = page_gallery.xsl
-- Surfer Page = page_acommunity.xsl
-- Surfer Editor Page = page_community.xsl
-- Message Page = page_acommunity.xsl
-- Message Conversations Box = box_acommunity.xsl
-- Notification Settings Page = page_acommunity.xsl
-- Surfer Status Box = box_acommunity.xsl
-- Surfers List Box = box_acommunity.xsl
-- Surfers List Page = page_acommunity.xsl
+==> box_acommunity.xsl für
+- Commenters Ranking Box
+- Comments Box
+- Comments Ranking Box
+- Surfer Gallery Teaser Box
+- Surfer Gallery Folders Box
+- Surfer Gallery Upload Box
+- Message Conversations Box
+- Surfer Status Box
+- Surfers List Box
+
+==> page_acommunity.xsl für
+- Surfer Page
+- Surfer Editor Page
+- Surfer Gallery Page
+- Surfers List Page
+- Messages Page
+- Notification Settings Page
 
 == Boxen und Seiten einrichten ==
 
