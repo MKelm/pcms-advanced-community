@@ -17,21 +17,14 @@ This package contains modules to extend your papaya CMS community.
 - Surfers page, searchable and with filters
 - Groups for surfers
 
------------
-| Patches |
------------
+----------------
+| Installation |
+----------------
 
-This package needs some patches in your papaya CMS installation.
-You have to use one file from the patches folder to patch your system.
-Go to your papaya CMS folder by command line and enter the following command:
-patch -p 0 < /path/to/package/patches/patchfile.patches
-patchfile.patches can replaced by:
-- trunk_r38500.patches if you use a nightly build
-- release_r38112.patches if you use the 5.5.2 release build
-The patches file assumes a directory with all folders. If you have papaya-lib and papaya-data in
-a seperate folder, you have to perform the patch command in each folder.
-
-Or get the papaya CMS with patches from https://github.com/MKelm/papaya-cms
+Please read the installation manual here
+https://github.com/MKelm/pcms-advanced-community/blob/master/installation-en.txt (english version)
+or here
+https://github.com/MKelm/pcms-advanced-community/blob/master/installation-de.txt (german version)
 
 -----------
 | Changes |
