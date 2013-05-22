@@ -535,9 +535,10 @@ Hier eine Liste mit Vorschlägen für Cachezeiten je Modul:
 
 - Surfer Gallery Page
 -- z.B. 604800 Sekunden
+-- das Caching wird beim Parameter command deaktiviert um Änderungen an Daten zu ermöglichen
 -- das Caching beachtet Änderungen relvanter Daten
 --- beachtet wird die Surferauswahl, die Ordnerauswahl, der Zeitstempel der letzten Bildänderung
-    in einem Ordner, sowie die Parameter command, id, index, offset, enlarge
+    in einem Ordner, sowie die Parameter index, offset, enlarge
 
 - Surfer Gallery Folders Box
 -- z.B. 604800 Sekunden

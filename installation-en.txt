@@ -515,9 +515,10 @@ Here is a list of suggestions for cache time by module:
 
 - Surfer Gallery Page
 -- E.g. 604800 seconds
+-- The caching will be disabled on parameter command to perform changes on gallery data
 -- The caching detects changes of relevant data
 --- Observes current selected surfer, current selected folder, the last change timestamp of images
-    in the selected folder and the parameters command, id, index, offset, enlarge
+    in the selected folder and the parameters index, offset, enlarge
 
 - Surfer Gallery Folders Box
 -- E.g. 604800 seconds
