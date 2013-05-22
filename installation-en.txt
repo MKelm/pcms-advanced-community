@@ -1,0 +1,564 @@
+= papaya CMS Advanced Community Installation =
+
+== Preamble ==
+
+This manual is written for a papaya CMS default installation. The templates
+in this module package are created for a papaya CMS default theme.
+
+== Copy files ==
+
+The files in this package are sorted by each papaya CMS folder. It is sufficient to copy the
+main foder to the base directory of papaya CMS. If papaya-data and papaya-lib are located in an
+external directory, you have to copy the package folders to there.
+
+=== Patches ===
+
+The package contains a set of patches for the existing papaya CMS files in the "pachtes" directory.
+
+To patch your papaya CMS you have to go to command line and execute the following command:
+- patch -p 0 < /path/to/package/patches/papayacms.patches
+
+Replace papayacms.patches by this:
+- trunk_r38500.patches if you use a nightly build
+- release_r38112.patches if you use the 5.5.2 release build
+
+If you cannot perform this patch process, you can download a patched version of papaya CMS here:
+https://github.com/MKelm/papaya-cms/archive/master.zip
+
+==== Patches in detail ====
+
+You can find a list of changes here: https://github.com/MKelm/papaya-cms/commits/master
+
+== Install modules ==
+
+To install the Advanced Community modules got to the papaya CMS backend, menu item "Modules".
+Click on "Search modules" to get the new package with all modules in the left "Packages" list.
+Click on "Advanced Community" in "Packages" and after that confirm the question in the right box
+to create the new database tables of this package.
+
+=== Module overview ===
+
+This package contains the following modules:
+
+- Comments Box
+-- Shows a list of comments and sub comments
+-- Surfers can vote for good or bad comments
+-- Contains a input form to post comments and sub comments
+-- Supports pages, surfers and gallery images
+--- Dependencies, parent page module
+---- For surfers you need a "surfer_handle" page parameter
+---- For gallery images you need the surfer gallery page module
+----- The box will appear if a image has been selected
+
+- Comments Ranking Box
+-- Shows a list of comments ordered by rating
+--- The rating is the sum of votes for a good / bad comment
+
+- Commenters Ranking Box
+-- Shows a list of commenters ordered by amount of comments
+
+- Surfer Page
+-- An optimized ouptut of surfer details of the current or the selected surfer
+-- Supports comments module, see above
+
+- Surfer Editor Page
+-- A slightly extended version of community->content_profile
+-- Use this module instead of content_profile to get a valid caching feature in
+   surfer page and surfer status box
+
+- Surfer Contacts Page
+-- Shows contacts, contact requests and received contact requests
+--- Contains links to delete contacts / contact requests and/or accept, decline requests
+--- Contains links to surfer pages
+
+- Surfer Gallery Page
+-- Shows a thumbnail gallery for the selected surfer
+-- Supports the comments module, see above
+
+- Messages Page (Notifications)
+-- Shows a list of messages between two surfers if a conversation has been selected
+--- To navigate conversations you need a "Message Conversations Box"
+--- Shows a input form to reply
+-- Or shows a list of notifications by system
+
+- Notification Settings Page
+-- Shows a list of settings for all available notifications
+--- Accepts the choise to deliver notifications by message or email
+
+- Message Conversations Box
+-- Shows a list of surfers for whom at least one message exists
+-- Shows the last message with shortended text and time for each surfer
+
+- Surfer Status Box
+-- Inactive login
+--- Shows a login / registration page link
+-- Active login
+--- Shows the surfer avatar and surfer name
+--- Shows a link to surfer page and a logout link
+--- Shows amounts of contacts and requests with links to contacts page
+--- Shows a link to messages page
+--- Shows a link to notifications/messages page
+--- Shows a link to notification settings page
+
+- Surfers Last Action Box
+-- Shows surfers by last activity time and set links to surfer page
+
+- Surfers Registration Box
+-- Shows surfers by registration time and set links to surfer page
+
+- Surfer Gallery Teaser Box
+-- Shows a range of maxiaml n thumbnails
+-- Needs a Surfer Page as parent page module
+-- Set links to surfer gallery page
+
+- Surfer Gallery Folders Box
+-- Shows all folders of the current selected surfer in surfer gallery page
+-- Contains links to delete or add folders if the current surfer is the selected surfer
+
+- Surfer Gallery Upload Box
+-- Shows a upload form for images in surfer gallery page
+--- The selected surfer has to match the active surfer
+
+- Conntector
+-- Contains action dispatcher methods, onDeleteSurfer and onDeletePages
+-- Contains methods to get some page links
+-- Contains methods to get module options
+
+== Configure views ==
+
+This manual assumes that a default papaya CMS installtion with the output filter "html" exists.
+Go to the menu item "Vies" in the backend to find the creation form for views.
+You will find all modules of Advanced Community in the combo box in the corresponding section.
+After you created a view with title you have to link this view with the output filter "html".
+In this process you have to choose a XSL stylesheet. Here is a list of supported xsl stylesheets
+for the Advanced Community modules:
+
+==> box_acommunity.xsl for
+- Commenters Ranking Box
+- Comments Box
+- Comments Ranking Box
+- Surfer Gallery Teaser Box
+- Surfer Gallery Folders Box
+- Surfer Gallery Upload Box
+- Message Conversations Box
+- Surfer Status Box
+- Surfers List Box
+
+==> page_acommunity.xsl for
+- Surfer Page
+- Surfer Editor Page
+- Surfer Gallery Page
+- Surfers List Page
+- Messages Page
+- Notification Settings Page
+
+== Configure pages and boxes ==
+
+=== Community modules ===
+
+To get a functioning community you need a set of pages of the regular community package first:
+- Registration page, to register
+--
+- Registrierungs-Seite, zum Registrieren
+-- Manual http://goo.gl/xQj0n
+-- Different from this manual the corresponding module in papaya CMS 5.5.2 supports dynamic data
+   groups
+-- The patched version of papaya CMS contains an improved module version
+--- The display of dynamic data groups in the input form has been improved
+- Login page, to login
+-- Manual http://goo.gl/Q2c8J
+- Profile page, to edit surfer data of current active surfer
+-- Manual http://goo.gl/SjoKK
+-- The patched version of papaya CMS contains an improved module version
+--- The display of dynamic data-/groups in the input form has been added
+--- Field descriptions for "Old password" has been added
+-- The profile page needs a "Profile Change Confirmations" page too
+-- Use the module "Surfer Editor Page" instead which conforms to content_profile
+
+=== Advanced Community modules ==
+
+- Page/Surfer/Image Comments Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "after-content"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+--- for image comments you need a surfer gallery page first, see below
+--- for surfer comments you need e.g. a surfer page first, see below
+
+- Comments Ranking Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "after-content"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+- Commenters Ranking Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "additional"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+- Surfer Page
+-- Choose the menu item "Edit" to create a surfer page
+-- Choose the main page of your default installtion to create a sub page
+-- After that term this sub page obvious
+-- Link the corresponding page view in the menu item "View"
+-- Go to "Content" and change settings if required
+-- Publish the created page
+
+- Surfers Contacts Page
+-- Choose the menu item "Edit" to create a surfer contacts page
+-- Choose the main page of your default installtion to create a sub page
+-- After that term this sub page obvious
+-- Link the corresponding page view in the menu item "View"
+-- Go to "Content" and change settings if required
+-- Publish the created page
+
+- Messages Page
+-- Choose the menu item "Edit" to create a mesages page
+-- Choose the main page of your default installtion to create a sub page
+-- After that term this sub page obvious
+-- Link the corresponding page view in the menu item "View"
+-- Go to "Content" and change settings if required
+-- Publish the created page
+
+- Notification Settings Page
+-- Choose the menu item "Edit" to create a notification settings page
+-- Choose the main page of your default installtion to create a sub page
+-- After that term this sub page obvious
+-- Link the corresponding page view in the menu item "View"
+-- Go to "Content" and change settings if required
+-- Publish the created page
+
+- Message Conversations Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "additional"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+- Surfer Gallery Page
+-- Choose the menu item "Files"
+-- Create a new (sub) folder for surfer galleries
+-- Choose the menu item "Edit" to create a surfer gallery page
+-- Choose the main page of your default installtion to create a sub page
+-- After that term this sub page obvious
+-- Link the corresponding page view in the menu item "View"
+-- Go to "Content" and change the directory to fit the folder you created before
+-- Change the following options too, to get a optimal display
+--- Preview images, Amount of images = 4
+--- Preview images, Column amount = 2
+--- Preview images, Resize = "Minimum cropped"
+--- Images, Display in Lightbox? = No
+---- You can activate the lightbox if you do not use the image comments box
+--- Images, Display mode = "Resized Image" or "Resized image with download link" or
+    "Resized image with original link"
+--- Images, Width and Height = 410
+-- Change more settings if required
+-- Publish the created page
+
+- Surfer Status Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "additional"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+- Surfer Gallery Teaser Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "after-content"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+- Surfer Gallery Folders Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "before-content"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+- Surfer Gallery Upload Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "after-content" or "before-content"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+- Surfers Last Action Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "after-content"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+- Surfers Registration Box
+-- Choose the menu item "Boxes" to create a comments box
+-- Choose the box group "after-content"
+-- Create a box with the corresponding box view and term it obvious
+-- Change settings in "Content" if required
+-- Publish the created box
+-- Hook it into a page in the menu item "Boxes"
+
+== Configure the action dispatcher ==
+
+The action dispatcher should be configured to handle deleted data of surfers and pages correctly
+in the Advanced Community modules.
+
+Please read the action dispatcher manual too:
+http://en.wiki.papaya-cms.com/wiki/Action_Dispatcher
+
+=== Delete surfer data ===
+
+You need a group "community" and an action "onDeleteSurfer" in the action dispatcher. After that you
+can add the observer class "ACommunityConnector" to this action.
+
+The Advanced Community connector performs the following actions if a surfer gets deleted:
+- Page comments get a flag that the surfer has been deleted
+-- The comments list shows a defined surfer name like "Deleted user" after that
+-- The commenters ranking box ignores deleted surfers
+- Comments for the deleted surfer get deleted
+- Surfer galleries with all folders, images and image comments get deleted
+-- The corresponding timestamps of last images change get deleted
+- Messages of the deleted surfer get deleted
+- The timestamp of surfer's last change gets deleted
+
+=== Delete page data ===
+
+You need a group "system" and an action "onDeletePages". Then you can add the observer class
+"ACommunityConnector" to this action.
+
+The Advanced Community connector performs the following actions if pages get deleted:
+- Page comments of the deleted pages get deleted
+- The timestamp of the last page comments change gets deleted
+
+== Page links ==
+
+To link e.g. surfers in boxes and pages correctly you have to set the page ids by module options
+in the connector module. Many Advanced Community modules use these options to generate page links.
+You need the page modules corresponding to the page id options first, see "Configure pages and boxes".
+
+Change module options, e.g. for "Surfer Page" and "Surfer Gallery Page":
+- Open the module overview in the backen menu item "Modules"
+- Open the module package "Advanced Community"
+- Choose the module "Connector"
+- Choose the menu item "Options" on the right upper side
+- Set the Option "Page IDs" -> "Surfer" and "Page IDs" -> "Surfer Gallery"
+- After that you can reach the surfer page in comment boxes
+-- Example URL: infis-page.70.de.html?acs:surfer_handle=infi
+- After that you can reach the surfer gallery page in the gallery teaser box
+-- Example URL: infis-gallery.71.de.html?acg:surfer_handle=infi
+
+You can set the parameter group of the surfer page too. You will need another parameter group only
+if you use another page module than "Surfer Page". This options allows you e.g. to use the
+"Show user" module of the community package with the parameter group "bab".
+
+There are some more page ID settings in the connector's module options:
+- Login Page = Page ID of the login page, used by "Surfer Status Box"
+- Registration Page = Page ID of the registration page, used by "Surfer Status Box"
+- Editor Page = Page ID of the profile / editor page, used by "Surfer Status Box"
+- Contacts Page = Page ID of contacts page, used by "Surfer Status Box"
+- Messages / Notification Page = Page ID of messages page
+-- used by "Surfer Status Box" to link "Messages" and "Notifications"
+-- used by "Message Conversations Box" for links
+- Notification Settings Page = Page ID of the notification settings page
+-- used by "Surfer Status Box"
+
+== Notifications ==
+
+To use notifications, you have to import the files from the "import-data" folder to your database:
+- Open the papaya CMS backend and go to menu item "Moduels", Packages -> "Advanced Community" and
+  choose the table "papaya_acommunity_notifications"
+- Go to the menu item "Import data" on the upper right side
+- Choose the corresponding CSV file from the "import-data" folder
+- Confirm the upload form
+- Choose the table "papaya_acommunity_notification_trans"
+- Go to the menu item "Import data" on the upper right side
+- Choose the corresponding CSV file from the "import-data" folder
+- Confirm the upload form
+
+After that the modules will send notifications by message. The delivery of notifications by email
+is disabled by default.
+
+But you can change this default behaviour by changing module options in the Advanced Community connector:
+- Sender E-Mail, an email address used as sender address for email notifications
+- Sender Name, a name used as sender name for email notifications
+- Notify By Message, notifications for new surfers by message as default yes/no
+- Notify By E-Mail, notifications for new surfers by email as default yes/no
+
+There are three notifications which get supported:
+- new-surfer-comment, if another surfer posts a new comment on a surfer page
+- new-surfer-image-comment, if another surfer posts a image comment in the surfer's gallery
+- new-contact-request, if a surfer requests a contact on another surfer
+
+The settings to deliver notification can be changed by each surfer on a "Notification Settings Page".
+
+== Performance / Caching ==
+
+You can improve the performance of your community page by caching pages and boxes.
+You can find the cache settings in the backend menu item "Settings" -> "Options" -> "Cache".
+A description of the options is here: http://goo.gl/aYPK6
+
+I recommend to set PAPAYA_CACHE_BOXES = on and PAPAYA_CACHE_PAGES = on.
+You should set the cache time settings for each page and box individually.
+
+If you can install php modules, i recommend to install the APC extension and to set
+PAPAYA_CACHE_SERVICE = APC. Also see http://goo.gl/aYPK6 and http://php.net/manual/en/book.apc.php
+
+=== Caching Community ===
+
+It is not recommend to cache the login-, registration and profile page, because these modules
+load and save data dynamically.
+
+=== Caching Advanced Community ===
+
+Most of the modules support a hight cache time, because the cache content will be resetted
+automatically if some data get changed. If your community has a high user acitivity, the real
+cache times can be much lesser than the following suggestions. High cache times are great for
+areas with a low surfer activity but a high hit count.
+
+Here is a list of suggestions for cache time by module:
+
+- Surfer Page
+-- E.g. 604800 seconds
+-- The page detects a surfer request change
+-- The page detects a change of contact status between the active and selected surfer
+-- The page detects a change of surfer's data
+-- The caching will be disabled on command parameters to allow repeated changes of the surfer's
+   contact status
+
+- Surfer Editor Page
+-- The cache will be disabled by default, because data will be loaded and saved dynamically
+
+- Surfer Status Box
+-- E.g. 604800 seconds
+-- The box detects changes of relevant data
+--- Observes the current surfer and changes in contacts
+
+- Commenters Ranking Box
+-- E.g. 1800 seconds
+-- The box does not detect changes of relevant data, because the computing of changes would be to
+   extensive
+--- You can set a lower cache time to get a better up-to-dateness, choose for yourself how far you
+    change this setting
+
+- Page/Surfer/Image Comments Box
+-- E.g. 604800 seconds
+-- The cache will be disabled for surfers with login, because the reply form needs a valid token
+-- Cache for all surfers without active login
+--- The box detects changes of relevant data
+---- Observes ressource type (page/surfer/image), ressource id, timestamp of last comments' change
+---- Observes parameter command, comment_id and all comment_page parameters
+
+-- Comments Ranking Box
+-- E.g. 604800 seconds
+-- The box detects changes of comments to refresh the cache content
+
+- Surfer Contacts Page
+-- E.g. 604800 seconds
+-- The box detects changes of relevant data
+--- Observes the current active surfer and the last change time of all contact types
+--- Observes the parameter command, surfer_handle and all ..._list_page parameters
+--- The caching will be disabled on command parameter to allow contact status changes
+
+- Surfer Contacts Box
+-- E.g. 604800 seconds
+-- The box detects changes of relevant data
+--- Observes the current selected surfer, the last change time of surfer's contacts and the
+    parameter contacts_list_page
+-- You can change the constant PAPAYA_ACOMMUNITY_CACHE_CONTACTS_BOX_USE_LAST_CHANGE_TIME to 0 in
+   papaya-lib/modules/externale/ACommunity/Surfers/Box.php if you use the box without paging and
+   if the actuallity of the contents is less important. On active option the module will ignore
+   the last change time of contacts. In this mode changes of the list do not have any effect on the
+   cached output.
+--- In this case you should set the cache time to e.g. 1800 seconds, to get a relative current content
+
+- Surfers Last Action Box
+-- E.g. 604800 seconds
+-- This box detects changes of relevant data
+--- Observes th last timestamp of the surfer property "lastaction"
+    and the parameter lastaction_list_page
+-- Depending on the activity rate of the whole community the update rate of this box can be very high,
+   or follow the next point to get a lesser update rate
+-- You can change the constant PAPAYA_ACOMMUNITY_CACHE_LAST_ACTIONS_BOX_USE_LAST_TIME to 0 in
+   papaya-lib/modules/externale/ACommunity/Surfers/Box.php if you use the box without paging and
+   if the actuallity of the contents is less important. On active option the module will ignore
+   the last action time. In this mode changes of the list do not have any effect on the
+   cached output.
+--- In this case you should set the cache time to e.g. 300 seconds, to get a relative current content
+
+- Surfers Registrations Box
+-- E.g. 604800 seconds
+-- This box detects changes of relevant data
+--- Observes th last timestamp of the surfer property "registration"
+    and the parameter registration_list_page
+-- Depending on the activity rate of the whole community the update rate of this box can be high,
+   or follow the next point to get a lesser update rate
+-- You can change the constant PAPAYA_ACOMMUNITY_CACHE_REGISTRATIONS_BOX_USE_LAST_TIME to 0 in
+   papaya-lib/modules/externale/ACommunity/Surfers/Box.php if you use the box without paging and
+   if the actuallity of the contents is less important. On active option the module will ignore
+   the last registration time. In this mode changes of the list do not have any effect on the
+   cached output.
+--- In this case you should set the cache time to e.g. 1800 seconds, to get a relative current content
+
+- Surfer Gallery Page
+-- E.g. 604800 seconds
+-- The caching detects changes of relevant data
+--- Observes current selected surfer, current selected folder, the last change timestamp of images
+    in the selected folder and the parameters command, id, index, offset, enlarge
+
+- Surfer Gallery Folders Box
+-- E.g. 604800 seconds
+-- The cache will be disabled if a active surfer corresponds to the selected surfer and the command
+   "Add folder" has been performed, because the form to add needs a valid token
+-- Otherwise the cache is active and observes changes of relevant data
+--- Observes the last change time of gallery folders and the parameters command and folder_id
+
+- Surfer Gallery Upload Box
+-- E.g. 604800 seconds
+-- The cache will be disabled, if the upload form appears, because it needs a valid token
+-- Otherwise the cache ist active, but the benefit of an active cache in this module is small
+
+- Surfer Gallery Teaser Box
+-- E.g. 604800 seconds
+-- Caching observes the selected surfer and the last change time of images in the base folder,
+   additionally it observes if the current surfer is the owner of the gallery
+
+- Message Conversations Box
+-- E.g. 604800 seconds
+-- This box detects changes of relevant data
+--- Observes the current active surfer and the timestamp of the last conversation
+
+- Messages Page
+-- E.g. 604800 seconds
+-- The cache will be disabled for messages between surfers view, because the reply form needs
+   a valid token
+-- The cache will be activated for notification (messages) view
+--- This view mode detects changes of relevant data
+--- Observes the current active surfer, the timestamp of the last notification and the parameter
+    messages_page
+
+- Notification Settings Page
+-- The cache will be disabled by default, because the module loads and save data dynamically
+
+== URL processing in text ==
+
+Text contents in comments and messages are filtered automatically.
+In this process URLs get identified and linked:
+- Regular URLs get an a-tag
+- Image URLs get an a-tag too
+-- but optional you can activate "Text Thumnails" in "Modules" -> Packages: "Advanced Community"
+   -> Module: "Connector" -> "Options"
+--- In this mode the comment / message content gets Thumbnails of the Image URLs additionally.
+    These thumbnails will be displayed below the text content after that.
