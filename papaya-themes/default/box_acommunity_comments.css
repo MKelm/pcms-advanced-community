@@ -28,8 +28,12 @@
   float: left;
   margin-right: 0.5em;
 }
-.comments .comment .commentExtras .commentExtrasReply {
+.comments .comment .commentExtras .commentExtrasReply,
+.comments .comment .commentExtras .commentExtrasDelete {
   float: right;
+}
+.comments .comment .commentExtras .commentExtrasDelete {
+  margin-right: 0.5em;
 }
 .comments.indent {
   margin-top: 1em;

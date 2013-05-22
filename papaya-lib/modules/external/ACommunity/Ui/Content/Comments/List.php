@@ -84,6 +84,10 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
             $comment->linkReply = $commandLinks[$id]['reply'];
             $comment->linkReplyCaption = $this->data()->captions['command_reply'];
           }
+          if (isset($commandLinks[$id]['delete'])) {
+            $comment->linkDelete = $commandLinks[$id]['delete'];
+            $comment->linkDeleteCaption = $this->data()->captions['command_delete'];
+          }
           if (isset($commandLinks[$id]['vote_up'])) {
             $comment->linkVoteUp = $commandLinks[$id]['vote_up'];
             $comment->linkVoteUpCaption = $this->data()->captions['command_vote_up'];

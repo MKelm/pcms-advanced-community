@@ -35,6 +35,11 @@
           <xsl:variable name="anchor">
             <xsl:text>comment_</xsl:text><xsl:value-of select="@id" />
           </xsl:variable>
+          <xsl:variable name="previousAnchor">
+            <xsl:if test="position() &gt; 1">
+              <xsl:text>comment_</xsl:text><xsl:value-of select="preceding-sibling::comment/@id" />
+            </xsl:if>
+          </xsl:variable>
           <a name="{$anchor}"><xsl:text> </xsl:text></a>
           <div class="comment">
             <div class="commentSurferAvatar"><a href="{surfer/@page-link}"><img src="{surfer/@avatar}" alt="" /></a></div>
@@ -64,6 +69,7 @@
                 <xsl:call-template name="acommunity-comments-comment-extras">
                   <xsl:with-param name="commandLinks" select="command-links/link" />
                   <xsl:with-param name="anchor" select="$anchor" />
+                  <xsl:with-param name="previousAnchor" select="$previousAnchor" />
                 </xsl:call-template>
                 <xsl:call-template name="float-fix" />
               </div>
@@ -97,6 +103,7 @@
   <xsl:template name="acommunity-comments-comment-extras">
     <xsl:param name="commandLinks" />
     <xsl:param name="anchor" />
+    <xsl:param name="previousAnchor" />
 
     <div class="commentExtras">
       <div class="commentExtrasVotesScore"><xsl:value-of select="@votes_score" /></div>
@@ -113,6 +120,11 @@
         </xsl:if>
         <xsl:text> </xsl:text>
       </div>
+      <xsl:if test="$commandLinks[@name = 'delete']">
+        <div class="commentExtrasDelete">
+          <a class="commentExtrasDeleteLink" href="{$commandLinks[@name = 'delete']/text()}#{$previousAnchor}"><xsl:value-of select="$commandLinks[@name = 'delete']/@caption" /></a>
+        </div>
+      </xsl:if>
     </div>
   </xsl:template>
 

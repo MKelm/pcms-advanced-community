@@ -188,12 +188,12 @@ class ACommunityCommentsData extends ACommunityUiContentData {
    */
   protected function _getCommandLinks(&$links, $commentsList, $votingCookieData) {
     if (!empty($commentsList['data'])) {
+      $surferIsModerator = $this->surferIsModerator();
       foreach ($commentsList['data'] as $id => $comment) {
 
         $links[$id]['reply'] = NULL;
         if (isset($comment['childs'])) {
-          $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
-          if ($currentSurfer->isValid) {
+          if ($this->papaya()->surfer->isValid) {
             $reference = clone $this->reference();
             $reference->setParameters(
               array(
@@ -203,6 +203,17 @@ class ACommunityCommentsData extends ACommunityUiContentData {
               $this->owner->parameterGroup()
             );
             $links[$id]['reply'] = $reference->getRelative();
+          }
+          if ($surferIsModerator) {
+            $reference = clone $this->reference();
+            $reference->setParameters(
+              array(
+                'command' => 'delete',
+                'comment_id' => $id
+              ),
+              $this->owner->parameterGroup()
+            );
+            $links[$id]['delete'] = $reference->getRelative();
           }
         }
 

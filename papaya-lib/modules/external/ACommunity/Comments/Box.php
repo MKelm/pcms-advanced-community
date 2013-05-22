@@ -80,6 +80,9 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
     'caption_command_vote_down' => array(
       'Vote Down', 'isNoHTML', TRUE, 'input', 200, '', '[ - ]'
     ),
+    'caption_command_delete' => array(
+      'Delete', 'isNoHTML', TRUE, 'input', 200, 'Command for moderators.', 'Delete'
+    ),
     'Messages',
     'message_dialog_input_error' => array(
       'Dialog Input Error', 'isNoHTML', TRUE, 'input', 200, '',
@@ -182,7 +185,7 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
       $this->data,
       array(
         'caption_dialog_text', 'caption_dialog_button', 'caption_command_reply',
-        'caption_command_vote_up', 'caption_command_vote_down'
+        'caption_command_vote_up', 'caption_command_vote_down', 'caption_command_delete'
       ),
       array('message_dialog_input_error')
     );

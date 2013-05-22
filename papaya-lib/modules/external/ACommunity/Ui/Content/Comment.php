@@ -88,6 +88,20 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
   protected $_linkReplyCaption = NULL;
 
   /**
+  * Link to delete
+  *
+  * @var string
+  */
+  protected $_linkDelete = NULL;
+
+  /**
+  * Link to delete caption
+  *
+  * @var string
+  */
+  protected $_linkDeleteCaption = NULL;
+
+  /**
   * Link to vote up
   *
   * @var string
@@ -137,6 +151,8 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
     'votesScore' => array('_votesScore', '_votesScore'),
     'linkReply' => array('_linkReply', '_linkReply'),
     'linkReplyCaption' => array('_linkReplyCaption', '_linkReplyCaption'),
+    'linkDelete' => array('_linkDelete', '_linkDelete'),
+    'linkDeleteCaption' => array('_linkDeleteCaption', '_linkDeleteCaption'),
     'linkVoteUp' => array('_linkVoteUp', '_linkVoteUp'),
     'linkVoteUpCaption' => array('_linkVoteUpCaption', '_linkVoteUpCaption'),
     'linkVoteDown' => array('_linkVoteDown', '_linkVoteDown'),
@@ -212,6 +228,12 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
       $links->appendElement(
         'link', array('name' => 'reply', 'caption' => $this->linkReplyCaption),
         PapayaUtilStringXml::escape($this->linkReply)
+      );
+    }
+    if (!is_null($this->linkDelete)) {
+      $links->appendElement(
+        'link', array('name' => 'delete', 'caption' => $this->linkDeleteCaption),
+        PapayaUtilStringXml::escape($this->linkDelete)
       );
     }
     if (!is_null($this->linkVoteUp)) {

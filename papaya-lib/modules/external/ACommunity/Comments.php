@@ -65,45 +65,55 @@ class ACommunityComments extends ACommunityUiContent {
   public function performCommands() {
     $command = $this->parameters()->get('command', '');
     $commentId = $this->parameters()->get('comment_id', 0);
-    if ($command == 'vote_up' || $command == 'vote_down') {
-      if ($commentId > 0) {
-        $change = 0;
+    if (!empty($command) && $commentId > 0) {
+      $lastChange = 0;
+      if ($command == 'vote_up' || $command == 'vote_down') {
         $votingCookieData = $this->data()->votingCookie();
-        $comment = clone $this->data()->comment();
-        $comment->load($commentId);
         if (empty($votingCookieData[$commentId])) {
+          $comment = clone $this->data()->comment();
+          $comment->load($commentId);
+          $vote = 0;
           switch ($command) {
             case 'vote_up':
               $comment->assign(array('votes_score' => $comment['votes_score'] + 1));
               if ($comment->save()) {
-                $change = 1;
+                $vote = 1;
               }
               break;
             case 'vote_down':
               $comment->assign(array('votes_score' => $comment['votes_score'] - 1));
               if ($comment->save()) {
-                $change = -1;
+                $vote = -1;
               }
               break;
           }
+          if ($vote != 0) {
+            $votingCookieData[$commentId] = $vote;
+            $this->data()->votingCookie($votingCookieData);
+            $lastChange = time();
+          }
         }
-        if ($change != 0) {
-          $votingCookieData[$commentId] = $change;
-          $this->data()->votingCookie($votingCookieData);
-          $ressource = $this->data()->ressource();
-          $lastChange = clone $this->data()->lastChange();
-          $lastChange->assign(
-            array(
-              'ressource' => 'comments:'.$ressource['type'].'_'.$ressource['id'],
-              'time' => time()
-            )
-          );
-          $lastChange->save();
-          $this->data()->lastChange()->assign(
-            array('ressource' => 'comments', 'time' => time())
-          );
-          $this->data()->lastChange()->save();
+      } elseif ($command == 'delete') {
+        $comment = clone $this->data()->comment();
+        $comment->load($commentId);
+        if ($comment->delete()) {
+          $lastChange = time();
         }
+      }
+      if ($lastChange > 0) {
+        $ressource = $this->data()->ressource();
+        $lastChange = clone $this->data()->lastChange();
+        $lastChange->assign(
+          array(
+            'ressource' => 'comments:'.$ressource['type'].'_'.$ressource['id'],
+            'time' => $lastChange
+          )
+        );
+        $lastChange->save();
+        $this->data()->lastChange()->assign(
+          array('ressource' => 'comments', 'time' => time())
+        );
+        $this->data()->lastChange()->save();
       }
       $this->parameters()->set('command', 'reply');
       $this->parameters()->set('comment_id', 0);
