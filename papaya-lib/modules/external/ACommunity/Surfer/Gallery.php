@@ -92,13 +92,11 @@ class ACommunitySurferGallery extends MediaImageGallery {
           } else {
             $ressource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
           }
-          var_dump($ressource);
           $this->data()->lastChange()->assign(
             array('ressource' => $ressource, 'time' => time())
           );
           $this->data()->lastChange()->save();
         }
-        var_dump(1);
       }
     }
   }
