@@ -47,7 +47,7 @@
           <xsl:with-param name="pageContent" select="$pageContent"/>
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="$pageContent/@module = 'ACommunitySurferContactsPage' or $pageContent/@module = 'ACommunitySurfersLastActionPage' or $pageContent/@module = 'ACommunitySurfersRegistrationPage'">
+      <xsl:when test="$pageContent/@module = 'ACommunitySurferContactsPage' or $pageContent/@module = 'ACommunitySurfersLastActionPage' or $pageContent/@module = 'ACommunitySurfersPage'">
         <xsl:call-template name="acommunity-surfers">
           <xsl:with-param name="content" select="$pageContent/acommunity-surfers"/>
         </xsl:call-template>

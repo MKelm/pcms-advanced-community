@@ -31,7 +31,7 @@
           <xsl:with-param name="content" select="$content" />
         </xsl:call-template>
         <xsl:call-template name="acommunity-content-paging">
-          <xsl:with-param name="paging" select="paging" />
+          <xsl:with-param name="paging" select="$content/paging" />
           <xsl:with-param name="additionalClass" select="'surfersPaging'" />
         </xsl:call-template>
       </xsl:otherwise>

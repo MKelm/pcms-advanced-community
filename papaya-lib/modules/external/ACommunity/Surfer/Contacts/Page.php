@@ -91,6 +91,61 @@ class ACommunitySurferContactsPage extends ACommunitySurfersPage {
   );
 
   /**
+   * Names of caption data
+   * @var array
+   */
+  protected $_captionNames = array('caption_contacts', 'caption_own_contact_requests',
+    'caption_contact_requests', 'caption_command_accept_contact_request',
+    'caption_command_decline_contact_request', 'caption_command_remove_contact_request',
+    'caption_command_remove_contact');
+
+  /**
+   * Names of message data
+   * @var array
+   */
+  protected $_messageNames = array('message_empty_list');
+
+  /**
+   * Define the cache definition for output.
+   *
+   * @see PapayaPluginCacheable::cacheable()
+   * @param PapayaCacheIdentifierDefinition $definition
+   * @return PapayaCacheIdentifierDefinition
+   */
+  public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $definitionValues = array('acommunity_surfers_page', $this->_displayMode);
+      $definitionParameters = array();
+      include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+      $values = new ACommunityCacheIdentifierValues();
+      $ressource = $this->setRessourceData();
+      if (!empty($ressource)) {
+        $command = $this->surfers()->parameters()->get('command', NULL);
+        if (empty($command)) {
+          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = $values->lastChangeTime('contacts:surfer_'.$ressource['id']);
+          $definitionParameters[] = 'contacts_list_page';
+          $definitionParameters[] = 'own_contact_requests_list_page';
+          $definitionParameters[] = 'contact_requests_list_page';
+          $definitionParameters[] = 'surfer_handle';
+          $definitionParameters[] = 'command';
+        } else {
+          $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+        }
+      }
+      if (is_null($this->_cacheDefiniton)) {
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
+        );
+      }
+    }
+    return $this->_cacheDefiniton;
+  }
+
+  /**
    * Check url name to fix wrong page names
    *
    * @param string $currentFileName
@@ -99,5 +154,12 @@ class ACommunitySurferContactsPage extends ACommunitySurfersPage {
   public function checkURLFileName($currentFileName, $outputMode) {
     $this->setRessourceData();
     return $this->surfers()->checkURLFileName($this, $currentFileName, $outputMode, 's-contacts');
+  }
+
+  /**
+   * Set surfer ressource data to load corresponding surfer
+   */
+  public function setRessourceData() {
+    return $this->surfers()->data()->ressource('surfer', $this);
   }
 }

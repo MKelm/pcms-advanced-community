@@ -98,6 +98,11 @@
             name="Notifcation Settings Page"
             class="ACommunityNotificationSettingsPage"
             file="Notification/Settings/Page.php">Shows settings for all available notifications to the current surfer</module>
+    <module type="page"
+            guid="2293efa2ec9d4b7cb0d09069232b2ef2"
+            name="Surfers Page"
+            class="ACommunitySurfersPage"
+            file="Surfers/Page.php">Shows a list of surfers, searchable and with fiters</module>
     <module type="connector"
             guid="0badeb14ea2d41d5bcfd289e9d190534"
             name="Connector"

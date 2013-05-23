@@ -27,19 +27,19 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-abstract class ACommunitySurfersPage extends base_content implements PapayaPluginCacheable {
+class ACommunitySurfersPage extends base_content implements PapayaPluginCacheable {
 
   /**
    * Use a advanced community parameter group name
    * @var string
    */
-  public $paramName = '';
+  public $paramName = 'acss';
 
   /**
    * Display mode
    * @var string
    */
-  protected $_displayMode = '';
+  protected $_displayMode = 'surfers';
 
   /**
    * Edit fields
@@ -55,53 +55,33 @@ abstract class ACommunitySurfersPage extends base_content implements PapayaPlugi
          'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
        ), '', 'mincrop'
     ),
-    'timeframe' => array(
-      'Timeframe in days', 'isNum', TRUE, 'input', 30,
-      'Get surfers by last action or registration time in a specified timeframe.', 365
-    ),
     'limit' => array(
-      'Limit', 'isNum', TRUE, 'input', 30,
-      "Note: The contacts display mode has three lists for contacts,
-      received contact requests and sent contact requests.",
-      5
+      'Limit', 'isNum', TRUE, 'input', 30, '', 15
     ),
     'show_paging' => array(
-      'Show paging', 'isNum', TRUE, 'yesno', NULL, 'Note: The contacts display mode needs paging.', 1
+      'Show paging', 'isNum', TRUE, 'yesno', NULL, '', 1
     ),
     'Captions',
-    'caption_contacts' => array(
-      'Contacts', 'isNoHTML', TRUE, 'input', 200, '', 'Contacts'
-    ),
-    'caption_own_contact_requests' => array(
-      'Sent contact requests', 'isNoHTML', TRUE, 'input', 200, '', 'Sent contact requests'
-    ),
-    'caption_contact_requests' => array(
-      'Received contact requests', 'isNoHTML', TRUE, 'input', 200, '', 'Received contact requests'
-    ),
-    'caption_last_action' => array(
-      'Last Action', 'isNoHTML', TRUE, 'input', 200, '', 'Last action'
-    ),
-    'caption_registration' => array(
-      'Registered Since', 'isNoHTML', TRUE, 'input', 200, '', 'Registered sine'
-    ),
-    'Command Captions',
-    'caption_command_accept_contact_request' => array(
-      'Accept contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Accept contact request'
-    ),
-    'caption_command_decline_contact_request' => array(
-      'Decline contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Decline contact request'
-    ),
-    'caption_command_remove_contact_request' => array(
-      'Remove contact request', 'isNoHTML', TRUE, 'input', 200, '', 'Remove contact request'
-    ),
-    'caption_command_remove_contact' => array(
-      'Remove contact', 'isNoHTML', TRUE, 'input', 200, '', 'Remove contact'
+    'caption_surfers' => array(
+      'Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Surfers'
     ),
     'Messages',
     'message_empty_list' => array(
       'No Entries', 'isNoHTML', TRUE, 'input', 200, '', 'No entries.'
     )
   );
+
+  /**
+   * Names of caption data
+   * @var array
+   */
+  protected $_captionNames = array('caption_surfers');
+
+  /**
+   * Names of message data
+   * @var array
+   */
+  protected $_messageNames = array('message_empty_list');
 
   /**
    * Surfers object
@@ -130,33 +110,8 @@ abstract class ACommunitySurfersPage extends base_content implements PapayaPlugi
       $definitionParameters = array();
       include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
       $values = new ACommunityCacheIdentifierValues();
-      switch ($this->_displayMode) {
-        case 'lastaction':
-          $definitionParameters[] = 'lastaction_list_page';
-          $definitionValues[] = $values->surferLastActionTime();
-          break;
-        case 'registration':
-          $definitionParameters[] = 'registration_list_page';
-          $definitionValues[] = $values->surferLastRegistrationTime();
-          break;
-        case 'contacts_and_requests':
-          $ressource = $this->setRessourceData();
-          if (!empty($ressource)) {
-            $command = $this->surfers()->parameters()->get('command', NULL);
-            if (empty($command)) {
-              $definitionValues[] = $ressource['id'];
-              $definitionValues[] = $values->lastChangeTime('contacts:surfer_'.$ressource['id']);
-              $definitionParameters[] = 'contacts_list_page';
-              $definitionParameters[] = 'own_contact_requests_list_page';
-              $definitionParameters[] = 'contact_requests_list_page';
-              $definitionParameters[] = 'surfer_handle';
-              $definitionParameters[] = 'command';
-            } else {
-              $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-            }
-          }
-          break;
-      }
+      $definitionParameters[] = 'surfers';
+      //$definitionValues[] = $values->surferLastActionTime();
       if (is_null($this->_cacheDefiniton)) {
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
           new PapayaCacheIdentifierDefinitionValues($definitionValues),
@@ -165,13 +120,6 @@ abstract class ACommunitySurfersPage extends base_content implements PapayaPlugi
       }
     }
     return $this->_cacheDefiniton;
-  }
-
-  /**
-   * Set surfer ressource data to load corresponding surfer
-   */
-  public function setRessourceData() {
-    return $this->surfers()->data()->ressource('surfer', $this);
   }
 
   /**
@@ -187,8 +135,16 @@ abstract class ACommunitySurfersPage extends base_content implements PapayaPlugi
       $this->_surfers = new ACommunitySurfers();
       $this->_surfers->parameterGroup($this->paramName);
       $this->_surfers->data()->languageId = $this->papaya()->request->languageId;
+      $this->_surfers->data()->displayMode = $this->_displayMode;
     }
     return $this->_surfers;
+  }
+
+  /**
+   * Set surfer ressource data to load corresponding surfer
+   */
+  public function setRessourceData() {
+    return NULL;
   }
 
   /**
@@ -201,14 +157,7 @@ abstract class ACommunitySurfersPage extends base_content implements PapayaPlugi
     $this->setRessourceData();
     $this->setDefaultData();
     $this->surfers()->data()->setPluginData(
-      $this->data,
-      array(
-        'caption_last_action', 'caption_registration',
-        'caption_contacts', 'caption_own_contact_requests', 'caption_contact_requests',
-        'caption_command_accept_contact_request', 'caption_command_decline_contact_request',
-        'caption_command_remove_contact_request', 'caption_command_remove_contact'
-      ),
-      array('message_empty_list')
+      $this->data, $this->_captionNames, $this->_messageNames
     );
     return $this->surfers()->getXml();
   }
