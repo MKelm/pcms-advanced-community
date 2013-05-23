@@ -84,11 +84,13 @@ class ACommunitySurfersData extends ACommunityUiContentData {
   protected $_contactChanges = NULL;
 
   /**
-   * A regular expression to filter reference parameters by name
-   * @var string
+   * Set reference parameters expression on construct
    */
-  protected $_referenceParametersExpression =
-    '(lastaction|registration|contacts|own_contact_requests|contact_requests)_list_page';
+  public function __construct() {
+    $this->_referenceParametersExpression =
+      '(lastaction|registration|contacts|own_contact_requests|contact_requests)_list_page'.
+      '|surfers_search|surfers_character';
+  }
 
   /**
    * Set data by plugin object
@@ -243,13 +245,13 @@ class ACommunitySurfersData extends ACommunityUiContentData {
         break;
       case 'surfers':
         $page = $this->owner->parameters()->get('surfers_list_page', 0);
-        $filter = $this->owner->parameters()->get('filter', NULL);
-        if (!empty($filter)) {
+        $character = $this->owner->parameters()->get('surfers_character', NULL);
+        if (!empty($character)) {
           $patternFirstChar = TRUE;
-          $search = $filter;
+          $search = $character;
         } else {
           $patternFirstChar = FALSE;
-          $search = $this->owner->parameters()->get('search', NULL);
+          $search = $this->owner->parameters()->get('surfers_search', NULL);
           if (!empty($search)) {
             $search = explode(' ', $search);
           }
@@ -259,7 +261,7 @@ class ACommunitySurfersData extends ACommunityUiContentData {
         switch ($displayModeSurferName) {
           case 'all':
             $orderBy = array('surfer_givenname', 'surfer_handle', 'surfer_surname');
-            if (!empty($filter)) {
+            if (!empty($character)) {
               $searchFields = array('surfer_givenname');
             } else {
               $searchFields = NULL;
@@ -267,7 +269,7 @@ class ACommunitySurfersData extends ACommunityUiContentData {
             break;
           case 'names':
             $orderBy = array('surfer_givenname', 'surfer_surname');
-            if (!empty($filter)) {
+            if (!empty($character)) {
               $searchFields = array('surfer_givenname');
             } else {
               $searchFields = array('surfer_givenname', 'surfer_surname');
@@ -283,7 +285,7 @@ class ACommunitySurfersData extends ACommunityUiContentData {
             break;
           case 'surname':
             $orderBy = array('surfer_surname');
-            $orderBy = array('surfer_surname');
+            $searchFields = array('surfer_surname');
             break;
         }
         $surfers = $this->owner->communityConnector()->searchSurfers(

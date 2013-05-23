@@ -154,14 +154,16 @@ class ACommunitySurfers extends ACommunityUiContent {
       'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
     foreach ($abc as $character) {
       $reference = clone $this->data()->reference();
-      $reference->setParameters(array('filter' => $character), $this->parameterGroup());
+      $reference->setParameters(array('surfers_character' => $character), $this->parameterGroup());
       $filterNavigation->appendElement(
         'character', array('href' => $reference->getRelative()), $character
       );
     }
+    $reference = clone $this->data()->reference();
+    $reference->setParameters(array('surfers_character' => ''), $this->parameterGroup());
     $filterNavigation->appendElement(
       'character',
-      array('href' => $this->data()->reference()->getRelative()),
+      array('href' => $reference->getRelative()),
       $this->data()->captions['all']
     );
   }
@@ -188,7 +190,7 @@ class ACommunitySurfers extends ACommunityUiContent {
 
     $dialog->fields[] = $field = new PapayaUiDialogFieldInput(
       $this->data()->captions['dialog_search'],
-      'search',
+      'surfers_search',
       200,
       NULL,
       new PapayaFilterText(PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS)
