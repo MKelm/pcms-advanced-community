@@ -48,6 +48,12 @@ class ACommunitySurferEditorPage extends content_profile implements PapayaPlugin
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Advanced Community connector
+   * @var ACommunityConnector
+   */
+  protected $_acommunityConnector = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -104,16 +110,77 @@ class ACommunitySurferEditorPage extends content_profile implements PapayaPlugin
    * @return boolean
    */
   function saveProfileData() {
+    $surferNameChange = $this->_detectSurferNameChange();
     $result = parent::saveProfileData();
     $surferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
       $this->papaya()->surfer->surfer['surfer_id'] : NULL;
     if ($result == TRUE && !is_null($surferId)) {
       $surferId = $this->papaya()->surfer->surfer['surfer_id'];
-      $this->surfer()->data()->lastChange()->assign(
+      $lastChange = clone $this->surfer()->data()->lastChange();
+      $lastChange->assign(
         array('ressource' => 'surfer:surfer_'.$surferId, 'time' => time())
       );
-      $this->surfer()->data()->lastChange()->save();
+      $lastChange->save();
+      if ($surferNameChange) {
+        $lastChange = clone $this->surfer()->data()->lastChange();
+        $lastChange->assign(array('ressource' => 'surfer_names', 'time' => time()));
+        $lastChange->save();
+      }
     }
     return $result;
+  }
+
+  /**
+   * Detect surfer name change to allow a correct cache invalidation in surfers page
+   *
+   * @return boolean
+   */
+  protected function _detectSurferNameChange() {
+    $displayModeSurferName = $this->acommunityConnector()->getDisplayModeSurferName();
+    switch ($displayModeSurferName) {
+      case 'all':
+        $nameFields = array('surfer_givenname', 'surfer_handle', 'surfer_surname');
+        break;
+      case 'names':
+        $nameFields = array('surfer_givenname', 'surfer_surname');
+        break;
+      case 'handle':
+        $nameFields = array('surfer_handle');
+        break;
+      case 'givenname':
+        $nameFields = array('surfer_givenname');
+        break;
+      case 'surname':
+        $nameFields = array('surfer_surname');
+        break;
+    }
+    if (!empty($nameFields)) {
+      $changed = FALSE;
+      foreach ($nameFields as $nameField) {
+        if ($this->papaya()->surfer->surfer[$nameField] != $this->profileForm->data[$nameField]) {
+          $changed = TRUE;
+        }
+      }
+      return $changed;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get/set advanced community connector
+   *
+   * @param object $connector
+   * @return object
+   */
+  public function acommunityConnector(ACommunityConnector $connector = NULL) {
+    if (isset($connector)) {
+      $this->_acommunityConnector = $connector;
+    } elseif (is_null($this->_acommunityConnector)) {
+      include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
+      $this->_acommunityConnector = base_pluginloader::getPluginInstance(
+        '0badeb14ea2d41d5bcfd289e9d190534', $this
+      );
+    }
+    return $this->_acommunityConnector;
   }
 }
