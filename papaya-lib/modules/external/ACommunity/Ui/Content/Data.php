@@ -216,6 +216,13 @@ class ACommunityUiContentData extends PapayaObject {
     }
   }
 
+  /**
+   * Get surfer name by surfer data and display mode surfer name option
+   *
+   * @param array $surfer
+   * @param string $displayModeSurferName
+   * @return string
+   */
   protected function _getSurferName($surfer, $displayModeSurferName = NULL) {
     $name = NULL;
     $displayModeName = is_null($displayModeSurferName) ?
