@@ -36,8 +36,16 @@
 }
 
 /*
- CSS rules for ACommunitySurfersListPage
+ CSS rules for ACommunitySurfersPage / ACommunitySurferContactsPage
 */
+#content .surfersFilterNavigation {
+
+}
+#content .surfersFilterNavigation li {
+  display: inline;
+  background-position: 0 0.2em;
+  margin-right: 0.5em;
+}
 #content .surfersMessage {
   margin-top: 1em;
   margin-bottom: 1em;

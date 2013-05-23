@@ -65,6 +65,9 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     'caption_surfers' => array(
       'Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Surfers'
     ),
+    'caption_all' => array(
+      'All', 'isNoHTML', TRUE, 'input', 200, '', 'All'
+    ),
     'Messages',
     'message_empty_list' => array(
       'No Entries', 'isNoHTML', TRUE, 'input', 200, '', 'No entries.'
@@ -75,7 +78,7 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    * Names of caption data
    * @var array
    */
-  protected $_captionNames = array('caption_surfers');
+  protected $_captionNames = array('caption_surfers', 'caption_all');
 
   /**
    * Names of message data

@@ -76,7 +76,7 @@ class ACommunitySurfersData extends ACommunityUiContentData {
    * @var string
    */
   protected $_referenceParametersExpression =
-    '(lastaction|registration|contacts|own_contact_requests|contact_requests|surfers)_list_page';
+    '(lastaction|registration|contacts|own_contact_requests|contact_requests)_list_page';
 
   /**
    * Set data by plugin object
@@ -223,21 +223,49 @@ class ACommunitySurfersData extends ACommunityUiContentData {
         break;
       case 'surfers':
         $page = $this->owner->parameters()->get('surfers_list_page', 0);
-        $search = $this->owner->parameters()->get('search', NULL);
-        if (!empty($search)) {
-          $search = explode(' ', $search);
-        }
         $filter = $this->owner->parameters()->get('filter', NULL);
         if (!empty($filter)) {
-          $searchFields = array('surfer_givenname');
           $patternFirstChar = TRUE;
           $search = $filter;
         } else {
-          $searchFields = NULL;
           $patternFirstChar = FALSE;
+          $search = $this->owner->parameters()->get('search', NULL);
+          if (!empty($search)) {
+            $search = explode(' ', $search);
+          }
         }
         $offset = $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0;
-        $orderBy = array('surfer_givenname', 'surfer_handle', 'surfer_surname');
+        $displayModeSurferName = $this->owner->acommunityConnector()->getDisplayModeSurferName();
+        switch ($displayModeSurferName) {
+          case 'all':
+            $orderBy = array('surfer_givenname', 'surfer_handle', 'surfer_surname');
+            if (!empty($filter)) {
+              $searchFields = array('surfer_givenname');
+            } else {
+              $searchFields = NULL;
+            }
+            break;
+          case 'names':
+            $orderBy = array('surfer_givenname', 'surfer_surname');
+            if (!empty($filter)) {
+              $searchFields = array('surfer_givenname');
+            } else {
+              $searchFields = array('surfer_givenname', 'surfer_surname');
+            }
+            break;
+          case 'handle':
+            $orderBy = array('surfer_handle');
+            $searchFields = array('surfer_handle');
+            break;
+          case 'givenname':
+            $orderBy = array('surfer_givenname');
+            $searchFields = array('surfer_givenname');
+            break;
+          case 'surname':
+            $orderBy = array('surfer_surname');
+            $orderBy = array('surfer_surname');
+            break;
+        }
         $surfers = $this->owner->communityConnector()->searchSurfers(
           $search, $searchFields, FALSE, $orderBy, $this->pagingItemsPerPage, $offset, $patternFirstChar
         );
@@ -245,8 +273,6 @@ class ACommunitySurfersData extends ACommunityUiContentData {
         $this->pagingItemsAbsCount = $this->owner->communityConnector()->surferAdmin->surfersAbsCount;
         break;
     }
-
-
     $this->surfers = array();
     if (!empty($surfers)) {
       if ($this->displayMode == 'contacts_and_requests') {

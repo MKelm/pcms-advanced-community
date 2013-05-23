@@ -27,6 +27,9 @@
         </xsl:for-each>
       </xsl:when>
       <xsl:otherwise>
+        <xsl:call-template name="acommunity-surfers-filter-navigation">
+          <xsl:with-param name="content" select="$content/filter-navigation" />
+        </xsl:call-template>
         <xsl:call-template name="acommunity-surfers-surfer">
           <xsl:with-param name="content" select="$content" />
         </xsl:call-template>
@@ -36,6 +39,17 @@
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <xsl:template name="acommunity-surfers-filter-navigation">
+    <xsl:param name="content" />
+    <xsl:if test="$content">
+      <ul class="surfersFilterNavigation">
+        <xsl:for-each select="$content/character">
+          <li><a href="{@href}"><xsl:value-of select="." /></a></li>
+        </xsl:for-each>
+      </ul>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template name="acommunity-surfers-surfer">
