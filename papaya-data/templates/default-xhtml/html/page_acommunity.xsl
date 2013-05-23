@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml">
 <!--
-  @papaya:modules ACommunitySurferPage, ACommunitySurferGalleryPage, ACommunitySurferEditorPage, ACommunitySurferContactsPage, ACommunitySurfersLastActionPage, ACommunitySurfersRegistrationPage, ACommunityMessagesPage, ACommunityNotificationSettingsPage
+  @papaya:modules ACommunitySurferPage, ACommunitySurferGalleryPage, ACommunitySurferEditorPage,
+    ACommunitySurferContactsPage, ACommunitySurfersLastActionPage, ACommunitySurfersRegistrationPage,
+    ACommunityMessagesPage, ACommunityNotificationSettingsPage
 -->
 
 <!-- import main layout rules, this will import the default rules, too -->
