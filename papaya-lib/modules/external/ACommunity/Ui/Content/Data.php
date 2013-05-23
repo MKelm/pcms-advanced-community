@@ -141,7 +141,9 @@ class ACommunityUiContentData extends PapayaObject {
    * @param array|string $surferId one id or multiple ids
    * @return array
    */
-  public function getSurfer($surferId, $deletedSurferHandle = NULL, $extendedDetails = FALSE) {
+  public function getSurfer(
+           $surferId, $deletedSurferHandle = NULL, $details = NULL, $extendedDetails = FALSE
+         ) {
     $loadIds = array();
     if (is_array($surferId)) {
       foreach ($surferId as $id) {
@@ -154,7 +156,7 @@ class ACommunityUiContentData extends PapayaObject {
         $loadIds = array($surferId);
       }
     }
-    $this->_loadSurfers($loadIds, $deletedSurferHandle, $extendedDetails);
+    $this->_loadSurfers($loadIds, $deletedSurferHandle, $details, $extendedDetails);
     if (is_array($surferId)) {
       $result = array();
       foreach ($surferId as $id) {
@@ -173,15 +175,17 @@ class ACommunityUiContentData extends PapayaObject {
    * @param string $deletedSurferHandle
    * @param boolean $extendedDetails
    */
-  protected function _loadSurfers($loadIds, $deletedSurferHandle, $extendedDetails) {
+  protected function _loadSurfers($loadIds, $deletedSurferHandle, $details = NULL, $extendedDetails = FALSE) {
     if (!empty($loadIds)) {
       $avatarSize = isset($this->_surferAvatarSize) ? $this->_surferAvatarSize : 0;
       $avatarResizeMode = isset($this->_surferAvatarResizeMode) ? $this->_surferAvatarResizeMode : 'mincrop';
       $avatars = $this->owner->communityConnector()->getAvatar($loadIds, $avatarSize, TRUE, $avatarResizeMode);
-      $details = $extendedDetails ?
-        $this->owner->communityConnector()->loadSurfers($loadIds) :
-        $this->owner->communityConnector()->getNameById($loadIds);
-      $displayModeName = $this->owner->acommunityConnector()->getDisplayModeSurferName();
+      if (empty($details)) {
+        $details = $extendedDetails ?
+          $this->owner->communityConnector()->loadSurfers($loadIds) :
+          $this->owner->communityConnector()->getNameById($loadIds);
+      }
+      $displayModeSurferName = $this->owner->acommunityConnector()->getDisplayModeSurferName();
       foreach ($loadIds as $loadId) {
         $surfer = array(
           'id' => $loadId,
@@ -189,7 +193,6 @@ class ACommunityUiContentData extends PapayaObject {
           'avatar' => $avatars[$loadId],
           'page_link' => $this->owner->acommunityConnector()->getSurferPageLink($loadId)
         );
-
         if ($extendedDetails) {
           $surfer = array_merge(
             $surfer,
@@ -207,26 +210,43 @@ class ACommunityUiContentData extends PapayaObject {
         $surfer['handle'] = isset($details[$loadId]['surfer_handle']) ? $details[$loadId]['surfer_handle'] : $deletedSurferHandle;
         $surfer['givenname'] = isset($details[$loadId]['surfer_givenname']) ? $details[$loadId]['surfer_givenname'] : NULL;
         $surfer['surname'] = isset($details[$loadId]['surfer_surname']) ? $details[$loadId]['surfer_surname'] : NULL;
-        switch ($displayModeName) {
-          case 'all':
-            $surfer['name'] = sprintf("%s '%s' %s", $surfer['givenname'], $surfer['handle'], $surfer['surname']);
-            break;
-          case 'names':
-            $surfer['name'] = sprintf("%s %s", $surfer['givenname'], $surfer['surname']);
-            break;
-          case 'handle':
-            $surfer['name'] = $surfer['handle'];
-            break;
-          case 'givenname':
-            $surfer['name'] = $surfer['givenname'];
-            break;
-          case 'surname':
-            $surfer['name'] = $surfer['surname'];
-            break;
-        }
+        $surfer['name'] = $this->_getSurferName($surfer, $displayModeSurferName);
         $this->_surfers[$loadId] = $surfer;
       }
     }
+  }
+
+  protected function _getSurferName($surfer, $displayModeSurferName = NULL) {
+    $name = NULL;
+    $displayModeName = is_null($displayModeSurferName) ?
+      $this->owner->acommunityConnector()->getDisplayModeSurferName() : $displayModeSurferName;
+    switch ($displayModeName) {
+      case 'all':
+        $name = sprintf(
+          "%s '%s' %s",
+          isset($surfer['givenname']) ? $surfer['givenname'] : $surfer['surfer_givenname'],
+          isset($surfer['handle']) ? $surfer['handle'] : $surfer['surfer_handle'],
+          isset($surfer['surname']) ? $surfer['surname'] : $surfer['surfer_surname']
+        );
+        break;
+      case 'names':
+        $name = sprintf(
+          "%s %s",
+          isset($surfer['givenname']) ? $surfer['givenname'] : $surfer['surfer_givenname'],
+          isset($surfer['surname']) ? $surfer['surname'] : $surfer['surfer_surname']
+        );
+        break;
+      case 'handle':
+        $name = isset($surfer['handle']) ? $surfer['handle'] : $surfer['surfer_handle'];
+        break;
+      case 'givenname':
+        $name = isset($surfer['givenname']) ? $surfer['givenname'] : $surfer['surfer_givenname'];
+        break;
+      case 'surname':
+        $name = isset($surfer['surname']) ? $surfer['surname'] : $surfer['surfer_surname'];
+        break;
+    }
+    return $name;
   }
 
   /**

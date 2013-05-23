@@ -84,7 +84,7 @@ class ACommunitySurferData extends ACommunityUiContentData {
    */
   public function initialize() {
     $ressource = $this->ressource();
-    $this->surferBaseDetails = $this->getSurfer($ressource['id'], NULL, TRUE);
+    $this->surferBaseDetails = $this->getSurfer($ressource['id'], NULL, NULL, TRUE);
     if ($this->ressourceIsActiveSurfer == FALSE) {
       $this->sendMessageLink = $this->owner->acommunityConnector()->getMessagesPageLink(
         $ressource['id']
