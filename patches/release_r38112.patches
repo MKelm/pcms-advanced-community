@@ -1,177 +1,18 @@
-Index: papaya-themes/default/basic.css
+Index: papaya-lib/modules/_base/filter_xslt.php
 ===================================================================
---- papaya-themes/default/basic.css	(Revision 38500)
-+++ papaya-themes/default/basic.css	(Arbeitskopie)
-@@ -72,6 +72,9 @@
- 
- /* Forms
- ----------------------------------------------- */
-+form h2 {
-+  margin: 0.7em 0 0.2em 0;
-+}
- form p {
-   margin-bottom: .8em;
- }
-@@ -80,6 +83,9 @@
-   padding: 0;
-   border: none;
- }
-+form div.field {
-+  margin-top: 0.2em;
-+}
- form label {
-   display: block;
-   font-weight: bold;
-@@ -91,6 +97,8 @@
-   padding-left: .5em;
- }
- form input.text,
-+form input.password,
-+form input.file,
- form textarea,
- form select {
-   border: 1px solid #CCC;
-@@ -114,13 +122,27 @@
-   vertical-align: middle;
-   width: auto;
- }
-+form .radio {
-+  float: left;
-+  margin-right: 0.8em;
-+}
-+form input.radio {
-+  margin-right: 0.2em;
-+}
-+form div.buttons {
-+  margin-top: 15px;
-+}
- form button {
-   border: 1px solid #90A33B;
-   cursor: pointer;
-   font-weight: bold;
-   font-size: 100%;
-   padding: 1px;
-+  margin-right: 0.5em;
- }
-+form div.hint {
-+  margin-top: 0.3em;
-+}
- 
- 
- /* Accessibility
-@@ -184,7 +206,7 @@
-   font-size: 90%;
- }
- 
--/* Messages 
-+/* Messages
- ----------------------------------------------- */
- div.message, div.error {
-   border: 1px solid #90A33B;
-@@ -240,22 +262,22 @@
- /* Mobile rules, resize page and move elements
-    for small windows
- ----------------------------------------------- */
--@media only screen and (max-width: 480px), 
-+@media only screen and (max-width: 480px),
-        only screen and (max-device-width: 480px) {
- 
-   p {
-     margin-bottom: 1.5em;
-     width: 20em;
-   }
--  
-+
-   h1, h2, h3, h4, h5, h6, caption {
-     font-weight: bold;
-     margin-bottom: 0.6em;
-     width: 20em;
-   }
--  
-+
-   h1 {
-     font-size: 120%;
-     padding-top: 17em;
-   }
--}  
-+}
-Index: papaya-themes/default/page_community.css
-===================================================================
---- papaya-themes/default/page_community.css	(Revision 38500)
-+++ papaya-themes/default/page_community.css	(Arbeitskopie)
-@@ -48,4 +48,11 @@
- img.communityUserAvatar {
-   margin-top: 20px;
-   margin-bottom: 20px;
-+}
-+div.deleteAccount,
-+div.deleteAccount form div.buttons {
-+  margin-top: 1em;
-+}
-+div.deleteAccount fieldset {
-+  margin: 0;
- }
-\ No newline at end of file
-Index: papaya-themes/default/page_thumbs.css
-===================================================================
---- papaya-themes/default/page_thumbs.css	(Revision 38500)
-+++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
-@@ -1,6 +1,6 @@
- .galleryThumbnail {
-   float: left;
--  padding: 20px;
-+  padding: 0.4em;
- }
- a.galleryThumbnailFrame {
-   display: block;
-Index: papaya-lib/system/Papaya/Filter/Text.php
-===================================================================
---- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
-+++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
-@@ -49,7 +49,7 @@
-    * @return string^
-    */
-   private function getPattern() {
--    $result = '([^\\pL\\pP';
-+    $result = '([^\\pL\\pP=';
-     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
-       $result .= '\\p{Zs} ';
-     }
-Index: papaya-lib/system/papaya_publictopic.php
-===================================================================
---- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
-+++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
-@@ -229,7 +229,7 @@
-         $definition
-       );
-     } else {
--      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
-+      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-     }
-   }
- 
-Index: papaya-lib/system/base_topic_edit.php
-===================================================================
---- papaya-lib/system/base_topic_edit.php	(Revision 38500)
-+++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
-@@ -1623,9 +1623,14 @@
-                 //delete page
-                 if (FALSE !== $this->databaseDeleteRecord(
-                       $this->tableTopicsTrans, $filter)) {
--                  return FALSE !== $this->databaseDeleteRecord(
--                    $this->tableTopics, $filter
--                  );
-+                  if (FALSE !== $this->databaseDeleteRecord(
-+                        $this->tableTopics, $filter)) {
-+                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
-+                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-+                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
-+                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
-+                    return TRUE;
-+                  }
-                 }
-               }
-             }
+--- papaya-lib/modules/_base/filter_xslt.php	(Revision 38500)
++++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
+@@ -161,8 +161,8 @@
+         } else {
+           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
+           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
+-            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
+-              $moduleNames = explode(',', $match[1]);
++            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
++              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
+               foreach ($moduleNames as $key => $value) {
+                 $moduleNames[trim($value)] = TRUE;
+                 unset($moduleNames[$key]);
 Index: papaya-lib/modules/_base/community/content_register.php
 ===================================================================
 --- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
@@ -570,19 +411,6 @@ Index: papaya-lib/modules/_base/community/content_userdata.php
 -?>
 \ No newline at end of file
 +?>
-Index: papaya-lib/modules/free/thumbs/modules.xml
-===================================================================
---- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38500)
-+++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
-@@ -5,7 +5,7 @@
-   <modules>
-     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
-     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
--    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
-+    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
-     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
-   </modules>
-   <tables>
 Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 ===================================================================
 --- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38500)
@@ -1741,6 +1569,230 @@ Index: papaya-lib/modules/free/thumbs/Image/Gallery.php
 +  }
 +}
 \ No newline at end of file
+Index: papaya-lib/modules/free/thumbs/modules.xml
+===================================================================
+--- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38500)
++++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
+@@ -5,7 +5,7 @@
+   <modules>
+     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
+     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
+-    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
++    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
+     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
+   </modules>
+   <tables>
+Index: papaya-lib/system/Papaya/Filter/Text.php
+===================================================================
+--- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
++++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
+@@ -49,7 +49,7 @@
+    * @return string^
+    */
+   private function getPattern() {
+-    $result = '([^\\pL\\pP';
++    $result = '([^\\pL\\pP=';
+     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
+       $result .= '\\p{Zs} ';
+     }
+Index: papaya-lib/system/papaya_mediadb.php
+===================================================================
+--- papaya-lib/system/papaya_mediadb.php	(Revision 38500)
++++ papaya-lib/system/papaya_mediadb.php	(Arbeitskopie)
+@@ -677,7 +677,14 @@
+         }
+         break;
+       case 'crop_image_window':
+-        $this->getImageCropWindow();
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $this->getImageCropWindow();
++        } else {
++          $this->addMsg(
++            MSG_WARNING,
++            $this->_gt('You can crop image/jpeg files only, please convert the image first.')
++          );
++        }
+         break;
+       case 'crop_image_rpc':
+         header('Content-type: text/xml; charset=utf-8');
+@@ -1195,9 +1202,9 @@
+             'actions-edit-copy',
+             'Copy file to clipboard'
+           );
+-          if ($this->currentFile['mimetype_ext'] == 'jpg' ||
+-              $this->currentFile['mimetype_ext'] == 'gif' ||
+-              $this->currentFile['mimetype_ext'] == 'png') {
++          if ($this->currentFile['mimetype'] == 'image/jpeg' ||
++              $this->currentFile['mimetype'] == 'image/gif' ||
++              $this->currentFile['mimetype'] == 'image/png') {
+             $convertParams = array(
+               'cmd' => 'convert_image',
+               'file_id' => $this->params['file_id'],
+@@ -1212,22 +1219,33 @@
+           }
+         }
+ 
+-        if (strtolower($this->getFileExtension($this->currentFile['file_name'])) == 'jpg') {
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $cropLink = sprintf(
++            "javascript:window.open('%s', 'cropwindow',
++             'width=656,height=556,top=100,left=100'); return false;",
++            $this->getLink(
++              array(
++                'cmd' => 'crop_image_window',
++                'file_id' => $this->params['file_id']
++              )
++            )
++          );
++        } elseif ($this->currentFile['mimetype'] == 'image/gif' ||
++                  $this->currentFile['mimetype'] == 'image/png') {
+           $cropLink = $this->getLink(
+             array(
+               'cmd' => 'crop_image_window',
+               'file_id' => $this->params['file_id']
+             )
+           );
++        }
++        if (!empty($cropLink)) {
+           $this->menubar->addButton(
+             'Crop',
+-            sprintf(
+-              "javascript:window.open('%s', 'cropwindow',
+-               'width=656,height=556,top=100,left=100'); return false;",
+-              $cropLink
+-            ),
++            $cropLink,
+             'actions-edit-crop',
+-            'Crop image'
++            'Crop image',
++            isset($this->params['cmd']) && $this->params['cmd'] == 'crop_image_window'
+           );
+         }
+ 
+Index: papaya-lib/system/base_topic_edit.php
+===================================================================
+--- papaya-lib/system/base_topic_edit.php	(Revision 38500)
++++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
+@@ -1623,9 +1623,14 @@
+                 //delete page
+                 if (FALSE !== $this->databaseDeleteRecord(
+                       $this->tableTopicsTrans, $filter)) {
+-                  return FALSE !== $this->databaseDeleteRecord(
+-                    $this->tableTopics, $filter
+-                  );
++                  if (FALSE !== $this->databaseDeleteRecord(
++                        $this->tableTopics, $filter)) {
++                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
++                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
++                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
++                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
++                    return TRUE;
++                  }
+                 }
+               }
+             }
+Index: papaya-lib/system/base_mediadb_edit.php
+===================================================================
+--- papaya-lib/system/base_mediadb_edit.php	(Revision 38500)
++++ papaya-lib/system/base_mediadb_edit.php	(Arbeitskopie)
+@@ -653,6 +653,8 @@
+           $doDelete = TRUE;
+         }
+         if ($doDelete) {
++          $this->deleteFileDerivations($fileId);
++          $this->deleteFileTrans($fileId);
+           $condition = array('file_id' => $fileId);
+           return (FALSE !== $this->databaseDeleteRecord($this->tableFiles, $condition));
+         }
+@@ -662,6 +664,20 @@
+   }
+ 
+   /**
++   * Delete file translation by id
++   *
++   * @param string $fileId
++   * @return boolean
++   */
++  function deleteFileTrans($fileId) {
++    if (!empty($fileId)) {
++      $condition = array('file_id' => $fileId);
++      return FALSE !== $this->databaseDeleteRecord($this->tableFilesTrans, $condition);
++    }
++    return FALSE;
++  }
++
++  /**
+   * delete a version of a file
+   *
+   * use this method to delete a specific version of a file
+@@ -679,6 +695,7 @@
+       include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
+       $thumbnail = new base_thumbnail;
+       $thumbnail->deleteThumbs($fileId);
++      $this->deleteFileDerivations($fileId, $versionId);
+       return (FALSE !== $this->databaseDeleteRecord($this->tableFilesVersions, $condition));
+     }
+   }
+@@ -695,6 +712,7 @@
+     if ($fileId != '') {
+       $versions = $this->getFileVersions($fileId);
+       if (is_array($versions) && count($versions) > 0) {
++        $this->deleteFileDerivations($fileId, array_keys($versions));
+         foreach ($versions as $versionId => $version) {
+           $fileName = $this->getFileName($fileId, $versionId, TRUE);
+           if (!is_file($fileName) || unlink($fileName)) {
+@@ -717,6 +735,31 @@
+   }
+ 
+   /**
++   * Delete file derivations by file or file version.
++   *
++   * @param string $fileId
++   * @param integer $versionId
++   * @return boolean
++   */
++  function deleteFileDerivations($fileId, $versionId = NULL) {
++    if (!empty($fileId)) {
++      $condition = array('parent_file_id' => $fileId);
++      if (!empty($versionId)) {
++        $condition['parent_file_version_id'] = $versionId;
++      }
++      $result1 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++      if (empty($versionId)) {
++        $condition = array('child_file_id' => $fileId);
++        $result2 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++        return $result1 && $result2;
++      } else {
++        return $result1;
++      }
++    }
++    return FALSE;
++  }
++
++  /**
+   * move multiple files to a different folder
+   *
+   * use this method to move multiple files to a different folder
+@@ -1009,4 +1052,4 @@
+     return $size;
+   }
+ }
+-?>
++?>
+\ No newline at end of file
+Index: papaya-lib/system/papaya_publictopic.php
+===================================================================
+--- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
++++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
+@@ -229,7 +229,7 @@
+         $definition
+       );
+     } else {
+-      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
++      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+     }
+   }
+ 
 Index: papaya-data/templates/default-xhtml/html/boxes.xml
 ===================================================================
 --- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38500)
@@ -2329,3 +2381,129 @@ Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
  </xsl:template>
  
  <xsl:template name="dialog-element-select">
+Index: papaya-themes/default/page_community.css
+===================================================================
+--- papaya-themes/default/page_community.css	(Revision 38500)
++++ papaya-themes/default/page_community.css	(Arbeitskopie)
+@@ -48,4 +48,11 @@
+ img.communityUserAvatar {
+   margin-top: 20px;
+   margin-bottom: 20px;
++}
++div.deleteAccount,
++div.deleteAccount form div.buttons {
++  margin-top: 1em;
++}
++div.deleteAccount fieldset {
++  margin: 0;
+ }
+\ No newline at end of file
+Index: papaya-themes/default/basic.css
+===================================================================
+--- papaya-themes/default/basic.css	(Revision 38500)
++++ papaya-themes/default/basic.css	(Arbeitskopie)
+@@ -72,6 +72,9 @@
+ 
+ /* Forms
+ ----------------------------------------------- */
++form h2 {
++  margin: 0.7em 0 0.2em 0;
++}
+ form p {
+   margin-bottom: .8em;
+ }
+@@ -80,6 +83,9 @@
+   padding: 0;
+   border: none;
+ }
++form div.field {
++  margin-top: 0.2em;
++}
+ form label {
+   display: block;
+   font-weight: bold;
+@@ -91,6 +97,8 @@
+   padding-left: .5em;
+ }
+ form input.text,
++form input.password,
++form input.file,
+ form textarea,
+ form select {
+   border: 1px solid #CCC;
+@@ -114,13 +122,27 @@
+   vertical-align: middle;
+   width: auto;
+ }
++form .radio {
++  float: left;
++  margin-right: 0.8em;
++}
++form input.radio {
++  margin-right: 0.2em;
++}
++form div.buttons {
++  margin-top: 15px;
++}
+ form button {
+   border: 1px solid #90A33B;
+   cursor: pointer;
+   font-weight: bold;
+   font-size: 100%;
+   padding: 1px;
++  margin-right: 0.5em;
+ }
++form div.hint {
++  margin-top: 0.3em;
++}
+ 
+ 
+ /* Accessibility
+@@ -184,7 +206,7 @@
+   font-size: 90%;
+ }
+ 
+-/* Messages 
++/* Messages
+ ----------------------------------------------- */
+ div.message, div.error {
+   border: 1px solid #90A33B;
+@@ -240,22 +262,22 @@
+ /* Mobile rules, resize page and move elements
+    for small windows
+ ----------------------------------------------- */
+-@media only screen and (max-width: 480px), 
++@media only screen and (max-width: 480px),
+        only screen and (max-device-width: 480px) {
+ 
+   p {
+     margin-bottom: 1.5em;
+     width: 20em;
+   }
+-  
++
+   h1, h2, h3, h4, h5, h6, caption {
+     font-weight: bold;
+     margin-bottom: 0.6em;
+     width: 20em;
+   }
+-  
++
+   h1 {
+     font-size: 120%;
+     padding-top: 17em;
+   }
+-}  
++}
+Index: papaya-themes/default/page_thumbs.css
+===================================================================
+--- papaya-themes/default/page_thumbs.css	(Revision 38500)
++++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
+@@ -1,6 +1,6 @@
+ .galleryThumbnail {
+   float: left;
+-  padding: 20px;
++  padding: 0.4em;
+ }
+ a.galleryThumbnailFrame {
+   display: block;

@@ -1,6 +1,6 @@
 Index: papaya-themes/default/page_thumbs.css
 ===================================================================
---- papaya-themes/default/page_thumbs.css	(Revision 38500)
+--- papaya-themes/default/page_thumbs.css	(Revision 38501)
 +++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
 @@ -1,6 +1,6 @@
  .galleryThumbnail {
@@ -12,7 +12,7 @@ Index: papaya-themes/default/page_thumbs.css
    display: block;
 Index: papaya-themes/default/page_community.css
 ===================================================================
---- papaya-themes/default/page_community.css	(Revision 38500)
+--- papaya-themes/default/page_community.css	(Revision 38501)
 +++ papaya-themes/default/page_community.css	(Arbeitskopie)
 @@ -48,4 +48,11 @@
  img.communityUserAvatar {
@@ -29,7 +29,7 @@ Index: papaya-themes/default/page_community.css
 \ No newline at end of file
 Index: papaya-themes/default/basic.css
 ===================================================================
---- papaya-themes/default/basic.css	(Revision 38500)
+--- papaya-themes/default/basic.css	(Revision 38501)
 +++ papaya-themes/default/basic.css	(Arbeitskopie)
 @@ -72,6 +72,9 @@
  
@@ -124,22 +124,220 @@ Index: papaya-themes/default/basic.css
    }
 -}  
 +}
-Index: papaya-lib/modules/free/thumbs/modules.xml
+Index: papaya-lib/system/base_mediadb_edit.php
 ===================================================================
---- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38500)
-+++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
-@@ -5,7 +5,7 @@
-   <modules>
-     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
-     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
--    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
-+    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
-     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
-   </modules>
-   <tables>
+--- papaya-lib/system/base_mediadb_edit.php	(Revision 38501)
++++ papaya-lib/system/base_mediadb_edit.php	(Arbeitskopie)
+@@ -653,6 +653,8 @@
+           $doDelete = TRUE;
+         }
+         if ($doDelete) {
++          $this->deleteFileDerivations($fileId);
++          $this->deleteFileTrans($fileId);
+           $condition = array('file_id' => $fileId);
+           return (FALSE !== $this->databaseDeleteRecord($this->tableFiles, $condition));
+         }
+@@ -662,6 +664,20 @@
+   }
+ 
+   /**
++   * Delete file translation by id
++   *
++   * @param string $fileId
++   * @return boolean
++   */
++  function deleteFileTrans($fileId) {
++    if (!empty($fileId)) {
++      $condition = array('file_id' => $fileId);
++      return FALSE !== $this->databaseDeleteRecord($this->tableFilesTrans, $condition);
++    }
++    return FALSE;
++  }
++
++  /**
+   * delete a version of a file
+   *
+   * use this method to delete a specific version of a file
+@@ -679,6 +695,7 @@
+       include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
+       $thumbnail = new base_thumbnail;
+       $thumbnail->deleteThumbs($fileId);
++      $this->deleteFileDerivations($fileId, $versionId);
+       return (FALSE !== $this->databaseDeleteRecord($this->tableFilesVersions, $condition));
+     }
+   }
+@@ -695,6 +712,7 @@
+     if ($fileId != '') {
+       $versions = $this->getFileVersions($fileId);
+       if (is_array($versions) && count($versions) > 0) {
++        $this->deleteFileDerivations($fileId, array_keys($versions));
+         foreach ($versions as $versionId => $version) {
+           $fileName = $this->getFileName($fileId, $versionId, TRUE);
+           if (!is_file($fileName) || unlink($fileName)) {
+@@ -717,6 +735,31 @@
+   }
+ 
+   /**
++   * Delete file derivations by file or file version.
++   *
++   * @param string $fileId
++   * @param integer $versionId
++   * @return boolean
++   */
++  function deleteFileDerivations($fileId, $versionId = NULL) {
++    if (!empty($fileId)) {
++      $condition = array('parent_file_id' => $fileId);
++      if (!empty($versionId)) {
++        $condition['parent_file_version_id'] = $versionId;
++      }
++      $result1 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++      if (empty($versionId)) {
++        $condition = array('child_file_id' => $fileId);
++        $result2 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++        return $result1 && $result2;
++      } else {
++        return $result1;
++      }
++    }
++    return FALSE;
++  }
++
++  /**
+   * move multiple files to a different folder
+   *
+   * use this method to move multiple files to a different folder
+@@ -1009,4 +1052,4 @@
+     return $size;
+   }
+ }
+-?>
++?>
+\ No newline at end of file
+Index: papaya-lib/system/papaya_publictopic.php
+===================================================================
+--- papaya-lib/system/papaya_publictopic.php	(Revision 38501)
++++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
+@@ -229,7 +229,7 @@
+         $definition
+       );
+     } else {
+-      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
++      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+     }
+   }
+ 
+Index: papaya-lib/system/papaya_mediadb.php
+===================================================================
+--- papaya-lib/system/papaya_mediadb.php	(Revision 38501)
++++ papaya-lib/system/papaya_mediadb.php	(Arbeitskopie)
+@@ -677,7 +677,14 @@
+         }
+         break;
+       case 'crop_image_window':
+-        $this->getImageCropWindow();
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $this->getImageCropWindow();
++        } else {
++          $this->addMsg(
++            MSG_WARNING,
++            $this->_gt('You can crop image/jpeg files only, please convert the image first.')
++          );
++        }
+         break;
+       case 'crop_image_rpc':
+         header('Content-type: text/xml; charset=utf-8');
+@@ -1195,9 +1202,9 @@
+             'actions-edit-copy',
+             'Copy file to clipboard'
+           );
+-          if ($this->currentFile['mimetype_ext'] == 'jpg' ||
+-              $this->currentFile['mimetype_ext'] == 'gif' ||
+-              $this->currentFile['mimetype_ext'] == 'png') {
++          if ($this->currentFile['mimetype'] == 'image/jpeg' ||
++              $this->currentFile['mimetype'] == 'image/gif' ||
++              $this->currentFile['mimetype'] == 'image/png') {
+             $convertParams = array(
+               'cmd' => 'convert_image',
+               'file_id' => $this->params['file_id'],
+@@ -1212,22 +1219,33 @@
+           }
+         }
+ 
+-        if (strtolower($this->getFileExtension($this->currentFile['file_name'])) == 'jpg') {
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $cropLink = sprintf(
++            "javascript:window.open('%s', 'cropwindow',
++             'width=656,height=556,top=100,left=100'); return false;",
++            $this->getLink(
++              array(
++                'cmd' => 'crop_image_window',
++                'file_id' => $this->params['file_id']
++              )
++            )
++          );
++        } elseif ($this->currentFile['mimetype'] == 'image/gif' ||
++                  $this->currentFile['mimetype'] == 'image/png') {
+           $cropLink = $this->getLink(
+             array(
+               'cmd' => 'crop_image_window',
+               'file_id' => $this->params['file_id']
+             )
+           );
++        }
++        if (!empty($cropLink)) {
+           $this->menubar->addButton(
+             'Crop',
+-            sprintf(
+-              "javascript:window.open('%s', 'cropwindow',
+-               'width=656,height=556,top=100,left=100'); return false;",
+-              $cropLink
+-            ),
++            $cropLink,
+             'actions-edit-crop',
+-            'Crop image'
++            'Crop image',
++            isset($this->params['cmd']) && $this->params['cmd'] == 'crop_image_window'
+           );
+         }
+ 
+Index: papaya-lib/system/base_topic_edit.php
+===================================================================
+--- papaya-lib/system/base_topic_edit.php	(Revision 38501)
++++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
+@@ -1600,9 +1600,14 @@
+                 //delete page
+                 if (FALSE !== $this->databaseDeleteRecord(
+                       $this->tableTopicsTrans, $filter)) {
+-                  return FALSE !== $this->databaseDeleteRecord(
+-                    $this->tableTopics, $filter
+-                  );
++                  if (FALSE !== $this->databaseDeleteRecord(
++                        $this->tableTopics, $filter)) {
++                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
++                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
++                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
++                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
++                    return TRUE;
++                  }
+                 }
+               }
+             }
+Index: papaya-lib/system/Papaya/Filter/Text.php
+===================================================================
+--- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38501)
++++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
+@@ -49,7 +49,7 @@
+    * @return string^
+    */
+   private function getPattern() {
+-    $result = '([^\\pL\\pP';
++    $result = '([^\\pL\\pP=';
+     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
+       $result .= '\\p{Zs} ';
+     }
 Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 ===================================================================
---- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38500)
+--- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38501)
 +++ papaya-lib/modules/free/thumbs/content_thumbs.php	(Arbeitskopie)
 @@ -1,540 +0,0 @@
 -<?php
@@ -683,155 +881,6 @@ Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 -  }
 -}
 \ No newline at end of file
-Index: papaya-lib/modules/free/thumbs/Image/Gallery/Page.php
-===================================================================
---- papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
-+++ papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
-@@ -0,0 +1,143 @@
-+<?php
-+/**
-+* Media image gallery page
-+*
-+* @copyright 2002-2013 by papaya Software GmbH - All rights reserved.
-+* @link http://www.papaya-cms.com/
-+* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
-+*
-+* You can redistribute and/or modify this script under the terms of the GNU General Public
-+* License (GPL) version 2, provided that the copyright and license notes, including these
-+* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
-+* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-+* FOR A PARTICULAR PURPOSE.
-+*
-+* @package Papaya-Modules
-+* @subpackage Free-Media
-+* @version $Id: $
-+*/
-+
-+/**
-+* Basic class page module
-+*/
-+require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
-+
-+
-+/**
-+* Media image gallery page
-+*
-+* @package Papaya-Modules
-+* @subpackage Free-Media
-+*/
-+class MediaImageGalleryPage extends base_content {
-+
-+  /**
-+   * Parameter group
-+   * @var string
-+   */
-+  public $paramName = 'mig';
-+
-+  /**
-+  * Content edit fields
-+  * @var array $editFields
-+  */
-+  var $editFields = array(
-+    'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
-+      array(0 => 'Yes', 1 => 'No'), 'Apply linebreaks from input to the HTML output.', 0
-+    ),
-+    'title' => array('Title', 'isSomeText', FALSE, 'input', 400, '', ''),
-+    'subtitle' => array('Subtitle', 'isSomeText', FALSE, 'input', 400, '', ''),
-+    'teaser' => array('Teaser', 'isSomeText', FALSE, 'simplerichtext', 5, '', ''),
-+    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 10, '', ''),
-+
-+    'Thumbnails',
-+    'directory' => array('Folder', 'isNum', TRUE, 'mediafolder'),
-+    'maxperpage' => array('Thumbnail count', 'isNum', TRUE, 'input', 5, '', 9),
-+    'maxperline' => array('Column count', 'isNum', TRUE, 'input', 5, '', 3),
-+    'resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
-+      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
-+        'mincrop' => 'Minimum cropped'), '', 'max'),
-+    'thumbwidth' => array('Thumbnail width', 'isNum', TRUE, 'input', 5, '', 100),
-+    'thumbheight' => array('Thumbnail height', 'isNum', TRUE, 'input', 5, '', 100),
-+    'order' => array('Sort type', 'isNoHTML', TRUE, 'translatedcombo',
-+      array('name' => 'File name', 'date' => 'File date'), '', 'name'),
-+    'sort' => array('Sort order', 'isNoHTML', TRUE, 'translatedcombo',
-+      array('asc' => 'Ascending', 'desc' => 'Descending'), '', 'asc'),
-+
-+    'Images',
-+    'display_title' => array('Display title?', 'isNoHTML', TRUE, 'translatedcombo',
-+       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
-+    'display_comment' => array('Display description?', 'isNoHTML', TRUE, 'translatedcombo',
-+       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
-+    'show_lightbox' => array('Display in lightbox?', 'isNum', TRUE, 'yesno', NULL, NULL, '1'),
-+    'show_mode' => array('Display mode', 'isNum', TRUE, 'translatedcombo',
-+      array(
-+        0 => 'Resized image',
-+        4 => 'Resized image with original image link',
-+        5 => 'Resized image with download link',
-+        1 => 'Original image',
-+        2 => 'Original image download',
-+        3 => 'Resized image download'
-+      ), '', 0
-+    ),
-+    'width' => array('Width', 'isNum', TRUE, 'input', 5, '', 640),
-+    'height' => array('Height', 'isNum', TRUE, 'input', 5, '', 480),
-+    'show_resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
-+      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
-+        'mincrop' => 'Minimum cropped'), '', 'max')
-+  );
-+
-+  /**
-+   * Gallery object
-+   * @var MediaImageGallery
-+   */
-+  protected $_gallery = NULL;
-+
-+  /**
-+  * Get (and, if necessary, initialize) the MediaImageGallery object
-+  *
-+  * @return MediaImageGallery $gallery
-+  */
-+  public function gallery(MediaImageGallery $gallery = NULL) {
-+    if (isset($gallery)) {
-+      $this->_gallery = $gallery;
-+    } elseif (is_null($this->_gallery)) {
-+      include_once(dirname(__FILE__).'/../Gallery.php');
-+      $this->_gallery = new MediaImageGallery();
-+      $this->_gallery->parameterGroup($this->paramName);
-+      $this->_gallery->languageId = $this->papaya()->request->languageId;
-+    }
-+    return $this->_gallery;
-+  }
-+
-+  /**
-+  * Get parsed teaser
-+  *
-+  * @access public
-+  * @return string $result
-+  */
-+  function getParsedTeaser() {
-+    $this->setDefaultData();
-+    $this->gallery()->initialize($this, $this->data, 'teaser');
-+    $this->gallery()->load();
-+    return $this->gallery()->getXml();
-+  }
-+
-+  /**
-+  * Get parsed data
-+  *
-+  * build an XML string containing either...
-+  * an image with links to previous image and next image or...
-+  * a page containing thumbnails with links to the previous and next pages of thumbnails.
-+  *
-+  * @access public
-+  * @return string $result
-+  */
-+  function getParsedData() {
-+    $this->setDefaultData();
-+    $this->initializeParams();
-+    $this->gallery()->initialize($this, $this->data);
-+    $this->gallery()->load();
-+    return $this->gallery()->getXml();
-+  }
-+}
-\ No newline at end of file
 Index: papaya-lib/modules/free/thumbs/Image/Gallery.php
 ===================================================================
 --- papaya-lib/modules/free/thumbs/Image/Gallery.php	(Revision 0)
@@ -1295,23 +1344,186 @@ Index: papaya-lib/modules/free/thumbs/Image/Gallery.php
 +  }
 +}
 \ No newline at end of file
-Index: papaya-lib/modules/_base/community/content_register.php
+Index: papaya-lib/modules/free/thumbs/Image/Gallery/Page.php
 ===================================================================
---- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
-@@ -1928,7 +1928,8 @@
-         $dynFields = $this->baseSurfers->getDynamicEditFields(
-           $this->data['dynamic_class'],
-           'dynamic',
--          $this->parentObj->topic['TRANSLATION']['lng_id']
-+          $this->parentObj->topic['TRANSLATION']['lng_id'],
-+          TRUE
-         );
-         $fields = array_merge($fields, $dynFields);
-       }
+--- papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
++++ papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
+@@ -0,0 +1,143 @@
++<?php
++/**
++* Media image gallery page
++*
++* @copyright 2002-2013 by papaya Software GmbH - All rights reserved.
++* @link http://www.papaya-cms.com/
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++* @version $Id: $
++*/
++
++/**
++* Basic class page module
++*/
++require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
++
++
++/**
++* Media image gallery page
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++*/
++class MediaImageGalleryPage extends base_content {
++
++  /**
++   * Parameter group
++   * @var string
++   */
++  public $paramName = 'mig';
++
++  /**
++  * Content edit fields
++  * @var array $editFields
++  */
++  var $editFields = array(
++    'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
++      array(0 => 'Yes', 1 => 'No'), 'Apply linebreaks from input to the HTML output.', 0
++    ),
++    'title' => array('Title', 'isSomeText', FALSE, 'input', 400, '', ''),
++    'subtitle' => array('Subtitle', 'isSomeText', FALSE, 'input', 400, '', ''),
++    'teaser' => array('Teaser', 'isSomeText', FALSE, 'simplerichtext', 5, '', ''),
++    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 10, '', ''),
++
++    'Thumbnails',
++    'directory' => array('Folder', 'isNum', TRUE, 'mediafolder'),
++    'maxperpage' => array('Thumbnail count', 'isNum', TRUE, 'input', 5, '', 9),
++    'maxperline' => array('Column count', 'isNum', TRUE, 'input', 5, '', 3),
++    'resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
++      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
++        'mincrop' => 'Minimum cropped'), '', 'max'),
++    'thumbwidth' => array('Thumbnail width', 'isNum', TRUE, 'input', 5, '', 100),
++    'thumbheight' => array('Thumbnail height', 'isNum', TRUE, 'input', 5, '', 100),
++    'order' => array('Sort type', 'isNoHTML', TRUE, 'translatedcombo',
++      array('name' => 'File name', 'date' => 'File date'), '', 'name'),
++    'sort' => array('Sort order', 'isNoHTML', TRUE, 'translatedcombo',
++      array('asc' => 'Ascending', 'desc' => 'Descending'), '', 'asc'),
++
++    'Images',
++    'display_title' => array('Display title?', 'isNoHTML', TRUE, 'translatedcombo',
++       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
++    'display_comment' => array('Display description?', 'isNoHTML', TRUE, 'translatedcombo',
++       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
++    'show_lightbox' => array('Display in lightbox?', 'isNum', TRUE, 'yesno', NULL, NULL, '1'),
++    'show_mode' => array('Display mode', 'isNum', TRUE, 'translatedcombo',
++      array(
++        0 => 'Resized image',
++        4 => 'Resized image with original image link',
++        5 => 'Resized image with download link',
++        1 => 'Original image',
++        2 => 'Original image download',
++        3 => 'Resized image download'
++      ), '', 0
++    ),
++    'width' => array('Width', 'isNum', TRUE, 'input', 5, '', 640),
++    'height' => array('Height', 'isNum', TRUE, 'input', 5, '', 480),
++    'show_resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
++      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
++        'mincrop' => 'Minimum cropped'), '', 'max')
++  );
++
++  /**
++   * Gallery object
++   * @var MediaImageGallery
++   */
++  protected $_gallery = NULL;
++
++  /**
++  * Get (and, if necessary, initialize) the MediaImageGallery object
++  *
++  * @return MediaImageGallery $gallery
++  */
++  public function gallery(MediaImageGallery $gallery = NULL) {
++    if (isset($gallery)) {
++      $this->_gallery = $gallery;
++    } elseif (is_null($this->_gallery)) {
++      include_once(dirname(__FILE__).'/../Gallery.php');
++      $this->_gallery = new MediaImageGallery();
++      $this->_gallery->parameterGroup($this->paramName);
++      $this->_gallery->languageId = $this->papaya()->request->languageId;
++    }
++    return $this->_gallery;
++  }
++
++  /**
++  * Get parsed teaser
++  *
++  * @access public
++  * @return string $result
++  */
++  function getParsedTeaser() {
++    $this->setDefaultData();
++    $this->gallery()->initialize($this, $this->data, 'teaser');
++    $this->gallery()->load();
++    return $this->gallery()->getXml();
++  }
++
++  /**
++  * Get parsed data
++  *
++  * build an XML string containing either...
++  * an image with links to previous image and next image or...
++  * a page containing thumbnails with links to the previous and next pages of thumbnails.
++  *
++  * @access public
++  * @return string $result
++  */
++  function getParsedData() {
++    $this->setDefaultData();
++    $this->initializeParams();
++    $this->gallery()->initialize($this, $this->data);
++    $this->gallery()->load();
++    return $this->gallery()->getXml();
++  }
++}
+\ No newline at end of file
+Index: papaya-lib/modules/free/thumbs/modules.xml
+===================================================================
+--- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38501)
++++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
+@@ -5,7 +5,7 @@
+   <modules>
+     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
+     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
+-    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
++    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
+     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
+   </modules>
+   <tables>
+Index: papaya-lib/modules/_base/filter_xslt.php
+===================================================================
+--- papaya-lib/modules/_base/filter_xslt.php	(Revision 38501)
++++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
+@@ -161,8 +161,8 @@
+         } else {
+           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
+           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
+-            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
+-              $moduleNames = explode(',', $match[1]);
++            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
++              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
+               foreach ($moduleNames as $key => $value) {
+                 $moduleNames[trim($value)] = TRUE;
+                 unset($moduleNames[$key]);
 Index: papaya-lib/modules/_base/community/base_surfers.php
 ===================================================================
---- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38500)
+--- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38501)
 +++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
 @@ -773,16 +773,16 @@
            );
@@ -1427,7 +1639,7 @@ Index: papaya-lib/modules/_base/community/base_surfers.php
          $fieldName = $prefix.'_'.$fieldName;
 Index: papaya-lib/modules/_base/community/content_profile.php
 ===================================================================
---- papaya-lib/modules/_base/community/content_profile.php	(Revision 38500)
+--- papaya-lib/modules/_base/community/content_profile.php	(Revision 38501)
 +++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
 @@ -240,6 +240,10 @@
            'Query string for redirect url',
@@ -1674,7 +1886,7 @@ Index: papaya-lib/modules/_base/community/content_profile.php
  ?>
 Index: papaya-lib/modules/_base/community/content_userdata.php
 ===================================================================
---- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38500)
+--- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38501)
 +++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
 @@ -522,7 +522,8 @@
          $dynFields = $this->baseSurfers->getDynamicEditFields(
@@ -1693,57 +1905,99 @@ Index: papaya-lib/modules/_base/community/content_userdata.php
 -?>
 \ No newline at end of file
 +?>
-Index: papaya-lib/system/Papaya/Filter/Text.php
+Index: papaya-lib/modules/_base/community/content_register.php
 ===================================================================
---- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
-+++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
-@@ -49,7 +49,7 @@
-    * @return string^
-    */
-   private function getPattern() {
--    $result = '([^\\pL\\pP';
-+    $result = '([^\\pL\\pP=';
-     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
-       $result .= '\\p{Zs} ';
-     }
-Index: papaya-lib/system/base_topic_edit.php
+--- papaya-lib/modules/_base/community/content_register.php	(Revision 38501)
++++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
+@@ -1928,7 +1928,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+Index: papaya-data/templates/default-xhtml/html/boxes.xml
 ===================================================================
---- papaya-lib/system/base_topic_edit.php	(Revision 38500)
-+++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
-@@ -1600,9 +1600,14 @@
-                 //delete page
-                 if (FALSE !== $this->databaseDeleteRecord(
-                       $this->tableTopicsTrans, $filter)) {
--                  return FALSE !== $this->databaseDeleteRecord(
--                    $this->tableTopics, $filter
--                  );
-+                  if (FALSE !== $this->databaseDeleteRecord(
-+                        $this->tableTopics, $filter)) {
-+                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
-+                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-+                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
-+                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
-+                    return TRUE;
-+                  }
-                 }
-               }
-             }
-Index: papaya-lib/system/papaya_publictopic.php
-===================================================================
---- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
-+++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
-@@ -229,7 +229,7 @@
-         $definition
-       );
-     } else {
--      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
-+      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-     }
-   }
+--- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38501)
++++ papaya-data/templates/default-xhtml/html/boxes.xml	(Arbeitskopie)
+@@ -1,8 +1,8 @@
+ <?xml version="1.0" ?>
+ <boxes>
+   <styles>
+-    <!-- 
+-      css files included in page head 
++    <!--
++      css files included in page head
  
+       Syntax: <file module="foo" file="foo.css"/>
+     -->
+@@ -23,33 +23,47 @@
+     <file module="actionbox_catalog_limited_content" file="box_catalog_limited_content.css" />
+     <file module="actionbox_catalog_related_categories" file="box_catalog_related_list.css" />
+     <file module="actionbox_quiz" file="box_quiz.css" />
+-    
++
+     <file module="actionbox_forum" file="box_forum.css" />
+     <file module="actionbox_comments" file="box_forum.css" />
+     <file module="actionbox_lastentries" file="box_forum.css" />
+-    
++
+     <file module="actionbox_nextdates_tag" file="box_calendar.css" />
+     <file module="actionbox_calendar_tag" file="box_calendar.css" />
+     <file module="actionbox_calendar" file="box_calendar.css" />
+-    
++
+     <file module="actbox_linkdb" file="box_linkdb.css" />
+-    
++
+     <file module="actionbox_searchbox" file="box_mnogo.css" />
+-  </styles>  
++
++    <file module="ACommunityPageCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunitySurferCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityImageCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
++    <file module="ACommunitySurferStatusBox" file="box_acommunity_surfer_status.css" />
++    <file module="ACommunitySurferContactsBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunitySurfersLastActionBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunitySurfersRegistrationBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunityMessageConversationsBox" file="box_acommunity_message_conversations.css" />
++    <file module="ACommunitySurferGalleryTeaserBox" file="box_acommunity_surfer_gallery_teaser.css" />
++    <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />
++    <file module="ACommunitySurferGalleryFoldersBox" file="box_acommunity_surfer_gallery_folders.css" />
++  </styles>
+   <scripts>
+-    <!-- 
++    <!--
+       javascript files included in page head
+-     
++
+       Syntax: <file module="foo" file="foo.js"/>
+     -->
+ 
+-  </scripts>  
++  </scripts>
+   <scripts-lazy>
+-    <!-- 
++    <!--
+       javascript files included just before page boday end
+-     
++
+       Syntax: <file module="bar" file="bar.js"/>
+     -->
+-  
++
+   </scripts-lazy>
+-</boxes>
+\ No newline at end of file
++</boxes>
 Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
 ===================================================================
---- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38501)
 +++ papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Arbeitskopie)
 @@ -6,7 +6,7 @@
    exclude-result-prefixes="#default"
@@ -1756,7 +2010,7 @@ Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
  <!-- import main layout rules, this will import the default rules, too -->
 Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl
 ===================================================================
---- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38501)
 +++ papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Arbeitskopie)
 @@ -605,40 +605,31 @@
    <fieldset>
@@ -1872,9 +2126,34 @@ Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_
 +</xsl:template>
 +
  </xsl:stylesheet>
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Revision 38501)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Arbeitskopie)
+@@ -2,4 +2,6 @@
+   <text ident="FILE_NAME">Fichier</text>
+   <text ident="FILE_DATE">Date</text>
+   <text ident="FILE_SIZE">Dimension</text>
++  <text ident="ORIGINAL_IMAGE">Original peinture</text>
++  <text ident="IMAGE_DOWNLOAD">Téléchargement</text>
+ </texts>
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Revision 38501)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Arbeitskopie)
+@@ -2,4 +2,7 @@
+   <text ident="FILE_NAME">Datei</text>
+   <text ident="FILE_DATE">Datum</text>
+   <text ident="FILE_SIZE">Größe</text>
+-</texts>
++  <text ident="NO_IMAGES">Keine Bilder gefunden.</text>
++  <text ident="ORIGINAL_IMAGE">Original Bild</text>
++  <text ident="IMAGE_DOWNLOAD">Download</text>
++</texts>
+\ No newline at end of file
 Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl
 ===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Revision 38501)
 +++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Arbeitskopie)
 @@ -6,162 +6,177 @@
    exclude-result-prefixes="#default"
@@ -2195,7 +2474,7 @@ Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thum
 \ No newline at end of file
 Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
 ===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38501)
 +++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Arbeitskopie)
 @@ -2,4 +2,7 @@
    <text ident="FILE_NAME">File</text>
@@ -2206,34 +2485,9 @@ Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
 +  <text ident="IMAGE_DOWNLOAD">Download</text>
  </texts>
 \ No newline at end of file
-Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Arbeitskopie)
-@@ -2,4 +2,6 @@
-   <text ident="FILE_NAME">Fichier</text>
-   <text ident="FILE_DATE">Date</text>
-   <text ident="FILE_SIZE">Dimension</text>
-+  <text ident="ORIGINAL_IMAGE">Original peinture</text>
-+  <text ident="IMAGE_DOWNLOAD">Téléchargement</text>
- </texts>
-Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Arbeitskopie)
-@@ -2,4 +2,7 @@
-   <text ident="FILE_NAME">Datei</text>
-   <text ident="FILE_DATE">Datum</text>
-   <text ident="FILE_SIZE">Größe</text>
--</texts>
-+  <text ident="NO_IMAGES">Keine Bilder gefunden.</text>
-+  <text ident="ORIGINAL_IMAGE">Original Bild</text>
-+  <text ident="IMAGE_DOWNLOAD">Download</text>
-+</texts>
-\ No newline at end of file
 Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
 ===================================================================
---- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38501)
 +++ papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Arbeitskopie)
 @@ -325,6 +325,9 @@
        </xsl:when>
@@ -2253,79 +2507,3 @@ Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
  </xsl:template>
  
  <xsl:template name="dialog-element-select">
-Index: papaya-data/templates/default-xhtml/html/boxes.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/boxes.xml	(Arbeitskopie)
-@@ -1,8 +1,8 @@
- <?xml version="1.0" ?>
- <boxes>
-   <styles>
--    <!-- 
--      css files included in page head 
-+    <!--
-+      css files included in page head
- 
-       Syntax: <file module="foo" file="foo.css"/>
-     -->
-@@ -23,33 +23,47 @@
-     <file module="actionbox_catalog_limited_content" file="box_catalog_limited_content.css" />
-     <file module="actionbox_catalog_related_categories" file="box_catalog_related_list.css" />
-     <file module="actionbox_quiz" file="box_quiz.css" />
--    
-+
-     <file module="actionbox_forum" file="box_forum.css" />
-     <file module="actionbox_comments" file="box_forum.css" />
-     <file module="actionbox_lastentries" file="box_forum.css" />
--    
-+
-     <file module="actionbox_nextdates_tag" file="box_calendar.css" />
-     <file module="actionbox_calendar_tag" file="box_calendar.css" />
-     <file module="actionbox_calendar" file="box_calendar.css" />
--    
-+
-     <file module="actbox_linkdb" file="box_linkdb.css" />
--    
-+
-     <file module="actionbox_searchbox" file="box_mnogo.css" />
--  </styles>  
-+
-+    <file module="ACommunityPageCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunitySurferCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityImageCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
-+    <file module="ACommunitySurferStatusBox" file="box_acommunity_surfer_status.css" />
-+    <file module="ACommunitySurferContactsBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunitySurfersLastActionBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunitySurfersRegistrationBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunityMessageConversationsBox" file="box_acommunity_message_conversations.css" />
-+    <file module="ACommunitySurferGalleryTeaserBox" file="box_acommunity_surfer_gallery_teaser.css" />
-+    <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />
-+    <file module="ACommunitySurferGalleryFoldersBox" file="box_acommunity_surfer_gallery_folders.css" />
-+  </styles>
-   <scripts>
--    <!-- 
-+    <!--
-       javascript files included in page head
--     
-+
-       Syntax: <file module="foo" file="foo.js"/>
-     -->
- 
--  </scripts>  
-+  </scripts>
-   <scripts-lazy>
--    <!-- 
-+    <!--
-       javascript files included just before page boday end
--     
-+
-       Syntax: <file module="bar" file="bar.js"/>
-     -->
--  
-+
-   </scripts-lazy>
--</boxes>
-\ No newline at end of file
-+</boxes>
