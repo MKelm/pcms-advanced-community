@@ -119,6 +119,11 @@ This package contains the following modules:
 -- Shows a upload form for images in surfer gallery page
 --- The selected surfer has to match the active surfer
 
+- Surfers Page
+-- Shows a list of all registered surerfs
+-- Contains a filter by first character
+-- Contains a search form
+
 - Conntector
 -- Contains action dispatcher methods, onDeleteSurfer and onDeletePages
 -- Contains methods to get some page links
@@ -152,6 +157,7 @@ for the Advanced Community modules:
 - Surfer Contacts Page
 - Messages Page
 - Notification Settings Page
+- Surfers Page
 
 == Configure pages and boxes ==
 
@@ -229,6 +235,14 @@ To get a functioning community you need a set of pages of the regular community 
 -- Publish the created page
 
 - Notification Settings Page
+-- Choose the menu item "Edit" to create a notification settings page
+-- Choose the main page of your default installtion to create a sub page
+-- After that term this sub page obvious
+-- Link the corresponding page view in the menu item "View"
+-- Go to "Content" and change settings if required
+-- Publish the created page
+
+- Surfers Page
 -- Choose the menu item "Edit" to create a notification settings page
 -- Choose the main page of your default installtion to create a sub page
 -- After that term this sub page obvious
@@ -553,6 +567,12 @@ Here is a list of suggestions for cache time by module:
 
 - Notification Settings Page
 -- The cache will be disabled by default, because the module loads and save data dynamically
+
+- Surfers Page
+-- E.g. 604800 seconds
+-- The page detects changes of the last registration time in surfers' data
+-- The page detects changes of surfer names
+-- The page observes the parameters surfers_character, surfers_search und surfers_list_page
 
 == URL processing in text ==
 

@@ -122,6 +122,11 @@ Das Advanced Community Paket enthält folgende Module:
 -- Zeigt in der Surfergallerie ein Feld zum Hochladen von Bilder an
 --- der gewählte Surfer muss mit dem angemeldeten Surfer übereinstimmen
 
+- Surferlistenseite (Surfers Page)
+-- Zeigt eine Liste von allen registrierten Surfern
+-- Enthält einen Filter nach Anfangsbuchstabe
+-- Enthält ein Suchformular
+
 - Conntector
 -- Enthält eine onDeleteSurfer / onDeletePages Methode für den Action Dispatcher
 -- Enthält Methoden zum Verlinken von Seiten
@@ -159,6 +164,7 @@ Modulbezeichnungen und zugehörigen XSL-Stylesheets:
 - Surfer Contacts Page
 - Messages Page
 - Notification Settings Page
+- Surfers Page
 
 == Boxen und Seiten einrichten ==
 
@@ -234,6 +240,14 @@ Modulpakets:
 -- Publizieren sie die Seite
 
 - Benachrichtigungseinstellungen (Notification Settings Page)
+-- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
+-- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
+-- Danach benennen sie die neue Unterseite eindeutig
+-- Weisen sie der Seite die zugehörige Seitenansicht unter "Ansicht" zu
+-- Gehen sie zu "Inhalt" und ändern sie bei Bedarf die Einstellungen
+-- Publizieren sie die Seite
+
+- Surferlistenseite (Surfers Page)
 -- Wählen sie den Menüpunkt "Ändern" um eine Surferseite zu erstellen
 -- Wählen sie die Hauptseite ihrer Standardinstallation um eine Unterseite zu erstellen
 -- Danach benennen sie die neue Unterseite eindeutig
@@ -576,6 +590,12 @@ Hier eine Liste mit Vorschlägen für Cachezeiten je Modul:
 
 - Notification Settings Page
 -- der Cache wird stets deaktiviert, da die Seite stets dynamisch Daten lädt und speichert
+
+- Surfers Page
+-- z.B. 604800 Sekunden
+-- die Seite erkennt wann sich die Anzahl an registrierten Benutzern ändert
+-- die Seite erkennt wann sich Namen von Benutzern ändern
+-- die Seite beachtet die Parameter surfers_character, surfers_search und surfers_list_page
 
 == URL-Verarbeitung in Texten ==
 
