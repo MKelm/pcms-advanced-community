@@ -124,6 +124,28 @@ Index: papaya-themes/default/basic.css
    }
 -}  
 +}
+Index: papaya-lib/system/base_topic_edit.php
+===================================================================
+--- papaya-lib/system/base_topic_edit.php	(Revision 38501)
++++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
+@@ -1600,9 +1600,14 @@
+                 //delete page
+                 if (FALSE !== $this->databaseDeleteRecord(
+                       $this->tableTopicsTrans, $filter)) {
+-                  return FALSE !== $this->databaseDeleteRecord(
+-                    $this->tableTopics, $filter
+-                  );
++                  if (FALSE !== $this->databaseDeleteRecord(
++                        $this->tableTopics, $filter)) {
++                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
++                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
++                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
++                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
++                    return TRUE;
++                  }
+                 }
+               }
+             }
 Index: papaya-lib/system/base_mediadb_edit.php
 ===================================================================
 --- papaya-lib/system/base_mediadb_edit.php	(Revision 38501)
@@ -213,19 +235,19 @@ Index: papaya-lib/system/base_mediadb_edit.php
 -?>
 +?>
 \ No newline at end of file
-Index: papaya-lib/system/papaya_publictopic.php
+Index: papaya-lib/system/Papaya/Filter/Text.php
 ===================================================================
---- papaya-lib/system/papaya_publictopic.php	(Revision 38501)
-+++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
-@@ -229,7 +229,7 @@
-         $definition
-       );
-     } else {
--      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
-+      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+--- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38501)
++++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
+@@ -49,7 +49,7 @@
+    * @return string^
+    */
+   private function getPattern() {
+-    $result = '([^\\pL\\pP';
++    $result = '([^\\pL\\pP=';
+     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
+       $result .= '\\p{Zs} ';
      }
-   }
- 
 Index: papaya-lib/system/papaya_mediadb.php
 ===================================================================
 --- papaya-lib/system/papaya_mediadb.php	(Revision 38501)
@@ -300,41 +322,561 @@ Index: papaya-lib/system/papaya_mediadb.php
            );
          }
  
-Index: papaya-lib/system/base_topic_edit.php
+Index: papaya-lib/system/papaya_publictopic.php
 ===================================================================
---- papaya-lib/system/base_topic_edit.php	(Revision 38501)
-+++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
-@@ -1600,9 +1600,14 @@
-                 //delete page
-                 if (FALSE !== $this->databaseDeleteRecord(
-                       $this->tableTopicsTrans, $filter)) {
--                  return FALSE !== $this->databaseDeleteRecord(
--                    $this->tableTopics, $filter
--                  );
-+                  if (FALSE !== $this->databaseDeleteRecord(
-+                        $this->tableTopics, $filter)) {
-+                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
-+                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-+                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
-+                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
-+                    return TRUE;
-+                  }
-                 }
-               }
-             }
-Index: papaya-lib/system/Papaya/Filter/Text.php
-===================================================================
---- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38501)
-+++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
-@@ -49,7 +49,7 @@
-    * @return string^
-    */
-   private function getPattern() {
--    $result = '([^\\pL\\pP';
-+    $result = '([^\\pL\\pP=';
-     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
-       $result .= '\\p{Zs} ';
+--- papaya-lib/system/papaya_publictopic.php	(Revision 38501)
++++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
+@@ -229,7 +229,7 @@
+         $definition
+       );
+     } else {
+-      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
++      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
      }
+   }
+ 
+Index: papaya-lib/modules/_base/filter_xslt.php
+===================================================================
+--- papaya-lib/modules/_base/filter_xslt.php	(Revision 38501)
++++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
+@@ -161,8 +161,8 @@
+         } else {
+           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
+           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
+-            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
+-              $moduleNames = explode(',', $match[1]);
++            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
++              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
+               foreach ($moduleNames as $key => $value) {
+                 $moduleNames[trim($value)] = TRUE;
+                 unset($moduleNames[$key]);
+Index: papaya-lib/modules/_base/community/content_userdata.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38501)
++++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
+@@ -522,7 +522,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+@@ -1005,4 +1006,4 @@
+     return $result;
+   }
+ }
+-?>
+\ No newline at end of file
++?>
+Index: papaya-lib/modules/_base/community/connector_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/connector_surfers.php	(Revision 38501)
++++ papaya-lib/modules/_base/community/connector_surfers.php	(Arbeitskopie)
+@@ -629,18 +629,21 @@
+   *
+   * @see existID() for behavior on blocked surfers
+   * @see surfer_admin::searchSurfers Detailed description
+-  * @access public
+-  * @param string $pattern Search pattern
+-  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
++  * @param string|array $pattern Search pattern or multiple search patterns
++  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
+   * @param boolean $includeBlocked Seach in blocked surfers too
+-  * @param string $orderBy Order search results by a given (NULL = disabled)
++  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
++  * @param integer $limit max results to fetch
++  * @param integer $offset fetch results from offset
++  * @param boolean $patternFirstChar using a pattern to get the first char of result string
+   * @return array $result Surfers data (id, handle, email, givenname, surfname)
+   */
+-  function searchSurfers($pattern, $handleOnly = FALSE,
+-                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
++  function searchSurfers($pattern, $searchFields = NULL,
++                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
++                         $limit = NULL, $offset = NULL, $patternFirstChar = FALSE) {
+     $this->_initSurferAdmin();
+     return $this->surferAdmin->searchSurfers(
+-      $pattern, $handleOnly, $includeBlocked, $orderBy
++      $pattern, $searchFields, $includeBlocked, $orderBy, $limit, $offset, $patternFirstChar
+     );
+   }
+ 
+Index: papaya-lib/modules/_base/community/content_register.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_register.php	(Revision 38501)
++++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
+@@ -1928,7 +1928,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+Index: papaya-lib/modules/_base/community/base_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38501)
++++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
+@@ -773,16 +773,16 @@
+           );
+         }
+       }
+-
+-      if ($isMultiples) {
+-        // case 1: multiples ids
+-        return $result;
+-      } else if (count($result) > 0) {
+-        // case 2: one id lookup
+-        return reset($result);
+-      }
+     }
+-    return '';
++    if ($isMultiples) {
++      // case 1: multiples ids
++      return $result;
++    } elseif (count($result) > 0) {
++      // case 2: one id lookup
++      return reset($result);
++    } else {
++      return '';
++    }
+   }
+ 
+   /**
+@@ -2223,41 +2223,74 @@
+   * Returns an empty array if no surfers match the pattern.
+   *
+   * @see existID() for behavior on blocked surfers
+-  * @access public
+-  * @param string $pattern Search pattern
+-  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
++  * @param string|array $pattern Search pattern or multiple search patterns
++  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
+   * @param boolean $includeBlocked Seach in blocked surfers too
+-  * @param string $orderBy Order search results by a given (NULL = disabled)
++  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
++  * @param integer $limit max results to fetch
++  * @param integer $offset fetch results from offset
++  * @param boolean $patternFirstChar using a pattern to get the first char of result string
+   * @return array $result Surfers data (id, handle, email, givenname, surfname)
+   */
+-  function searchSurfers($pattern, $handleOnly = FALSE,
+-                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
++  function searchSurfers($pattern, $searchFields = NULL,
++                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
++                         $limit  = NULL, $offset = NULL, $patternFirstChar = FALSE) {
+     $result = array();
+-
+-    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
+-    $parser = new searchStringParser();
+-    if ($handleOnly) {
++    // backward compatibility for search fields parameter, handle only mode
++    if ($searchFields === TRUE) {
+       $searchFields = array('surfer_handle');
+-    } else {
++    } elseif ($searchFields === FALSE || $searchFields === NULL) {
+       $searchFields = array('surfer_handle', 'surfer_givenname', 'surfer_surname');
+     }
+-    if ($filter = $parser->getSQL($pattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
+-      $sql = "SELECT surfer_id,
+-                     surfer_handle,
+-                     surfer_email,
+-                     surfer_givenname,
+-                     surfer_surname
+-              FROM %s
+-              WHERE ".str_replace('%', '%%', $filter)." %s";
++    $whereCondition = '';
++    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
++    $parser = new searchStringParser();
++    if ($patternFirstChar == TRUE) {
++      $parser->tokenMinLength = 1;
++    }
++    $validFilter = TRUE;
++    if (!empty($pattern)) {
++      if (!is_array($pattern)) {
++        $pattern = array($pattern);
++      }
++      foreach ($pattern as $currentPattern) {
++        if ($filter = $parser->getSQL($currentPattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
++          if ($patternFirstChar == TRUE) {
++            $filter = str_replace("LIKE '%", "LIKE '", $filter);
++          }
++          $whereCondition .= $whereCondition == '' ? " WHERE " : " AND ";
++          $whereCondition .= str_replace('%', '%%', $filter);
++        } else {
++          $validFilter = FALSE;
++        }
++      }
++    }
++    if ($validFilter == TRUE) {
++      if (is_array($orderBy)) {
++        $orderByField = ", CONCAT(".implode(",", $orderBy).") AS order_by";
++      } else {
++        $orderByField = "";
++      }
++      $sql = "SELECT surfer_id, surfer_handle, surfer_email,
++                     surfer_givenname, surfer_surname$orderByField
++                FROM %s
++                $whereCondition %s";
+       if (in_array($orderBy, array('surfer_handle', 'surfer_email', 'surfer_surname'))) {
+         $sql .= " ORDER BY ".$orderBy." ASC";
++      } elseif (is_array($orderBy)) {
++        $sql .= " ORDER BY order_by ASC";
+       }
+-      $blockedClause = ($includeBlocked === FALSE) ? ' AND surfer_valid != 4' : '';
++      $blockedClause = empty($whereCondition) ? " WHERE " : " AND ";
++      $blockedClause .= ($includeBlocked === FALSE) ? ' surfer_valid != 4' : '';
+       $sqlParams = array($this->tableSurfer, $blockedClause);
+-      if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
++      if ($res = $this->databaseQueryFmt($sql, $sqlParams, $limit, $offset)) {
+         while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++          if (isset($row['order_by'])) {
++            unset($row['order_by']);
++          }
+           $result[$row['surfer_id']] = $row;
+         }
++        $this->surfersAbsCount = $res->absCount();
+       }
+     }
+     return $result;
+@@ -3517,13 +3550,13 @@
+   * @param integer $lng Language id
+   * @return array $dynamicEditFields Fields configuration
+   */
+-  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
++  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
+     // Create field condition
+     $fieldCondition = '';
+     if (is_numeric($fields) && $fields > 0) {
+-      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
++      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
+     } elseif (is_string($fields) && $fields != '0') {
+-      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
++      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
+     } elseif (is_array($fields)) {
+       // Check whether we have got an array of categories (numeric) or of names
+       $numeric = TRUE;
+@@ -3533,23 +3566,43 @@
+         }
+       }
+       if ($numeric) {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
+       } else {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
+       }
+     }
+     if ($fieldCondition != '') {
+       $fieldCondition = " AND ".$fieldCondition;
+     }
+-    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
+-                   surferdata_values, surferdata_check, surferdata_class,
+-                   surferdata_available, surferdata_mandatory, surferdata_order
+-              FROM %s
+-             WHERE surferdata_available = 1".
++
++    if ($getClasses = TRUE) {
++      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
++      $joinSurferDataClassTitles = sprintf(
++        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
++        "AND ct.surferdataclasstitle_lang = %d)",
++        $this->tableDataClassTitles,
++        $lng
++      );
++      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
++    } else {
++      $fieldSurferDataClassTitle = '';
++      $joinSurferDataClassTitles = '';
++      $orderBySurferDataClassTitle = '';
++    }
++
++    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
++                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
++                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
++              FROM %s AS d
++              %s
++             WHERE d.surferdata_available = 1".
+                    $fieldCondition."
+-          ORDER BY surferdata_order, surferdata_name";
+-    $sqlParams = array($this->tableData);
++          ORDER BY %sd.surferdata_order, d.surferdata_name";
++    $sqlParams = array(
++      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
++    );
+     $fields = array();
++
+     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
+       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
+         $fields[] = $row;
+@@ -3573,9 +3626,15 @@
+         }
+       }
+     }
++
+     // Create the edit fields
+     $dynamicEditFields = array();
++    $lastClassTitle = NULL;
+     foreach ($fields as $field) {
++      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
++        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
++        $lastClassTitle = $field['surferdataclasstitle_name'];
++      }
+       $fieldName = $field['surferdata_name'];
+       if ($prefix != '') {
+         $fieldName = $prefix.'_'.$fieldName;
+Index: papaya-lib/modules/_base/community/content_profile.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_profile.php	(Revision 38501)
++++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
+@@ -240,6 +240,10 @@
+           'Query string for redirect url',
+           ''
+         ),
++        'Dynamic Data',
++        'dynamic_class' => array(
++          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
++        )
+       ),
+     ),
+     array(
+@@ -576,6 +580,15 @@
+         ),
+         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
+         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
++        'caption_section_email' => array(
++          'Section email',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Change email"',
++          ''
++        ),
+         'caption_change_email' => array(
+           'Change email',
+           'isNoHTML',
+@@ -617,6 +630,15 @@
+         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
+         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
+         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
++        'caption_section_password' => array(
++          'Section password',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Old password"',
++          ''
++        ),
+         'caption_old_password' => array(
+           'Old password',
+           'isNoHTML',
+@@ -705,6 +727,24 @@
+           '',
+           'Enter the new password twice or leave blank to keep the old one.'
+         ),
++        'descr_old_password' => array(
++          'Old password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password if you want to change your email.'
++        ),
++        'descr_need_old_password' => array(
++          'Change password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password to confirm changes.'
++        ),
+         'descr_delete_account' => array(
+           'Delete account',
+           'isSomeText',
+@@ -828,6 +868,9 @@
+     }
+ 
+     if ($this->data['change_email'] == 1) {
++      if (!empty($this->data['caption_section_email'])) {
++        $fields[] = $this->data['caption_section_email'];
++      }
+       $fields['surfer_new_email'] = array(
+         $this->data['caption_change_email'],
+         'isEmail',
+@@ -842,6 +885,9 @@
+     }
+ 
+     if ($this->data['change_password'] == 1) {
++      if (!empty($this->data['caption_section_password'])) {
++        $fields[] = $this->data['caption_section_password'];
++      }
+       $fields['surfer_password1'] = array(
+         $this->data['caption_new_password'],
+         'isPassword',
+@@ -854,21 +900,53 @@
+         'isSomeText',
+         FALSE,
+         'password',
+-        200
++        200,
++        $this->data['descr_change_password']
+       );
++    }
++    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
+       $fields['surfer_password3'] = array(
+         $this->data['caption_old_password'],
+         'isSomeText',
+-        FALSE,
++        !empty($this->data['need_oldpassword']),
+         'password',
+         200,
+-        $this->data['descr_change_password']
++        !empty($this->data['need_oldpassword']) ?
++          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
+       );
+     }
+ 
++    // Add dynamic data fields
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $dynFields = $this->baseSurfers->getDynamicEditFields(
++        $this->data['dynamic_class'],
++        'dynamic',
++        $this->parentObj->topic['TRANSLATION']['lng_id'],
++        TRUE
++      );
++      $fields = array_merge($fields, $dynFields);
++    }
++
++    $data = $this->surferData;
++    // Get existing dynamic data
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      $dynData = $this->baseSurfers->getDynamicData(
++        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
++        $fieldNames
++      );
++      if ($dynData != NULL) {
++        foreach ($dynData as $fieldName => $fieldValue) {
++          $data['dynamic_'.$fieldName] = $fieldValue;
++        }
++      }
++    }
++
+     $hidden = array('save' => 1);
+     $this->profileForm = new base_frontend_form(
+-      $this, $this->paramName, $fields, $this->surferData, $hidden
++      $this, $this->paramName, $fields, $data, $hidden
+     );
+     $this->profileForm->msgs = &$this->msgs;
+     $this->profileForm->loadParams();
+@@ -996,7 +1074,25 @@
+     if ($this->data['edit_gender'] == 0) {
+       unset($this->surferData['surfer_gender']);
+     }
+-    return $this->baseSurfers->saveSurfer($this->surferData);
++    $result = $this->baseSurfers->saveSurfer($this->surferData);
++
++    // Now save the dynamic data, if necessary
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      // Get the field names
++      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      // Get those fields that are actually set
++      $dynFields = array();
++      foreach ($dynFieldNames as $fieldName) {
++        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
++          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
++        }
++      }
++      if (!empty($dynFields)) {
++        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
++      }
++    }
++    return $result;
+   }
+ 
+   /**
+@@ -1538,7 +1634,14 @@
+           // If an error field exists, the error_input message is displayed
+           // Otherwise it is a token error with a different message
+           if ($errorField == $field) {
+-            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
++            if (in_array(
++                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
++               ) {
++              $message = $this->data['error_password'];
++            } else {
++              $message = $this->data['error_input'];
++            }
++            $result .= $this->getErrorMessageXml($message, $errorField);
+           } else {
+             $result .= $this->getErrorMessageXml(
+               'Invalid Token. Progress is canceled', $errorField
+@@ -1625,5 +1728,53 @@
+   function getCacheId() {
+     return FALSE;
+   }
++
++  /**
++  * Get form xml to select dynamic data categories by callback.
++  *
++  * @param string $name Field name
++  * @param array $element Field element configurations
++  * @param string $data Current field data
++  * @return string $result XML
++  */
++  function callbackClasses($name, $element, $data) {
++    $this->_initBaseSurfers();
++    $result = '';
++    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
++    $commonTitle = $this->_gt('Category');
++    $sql = "SELECT c.surferdataclass_id,
++                   ct.surferdataclasstitle_classid,
++                   ct.surferdataclasstitle_name,
++                   ct.surferdataclasstitle_lang
++              FROM %s AS c LEFT OUTER JOIN %s AS ct
++                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
++             WHERE ct.surferdataclasstitle_lang = %d";
++    $sqlParams = array(
++      $this->baseSurfers->tableDataClasses,
++      $this->baseSurfers->tableDataClassTitles,
++      $lng
++    );
++    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
++      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++        if (isset($row['surferdataclasstitle_name']) &&
++            trim($row['surferdataclasstitle_name']) != '') {
++          $title = $row['surferdataclasstitle_name'];
++        } else {
++          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
++        }
++        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
++          ' checked="checked"' : '';
++        $result .= sprintf(
++          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
++          $this->paramName,
++          $name,
++          $row['surferdataclass_id'],
++          $checked,
++          $title
++        );
++      }
++    }
++    return $result;
++  }
+ }
+ ?>
 Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 ===================================================================
 --- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38501)
@@ -1506,495 +2048,6 @@ Index: papaya-lib/modules/free/thumbs/modules.xml
      <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
    </modules>
    <tables>
-Index: papaya-lib/modules/_base/filter_xslt.php
-===================================================================
---- papaya-lib/modules/_base/filter_xslt.php	(Revision 38501)
-+++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
-@@ -161,8 +161,8 @@
-         } else {
-           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
-           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
--            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
--              $moduleNames = explode(',', $match[1]);
-+            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
-+              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
-               foreach ($moduleNames as $key => $value) {
-                 $moduleNames[trim($value)] = TRUE;
-                 unset($moduleNames[$key]);
-Index: papaya-lib/modules/_base/community/base_surfers.php
-===================================================================
---- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38501)
-+++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
-@@ -773,16 +773,16 @@
-           );
-         }
-       }
--
--      if ($isMultiples) {
--        // case 1: multiples ids
--        return $result;
--      } else if (count($result) > 0) {
--        // case 2: one id lookup
--        return reset($result);
--      }
-     }
--    return '';
-+    if ($isMultiples) {
-+      // case 1: multiples ids
-+      return $result;
-+    } elseif (count($result) > 0) {
-+      // case 2: one id lookup
-+      return reset($result);
-+    } else {
-+      return '';
-+    }
-   }
- 
-   /**
-@@ -3517,13 +3517,13 @@
-   * @param integer $lng Language id
-   * @return array $dynamicEditFields Fields configuration
-   */
--  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
-+  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
-     // Create field condition
-     $fieldCondition = '';
-     if (is_numeric($fields) && $fields > 0) {
--      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
-+      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
-     } elseif (is_string($fields) && $fields != '0') {
--      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
-+      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
-     } elseif (is_array($fields)) {
-       // Check whether we have got an array of categories (numeric) or of names
-       $numeric = TRUE;
-@@ -3533,23 +3533,43 @@
-         }
-       }
-       if ($numeric) {
--        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
-+        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
-       } else {
--        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
-+        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
-       }
-     }
-     if ($fieldCondition != '') {
-       $fieldCondition = " AND ".$fieldCondition;
-     }
--    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
--                   surferdata_values, surferdata_check, surferdata_class,
--                   surferdata_available, surferdata_mandatory, surferdata_order
--              FROM %s
--             WHERE surferdata_available = 1".
-+
-+    if ($getClasses = TRUE) {
-+      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
-+      $joinSurferDataClassTitles = sprintf(
-+        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
-+        "AND ct.surferdataclasstitle_lang = %d)",
-+        $this->tableDataClassTitles,
-+        $lng
-+      );
-+      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
-+    } else {
-+      $fieldSurferDataClassTitle = '';
-+      $joinSurferDataClassTitles = '';
-+      $orderBySurferDataClassTitle = '';
-+    }
-+
-+    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
-+                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
-+                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
-+              FROM %s AS d
-+              %s
-+             WHERE d.surferdata_available = 1".
-                    $fieldCondition."
--          ORDER BY surferdata_order, surferdata_name";
--    $sqlParams = array($this->tableData);
-+          ORDER BY %sd.surferdata_order, d.surferdata_name";
-+    $sqlParams = array(
-+      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
-+    );
-     $fields = array();
-+
-     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
-       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-         $fields[] = $row;
-@@ -3573,9 +3593,15 @@
-         }
-       }
-     }
-+
-     // Create the edit fields
-     $dynamicEditFields = array();
-+    $lastClassTitle = NULL;
-     foreach ($fields as $field) {
-+      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
-+        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
-+        $lastClassTitle = $field['surferdataclasstitle_name'];
-+      }
-       $fieldName = $field['surferdata_name'];
-       if ($prefix != '') {
-         $fieldName = $prefix.'_'.$fieldName;
-Index: papaya-lib/modules/_base/community/content_profile.php
-===================================================================
---- papaya-lib/modules/_base/community/content_profile.php	(Revision 38501)
-+++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
-@@ -240,6 +240,10 @@
-           'Query string for redirect url',
-           ''
-         ),
-+        'Dynamic Data',
-+        'dynamic_class' => array(
-+          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
-+        )
-       ),
-     ),
-     array(
-@@ -576,6 +580,15 @@
-         ),
-         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
-         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
-+        'caption_section_email' => array(
-+          'Section email',
-+          'isNoHTML',
-+          FALSE,
-+          'input',
-+          200,
-+          'Adds a section caption above "Change email"',
-+          ''
-+        ),
-         'caption_change_email' => array(
-           'Change email',
-           'isNoHTML',
-@@ -617,6 +630,15 @@
-         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
-         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
-         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
-+        'caption_section_password' => array(
-+          'Section password',
-+          'isNoHTML',
-+          FALSE,
-+          'input',
-+          200,
-+          'Adds a section caption above "Old password"',
-+          ''
-+        ),
-         'caption_old_password' => array(
-           'Old password',
-           'isNoHTML',
-@@ -705,6 +727,24 @@
-           '',
-           'Enter the new password twice or leave blank to keep the old one.'
-         ),
-+        'descr_old_password' => array(
-+          'Old password',
-+          'isSomeText',
-+          FALSE,
-+          'simplerichtext',
-+          7,
-+          '',
-+          'Enter the old password if you want to change your email.'
-+        ),
-+        'descr_need_old_password' => array(
-+          'Change password',
-+          'isSomeText',
-+          FALSE,
-+          'simplerichtext',
-+          7,
-+          '',
-+          'Enter the old password to confirm changes.'
-+        ),
-         'descr_delete_account' => array(
-           'Delete account',
-           'isSomeText',
-@@ -828,6 +868,9 @@
-     }
- 
-     if ($this->data['change_email'] == 1) {
-+      if (!empty($this->data['caption_section_email'])) {
-+        $fields[] = $this->data['caption_section_email'];
-+      }
-       $fields['surfer_new_email'] = array(
-         $this->data['caption_change_email'],
-         'isEmail',
-@@ -842,6 +885,9 @@
-     }
- 
-     if ($this->data['change_password'] == 1) {
-+      if (!empty($this->data['caption_section_password'])) {
-+        $fields[] = $this->data['caption_section_password'];
-+      }
-       $fields['surfer_password1'] = array(
-         $this->data['caption_new_password'],
-         'isPassword',
-@@ -854,21 +900,53 @@
-         'isSomeText',
-         FALSE,
-         'password',
--        200
-+        200,
-+        $this->data['descr_change_password']
-       );
-+    }
-+    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
-       $fields['surfer_password3'] = array(
-         $this->data['caption_old_password'],
-         'isSomeText',
--        FALSE,
-+        !empty($this->data['need_oldpassword']),
-         'password',
-         200,
--        $this->data['descr_change_password']
-+        !empty($this->data['need_oldpassword']) ?
-+          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
-       );
-     }
- 
-+    // Add dynamic data fields
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      $dynFields = $this->baseSurfers->getDynamicEditFields(
-+        $this->data['dynamic_class'],
-+        'dynamic',
-+        $this->parentObj->topic['TRANSLATION']['lng_id'],
-+        TRUE
-+      );
-+      $fields = array_merge($fields, $dynFields);
-+    }
-+
-+    $data = $this->surferData;
-+    // Get existing dynamic data
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
-+      $dynData = $this->baseSurfers->getDynamicData(
-+        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
-+        $fieldNames
-+      );
-+      if ($dynData != NULL) {
-+        foreach ($dynData as $fieldName => $fieldValue) {
-+          $data['dynamic_'.$fieldName] = $fieldValue;
-+        }
-+      }
-+    }
-+
-     $hidden = array('save' => 1);
-     $this->profileForm = new base_frontend_form(
--      $this, $this->paramName, $fields, $this->surferData, $hidden
-+      $this, $this->paramName, $fields, $data, $hidden
-     );
-     $this->profileForm->msgs = &$this->msgs;
-     $this->profileForm->loadParams();
-@@ -996,7 +1074,25 @@
-     if ($this->data['edit_gender'] == 0) {
-       unset($this->surferData['surfer_gender']);
-     }
--    return $this->baseSurfers->saveSurfer($this->surferData);
-+    $result = $this->baseSurfers->saveSurfer($this->surferData);
-+
-+    // Now save the dynamic data, if necessary
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      // Get the field names
-+      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
-+      // Get those fields that are actually set
-+      $dynFields = array();
-+      foreach ($dynFieldNames as $fieldName) {
-+        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
-+          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
-+        }
-+      }
-+      if (!empty($dynFields)) {
-+        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
-+      }
-+    }
-+    return $result;
-   }
- 
-   /**
-@@ -1538,7 +1634,14 @@
-           // If an error field exists, the error_input message is displayed
-           // Otherwise it is a token error with a different message
-           if ($errorField == $field) {
--            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
-+            if (in_array(
-+                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
-+               ) {
-+              $message = $this->data['error_password'];
-+            } else {
-+              $message = $this->data['error_input'];
-+            }
-+            $result .= $this->getErrorMessageXml($message, $errorField);
-           } else {
-             $result .= $this->getErrorMessageXml(
-               'Invalid Token. Progress is canceled', $errorField
-@@ -1625,5 +1728,53 @@
-   function getCacheId() {
-     return FALSE;
-   }
-+
-+  /**
-+  * Get form xml to select dynamic data categories by callback.
-+  *
-+  * @param string $name Field name
-+  * @param array $element Field element configurations
-+  * @param string $data Current field data
-+  * @return string $result XML
-+  */
-+  function callbackClasses($name, $element, $data) {
-+    $this->_initBaseSurfers();
-+    $result = '';
-+    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
-+    $commonTitle = $this->_gt('Category');
-+    $sql = "SELECT c.surferdataclass_id,
-+                   ct.surferdataclasstitle_classid,
-+                   ct.surferdataclasstitle_name,
-+                   ct.surferdataclasstitle_lang
-+              FROM %s AS c LEFT OUTER JOIN %s AS ct
-+                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
-+             WHERE ct.surferdataclasstitle_lang = %d";
-+    $sqlParams = array(
-+      $this->baseSurfers->tableDataClasses,
-+      $this->baseSurfers->tableDataClassTitles,
-+      $lng
-+    );
-+    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
-+      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-+        if (isset($row['surferdataclasstitle_name']) &&
-+            trim($row['surferdataclasstitle_name']) != '') {
-+          $title = $row['surferdataclasstitle_name'];
-+        } else {
-+          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
-+        }
-+        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
-+          ' checked="checked"' : '';
-+        $result .= sprintf(
-+          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
-+          $this->paramName,
-+          $name,
-+          $row['surferdataclass_id'],
-+          $checked,
-+          $title
-+        );
-+      }
-+    }
-+    return $result;
-+  }
- }
- ?>
-Index: papaya-lib/modules/_base/community/content_userdata.php
-===================================================================
---- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38501)
-+++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
-@@ -522,7 +522,8 @@
-         $dynFields = $this->baseSurfers->getDynamicEditFields(
-           $this->data['dynamic_class'],
-           'dynamic',
--          $this->parentObj->topic['TRANSLATION']['lng_id']
-+          $this->parentObj->topic['TRANSLATION']['lng_id'],
-+          TRUE
-         );
-         $fields = array_merge($fields, $dynFields);
-       }
-@@ -1005,4 +1006,4 @@
-     return $result;
-   }
- }
--?>
-\ No newline at end of file
-+?>
-Index: papaya-lib/modules/_base/community/content_register.php
-===================================================================
---- papaya-lib/modules/_base/community/content_register.php	(Revision 38501)
-+++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
-@@ -1928,7 +1928,8 @@
-         $dynFields = $this->baseSurfers->getDynamicEditFields(
-           $this->data['dynamic_class'],
-           'dynamic',
--          $this->parentObj->topic['TRANSLATION']['lng_id']
-+          $this->parentObj->topic['TRANSLATION']['lng_id'],
-+          TRUE
-         );
-         $fields = array_merge($fields, $dynFields);
-       }
-Index: papaya-data/templates/default-xhtml/html/boxes.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38501)
-+++ papaya-data/templates/default-xhtml/html/boxes.xml	(Arbeitskopie)
-@@ -1,8 +1,8 @@
- <?xml version="1.0" ?>
- <boxes>
-   <styles>
--    <!-- 
--      css files included in page head 
-+    <!--
-+      css files included in page head
- 
-       Syntax: <file module="foo" file="foo.css"/>
-     -->
-@@ -23,33 +23,47 @@
-     <file module="actionbox_catalog_limited_content" file="box_catalog_limited_content.css" />
-     <file module="actionbox_catalog_related_categories" file="box_catalog_related_list.css" />
-     <file module="actionbox_quiz" file="box_quiz.css" />
--    
-+
-     <file module="actionbox_forum" file="box_forum.css" />
-     <file module="actionbox_comments" file="box_forum.css" />
-     <file module="actionbox_lastentries" file="box_forum.css" />
--    
-+
-     <file module="actionbox_nextdates_tag" file="box_calendar.css" />
-     <file module="actionbox_calendar_tag" file="box_calendar.css" />
-     <file module="actionbox_calendar" file="box_calendar.css" />
--    
-+
-     <file module="actbox_linkdb" file="box_linkdb.css" />
--    
-+
-     <file module="actionbox_searchbox" file="box_mnogo.css" />
--  </styles>  
-+
-+    <file module="ACommunityPageCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunitySurferCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityImageCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
-+    <file module="ACommunitySurferStatusBox" file="box_acommunity_surfer_status.css" />
-+    <file module="ACommunitySurferContactsBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunitySurfersLastActionBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunitySurfersRegistrationBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunityMessageConversationsBox" file="box_acommunity_message_conversations.css" />
-+    <file module="ACommunitySurferGalleryTeaserBox" file="box_acommunity_surfer_gallery_teaser.css" />
-+    <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />
-+    <file module="ACommunitySurferGalleryFoldersBox" file="box_acommunity_surfer_gallery_folders.css" />
-+  </styles>
-   <scripts>
--    <!-- 
-+    <!--
-       javascript files included in page head
--     
-+
-       Syntax: <file module="foo" file="foo.js"/>
-     -->
- 
--  </scripts>  
-+  </scripts>
-   <scripts-lazy>
--    <!-- 
-+    <!--
-       javascript files included just before page boday end
--     
-+
-       Syntax: <file module="bar" file="bar.js"/>
-     -->
--  
-+
-   </scripts-lazy>
--</boxes>
-\ No newline at end of file
-+</boxes>
 Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
 ===================================================================
 --- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38501)
@@ -2507,3 +2560,79 @@ Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
  </xsl:template>
  
  <xsl:template name="dialog-element-select">
+Index: papaya-data/templates/default-xhtml/html/boxes.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38501)
++++ papaya-data/templates/default-xhtml/html/boxes.xml	(Arbeitskopie)
+@@ -1,8 +1,8 @@
+ <?xml version="1.0" ?>
+ <boxes>
+   <styles>
+-    <!-- 
+-      css files included in page head 
++    <!--
++      css files included in page head
+ 
+       Syntax: <file module="foo" file="foo.css"/>
+     -->
+@@ -23,33 +23,47 @@
+     <file module="actionbox_catalog_limited_content" file="box_catalog_limited_content.css" />
+     <file module="actionbox_catalog_related_categories" file="box_catalog_related_list.css" />
+     <file module="actionbox_quiz" file="box_quiz.css" />
+-    
++
+     <file module="actionbox_forum" file="box_forum.css" />
+     <file module="actionbox_comments" file="box_forum.css" />
+     <file module="actionbox_lastentries" file="box_forum.css" />
+-    
++
+     <file module="actionbox_nextdates_tag" file="box_calendar.css" />
+     <file module="actionbox_calendar_tag" file="box_calendar.css" />
+     <file module="actionbox_calendar" file="box_calendar.css" />
+-    
++
+     <file module="actbox_linkdb" file="box_linkdb.css" />
+-    
++
+     <file module="actionbox_searchbox" file="box_mnogo.css" />
+-  </styles>  
++
++    <file module="ACommunityPageCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunitySurferCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityImageCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
++    <file module="ACommunitySurferStatusBox" file="box_acommunity_surfer_status.css" />
++    <file module="ACommunitySurferContactsBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunitySurfersLastActionBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunitySurfersRegistrationBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunityMessageConversationsBox" file="box_acommunity_message_conversations.css" />
++    <file module="ACommunitySurferGalleryTeaserBox" file="box_acommunity_surfer_gallery_teaser.css" />
++    <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />
++    <file module="ACommunitySurferGalleryFoldersBox" file="box_acommunity_surfer_gallery_folders.css" />
++  </styles>
+   <scripts>
+-    <!-- 
++    <!--
+       javascript files included in page head
+-     
++
+       Syntax: <file module="foo" file="foo.js"/>
+     -->
+ 
+-  </scripts>  
++  </scripts>
+   <scripts-lazy>
+-    <!-- 
++    <!--
+       javascript files included just before page boday end
+-     
++
+       Syntax: <file module="bar" file="bar.js"/>
+     -->
+-  
++
+   </scripts-lazy>
+-</boxes>
+\ No newline at end of file
++</boxes>

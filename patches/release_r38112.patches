@@ -1,416 +1,730 @@
-Index: papaya-lib/modules/_base/filter_xslt.php
+Index: papaya-data/templates/default-xhtml/html/boxes.xml
 ===================================================================
---- papaya-lib/modules/_base/filter_xslt.php	(Revision 38500)
-+++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
-@@ -161,8 +161,8 @@
-         } else {
-           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
-           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
--            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
--              $moduleNames = explode(',', $match[1]);
-+            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
-+              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
-               foreach ($moduleNames as $key => $value) {
-                 $moduleNames[trim($value)] = TRUE;
-                 unset($moduleNames[$key]);
-Index: papaya-lib/modules/_base/community/content_register.php
-===================================================================
---- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
-@@ -1928,7 +1928,8 @@
-         $dynFields = $this->baseSurfers->getDynamicEditFields(
-           $this->data['dynamic_class'],
-           'dynamic',
--          $this->parentObj->topic['TRANSLATION']['lng_id']
-+          $this->parentObj->topic['TRANSLATION']['lng_id'],
-+          TRUE
-         );
-         $fields = array_merge($fields, $dynFields);
-       }
-Index: papaya-lib/modules/_base/community/base_surfers.php
-===================================================================
---- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
-@@ -773,16 +773,16 @@
-           );
-         }
-       }
--
--      if ($isMultiples) {
--        // case 1: multiples ids
--        return $result;
--      } else if (count($result) > 0) {
--        // case 2: one id lookup
--        return reset($result);
--      }
-     }
--    return '';
-+    if ($isMultiples) {
-+      // case 1: multiples ids
-+      return $result;
-+    } elseif (count($result) > 0) {
-+      // case 2: one id lookup
-+      return reset($result);
-+    } else {
-+      return '';
-+    }
-   }
+--- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/boxes.xml	(Arbeitskopie)
+@@ -1,8 +1,8 @@
+ <?xml version="1.0" ?>
+ <boxes>
+   <styles>
+-    <!-- 
+-      css files included in page head 
++    <!--
++      css files included in page head
  
-   /**
-@@ -3506,13 +3506,13 @@
-   * @param integer $lng Language id
-   * @return array $dynamicEditFields Fields configuration
-   */
--  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
-+  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
-     // Create field condition
-     $fieldCondition = '';
-     if (is_numeric($fields) && $fields > 0) {
--      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
-+      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
-     } elseif (is_string($fields) && $fields != '0') {
--      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
-+      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
-     } elseif (is_array($fields)) {
-       // Check whether we have got an array of categories (numeric) or of names
-       $numeric = TRUE;
-@@ -3522,23 +3522,43 @@
-         }
-       }
-       if ($numeric) {
--        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
-+        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
-       } else {
--        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
-+        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
-       }
-     }
-     if ($fieldCondition != '') {
-       $fieldCondition = " AND ".$fieldCondition;
-     }
--    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
--                   surferdata_values, surferdata_check, surferdata_class,
--                   surferdata_available, surferdata_mandatory, surferdata_order
--              FROM %s
--             WHERE surferdata_available = 1".
+       Syntax: <file module="foo" file="foo.css"/>
+     -->
+@@ -23,33 +23,47 @@
+     <file module="actionbox_catalog_limited_content" file="box_catalog_limited_content.css" />
+     <file module="actionbox_catalog_related_categories" file="box_catalog_related_list.css" />
+     <file module="actionbox_quiz" file="box_quiz.css" />
+-    
 +
-+    if ($getClasses = TRUE) {
-+      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
-+      $joinSurferDataClassTitles = sprintf(
-+        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
-+        "AND ct.surferdataclasstitle_lang = %d)",
-+        $this->tableDataClassTitles,
-+        $lng
-+      );
-+      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
-+    } else {
-+      $fieldSurferDataClassTitle = '';
-+      $joinSurferDataClassTitles = '';
-+      $orderBySurferDataClassTitle = '';
-+    }
+     <file module="actionbox_forum" file="box_forum.css" />
+     <file module="actionbox_comments" file="box_forum.css" />
+     <file module="actionbox_lastentries" file="box_forum.css" />
+-    
 +
-+    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
-+                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
-+                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
-+              FROM %s AS d
-+              %s
-+             WHERE d.surferdata_available = 1".
-                    $fieldCondition."
--          ORDER BY surferdata_order, surferdata_name";
--    $sqlParams = array($this->tableData);
-+          ORDER BY %sd.surferdata_order, d.surferdata_name";
-+    $sqlParams = array(
-+      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
-+    );
-     $fields = array();
+     <file module="actionbox_nextdates_tag" file="box_calendar.css" />
+     <file module="actionbox_calendar_tag" file="box_calendar.css" />
+     <file module="actionbox_calendar" file="box_calendar.css" />
+-    
 +
-     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
-       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-         $fields[] = $row;
-@@ -3562,9 +3582,15 @@
-         }
-       }
-     }
+     <file module="actbox_linkdb" file="box_linkdb.css" />
+-    
 +
-     // Create the edit fields
-     $dynamicEditFields = array();
-+    $lastClassTitle = NULL;
-     foreach ($fields as $field) {
-+      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
-+        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
-+        $lastClassTitle = $field['surferdataclasstitle_name'];
-+      }
-       $fieldName = $field['surferdata_name'];
-       if ($prefix != '') {
-         $fieldName = $prefix.'_'.$fieldName;
-Index: papaya-lib/modules/_base/community/content_profile.php
-===================================================================
---- papaya-lib/modules/_base/community/content_profile.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
-@@ -240,6 +240,10 @@
-           'Query string for redirect url',
-           ''
-         ),
-+        'Dynamic Data',
-+        'dynamic_class' => array(
-+          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
-+        )
-       ),
-     ),
-     array(
-@@ -576,6 +580,15 @@
-         ),
-         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
-         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
-+        'caption_section_email' => array(
-+          'Section email',
-+          'isNoHTML',
-+          FALSE,
-+          'input',
-+          200,
-+          'Adds a section caption above "Change email"',
-+          ''
-+        ),
-         'caption_change_email' => array(
-           'Change email',
-           'isNoHTML',
-@@ -617,6 +630,15 @@
-         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
-         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
-         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
-+        'caption_section_password' => array(
-+          'Section password',
-+          'isNoHTML',
-+          FALSE,
-+          'input',
-+          200,
-+          'Adds a section caption above "Old password"',
-+          ''
-+        ),
-         'caption_old_password' => array(
-           'Old password',
-           'isNoHTML',
-@@ -705,6 +727,24 @@
-           '',
-           'Enter the new password twice or leave blank to keep the old one.'
-         ),
-+        'descr_old_password' => array(
-+          'Old password',
-+          'isSomeText',
-+          FALSE,
-+          'simplerichtext',
-+          7,
-+          '',
-+          'Enter the old password if you want to change your email.'
-+        ),
-+        'descr_need_old_password' => array(
-+          'Change password',
-+          'isSomeText',
-+          FALSE,
-+          'simplerichtext',
-+          7,
-+          '',
-+          'Enter the old password to confirm changes.'
-+        ),
-         'descr_delete_account' => array(
-           'Delete account',
-           'isSomeText',
-@@ -828,6 +868,9 @@
-     }
+     <file module="actionbox_searchbox" file="box_mnogo.css" />
+-  </styles>  
++
++    <file module="ACommunityPageCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunitySurferCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityImageCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
++    <file module="ACommunitySurferStatusBox" file="box_acommunity_surfer_status.css" />
++    <file module="ACommunitySurferContactsBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunitySurfersLastActionBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunitySurfersRegistrationBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunityMessageConversationsBox" file="box_acommunity_message_conversations.css" />
++    <file module="ACommunitySurferGalleryTeaserBox" file="box_acommunity_surfer_gallery_teaser.css" />
++    <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />
++    <file module="ACommunitySurferGalleryFoldersBox" file="box_acommunity_surfer_gallery_folders.css" />
++  </styles>
+   <scripts>
+-    <!-- 
++    <!--
+       javascript files included in page head
+-     
++
+       Syntax: <file module="foo" file="foo.js"/>
+     -->
  
-     if ($this->data['change_email'] == 1) {
-+      if (!empty($this->data['caption_section_email'])) {
-+        $fields[] = $this->data['caption_section_email'];
-+      }
-       $fields['surfer_new_email'] = array(
-         $this->data['caption_change_email'],
-         'isEmail',
-@@ -842,6 +885,9 @@
-     }
- 
-     if ($this->data['change_password'] == 1) {
-+      if (!empty($this->data['caption_section_password'])) {
-+        $fields[] = $this->data['caption_section_password'];
-+      }
-       $fields['surfer_password1'] = array(
-         $this->data['caption_new_password'],
-         'isPassword',
-@@ -854,21 +900,53 @@
-         'isSomeText',
-         FALSE,
-         'password',
--        200
-+        200,
-+        $this->data['descr_change_password']
-       );
-+    }
-+    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
-       $fields['surfer_password3'] = array(
-         $this->data['caption_old_password'],
-         'isSomeText',
--        FALSE,
-+        !empty($this->data['need_oldpassword']),
-         'password',
-         200,
--        $this->data['descr_change_password']
-+        !empty($this->data['need_oldpassword']) ?
-+          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
-       );
-     }
- 
-+    // Add dynamic data fields
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      $dynFields = $this->baseSurfers->getDynamicEditFields(
-+        $this->data['dynamic_class'],
-+        'dynamic',
-+        $this->parentObj->topic['TRANSLATION']['lng_id'],
-+        TRUE
-+      );
-+      $fields = array_merge($fields, $dynFields);
-+    }
+-  </scripts>  
++  </scripts>
+   <scripts-lazy>
+-    <!-- 
++    <!--
+       javascript files included just before page boday end
+-     
 +
-+    $data = $this->surferData;
-+    // Get existing dynamic data
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
-+      $dynData = $this->baseSurfers->getDynamicData(
-+        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
-+        $fieldNames
-+      );
-+      if ($dynData != NULL) {
-+        foreach ($dynData as $fieldName => $fieldValue) {
-+          $data['dynamic_'.$fieldName] = $fieldValue;
-+        }
-+      }
-+    }
+       Syntax: <file module="bar" file="bar.js"/>
+     -->
+-  
 +
-     $hidden = array('save' => 1);
-     $this->profileForm = new base_frontend_form(
--      $this, $this->paramName, $fields, $this->surferData, $hidden
-+      $this, $this->paramName, $fields, $data, $hidden
-     );
-     $this->profileForm->msgs = &$this->msgs;
-     $this->profileForm->loadParams();
-@@ -996,7 +1074,25 @@
-     if ($this->data['edit_gender'] == 0) {
-       unset($this->surferData['surfer_gender']);
-     }
--    return $this->baseSurfers->saveSurfer($this->surferData);
-+    $result = $this->baseSurfers->saveSurfer($this->surferData);
-+
-+    // Now save the dynamic data, if necessary
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      // Get the field names
-+      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
-+      // Get those fields that are actually set
-+      $dynFields = array();
-+      foreach ($dynFieldNames as $fieldName) {
-+        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
-+          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
-+        }
-+      }
-+      if (!empty($dynFields)) {
-+        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
-+      }
-+    }
-+    return $result;
-   }
- 
-   /**
-@@ -1538,7 +1634,14 @@
-           // If an error field exists, the error_input message is displayed
-           // Otherwise it is a token error with a different message
-           if ($errorField == $field) {
--            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
-+            if (in_array(
-+                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
-+               ) {
-+              $message = $this->data['error_password'];
-+            } else {
-+              $message = $this->data['error_input'];
-+            }
-+            $result .= $this->getErrorMessageXml($message, $errorField);
-           } else {
-             $result .= $this->getErrorMessageXml(
-               'Invalid Token. Progress is canceled', $errorField
-@@ -1625,5 +1728,53 @@
-   function getCacheId() {
-     return FALSE;
-   }
-+
-+  /**
-+  * Get form xml to select dynamic data categories by callback.
-+  *
-+  * @param string $name Field name
-+  * @param array $element Field element configurations
-+  * @param string $data Current field data
-+  * @return string $result XML
-+  */
-+  function callbackClasses($name, $element, $data) {
-+    $this->_initBaseSurfers();
-+    $result = '';
-+    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
-+    $commonTitle = $this->_gt('Category');
-+    $sql = "SELECT c.surferdataclass_id,
-+                   ct.surferdataclasstitle_classid,
-+                   ct.surferdataclasstitle_name,
-+                   ct.surferdataclasstitle_lang
-+              FROM %s AS c LEFT OUTER JOIN %s AS ct
-+                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
-+             WHERE ct.surferdataclasstitle_lang = %d";
-+    $sqlParams = array(
-+      $this->baseSurfers->tableDataClasses,
-+      $this->baseSurfers->tableDataClassTitles,
-+      $lng
-+    );
-+    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
-+      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-+        if (isset($row['surferdataclasstitle_name']) &&
-+            trim($row['surferdataclasstitle_name']) != '') {
-+          $title = $row['surferdataclasstitle_name'];
-+        } else {
-+          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
-+        }
-+        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
-+          ' checked="checked"' : '';
-+        $result .= sprintf(
-+          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
-+          $this->paramName,
-+          $name,
-+          $row['surferdataclass_id'],
-+          $checked,
-+          $title
-+        );
-+      }
-+    }
-+    return $result;
-+  }
- }
- ?>
-Index: papaya-lib/modules/_base/community/content_userdata.php
-===================================================================
---- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
-@@ -522,7 +522,8 @@
-         $dynFields = $this->baseSurfers->getDynamicEditFields(
-           $this->data['dynamic_class'],
-           'dynamic',
--          $this->parentObj->topic['TRANSLATION']['lng_id']
-+          $this->parentObj->topic['TRANSLATION']['lng_id'],
-+          TRUE
-         );
-         $fields = array_merge($fields, $dynFields);
-       }
-@@ -1005,4 +1006,4 @@
-     return $result;
-   }
- }
--?>
+   </scripts-lazy>
+-</boxes>
 \ No newline at end of file
-+?>
++</boxes>
+Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Arbeitskopie)
+@@ -6,7 +6,7 @@
+   exclude-result-prefixes="#default"
+ >
+ <!--
+-  @papaya:modules content_thumbs
++  @papaya:modules MediaImageGalleryPage
+ -->
+ 
+ <!-- import main layout rules, this will import the default rules, too -->
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Arbeitskopie)
+@@ -2,4 +2,7 @@
+   <text ident="FILE_NAME">File</text>
+   <text ident="FILE_DATE">Date</text>
+   <text ident="FILE_SIZE">Size</text>
++  <text ident="NO_IMAGES">No images found.</text>
++  <text ident="ORIGINAL_IMAGE">Original image</text>
++  <text ident="IMAGE_DOWNLOAD">Download</text>
+ </texts>
+\ No newline at end of file
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Arbeitskopie)
+@@ -2,4 +2,6 @@
+   <text ident="FILE_NAME">Fichier</text>
+   <text ident="FILE_DATE">Date</text>
+   <text ident="FILE_SIZE">Dimension</text>
++  <text ident="ORIGINAL_IMAGE">Original peinture</text>
++  <text ident="IMAGE_DOWNLOAD">Téléchargement</text>
+ </texts>
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Arbeitskopie)
+@@ -2,4 +2,7 @@
+   <text ident="FILE_NAME">Datei</text>
+   <text ident="FILE_DATE">Datum</text>
+   <text ident="FILE_SIZE">Größe</text>
+-</texts>
++  <text ident="NO_IMAGES">Keine Bilder gefunden.</text>
++  <text ident="ORIGINAL_IMAGE">Original Bild</text>
++  <text ident="IMAGE_DOWNLOAD">Download</text>
++</texts>
+\ No newline at end of file
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Arbeitskopie)
+@@ -6,162 +6,177 @@
+   exclude-result-prefixes="#default"
+ >
+ 
+-<xsl:import href="../../../../_functions/javascript-escape-string.xsl" />
++  <xsl:import href="../../../../_functions/javascript-escape-string.xsl" />
+ 
+-<xsl:param name="PAGE_LANGUAGE"></xsl:param>
+-<xsl:param name="LANGUAGE_MODULE_CURRENT" select="document(concat($PAGE_LANGUAGE, '.xml'))" />
+-<xsl:param name="LANGUAGE_MODULE_FALLBACK" select="document('en-US.xml')"/>
++  <xsl:param name="PAGE_LANGUAGE"></xsl:param>
++  <xsl:param name="LANGUAGE_MODULE_CURRENT" select="document(concat($PAGE_LANGUAGE, '.xml'))" />
++  <xsl:param name="LANGUAGE_MODULE_FALLBACK" select="document('en-US.xml')"/>
+ 
+-<xsl:template name="page-styles">
+-  <xsl:call-template name="link-style">
+-    <xsl:with-param name="file">page_thumbs.css</xsl:with-param>
+-  </xsl:call-template>
+-</xsl:template>
++  <xsl:template name="page-styles">
++    <xsl:call-template name="link-style">
++      <xsl:with-param name="file">page_thumbs.css</xsl:with-param>
++    </xsl:call-template>
++  </xsl:template>
+ 
+-<xsl:template name="page-scripts-lazy">
+-  <xsl:call-template name="link-script">
+-    <xsl:with-param name="file">papaya/jquery.xmlns.js</xsl:with-param>
+-  </xsl:call-template>
+-  <xsl:call-template name="link-script">
+-    <xsl:with-param name="file">papaya/jquery.papayaLightbox.js</xsl:with-param>
+-  </xsl:call-template>
+-  <xsl:call-template name="link-script">
+-    <xsl:with-param name="file">papaya/jquery.papayaGallery.js</xsl:with-param>
+-  </xsl:call-template>
+- <script type="text/javascript"><xsl:comment>
+-    jQuery(document).ready(
+-      function() {
+-        jQuery('#gallery').papayaGallery();
+-      }
+-    );
+-  </xsl:comment></script>
+-</xsl:template>
+-
+-<xsl:template name="content-area">
+-  <xsl:param name="pageContent" select="content/topic"/>
+-  <xsl:choose>
+-    <xsl:when test="$pageContent/@module = 'content_thumbs'">
+-      <xsl:call-template name="module-content-thumbs">
+-        <xsl:with-param name="pageContent" select="$pageContent"/>
++  <xsl:template name="page-scripts-lazy">
++    <xsl:if test="/page/content/topic/options/lightbox = '1'">
++      <xsl:call-template name="link-script">
++        <xsl:with-param name="file">papaya/jquery.xmlns.js</xsl:with-param>
+       </xsl:call-template>
+-    </xsl:when>
+-    <xsl:otherwise>
+-      <xsl:call-template name="module-content-default">
+-        <xsl:with-param name="pageContent" select="$pageContent"/>
++      <xsl:call-template name="link-script">
++        <xsl:with-param name="file">papaya/jquery.papayaLightbox.js</xsl:with-param>
+       </xsl:call-template>
+-    </xsl:otherwise>
+-  </xsl:choose>
+-</xsl:template>
++      <xsl:call-template name="link-script">
++        <xsl:with-param name="file">papaya/jquery.papayaGallery.js</xsl:with-param>
++      </xsl:call-template>
++     <script type="text/javascript"><xsl:comment>
++        jQuery(document).ready(
++          function() {
++            jQuery('#gallery').papayaGallery();
++          }
++        );
++      </xsl:comment></script>
++    </xsl:if>
++  </xsl:template>
+ 
+-<xsl:template name="module-content-thumbs">
+-  <xsl:param name="pageContent"/>
+-  <xsl:call-template name="module-content-topic">
+-    <xsl:with-param name="pageContent" select="$pageContent" />
+-    <xsl:with-param name="withText" select="not($pageContent/image)" />
+-  </xsl:call-template>
+-  <div id="gallery">
++  <xsl:template name="content-area">
++    <xsl:param name="pageContent" select="content/topic"/>
+     <xsl:choose>
+-      <xsl:when test="$pageContent/thumbnails/thumb">
+-        <xsl:call-template name="module-content-thumbs-list">
+-          <xsl:with-param name="thumbs" select="$pageContent/thumbnails/thumb" />
+-          <xsl:with-param name="options" select="$pageContent/options" />
++      <xsl:when test="$pageContent/@module = 'MediaImageGalleryPage'">
++        <xsl:call-template name="module-content-image-gallery">
++          <xsl:with-param name="pageContent" select="$pageContent"/>
+         </xsl:call-template>
+       </xsl:when>
+-      <xsl:when test="$pageContent/image">
+-        <xsl:call-template name="module-content-thumbs-image-detail">
+-          <xsl:with-param name="image" select="$pageContent/image" />
+-          <xsl:with-param name="imageTitle" select="$pageContent/imagetitle" />
+-          <xsl:with-param name="imageComment" select="$pageContent/imagecomment" />
+-          <xsl:with-param name="navigation" select="$pageContent/navigation" />
++      <xsl:otherwise>
++        <xsl:call-template name="module-content-default">
++          <xsl:with-param name="pageContent" select="$pageContent"/>
+         </xsl:call-template>
+-      </xsl:when>
++      </xsl:otherwise>
+     </xsl:choose>
+-    <xsl:call-template name="float-fix"/>
+-    <xsl:call-template name="module-content-thumbns-navigation">
+-      <xsl:with-param name="navigation" select="$pageContent/navigation" />
++  </xsl:template>
++
++  <xsl:template name="module-content-image-gallery">
++    <xsl:param name="pageContent"/>
++    <xsl:call-template name="module-content-topic">
++      <xsl:with-param name="pageContent" select="$pageContent" />
++      <xsl:with-param name="withText" select="not($pageContent/image)" />
+     </xsl:call-template>
+-  </div>
+-</xsl:template>
+-
+-<xsl:template name="module-content-thumbs-list">
+-  <xsl:param name="thumbs" />
+-  <xsl:param name="options" />
+-  <!-- thumbnail view -->
+-  <xsl:if test="$thumbs">
+-    <xsl:for-each select="$thumbs">
+-      <div class="galleryThumbnail">
+-        <a class="galleryThumbnailFrame"
+-           style="width: {$options/thumbwidth}px; height: {$options/thumbheight}px;"
+-           href="{a/@href}"
+-           title="{image/@title}">
+-          <img src="{a/img/@src}" style="{a/img/@style}" alt="{a/img/@alt}"/>
+-        </a>
+-      </div>
+-    </xsl:for-each>
+-    <script type="text/javascript"><xsl:comment>
+-      jQuery('#gallery').children().hide();
+-      var galleryMapping = {
+-        images : {
+-          <xsl:for-each select="$thumbs">
+-            <xsl:if test="position() &gt; 1">, </xsl:if>
+-            <xsl:call-template name="javascript-escape-string">
+-              <xsl:with-param name="string" select="a/@href" />
+-            </xsl:call-template>
+-            <xsl:text> : </xsl:text>
+-            <xsl:call-template name="javascript-escape-string">
+-              <xsl:with-param name="string" select="@for" />
+-            </xsl:call-template>
+-          </xsl:for-each>
+-        },
+-        getImageUrl : function(href) {
+-          return (this.images[href]) ? this.images[href] : href;
+-        }
+-      };
+-    </xsl:comment></script>
+-  </xsl:if>
+-</xsl:template>
+-
+-<xsl:template name="module-content-thumbs-image-detail">
+-  <xsl:param name="image" />
+-  <xsl:param name="imageTitle" />
+-  <xsl:param name="imageComment" />
+-  <xsl:param name="navigation" />
+-  <xsl:if test="$image">
+-    <div class="galleryImage">
++    <div id="gallery">
+       <xsl:choose>
+-        <xsl:when test="$navigation/navlink[@dir='index']">
+-          <a href="{$navigation/navlink[@dir='index']/@href}">
+-            <img src="{$image/img/@src}" style="{$image/img/@style}" alt="{$image/img/@alt}"/>
+-          </a>
++        <xsl:when test="$pageContent/images/image">
++          <xsl:call-template name="module-content-gallery-images">
++            <xsl:with-param name="images" select="$pageContent/images/image" />
++            <xsl:with-param name="options" select="$pageContent/options" />
++          </xsl:call-template>
+         </xsl:when>
++        <xsl:when test="$pageContent/image">
++          <xsl:call-template name="module-content-gallery-image">
++            <xsl:with-param name="image" select="$pageContent/image" />
++            <xsl:with-param name="navigation" select="$pageContent/navigation" />
++          </xsl:call-template>
++        </xsl:when>
++      </xsl:choose>
++      <xsl:call-template name="float-fix"/>
++      <xsl:choose>
++        <xsl:when test="count($pageContent/images/image) &gt; 0 or count($pageContent/image) &gt; 0">
++          <xsl:call-template name="module-content-gallery-navigation">
++            <xsl:with-param name="navigation" select="$pageContent/navigation" />
++          </xsl:call-template>
++        </xsl:when>
+         <xsl:otherwise>
+-          <img src="{$image/img/@src}" style="{$image/img/@style}" alt="{$image/img/@alt}"/>
++          <div class="message"><xsl:call-template name="language-text">
++            <xsl:with-param name="text" select="'NO_IMAGES'"/>
++          </xsl:call-template></div>
+         </xsl:otherwise>
+       </xsl:choose>
+-      <xsl:if test="$imageTitle">
+-        <h2><xsl:value-of select="$imageTitle"/></h2>
+-      </xsl:if>
+-      <xsl:if test="$imageComment">
+-        <div class="comment">
+-          <xsl:apply-templates select="$imageComment/node()"/>
+-        </div>
+-      </xsl:if>
+     </div>
+-  </xsl:if>
+-</xsl:template>
++  </xsl:template>
+ 
+-<xsl:template name="module-content-thumbns-navigation">
+-  <xsl:param name="navigation" />
+-  <xsl:if test="$navigation/navlink[(@dir='prior') or (@dir='next')]">
+-    <div class="galleryNavigation">
+-      <xsl:if test="$navigation/navlink[@dir='prior']">
+-        <a href="{$navigation/navlink[@dir='prior']/@href}" class="navigationLinkPrevious">&lt;-</a>
++  <xsl:template name="module-content-gallery-images">
++    <xsl:param name="images" />
++    <xsl:param name="options" />
++    <xsl:if test="$images">
++      <xsl:for-each select="$images">
++        <div class="galleryThumbnail">
++          <a class="galleryThumbnailFrame" href="{destination/@href}" title="{title}">
++            <img src="{img/@src}" alt="{img/@alt}"/>
++          </a>
++        </div>
++      </xsl:for-each>
++      <xsl:if test="$options/lightbox = '1'">
++        <script type="text/javascript"><xsl:comment>
++          jQuery('#gallery').children().hide();
++          var galleryMapping = {
++            images : {
++              <xsl:for-each select="$images">
++                <xsl:if test="position() &gt; 1">, </xsl:if>
++                <xsl:call-template name="javascript-escape-string">
++                  <xsl:with-param name="string" select="destination/@href" />
++                </xsl:call-template>
++                <xsl:text> : </xsl:text>
++                <xsl:call-template name="javascript-escape-string">
++                  <xsl:with-param name="string" select="destination/img/@src" />
++                </xsl:call-template>
++              </xsl:for-each>
++            },
++            getImageUrl : function(href) {
++              return (this.images[href]) ? this.images[href] : href;
++            }
++          };
++        </xsl:comment></script>
+       </xsl:if>
+-      <xsl:if test="$navigation/navlink[@dir='next']">
+-        <a href="{$navigation/navlink[@dir='next']/@href}" class="navigationLinkNext">-&gt;</a>
+-      </xsl:if>
+-    </div>
+-  </xsl:if>
+-</xsl:template>
++    </xsl:if>
++  </xsl:template>
+ 
+-</xsl:stylesheet>
++  <xsl:template name="module-content-gallery-image">
++    <xsl:param name="image" />
++    <xsl:param name="navigation" />
++    <xsl:if test="$image">
++      <div class="galleryImage">
++        <xsl:choose>
++          <xsl:when test="$navigation/navlink[@direction = 'index']">
++            <a href="{$navigation/navlink[@direction = 'index']/@href}">
++              <img src="{$image/img/@src}" alt="{$image/img/@alt}"/>
++            </a>
++          </xsl:when>
++          <xsl:otherwise>
++            <img src="{$image/img/@src}" alt="{$image/img/@alt}"/>
++          </xsl:otherwise>
++        </xsl:choose>
++        <xsl:if test="$image/title">
++          <h2><xsl:value-of select="$image/title"/></h2>
++        </xsl:if>
++        <xsl:if test="$image/description">
++          <div class="description">
++            <xsl:apply-templates select="$image/description"/>
++          </div>
++        </xsl:if>
++        <xsl:if test="$image/original-link">
++          <div class="originalImage"><a href="{$image/original-link}"><xsl:call-template name="language-text">
++            <xsl:with-param name="text" select="'ORIGINAL_IMAGE'"/>
++          </xsl:call-template></a></div>
++        </xsl:if>
++        <xsl:if test="$image/download-link">
++          <div class="imageDownload"><a href="{$image/download-link}"><xsl:call-template name="language-text">
++            <xsl:with-param name="text" select="'IMAGE_DOWNLOAD'"/>
++          </xsl:call-template></a></div>
++        </xsl:if>
++      </div>
++    </xsl:if>
++  </xsl:template>
++
++  <xsl:template name="module-content-gallery-navigation">
++    <xsl:param name="navigation" />
++    <xsl:if test="$navigation/navlink[(@direction = 'previous') or (@direction = 'next')]">
++      <div class="galleryNavigation">
++        <xsl:if test="$navigation/navlink[@direction = 'previous']">
++          <a href="{$navigation/navlink[@direction = 'previous']/@href}" class="navigationLinkPrevious">&lt;-</a>
++        </xsl:if>
++        <xsl:if test="$navigation/navlink[@direction = 'next']">
++          <a href="{$navigation/navlink[@direction = 'next']/@href}" class="navigationLinkNext">-&gt;</a>
++        </xsl:if>
++      </div>
++    </xsl:if>
++  </xsl:template>
++
++</xsl:stylesheet>
+\ No newline at end of file
+Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Arbeitskopie)
+@@ -605,40 +605,31 @@
+   <fieldset>
+     <xsl:choose>
+       <xsl:when test="$dialog/lines">
+-        <xsl:for-each select="$dialog/lines//line[@fid != 'terms']">
+-          <xsl:if test="$userDataDescriptions != false()">
+-            <xsl:choose>
+-              <xsl:when test="@fid = 'surfer_password_1'">
+-                <p class="description">
+-                  <xsl:value-of select="$userDataDescriptions/description-change-password/@content" />
+-                </p>
+-              </xsl:when>
+-              <xsl:when test="@fid = 'surfer_new_email'">
+-                <p class="description">
+-                  <xsl:value-of select="$userDataDescriptions/description-change-email/@content" />
+-                </p>
+-              </xsl:when>
+-            </xsl:choose>
+-          </xsl:if>
+-          <xsl:call-template name="dialog-field">
+-            <xsl:with-param name="dialog" select="$dialog" />
+-            <xsl:with-param name="field" select="." />
+-            <xsl:with-param name="showMandatory" select="$showMandatory" />
+-          </xsl:call-template>
+-          <xsl:if test="$userDataDescriptions != false() and @fid = 'surfer_old_password'">
+-            <p class="description">
+-              <xsl:value-of select="$userDataDescriptions/description-enter-password/@content" />
+-            </p>
+-          </xsl:if>
+-        </xsl:for-each>
+-        <xsl:if test="$dialog/lines//line[@fid = 'terms']">
+-          <xsl:call-template name="dialog-field">
+-            <xsl:with-param name="dialog" select="$dialog" />
+-            <xsl:with-param name="field" select="$dialog/lines//line[@fid = 'terms']" />
+-            <xsl:with-param name="showMandatory" select="$showMandatory" />
+-          </xsl:call-template>
+-          <p><xsl:copy-of select="$terms" /></p>
+-        </xsl:if>
++        <xsl:choose>
++          <xsl:when test="$dialog/lines/linegroup">
++            <xsl:for-each select="$dialog/lines/linegroup">
++              <xsl:if test="@caption and @caption != ''">
++                <h2><xsl:value-of select="@caption" /></h2>
++              </xsl:if>
++              <xsl:call-template name="dialog-content-lines">
++                <xsl:with-param name="dialog" select="$dialog" />
++                <xsl:with-param name="lines" select="line"/>
++                <xsl:with-param name="showMandatory" select="$showMandatory" />
++                <xsl:with-param name="userDataDescriptions" select="$userDataDescriptions" />
++                <xsl:with-param name="terms" select="$terms" />
++              </xsl:call-template>
++            </xsl:for-each>
++          </xsl:when>
++          <xsl:otherwise>
++            <xsl:call-template name="dialog-content-lines">
++              <xsl:with-param name="dialog" select="$dialog" />
++              <xsl:with-param name="lines" select="$dialog/lines//line"/>
++              <xsl:with-param name="showMandatory" select="$showMandatory" />
++              <xsl:with-param name="userDataDescriptions" select="$userDataDescriptions" />
++              <xsl:with-param name="terms" select="$terms" />
++            </xsl:call-template>
++          </xsl:otherwise>
++        </xsl:choose>
+       </xsl:when>
+       <xsl:when test="$dialog/element/*">
+         <xsl:for-each select="$dialog/element">
+@@ -669,4 +660,47 @@
+   </fieldset>
+ </xsl:template>
+ 
++<xsl:template name="dialog-content-lines">
++  <xsl:param name="dialog" />
++  <xsl:param name="lines" />
++  <xsl:param name="showMandatory" select="true()" />
++  <xsl:param name="userDataDescriptions" select="false()" />
++  <xsl:param name="terms" />
++
++  <xsl:for-each select="$lines[@fid != 'terms']">
++    <xsl:if test="$userDataDescriptions != false()">
++      <xsl:choose>
++        <xsl:when test="@fid = 'surfer_password_1'">
++          <p class="description">
++            <xsl:value-of select="$userDataDescriptions/description-change-password/@content" />
++          </p>
++        </xsl:when>
++        <xsl:when test="@fid = 'surfer_new_email'">
++          <p class="description">
++            <xsl:value-of select="$userDataDescriptions/description-change-email/@content" />
++          </p>
++        </xsl:when>
++      </xsl:choose>
++    </xsl:if>
++    <xsl:call-template name="dialog-field">
++      <xsl:with-param name="dialog" select="$dialog" />
++      <xsl:with-param name="field" select="." />
++      <xsl:with-param name="showMandatory" select="$showMandatory" />
++    </xsl:call-template>
++    <xsl:if test="$userDataDescriptions != false() and @fid = 'surfer_old_password'">
++      <p class="description">
++        <xsl:value-of select="$userDataDescriptions/description-enter-password/@content" />
++      </p>
++    </xsl:if>
++  </xsl:for-each>
++  <xsl:if test="$lines[@fid = 'terms']">
++    <xsl:call-template name="dialog-field">
++      <xsl:with-param name="dialog" select="$dialog" />
++      <xsl:with-param name="field" select="$dialog/lines//line[@fid = 'terms']" />
++      <xsl:with-param name="showMandatory" select="$showMandatory" />
++    </xsl:call-template>
++    <p><xsl:copy-of select="$terms" /></p>
++  </xsl:if>
++</xsl:template>
++
+ </xsl:stylesheet>
+Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Arbeitskopie)
+@@ -325,6 +325,9 @@
+       </xsl:when>
+     </xsl:choose>
+   </div>
++  <xsl:if test="$field/@hint != ''">
++    <div class="hint"><xsl:value-of select="$field/@hint" /></div>
++  </xsl:if>
+ </xsl:template>
+ 
+ <xsl:template name="dialog-field-input">
+@@ -708,6 +711,7 @@
+   <label for="{$elementId}" class="radio">
+     <xsl:value-of select="$labelText" />
+   </label>
++  <xsl:call-template name="float-fix" />
+ </xsl:template>
+ 
+ <xsl:template name="dialog-element-select">
+Index: papaya-themes/default/page_thumbs.css
+===================================================================
+--- papaya-themes/default/page_thumbs.css	(Revision 38500)
++++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
+@@ -1,6 +1,6 @@
+ .galleryThumbnail {
+   float: left;
+-  padding: 20px;
++  padding: 0.4em;
+ }
+ a.galleryThumbnailFrame {
+   display: block;
+Index: papaya-themes/default/basic.css
+===================================================================
+--- papaya-themes/default/basic.css	(Revision 38500)
++++ papaya-themes/default/basic.css	(Arbeitskopie)
+@@ -72,6 +72,9 @@
+ 
+ /* Forms
+ ----------------------------------------------- */
++form h2 {
++  margin: 0.7em 0 0.2em 0;
++}
+ form p {
+   margin-bottom: .8em;
+ }
+@@ -80,6 +83,9 @@
+   padding: 0;
+   border: none;
+ }
++form div.field {
++  margin-top: 0.2em;
++}
+ form label {
+   display: block;
+   font-weight: bold;
+@@ -91,6 +97,8 @@
+   padding-left: .5em;
+ }
+ form input.text,
++form input.password,
++form input.file,
+ form textarea,
+ form select {
+   border: 1px solid #CCC;
+@@ -114,13 +122,27 @@
+   vertical-align: middle;
+   width: auto;
+ }
++form .radio {
++  float: left;
++  margin-right: 0.8em;
++}
++form input.radio {
++  margin-right: 0.2em;
++}
++form div.buttons {
++  margin-top: 15px;
++}
+ form button {
+   border: 1px solid #90A33B;
+   cursor: pointer;
+   font-weight: bold;
+   font-size: 100%;
+   padding: 1px;
++  margin-right: 0.5em;
+ }
++form div.hint {
++  margin-top: 0.3em;
++}
+ 
+ 
+ /* Accessibility
+@@ -184,7 +206,7 @@
+   font-size: 90%;
+ }
+ 
+-/* Messages 
++/* Messages
+ ----------------------------------------------- */
+ div.message, div.error {
+   border: 1px solid #90A33B;
+@@ -240,22 +262,22 @@
+ /* Mobile rules, resize page and move elements
+    for small windows
+ ----------------------------------------------- */
+-@media only screen and (max-width: 480px), 
++@media only screen and (max-width: 480px),
+        only screen and (max-device-width: 480px) {
+ 
+   p {
+     margin-bottom: 1.5em;
+     width: 20em;
+   }
+-  
++
+   h1, h2, h3, h4, h5, h6, caption {
+     font-weight: bold;
+     margin-bottom: 0.6em;
+     width: 20em;
+   }
+-  
++
+   h1 {
+     font-size: 120%;
+     padding-top: 17em;
+   }
+-}  
++}
+Index: papaya-themes/default/page_community.css
+===================================================================
+--- papaya-themes/default/page_community.css	(Revision 38500)
++++ papaya-themes/default/page_community.css	(Arbeitskopie)
+@@ -48,4 +48,11 @@
+ img.communityUserAvatar {
+   margin-top: 20px;
+   margin-bottom: 20px;
++}
++div.deleteAccount,
++div.deleteAccount form div.buttons {
++  margin-top: 1em;
++}
++div.deleteAccount fieldset {
++  margin: 0;
+ }
+\ No newline at end of file
+Index: papaya-lib/modules/free/thumbs/modules.xml
+===================================================================
+--- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38500)
++++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
+@@ -5,7 +5,7 @@
+   <modules>
+     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
+     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
+-    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
++    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
+     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
+   </modules>
+   <tables>
 Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 ===================================================================
 --- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38500)
@@ -957,155 +1271,6 @@ Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 -  }
 -}
 \ No newline at end of file
-Index: papaya-lib/modules/free/thumbs/Image/Gallery/Page.php
-===================================================================
---- papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
-+++ papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
-@@ -0,0 +1,143 @@
-+<?php
-+/**
-+* Media image gallery page
-+*
-+* @copyright 2002-2013 by papaya Software GmbH - All rights reserved.
-+* @link http://www.papaya-cms.com/
-+* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
-+*
-+* You can redistribute and/or modify this script under the terms of the GNU General Public
-+* License (GPL) version 2, provided that the copyright and license notes, including these
-+* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
-+* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-+* FOR A PARTICULAR PURPOSE.
-+*
-+* @package Papaya-Modules
-+* @subpackage Free-Media
-+* @version $Id: $
-+*/
-+
-+/**
-+* Basic class page module
-+*/
-+require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
-+
-+
-+/**
-+* Media image gallery page
-+*
-+* @package Papaya-Modules
-+* @subpackage Free-Media
-+*/
-+class MediaImageGalleryPage extends base_content {
-+
-+  /**
-+   * Parameter group
-+   * @var string
-+   */
-+  public $paramName = 'mig';
-+
-+  /**
-+  * Content edit fields
-+  * @var array $editFields
-+  */
-+  var $editFields = array(
-+    'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
-+      array(0 => 'Yes', 1 => 'No'), 'Apply linebreaks from input to the HTML output.', 0
-+    ),
-+    'title' => array('Title', 'isSomeText', FALSE, 'input', 400, '', ''),
-+    'subtitle' => array('Subtitle', 'isSomeText', FALSE, 'input', 400, '', ''),
-+    'teaser' => array('Teaser', 'isSomeText', FALSE, 'simplerichtext', 5, '', ''),
-+    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 10, '', ''),
-+
-+    'Thumbnails',
-+    'directory' => array('Folder', 'isNum', TRUE, 'mediafolder'),
-+    'maxperpage' => array('Thumbnail count', 'isNum', TRUE, 'input', 5, '', 9),
-+    'maxperline' => array('Column count', 'isNum', TRUE, 'input', 5, '', 3),
-+    'resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
-+      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
-+        'mincrop' => 'Minimum cropped'), '', 'max'),
-+    'thumbwidth' => array('Thumbnail width', 'isNum', TRUE, 'input', 5, '', 100),
-+    'thumbheight' => array('Thumbnail height', 'isNum', TRUE, 'input', 5, '', 100),
-+    'order' => array('Sort type', 'isNoHTML', TRUE, 'translatedcombo',
-+      array('name' => 'File name', 'date' => 'File date'), '', 'name'),
-+    'sort' => array('Sort order', 'isNoHTML', TRUE, 'translatedcombo',
-+      array('asc' => 'Ascending', 'desc' => 'Descending'), '', 'asc'),
-+
-+    'Images',
-+    'display_title' => array('Display title?', 'isNoHTML', TRUE, 'translatedcombo',
-+       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
-+    'display_comment' => array('Display description?', 'isNoHTML', TRUE, 'translatedcombo',
-+       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
-+    'show_lightbox' => array('Display in lightbox?', 'isNum', TRUE, 'yesno', NULL, NULL, '1'),
-+    'show_mode' => array('Display mode', 'isNum', TRUE, 'translatedcombo',
-+      array(
-+        0 => 'Resized image',
-+        4 => 'Resized image with original image link',
-+        5 => 'Resized image with download link',
-+        1 => 'Original image',
-+        2 => 'Original image download',
-+        3 => 'Resized image download'
-+      ), '', 0
-+    ),
-+    'width' => array('Width', 'isNum', TRUE, 'input', 5, '', 640),
-+    'height' => array('Height', 'isNum', TRUE, 'input', 5, '', 480),
-+    'show_resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
-+      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
-+        'mincrop' => 'Minimum cropped'), '', 'max')
-+  );
-+
-+  /**
-+   * Gallery object
-+   * @var MediaImageGallery
-+   */
-+  protected $_gallery = NULL;
-+
-+  /**
-+  * Get (and, if necessary, initialize) the MediaImageGallery object
-+  *
-+  * @return MediaImageGallery $gallery
-+  */
-+  public function gallery(MediaImageGallery $gallery = NULL) {
-+    if (isset($gallery)) {
-+      $this->_gallery = $gallery;
-+    } elseif (is_null($this->_gallery)) {
-+      include_once(dirname(__FILE__).'/../Gallery.php');
-+      $this->_gallery = new MediaImageGallery();
-+      $this->_gallery->parameterGroup($this->paramName);
-+      $this->_gallery->languageId = $this->papaya()->request->languageId;
-+    }
-+    return $this->_gallery;
-+  }
-+
-+  /**
-+  * Get parsed teaser
-+  *
-+  * @access public
-+  * @return string $result
-+  */
-+  function getParsedTeaser() {
-+    $this->setDefaultData();
-+    $this->gallery()->initialize($this, $this->data, 'teaser');
-+    $this->gallery()->load();
-+    return $this->gallery()->getXml();
-+  }
-+
-+  /**
-+  * Get parsed data
-+  *
-+  * build an XML string containing either...
-+  * an image with links to previous image and next image or...
-+  * a page containing thumbnails with links to the previous and next pages of thumbnails.
-+  *
-+  * @access public
-+  * @return string $result
-+  */
-+  function getParsedData() {
-+    $this->setDefaultData();
-+    $this->initializeParams();
-+    $this->gallery()->initialize($this, $this->data);
-+    $this->gallery()->load();
-+    return $this->gallery()->getXml();
-+  }
-+}
-\ No newline at end of file
 Index: papaya-lib/modules/free/thumbs/Image/Gallery.php
 ===================================================================
 --- papaya-lib/modules/free/thumbs/Image/Gallery.php	(Revision 0)
@@ -1569,19 +1734,910 @@ Index: papaya-lib/modules/free/thumbs/Image/Gallery.php
 +  }
 +}
 \ No newline at end of file
-Index: papaya-lib/modules/free/thumbs/modules.xml
+Index: papaya-lib/modules/free/thumbs/Image/Gallery/Page.php
 ===================================================================
---- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38500)
-+++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
-@@ -5,7 +5,7 @@
-   <modules>
-     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
-     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
--    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
-+    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
-     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
-   </modules>
-   <tables>
+--- papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
++++ papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
+@@ -0,0 +1,143 @@
++<?php
++/**
++* Media image gallery page
++*
++* @copyright 2002-2013 by papaya Software GmbH - All rights reserved.
++* @link http://www.papaya-cms.com/
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++* @version $Id: $
++*/
++
++/**
++* Basic class page module
++*/
++require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
++
++
++/**
++* Media image gallery page
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++*/
++class MediaImageGalleryPage extends base_content {
++
++  /**
++   * Parameter group
++   * @var string
++   */
++  public $paramName = 'mig';
++
++  /**
++  * Content edit fields
++  * @var array $editFields
++  */
++  var $editFields = array(
++    'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
++      array(0 => 'Yes', 1 => 'No'), 'Apply linebreaks from input to the HTML output.', 0
++    ),
++    'title' => array('Title', 'isSomeText', FALSE, 'input', 400, '', ''),
++    'subtitle' => array('Subtitle', 'isSomeText', FALSE, 'input', 400, '', ''),
++    'teaser' => array('Teaser', 'isSomeText', FALSE, 'simplerichtext', 5, '', ''),
++    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 10, '', ''),
++
++    'Thumbnails',
++    'directory' => array('Folder', 'isNum', TRUE, 'mediafolder'),
++    'maxperpage' => array('Thumbnail count', 'isNum', TRUE, 'input', 5, '', 9),
++    'maxperline' => array('Column count', 'isNum', TRUE, 'input', 5, '', 3),
++    'resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
++      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
++        'mincrop' => 'Minimum cropped'), '', 'max'),
++    'thumbwidth' => array('Thumbnail width', 'isNum', TRUE, 'input', 5, '', 100),
++    'thumbheight' => array('Thumbnail height', 'isNum', TRUE, 'input', 5, '', 100),
++    'order' => array('Sort type', 'isNoHTML', TRUE, 'translatedcombo',
++      array('name' => 'File name', 'date' => 'File date'), '', 'name'),
++    'sort' => array('Sort order', 'isNoHTML', TRUE, 'translatedcombo',
++      array('asc' => 'Ascending', 'desc' => 'Descending'), '', 'asc'),
++
++    'Images',
++    'display_title' => array('Display title?', 'isNoHTML', TRUE, 'translatedcombo',
++       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
++    'display_comment' => array('Display description?', 'isNoHTML', TRUE, 'translatedcombo',
++       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
++    'show_lightbox' => array('Display in lightbox?', 'isNum', TRUE, 'yesno', NULL, NULL, '1'),
++    'show_mode' => array('Display mode', 'isNum', TRUE, 'translatedcombo',
++      array(
++        0 => 'Resized image',
++        4 => 'Resized image with original image link',
++        5 => 'Resized image with download link',
++        1 => 'Original image',
++        2 => 'Original image download',
++        3 => 'Resized image download'
++      ), '', 0
++    ),
++    'width' => array('Width', 'isNum', TRUE, 'input', 5, '', 640),
++    'height' => array('Height', 'isNum', TRUE, 'input', 5, '', 480),
++    'show_resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
++      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
++        'mincrop' => 'Minimum cropped'), '', 'max')
++  );
++
++  /**
++   * Gallery object
++   * @var MediaImageGallery
++   */
++  protected $_gallery = NULL;
++
++  /**
++  * Get (and, if necessary, initialize) the MediaImageGallery object
++  *
++  * @return MediaImageGallery $gallery
++  */
++  public function gallery(MediaImageGallery $gallery = NULL) {
++    if (isset($gallery)) {
++      $this->_gallery = $gallery;
++    } elseif (is_null($this->_gallery)) {
++      include_once(dirname(__FILE__).'/../Gallery.php');
++      $this->_gallery = new MediaImageGallery();
++      $this->_gallery->parameterGroup($this->paramName);
++      $this->_gallery->languageId = $this->papaya()->request->languageId;
++    }
++    return $this->_gallery;
++  }
++
++  /**
++  * Get parsed teaser
++  *
++  * @access public
++  * @return string $result
++  */
++  function getParsedTeaser() {
++    $this->setDefaultData();
++    $this->gallery()->initialize($this, $this->data, 'teaser');
++    $this->gallery()->load();
++    return $this->gallery()->getXml();
++  }
++
++  /**
++  * Get parsed data
++  *
++  * build an XML string containing either...
++  * an image with links to previous image and next image or...
++  * a page containing thumbnails with links to the previous and next pages of thumbnails.
++  *
++  * @access public
++  * @return string $result
++  */
++  function getParsedData() {
++    $this->setDefaultData();
++    $this->initializeParams();
++    $this->gallery()->initialize($this, $this->data);
++    $this->gallery()->load();
++    return $this->gallery()->getXml();
++  }
++}
+\ No newline at end of file
+Index: papaya-lib/modules/_base/community/base_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
+@@ -773,16 +773,16 @@
+           );
+         }
+       }
+-
+-      if ($isMultiples) {
+-        // case 1: multiples ids
+-        return $result;
+-      } else if (count($result) > 0) {
+-        // case 2: one id lookup
+-        return reset($result);
+-      }
+     }
+-    return '';
++    if ($isMultiples) {
++      // case 1: multiples ids
++      return $result;
++    } elseif (count($result) > 0) {
++      // case 2: one id lookup
++      return reset($result);
++    } else {
++      return '';
++    }
+   }
+ 
+   /**
+@@ -1863,9 +1863,10 @@
+   * If the surfer record can be created successfully, its surfer id is returned.
+   *
+   * @param array $data Surfer's data
++  * @param boolean $ignoreIllegal optional, default FALSE
+   * @return mixed string|FALSE Status
+   */
+-  function createSurfer($data) {
++  function createSurfer($data, $ignoreIllegal = FALSE) {
+     $mailCheck = isset($data['surfer_email']) && isset($data['surfer_handle']) &&
+       trim($data['surfer_email']) != '' && trim($data['surfer_handle']) != '';
+     if (!$mailCheck) {
+@@ -1874,11 +1875,20 @@
+     if (!checkit::isEMail($data['surfer_email'])) {
+       return FALSE;
+     }
+-    if (!preg_match('{^[A-Za-z0-9-]{4,20}$}', $data['surfer_handle'])) {
++    if (!$ignoreIllegal &&
++      !preg_match(
++        '{^[A-Za-z0-9-]{4,'.PAPAYA_COMMUNITY_HANDLE_MAX_LENGTH.'}$}',
++        $data['surfer_handle'])
++      ) {
+       return FALSE;
+     }
+-    $surferExists = $this->existEmail($data['surfer_email'], TRUE) ||
+-      $this->existHandle($data['surfer_handle'], TRUE);
++    if ($ignoreIllegal) {
++      $surferExists = $this->existEmail($data['surfer_email'], TRUE) &&
++        $this->existHandle($data['surfer_handle'], TRUE);
++    } else {
++      $surferExists = $this->existEmail($data['surfer_email'], TRUE) ||
++        $this->existHandle($data['surfer_handle'], TRUE);
++    }
+     if ($surferExists) {
+       return FALSE;
+     }
+@@ -2213,41 +2223,74 @@
+   * Returns an empty array if no surfers match the pattern.
+   *
+   * @see existID() for behavior on blocked surfers
+-  * @access public
+-  * @param string $pattern Search pattern
+-  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
++  * @param string|array $pattern Search pattern or multiple search patterns
++  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
+   * @param boolean $includeBlocked Seach in blocked surfers too
+-  * @param string $orderBy Order search results by a given (NULL = disabled)
++  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
++  * @param integer $limit max results to fetch
++  * @param integer $offset fetch results from offset
++  * @param boolean $patternFirstChar using a pattern to get the first char of result string
+   * @return array $result Surfers data (id, handle, email, givenname, surfname)
+   */
+-  function searchSurfers($pattern, $handleOnly = FALSE,
+-                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
++  function searchSurfers($pattern, $searchFields = NULL,
++                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
++                         $limit  = NULL, $offset = NULL, $patternFirstChar = FALSE) {
+     $result = array();
+-
+-    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
+-    $parser = new searchStringParser();
+-    if ($handleOnly) {
++    // backward compatibility for search fields parameter, handle only mode
++    if ($searchFields === TRUE) {
+       $searchFields = array('surfer_handle');
+-    } else {
++    } elseif ($searchFields === FALSE || $searchFields === NULL) {
+       $searchFields = array('surfer_handle', 'surfer_givenname', 'surfer_surname');
+     }
+-    if ($filter = $parser->getSQL($pattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
+-      $sql = "SELECT surfer_id,
+-                     surfer_handle,
+-                     surfer_email,
+-                     surfer_givenname,
+-                     surfer_surname
+-              FROM %s
+-              WHERE ".str_replace('%', '%%', $filter)." %s";
++    $whereCondition = '';
++    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
++    $parser = new searchStringParser();
++    if ($patternFirstChar == TRUE) {
++      $parser->tokenMinLength = 1;
++    }
++    $validFilter = TRUE;
++    if (!empty($pattern)) {
++      if (!is_array($pattern)) {
++        $pattern = array($pattern);
++      }
++      foreach ($pattern as $currentPattern) {
++        if ($filter = $parser->getSQL($currentPattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
++          if ($patternFirstChar == TRUE) {
++            $filter = str_replace("LIKE '%", "LIKE '", $filter);
++          }
++          $whereCondition .= $whereCondition == '' ? " WHERE " : " AND ";
++          $whereCondition .= str_replace('%', '%%', $filter);
++        } else {
++          $validFilter = FALSE;
++        }
++      }
++    }
++    if ($validFilter == TRUE) {
++      if (is_array($orderBy)) {
++        $orderByField = ", CONCAT(".implode(",", $orderBy).") AS order_by";
++      } else {
++        $orderByField = "";
++      }
++      $sql = "SELECT surfer_id, surfer_handle, surfer_email,
++                     surfer_givenname, surfer_surname$orderByField
++                FROM %s
++                $whereCondition %s";
+       if (in_array($orderBy, array('surfer_handle', 'surfer_email', 'surfer_surname'))) {
+         $sql .= " ORDER BY ".$orderBy." ASC";
++      } elseif (is_array($orderBy)) {
++        $sql .= " ORDER BY order_by ASC";
+       }
+-      $blockedClause = ($includeBlocked === FALSE) ? ' AND surfer_valid != 4' : '';
++      $blockedClause = empty($whereCondition) ? " WHERE " : " AND ";
++      $blockedClause .= ($includeBlocked === FALSE) ? ' surfer_valid != 4' : '';
+       $sqlParams = array($this->tableSurfer, $blockedClause);
+-      if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
++      if ($res = $this->databaseQueryFmt($sql, $sqlParams, $limit, $offset)) {
+         while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++          if (isset($row['order_by'])) {
++            unset($row['order_by']);
++          }
+           $result[$row['surfer_id']] = $row;
+         }
++        $this->surfersAbsCount = $res->absCount();
+       }
+     }
+     return $result;
+@@ -2293,7 +2336,8 @@
+                    surfergroup_title,
+                    surfergroup_profile_page,
+                    surfergroup_redirect_page,
+-                   surfergroup_admin_group
++                   surfergroup_admin_group,
++                   surfergroup_identifier
+               FROM %s";
+     if ($adminGroups !== NULL) {
+       if (!in_array(0, $adminGroups)) {
+@@ -3506,13 +3550,13 @@
+   * @param integer $lng Language id
+   * @return array $dynamicEditFields Fields configuration
+   */
+-  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
++  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
+     // Create field condition
+     $fieldCondition = '';
+     if (is_numeric($fields) && $fields > 0) {
+-      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
++      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
+     } elseif (is_string($fields) && $fields != '0') {
+-      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
++      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
+     } elseif (is_array($fields)) {
+       // Check whether we have got an array of categories (numeric) or of names
+       $numeric = TRUE;
+@@ -3522,23 +3566,43 @@
+         }
+       }
+       if ($numeric) {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
+       } else {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
+       }
+     }
+     if ($fieldCondition != '') {
+       $fieldCondition = " AND ".$fieldCondition;
+     }
+-    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
+-                   surferdata_values, surferdata_check, surferdata_class,
+-                   surferdata_available, surferdata_mandatory, surferdata_order
+-              FROM %s
+-             WHERE surferdata_available = 1".
++
++    if ($getClasses = TRUE) {
++      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
++      $joinSurferDataClassTitles = sprintf(
++        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
++        "AND ct.surferdataclasstitle_lang = %d)",
++        $this->tableDataClassTitles,
++        $lng
++      );
++      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
++    } else {
++      $fieldSurferDataClassTitle = '';
++      $joinSurferDataClassTitles = '';
++      $orderBySurferDataClassTitle = '';
++    }
++
++    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
++                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
++                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
++              FROM %s AS d
++              %s
++             WHERE d.surferdata_available = 1".
+                    $fieldCondition."
+-          ORDER BY surferdata_order, surferdata_name";
+-    $sqlParams = array($this->tableData);
++          ORDER BY %sd.surferdata_order, d.surferdata_name";
++    $sqlParams = array(
++      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
++    );
+     $fields = array();
++
+     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
+       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
+         $fields[] = $row;
+@@ -3562,9 +3626,15 @@
+         }
+       }
+     }
++
+     // Create the edit fields
+     $dynamicEditFields = array();
++    $lastClassTitle = NULL;
+     foreach ($fields as $field) {
++      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
++        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
++        $lastClassTitle = $field['surferdataclasstitle_name'];
++      }
+       $fieldName = $field['surferdata_name'];
+       if ($prefix != '') {
+         $fieldName = $prefix.'_'.$fieldName;
+@@ -4437,6 +4507,28 @@
+   }
+ 
+   /**
++  * Get a surfer group id by its external identifier
++  *
++  * @param string $identifier
++  * @return integer
++  */
++  function getGroupIdByIdentifier($identifier) {
++    $result = 0;
++    if ($identifier != '') {
++      $sql = "SELECT surfergroup_id, surfergroup_identifier
++                FROM %s
++               WHERE surfergroup_identifier = '%s'";
++      $sqlData = array($this->tableGroups, $identifier);
++      if ($res = $this->databaseQueryFmt($sql, $sqlData)) {
++        if ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++          $result = $row['surfergroup_id'];
++        }
++      }
++    }
++    return $result;
++  }
++
++  /**
+    * Load surfers with a more complex statement see table papaya_surfer for handling.
+    *
+    * @access public
+@@ -4527,7 +4619,7 @@
+       $identifier = substr($identifier, 0, strpos($identifier, '@'));
+     }
+     // Step 2: Replace one or more special chars by '-'
+-    $identifier = preg_replace('([^a-z\d-]+)i', '-', $identifier);
++    $identifier = preg_replace('([^a-z\d._-]+)i', '-', $identifier);
+     // Step 3: Replace more than one '-' by a single '-'
+     $identifier = preg_replace('(\-{2,})', '-', $identifier);
+     // Step 4: Shorten to 14 characters max.
+@@ -4565,6 +4657,80 @@
+   }
+ 
+   /**
++  * Load permission list
++  *
++  * Loads the full list of available permissions
++  * Stores them in the permissionList attribute
++  * Returns true if this is possible
++  * or false if not
++  *
++  * @access public
++  * @return boolean
++  */
++  function loadPermList() {
++    $this->permissionsList = array();
++    $sql = "SELECT surferperm_id, surferperm_title, surferperm_active
++              FROM %s
++             ORDER BY surferperm_title ASC, surferperm_id DESC";
++    if ($res = $this->databaseQueryFmt($sql, array($this->tablePerm))) {
++      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++        $this->permissionsList[$row['surferperm_id']] = $row;
++      }
++      return TRUE;
++    }
++    return FALSE;
++  }
++
++  /**
++  * Get Permission combo
++  *
++  * Callback function that makes all active permissions
++  * available as a select field
++  *
++  * @param string $name
++  * @param array $field
++  * @param mixed $data
++  * @param string $paramName optional, default NULL
++  * @access public
++  * @return string XML
++  */
++  function getPermCombo($name, $field, $data, $paramName = NULL) {
++    if ($paramName === NULL) {
++      $paramName = $this->paramName;
++    }
++    // Reload permission list if not set
++    if (!(isset($this->permissionsList) && is_array($this->permissionsList))) {
++      $this->loadPermList();
++    }
++    // Create select field
++    $result = sprintf(
++      '<select id="field_type" name="%s[%s]" class="dialogSelect dialogScale" size="1">'.LF,
++      papaya_strings::escapeHTMLChars($paramName),
++      papaya_strings::escapeHTMLChars($name)
++    );
++    $result .= sprintf(
++      '<option value="0">[%s]</option>'.LF,
++      papaya_strings::escapeHTMLChars($this->_gt('globally allowed'))
++    );
++    // Iterate over all permissions
++    foreach ($this->permissionsList as $perm) {
++      // Use only active permissions
++      if ($perm['surferperm_active']) {
++        // Mark current permission as selected if it's the field value
++        $selected = ($perm['surferperm_id'] == $data) ? ' selected="selected"' : '';
++        $result .= sprintf(
++          '<option value="%s" %s>%s</option>'.LF,
++          papaya_strings::escapeHTMLChars($perm['surferperm_id']),
++          $selected,
++          papaya_strings::escapeHTMLChars($perm['surferperm_title'])
++        );
++      }
++    }
++    $result .= '</select>'.LF;
++    return $result;
++  }
++
++  /**
+    * Clear old registrations and change requests.
+    *
+    * Deletes any records from the surfer table
+Index: papaya-lib/modules/_base/community/content_profile.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_profile.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
+@@ -240,6 +240,10 @@
+           'Query string for redirect url',
+           ''
+         ),
++        'Dynamic Data',
++        'dynamic_class' => array(
++          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
++        )
+       ),
+     ),
+     array(
+@@ -576,6 +580,15 @@
+         ),
+         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
+         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
++        'caption_section_email' => array(
++          'Section email',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Change email"',
++          ''
++        ),
+         'caption_change_email' => array(
+           'Change email',
+           'isNoHTML',
+@@ -617,6 +630,15 @@
+         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
+         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
+         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
++        'caption_section_password' => array(
++          'Section password',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Old password"',
++          ''
++        ),
+         'caption_old_password' => array(
+           'Old password',
+           'isNoHTML',
+@@ -705,6 +727,24 @@
+           '',
+           'Enter the new password twice or leave blank to keep the old one.'
+         ),
++        'descr_old_password' => array(
++          'Old password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password if you want to change your email.'
++        ),
++        'descr_need_old_password' => array(
++          'Change password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password to confirm changes.'
++        ),
+         'descr_delete_account' => array(
+           'Delete account',
+           'isSomeText',
+@@ -828,6 +868,9 @@
+     }
+ 
+     if ($this->data['change_email'] == 1) {
++      if (!empty($this->data['caption_section_email'])) {
++        $fields[] = $this->data['caption_section_email'];
++      }
+       $fields['surfer_new_email'] = array(
+         $this->data['caption_change_email'],
+         'isEmail',
+@@ -842,6 +885,9 @@
+     }
+ 
+     if ($this->data['change_password'] == 1) {
++      if (!empty($this->data['caption_section_password'])) {
++        $fields[] = $this->data['caption_section_password'];
++      }
+       $fields['surfer_password1'] = array(
+         $this->data['caption_new_password'],
+         'isPassword',
+@@ -854,21 +900,53 @@
+         'isSomeText',
+         FALSE,
+         'password',
+-        200
++        200,
++        $this->data['descr_change_password']
+       );
++    }
++    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
+       $fields['surfer_password3'] = array(
+         $this->data['caption_old_password'],
+         'isSomeText',
+-        FALSE,
++        !empty($this->data['need_oldpassword']),
+         'password',
+         200,
+-        $this->data['descr_change_password']
++        !empty($this->data['need_oldpassword']) ?
++          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
+       );
+     }
+ 
++    // Add dynamic data fields
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $dynFields = $this->baseSurfers->getDynamicEditFields(
++        $this->data['dynamic_class'],
++        'dynamic',
++        $this->parentObj->topic['TRANSLATION']['lng_id'],
++        TRUE
++      );
++      $fields = array_merge($fields, $dynFields);
++    }
++
++    $data = $this->surferData;
++    // Get existing dynamic data
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      $dynData = $this->baseSurfers->getDynamicData(
++        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
++        $fieldNames
++      );
++      if ($dynData != NULL) {
++        foreach ($dynData as $fieldName => $fieldValue) {
++          $data['dynamic_'.$fieldName] = $fieldValue;
++        }
++      }
++    }
++
+     $hidden = array('save' => 1);
+     $this->profileForm = new base_frontend_form(
+-      $this, $this->paramName, $fields, $this->surferData, $hidden
++      $this, $this->paramName, $fields, $data, $hidden
+     );
+     $this->profileForm->msgs = &$this->msgs;
+     $this->profileForm->loadParams();
+@@ -996,7 +1074,25 @@
+     if ($this->data['edit_gender'] == 0) {
+       unset($this->surferData['surfer_gender']);
+     }
+-    return $this->baseSurfers->saveSurfer($this->surferData);
++    $result = $this->baseSurfers->saveSurfer($this->surferData);
++
++    // Now save the dynamic data, if necessary
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      // Get the field names
++      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      // Get those fields that are actually set
++      $dynFields = array();
++      foreach ($dynFieldNames as $fieldName) {
++        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
++          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
++        }
++      }
++      if (!empty($dynFields)) {
++        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
++      }
++    }
++    return $result;
+   }
+ 
+   /**
+@@ -1538,7 +1634,14 @@
+           // If an error field exists, the error_input message is displayed
+           // Otherwise it is a token error with a different message
+           if ($errorField == $field) {
+-            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
++            if (in_array(
++                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
++               ) {
++              $message = $this->data['error_password'];
++            } else {
++              $message = $this->data['error_input'];
++            }
++            $result .= $this->getErrorMessageXml($message, $errorField);
+           } else {
+             $result .= $this->getErrorMessageXml(
+               'Invalid Token. Progress is canceled', $errorField
+@@ -1625,5 +1728,53 @@
+   function getCacheId() {
+     return FALSE;
+   }
++
++  /**
++  * Get form xml to select dynamic data categories by callback.
++  *
++  * @param string $name Field name
++  * @param array $element Field element configurations
++  * @param string $data Current field data
++  * @return string $result XML
++  */
++  function callbackClasses($name, $element, $data) {
++    $this->_initBaseSurfers();
++    $result = '';
++    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
++    $commonTitle = $this->_gt('Category');
++    $sql = "SELECT c.surferdataclass_id,
++                   ct.surferdataclasstitle_classid,
++                   ct.surferdataclasstitle_name,
++                   ct.surferdataclasstitle_lang
++              FROM %s AS c LEFT OUTER JOIN %s AS ct
++                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
++             WHERE ct.surferdataclasstitle_lang = %d";
++    $sqlParams = array(
++      $this->baseSurfers->tableDataClasses,
++      $this->baseSurfers->tableDataClassTitles,
++      $lng
++    );
++    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
++      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++        if (isset($row['surferdataclasstitle_name']) &&
++            trim($row['surferdataclasstitle_name']) != '') {
++          $title = $row['surferdataclasstitle_name'];
++        } else {
++          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
++        }
++        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
++          ' checked="checked"' : '';
++        $result .= sprintf(
++          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
++          $this->paramName,
++          $name,
++          $row['surferdataclass_id'],
++          $checked,
++          $title
++        );
++      }
++    }
++    return $result;
++  }
+ }
+ ?>
+Index: papaya-lib/modules/_base/community/content_userdata.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
+@@ -522,7 +522,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+@@ -1005,4 +1006,4 @@
+     return $result;
+   }
+ }
+-?>
+\ No newline at end of file
++?>
+Index: papaya-lib/modules/_base/community/connector_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/connector_surfers.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/connector_surfers.php	(Arbeitskopie)
+@@ -103,6 +103,7 @@
+ * $string|NULL = $surfersObj->getDefaultContact()
+ * $string|NULL = $surfersObj->getBackendSurferLink($surferId)
+ * $string = $surfersObj->getPasswordHash($password)
++* $string = $surfersObj->getPermCombo($name, $field, $data, $paramName = NULL)
+ *
+ * ============== Native methods ==============
+ *
+@@ -568,11 +569,12 @@
+   *
+   * @see surfer_admin::createSurfer Detailed description
+   * @param array $data Surfer's data
++  * @param boolean $ignoreIllegal optional, default FALSE
+   * @return mixed string|FALSE Status
+   */
+-  function createSurfer($data) {
++  function createSurfer($data, $ignoreIllegal = FALSE) {
+     $this->_initSurferAdmin();
+-    return $this->surferAdmin->createSurfer($data);
++    return $this->surferAdmin->createSurfer($data, $ignoreIllegal);
+   }
+ 
+   /**
+@@ -627,18 +629,21 @@
+   *
+   * @see existID() for behavior on blocked surfers
+   * @see surfer_admin::searchSurfers Detailed description
+-  * @access public
+-  * @param string $pattern Search pattern
+-  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
++  * @param string|array $pattern Search pattern or multiple search patterns
++  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
+   * @param boolean $includeBlocked Seach in blocked surfers too
+-  * @param string $orderBy Order search results by a given (NULL = disabled)
++  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
++  * @param integer $limit max results to fetch
++  * @param integer $offset fetch results from offset
++  * @param boolean $patternFirstChar using a pattern to get the first char of result string
+   * @return array $result Surfers data (id, handle, email, givenname, surfname)
+   */
+-  function searchSurfers($pattern, $handleOnly = FALSE,
+-                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
++  function searchSurfers($pattern, $searchFields = NULL,
++                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
++                         $limit = NULL, $offset = NULL, $patternFirstChar = FALSE) {
+     $this->_initSurferAdmin();
+     return $this->surferAdmin->searchSurfers(
+-      $pattern, $handleOnly, $includeBlocked, $orderBy
++      $pattern, $searchFields, $includeBlocked, $orderBy, $limit, $offset, $patternFirstChar
+     );
+   }
+ 
+@@ -1604,5 +1609,23 @@
+     }
+     return $groups;
+   }
++
++  /**
++  * Get Permission combo
++  *
++  * Callback function that makes all active permissions
++  * available as a select field
++  *
++  * @param string $name
++  * @param array $field
++  * @param mixed $data
++  * @param string $paramName optional, default NULL
++  * @access public
++  * @return string XML
++  */
++  function getPermCombo($name, $field, $data, $paramName = NULL) {
++    $this->_initSurferAdmin();
++    return $this->surferAdmin->getPermCombo($name, $field, $data, $paramName);
++  }
+ }
+ ?>
+\ No newline at end of file
+Index: papaya-lib/modules/_base/community/content_register.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
+@@ -1928,7 +1928,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+Index: papaya-lib/modules/_base/filter_xslt.php
+===================================================================
+--- papaya-lib/modules/_base/filter_xslt.php	(Revision 38500)
++++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
+@@ -161,8 +161,8 @@
+         } else {
+           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
+           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
+-            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
+-              $moduleNames = explode(',', $match[1]);
++            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
++              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
+               foreach ($moduleNames as $key => $value) {
+                 $moduleNames[trim($value)] = TRUE;
+                 unset($moduleNames[$key]);
 Index: papaya-lib/system/Papaya/Filter/Text.php
 ===================================================================
 --- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
@@ -1595,6 +2651,28 @@ Index: papaya-lib/system/Papaya/Filter/Text.php
      if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
        $result .= '\\p{Zs} ';
      }
+Index: papaya-lib/system/base_topic_edit.php
+===================================================================
+--- papaya-lib/system/base_topic_edit.php	(Revision 38500)
++++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
+@@ -1623,9 +1623,14 @@
+                 //delete page
+                 if (FALSE !== $this->databaseDeleteRecord(
+                       $this->tableTopicsTrans, $filter)) {
+-                  return FALSE !== $this->databaseDeleteRecord(
+-                    $this->tableTopics, $filter
+-                  );
++                  if (FALSE !== $this->databaseDeleteRecord(
++                        $this->tableTopics, $filter)) {
++                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
++                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
++                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
++                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
++                    return TRUE;
++                  }
+                 }
+               }
+             }
 Index: papaya-lib/system/papaya_mediadb.php
 ===================================================================
 --- papaya-lib/system/papaya_mediadb.php	(Revision 38500)
@@ -1669,28 +2747,19 @@ Index: papaya-lib/system/papaya_mediadb.php
            );
          }
  
-Index: papaya-lib/system/base_topic_edit.php
+Index: papaya-lib/system/papaya_publictopic.php
 ===================================================================
---- papaya-lib/system/base_topic_edit.php	(Revision 38500)
-+++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
-@@ -1623,9 +1623,14 @@
-                 //delete page
-                 if (FALSE !== $this->databaseDeleteRecord(
-                       $this->tableTopicsTrans, $filter)) {
--                  return FALSE !== $this->databaseDeleteRecord(
--                    $this->tableTopics, $filter
--                  );
-+                  if (FALSE !== $this->databaseDeleteRecord(
-+                        $this->tableTopics, $filter)) {
-+                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
-+                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-+                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
-+                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
-+                    return TRUE;
-+                  }
-                 }
-               }
-             }
+--- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
++++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
+@@ -229,7 +229,7 @@
+         $definition
+       );
+     } else {
+-      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
++      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+     }
+   }
+ 
 Index: papaya-lib/system/base_mediadb_edit.php
 ===================================================================
 --- papaya-lib/system/base_mediadb_edit.php	(Revision 38500)
@@ -1780,730 +2849,3 @@ Index: papaya-lib/system/base_mediadb_edit.php
 -?>
 +?>
 \ No newline at end of file
-Index: papaya-lib/system/papaya_publictopic.php
-===================================================================
---- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
-+++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
-@@ -229,7 +229,7 @@
-         $definition
-       );
-     } else {
--      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
-+      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-     }
-   }
- 
-Index: papaya-data/templates/default-xhtml/html/boxes.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/boxes.xml	(Arbeitskopie)
-@@ -1,8 +1,8 @@
- <?xml version="1.0" ?>
- <boxes>
-   <styles>
--    <!-- 
--      css files included in page head 
-+    <!--
-+      css files included in page head
- 
-       Syntax: <file module="foo" file="foo.css"/>
-     -->
-@@ -23,33 +23,47 @@
-     <file module="actionbox_catalog_limited_content" file="box_catalog_limited_content.css" />
-     <file module="actionbox_catalog_related_categories" file="box_catalog_related_list.css" />
-     <file module="actionbox_quiz" file="box_quiz.css" />
--    
-+
-     <file module="actionbox_forum" file="box_forum.css" />
-     <file module="actionbox_comments" file="box_forum.css" />
-     <file module="actionbox_lastentries" file="box_forum.css" />
--    
-+
-     <file module="actionbox_nextdates_tag" file="box_calendar.css" />
-     <file module="actionbox_calendar_tag" file="box_calendar.css" />
-     <file module="actionbox_calendar" file="box_calendar.css" />
--    
-+
-     <file module="actbox_linkdb" file="box_linkdb.css" />
--    
-+
-     <file module="actionbox_searchbox" file="box_mnogo.css" />
--  </styles>  
-+
-+    <file module="ACommunityPageCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunitySurferCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityImageCommentsBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
-+    <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
-+    <file module="ACommunitySurferStatusBox" file="box_acommunity_surfer_status.css" />
-+    <file module="ACommunitySurferContactsBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunitySurfersLastActionBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunitySurfersRegistrationBox" file="box_acommunity_surfers.css" />
-+    <file module="ACommunityMessageConversationsBox" file="box_acommunity_message_conversations.css" />
-+    <file module="ACommunitySurferGalleryTeaserBox" file="box_acommunity_surfer_gallery_teaser.css" />
-+    <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />
-+    <file module="ACommunitySurferGalleryFoldersBox" file="box_acommunity_surfer_gallery_folders.css" />
-+  </styles>
-   <scripts>
--    <!-- 
-+    <!--
-       javascript files included in page head
--     
-+
-       Syntax: <file module="foo" file="foo.js"/>
-     -->
- 
--  </scripts>  
-+  </scripts>
-   <scripts-lazy>
--    <!-- 
-+    <!--
-       javascript files included just before page boday end
--     
-+
-       Syntax: <file module="bar" file="bar.js"/>
-     -->
--  
-+
-   </scripts-lazy>
--</boxes>
-\ No newline at end of file
-+</boxes>
-Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
-===================================================================
---- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Arbeitskopie)
-@@ -6,7 +6,7 @@
-   exclude-result-prefixes="#default"
- >
- <!--
--  @papaya:modules content_thumbs
-+  @papaya:modules MediaImageGalleryPage
- -->
- 
- <!-- import main layout rules, this will import the default rules, too -->
-Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl
-===================================================================
---- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Arbeitskopie)
-@@ -605,40 +605,31 @@
-   <fieldset>
-     <xsl:choose>
-       <xsl:when test="$dialog/lines">
--        <xsl:for-each select="$dialog/lines//line[@fid != 'terms']">
--          <xsl:if test="$userDataDescriptions != false()">
--            <xsl:choose>
--              <xsl:when test="@fid = 'surfer_password_1'">
--                <p class="description">
--                  <xsl:value-of select="$userDataDescriptions/description-change-password/@content" />
--                </p>
--              </xsl:when>
--              <xsl:when test="@fid = 'surfer_new_email'">
--                <p class="description">
--                  <xsl:value-of select="$userDataDescriptions/description-change-email/@content" />
--                </p>
--              </xsl:when>
--            </xsl:choose>
--          </xsl:if>
--          <xsl:call-template name="dialog-field">
--            <xsl:with-param name="dialog" select="$dialog" />
--            <xsl:with-param name="field" select="." />
--            <xsl:with-param name="showMandatory" select="$showMandatory" />
--          </xsl:call-template>
--          <xsl:if test="$userDataDescriptions != false() and @fid = 'surfer_old_password'">
--            <p class="description">
--              <xsl:value-of select="$userDataDescriptions/description-enter-password/@content" />
--            </p>
--          </xsl:if>
--        </xsl:for-each>
--        <xsl:if test="$dialog/lines//line[@fid = 'terms']">
--          <xsl:call-template name="dialog-field">
--            <xsl:with-param name="dialog" select="$dialog" />
--            <xsl:with-param name="field" select="$dialog/lines//line[@fid = 'terms']" />
--            <xsl:with-param name="showMandatory" select="$showMandatory" />
--          </xsl:call-template>
--          <p><xsl:copy-of select="$terms" /></p>
--        </xsl:if>
-+        <xsl:choose>
-+          <xsl:when test="$dialog/lines/linegroup">
-+            <xsl:for-each select="$dialog/lines/linegroup">
-+              <xsl:if test="@caption and @caption != ''">
-+                <h2><xsl:value-of select="@caption" /></h2>
-+              </xsl:if>
-+              <xsl:call-template name="dialog-content-lines">
-+                <xsl:with-param name="dialog" select="$dialog" />
-+                <xsl:with-param name="lines" select="line"/>
-+                <xsl:with-param name="showMandatory" select="$showMandatory" />
-+                <xsl:with-param name="userDataDescriptions" select="$userDataDescriptions" />
-+                <xsl:with-param name="terms" select="$terms" />
-+              </xsl:call-template>
-+            </xsl:for-each>
-+          </xsl:when>
-+          <xsl:otherwise>
-+            <xsl:call-template name="dialog-content-lines">
-+              <xsl:with-param name="dialog" select="$dialog" />
-+              <xsl:with-param name="lines" select="$dialog/lines//line"/>
-+              <xsl:with-param name="showMandatory" select="$showMandatory" />
-+              <xsl:with-param name="userDataDescriptions" select="$userDataDescriptions" />
-+              <xsl:with-param name="terms" select="$terms" />
-+            </xsl:call-template>
-+          </xsl:otherwise>
-+        </xsl:choose>
-       </xsl:when>
-       <xsl:when test="$dialog/element/*">
-         <xsl:for-each select="$dialog/element">
-@@ -669,4 +660,47 @@
-   </fieldset>
- </xsl:template>
- 
-+<xsl:template name="dialog-content-lines">
-+  <xsl:param name="dialog" />
-+  <xsl:param name="lines" />
-+  <xsl:param name="showMandatory" select="true()" />
-+  <xsl:param name="userDataDescriptions" select="false()" />
-+  <xsl:param name="terms" />
-+
-+  <xsl:for-each select="$lines[@fid != 'terms']">
-+    <xsl:if test="$userDataDescriptions != false()">
-+      <xsl:choose>
-+        <xsl:when test="@fid = 'surfer_password_1'">
-+          <p class="description">
-+            <xsl:value-of select="$userDataDescriptions/description-change-password/@content" />
-+          </p>
-+        </xsl:when>
-+        <xsl:when test="@fid = 'surfer_new_email'">
-+          <p class="description">
-+            <xsl:value-of select="$userDataDescriptions/description-change-email/@content" />
-+          </p>
-+        </xsl:when>
-+      </xsl:choose>
-+    </xsl:if>
-+    <xsl:call-template name="dialog-field">
-+      <xsl:with-param name="dialog" select="$dialog" />
-+      <xsl:with-param name="field" select="." />
-+      <xsl:with-param name="showMandatory" select="$showMandatory" />
-+    </xsl:call-template>
-+    <xsl:if test="$userDataDescriptions != false() and @fid = 'surfer_old_password'">
-+      <p class="description">
-+        <xsl:value-of select="$userDataDescriptions/description-enter-password/@content" />
-+      </p>
-+    </xsl:if>
-+  </xsl:for-each>
-+  <xsl:if test="$lines[@fid = 'terms']">
-+    <xsl:call-template name="dialog-field">
-+      <xsl:with-param name="dialog" select="$dialog" />
-+      <xsl:with-param name="field" select="$dialog/lines//line[@fid = 'terms']" />
-+      <xsl:with-param name="showMandatory" select="$showMandatory" />
-+    </xsl:call-template>
-+    <p><xsl:copy-of select="$terms" /></p>
-+  </xsl:if>
-+</xsl:template>
-+
- </xsl:stylesheet>
-Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Arbeitskopie)
-@@ -2,4 +2,6 @@
-   <text ident="FILE_NAME">Fichier</text>
-   <text ident="FILE_DATE">Date</text>
-   <text ident="FILE_SIZE">Dimension</text>
-+  <text ident="ORIGINAL_IMAGE">Original peinture</text>
-+  <text ident="IMAGE_DOWNLOAD">Téléchargement</text>
- </texts>
-Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Arbeitskopie)
-@@ -2,4 +2,7 @@
-   <text ident="FILE_NAME">Datei</text>
-   <text ident="FILE_DATE">Datum</text>
-   <text ident="FILE_SIZE">Größe</text>
--</texts>
-+  <text ident="NO_IMAGES">Keine Bilder gefunden.</text>
-+  <text ident="ORIGINAL_IMAGE">Original Bild</text>
-+  <text ident="IMAGE_DOWNLOAD">Download</text>
-+</texts>
-\ No newline at end of file
-Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl
-===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Arbeitskopie)
-@@ -6,162 +6,177 @@
-   exclude-result-prefixes="#default"
- >
- 
--<xsl:import href="../../../../_functions/javascript-escape-string.xsl" />
-+  <xsl:import href="../../../../_functions/javascript-escape-string.xsl" />
- 
--<xsl:param name="PAGE_LANGUAGE"></xsl:param>
--<xsl:param name="LANGUAGE_MODULE_CURRENT" select="document(concat($PAGE_LANGUAGE, '.xml'))" />
--<xsl:param name="LANGUAGE_MODULE_FALLBACK" select="document('en-US.xml')"/>
-+  <xsl:param name="PAGE_LANGUAGE"></xsl:param>
-+  <xsl:param name="LANGUAGE_MODULE_CURRENT" select="document(concat($PAGE_LANGUAGE, '.xml'))" />
-+  <xsl:param name="LANGUAGE_MODULE_FALLBACK" select="document('en-US.xml')"/>
- 
--<xsl:template name="page-styles">
--  <xsl:call-template name="link-style">
--    <xsl:with-param name="file">page_thumbs.css</xsl:with-param>
--  </xsl:call-template>
--</xsl:template>
-+  <xsl:template name="page-styles">
-+    <xsl:call-template name="link-style">
-+      <xsl:with-param name="file">page_thumbs.css</xsl:with-param>
-+    </xsl:call-template>
-+  </xsl:template>
- 
--<xsl:template name="page-scripts-lazy">
--  <xsl:call-template name="link-script">
--    <xsl:with-param name="file">papaya/jquery.xmlns.js</xsl:with-param>
--  </xsl:call-template>
--  <xsl:call-template name="link-script">
--    <xsl:with-param name="file">papaya/jquery.papayaLightbox.js</xsl:with-param>
--  </xsl:call-template>
--  <xsl:call-template name="link-script">
--    <xsl:with-param name="file">papaya/jquery.papayaGallery.js</xsl:with-param>
--  </xsl:call-template>
-- <script type="text/javascript"><xsl:comment>
--    jQuery(document).ready(
--      function() {
--        jQuery('#gallery').papayaGallery();
--      }
--    );
--  </xsl:comment></script>
--</xsl:template>
--
--<xsl:template name="content-area">
--  <xsl:param name="pageContent" select="content/topic"/>
--  <xsl:choose>
--    <xsl:when test="$pageContent/@module = 'content_thumbs'">
--      <xsl:call-template name="module-content-thumbs">
--        <xsl:with-param name="pageContent" select="$pageContent"/>
-+  <xsl:template name="page-scripts-lazy">
-+    <xsl:if test="/page/content/topic/options/lightbox = '1'">
-+      <xsl:call-template name="link-script">
-+        <xsl:with-param name="file">papaya/jquery.xmlns.js</xsl:with-param>
-       </xsl:call-template>
--    </xsl:when>
--    <xsl:otherwise>
--      <xsl:call-template name="module-content-default">
--        <xsl:with-param name="pageContent" select="$pageContent"/>
-+      <xsl:call-template name="link-script">
-+        <xsl:with-param name="file">papaya/jquery.papayaLightbox.js</xsl:with-param>
-       </xsl:call-template>
--    </xsl:otherwise>
--  </xsl:choose>
--</xsl:template>
-+      <xsl:call-template name="link-script">
-+        <xsl:with-param name="file">papaya/jquery.papayaGallery.js</xsl:with-param>
-+      </xsl:call-template>
-+     <script type="text/javascript"><xsl:comment>
-+        jQuery(document).ready(
-+          function() {
-+            jQuery('#gallery').papayaGallery();
-+          }
-+        );
-+      </xsl:comment></script>
-+    </xsl:if>
-+  </xsl:template>
- 
--<xsl:template name="module-content-thumbs">
--  <xsl:param name="pageContent"/>
--  <xsl:call-template name="module-content-topic">
--    <xsl:with-param name="pageContent" select="$pageContent" />
--    <xsl:with-param name="withText" select="not($pageContent/image)" />
--  </xsl:call-template>
--  <div id="gallery">
-+  <xsl:template name="content-area">
-+    <xsl:param name="pageContent" select="content/topic"/>
-     <xsl:choose>
--      <xsl:when test="$pageContent/thumbnails/thumb">
--        <xsl:call-template name="module-content-thumbs-list">
--          <xsl:with-param name="thumbs" select="$pageContent/thumbnails/thumb" />
--          <xsl:with-param name="options" select="$pageContent/options" />
-+      <xsl:when test="$pageContent/@module = 'MediaImageGalleryPage'">
-+        <xsl:call-template name="module-content-image-gallery">
-+          <xsl:with-param name="pageContent" select="$pageContent"/>
-         </xsl:call-template>
-       </xsl:when>
--      <xsl:when test="$pageContent/image">
--        <xsl:call-template name="module-content-thumbs-image-detail">
--          <xsl:with-param name="image" select="$pageContent/image" />
--          <xsl:with-param name="imageTitle" select="$pageContent/imagetitle" />
--          <xsl:with-param name="imageComment" select="$pageContent/imagecomment" />
--          <xsl:with-param name="navigation" select="$pageContent/navigation" />
-+      <xsl:otherwise>
-+        <xsl:call-template name="module-content-default">
-+          <xsl:with-param name="pageContent" select="$pageContent"/>
-         </xsl:call-template>
--      </xsl:when>
-+      </xsl:otherwise>
-     </xsl:choose>
--    <xsl:call-template name="float-fix"/>
--    <xsl:call-template name="module-content-thumbns-navigation">
--      <xsl:with-param name="navigation" select="$pageContent/navigation" />
-+  </xsl:template>
-+
-+  <xsl:template name="module-content-image-gallery">
-+    <xsl:param name="pageContent"/>
-+    <xsl:call-template name="module-content-topic">
-+      <xsl:with-param name="pageContent" select="$pageContent" />
-+      <xsl:with-param name="withText" select="not($pageContent/image)" />
-     </xsl:call-template>
--  </div>
--</xsl:template>
--
--<xsl:template name="module-content-thumbs-list">
--  <xsl:param name="thumbs" />
--  <xsl:param name="options" />
--  <!-- thumbnail view -->
--  <xsl:if test="$thumbs">
--    <xsl:for-each select="$thumbs">
--      <div class="galleryThumbnail">
--        <a class="galleryThumbnailFrame"
--           style="width: {$options/thumbwidth}px; height: {$options/thumbheight}px;"
--           href="{a/@href}"
--           title="{image/@title}">
--          <img src="{a/img/@src}" style="{a/img/@style}" alt="{a/img/@alt}"/>
--        </a>
--      </div>
--    </xsl:for-each>
--    <script type="text/javascript"><xsl:comment>
--      jQuery('#gallery').children().hide();
--      var galleryMapping = {
--        images : {
--          <xsl:for-each select="$thumbs">
--            <xsl:if test="position() &gt; 1">, </xsl:if>
--            <xsl:call-template name="javascript-escape-string">
--              <xsl:with-param name="string" select="a/@href" />
--            </xsl:call-template>
--            <xsl:text> : </xsl:text>
--            <xsl:call-template name="javascript-escape-string">
--              <xsl:with-param name="string" select="@for" />
--            </xsl:call-template>
--          </xsl:for-each>
--        },
--        getImageUrl : function(href) {
--          return (this.images[href]) ? this.images[href] : href;
--        }
--      };
--    </xsl:comment></script>
--  </xsl:if>
--</xsl:template>
--
--<xsl:template name="module-content-thumbs-image-detail">
--  <xsl:param name="image" />
--  <xsl:param name="imageTitle" />
--  <xsl:param name="imageComment" />
--  <xsl:param name="navigation" />
--  <xsl:if test="$image">
--    <div class="galleryImage">
-+    <div id="gallery">
-       <xsl:choose>
--        <xsl:when test="$navigation/navlink[@dir='index']">
--          <a href="{$navigation/navlink[@dir='index']/@href}">
--            <img src="{$image/img/@src}" style="{$image/img/@style}" alt="{$image/img/@alt}"/>
--          </a>
-+        <xsl:when test="$pageContent/images/image">
-+          <xsl:call-template name="module-content-gallery-images">
-+            <xsl:with-param name="images" select="$pageContent/images/image" />
-+            <xsl:with-param name="options" select="$pageContent/options" />
-+          </xsl:call-template>
-         </xsl:when>
-+        <xsl:when test="$pageContent/image">
-+          <xsl:call-template name="module-content-gallery-image">
-+            <xsl:with-param name="image" select="$pageContent/image" />
-+            <xsl:with-param name="navigation" select="$pageContent/navigation" />
-+          </xsl:call-template>
-+        </xsl:when>
-+      </xsl:choose>
-+      <xsl:call-template name="float-fix"/>
-+      <xsl:choose>
-+        <xsl:when test="count($pageContent/images/image) &gt; 0 or count($pageContent/image) &gt; 0">
-+          <xsl:call-template name="module-content-gallery-navigation">
-+            <xsl:with-param name="navigation" select="$pageContent/navigation" />
-+          </xsl:call-template>
-+        </xsl:when>
-         <xsl:otherwise>
--          <img src="{$image/img/@src}" style="{$image/img/@style}" alt="{$image/img/@alt}"/>
-+          <div class="message"><xsl:call-template name="language-text">
-+            <xsl:with-param name="text" select="'NO_IMAGES'"/>
-+          </xsl:call-template></div>
-         </xsl:otherwise>
-       </xsl:choose>
--      <xsl:if test="$imageTitle">
--        <h2><xsl:value-of select="$imageTitle"/></h2>
--      </xsl:if>
--      <xsl:if test="$imageComment">
--        <div class="comment">
--          <xsl:apply-templates select="$imageComment/node()"/>
--        </div>
--      </xsl:if>
-     </div>
--  </xsl:if>
--</xsl:template>
-+  </xsl:template>
- 
--<xsl:template name="module-content-thumbns-navigation">
--  <xsl:param name="navigation" />
--  <xsl:if test="$navigation/navlink[(@dir='prior') or (@dir='next')]">
--    <div class="galleryNavigation">
--      <xsl:if test="$navigation/navlink[@dir='prior']">
--        <a href="{$navigation/navlink[@dir='prior']/@href}" class="navigationLinkPrevious">&lt;-</a>
-+  <xsl:template name="module-content-gallery-images">
-+    <xsl:param name="images" />
-+    <xsl:param name="options" />
-+    <xsl:if test="$images">
-+      <xsl:for-each select="$images">
-+        <div class="galleryThumbnail">
-+          <a class="galleryThumbnailFrame" href="{destination/@href}" title="{title}">
-+            <img src="{img/@src}" alt="{img/@alt}"/>
-+          </a>
-+        </div>
-+      </xsl:for-each>
-+      <xsl:if test="$options/lightbox = '1'">
-+        <script type="text/javascript"><xsl:comment>
-+          jQuery('#gallery').children().hide();
-+          var galleryMapping = {
-+            images : {
-+              <xsl:for-each select="$images">
-+                <xsl:if test="position() &gt; 1">, </xsl:if>
-+                <xsl:call-template name="javascript-escape-string">
-+                  <xsl:with-param name="string" select="destination/@href" />
-+                </xsl:call-template>
-+                <xsl:text> : </xsl:text>
-+                <xsl:call-template name="javascript-escape-string">
-+                  <xsl:with-param name="string" select="destination/img/@src" />
-+                </xsl:call-template>
-+              </xsl:for-each>
-+            },
-+            getImageUrl : function(href) {
-+              return (this.images[href]) ? this.images[href] : href;
-+            }
-+          };
-+        </xsl:comment></script>
-       </xsl:if>
--      <xsl:if test="$navigation/navlink[@dir='next']">
--        <a href="{$navigation/navlink[@dir='next']/@href}" class="navigationLinkNext">-&gt;</a>
--      </xsl:if>
--    </div>
--  </xsl:if>
--</xsl:template>
-+    </xsl:if>
-+  </xsl:template>
- 
--</xsl:stylesheet>
-+  <xsl:template name="module-content-gallery-image">
-+    <xsl:param name="image" />
-+    <xsl:param name="navigation" />
-+    <xsl:if test="$image">
-+      <div class="galleryImage">
-+        <xsl:choose>
-+          <xsl:when test="$navigation/navlink[@direction = 'index']">
-+            <a href="{$navigation/navlink[@direction = 'index']/@href}">
-+              <img src="{$image/img/@src}" alt="{$image/img/@alt}"/>
-+            </a>
-+          </xsl:when>
-+          <xsl:otherwise>
-+            <img src="{$image/img/@src}" alt="{$image/img/@alt}"/>
-+          </xsl:otherwise>
-+        </xsl:choose>
-+        <xsl:if test="$image/title">
-+          <h2><xsl:value-of select="$image/title"/></h2>
-+        </xsl:if>
-+        <xsl:if test="$image/description">
-+          <div class="description">
-+            <xsl:apply-templates select="$image/description"/>
-+          </div>
-+        </xsl:if>
-+        <xsl:if test="$image/original-link">
-+          <div class="originalImage"><a href="{$image/original-link}"><xsl:call-template name="language-text">
-+            <xsl:with-param name="text" select="'ORIGINAL_IMAGE'"/>
-+          </xsl:call-template></a></div>
-+        </xsl:if>
-+        <xsl:if test="$image/download-link">
-+          <div class="imageDownload"><a href="{$image/download-link}"><xsl:call-template name="language-text">
-+            <xsl:with-param name="text" select="'IMAGE_DOWNLOAD'"/>
-+          </xsl:call-template></a></div>
-+        </xsl:if>
-+      </div>
-+    </xsl:if>
-+  </xsl:template>
-+
-+  <xsl:template name="module-content-gallery-navigation">
-+    <xsl:param name="navigation" />
-+    <xsl:if test="$navigation/navlink[(@direction = 'previous') or (@direction = 'next')]">
-+      <div class="galleryNavigation">
-+        <xsl:if test="$navigation/navlink[@direction = 'previous']">
-+          <a href="{$navigation/navlink[@direction = 'previous']/@href}" class="navigationLinkPrevious">&lt;-</a>
-+        </xsl:if>
-+        <xsl:if test="$navigation/navlink[@direction = 'next']">
-+          <a href="{$navigation/navlink[@direction = 'next']/@href}" class="navigationLinkNext">-&gt;</a>
-+        </xsl:if>
-+      </div>
-+    </xsl:if>
-+  </xsl:template>
-+
-+</xsl:stylesheet>
-\ No newline at end of file
-Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Arbeitskopie)
-@@ -2,4 +2,7 @@
-   <text ident="FILE_NAME">File</text>
-   <text ident="FILE_DATE">Date</text>
-   <text ident="FILE_SIZE">Size</text>
-+  <text ident="NO_IMAGES">No images found.</text>
-+  <text ident="ORIGINAL_IMAGE">Original image</text>
-+  <text ident="IMAGE_DOWNLOAD">Download</text>
- </texts>
-\ No newline at end of file
-Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
-===================================================================
---- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Arbeitskopie)
-@@ -325,6 +325,9 @@
-       </xsl:when>
-     </xsl:choose>
-   </div>
-+  <xsl:if test="$field/@hint != ''">
-+    <div class="hint"><xsl:value-of select="$field/@hint" /></div>
-+  </xsl:if>
- </xsl:template>
- 
- <xsl:template name="dialog-field-input">
-@@ -708,6 +711,7 @@
-   <label for="{$elementId}" class="radio">
-     <xsl:value-of select="$labelText" />
-   </label>
-+  <xsl:call-template name="float-fix" />
- </xsl:template>
- 
- <xsl:template name="dialog-element-select">
-Index: papaya-themes/default/page_community.css
-===================================================================
---- papaya-themes/default/page_community.css	(Revision 38500)
-+++ papaya-themes/default/page_community.css	(Arbeitskopie)
-@@ -48,4 +48,11 @@
- img.communityUserAvatar {
-   margin-top: 20px;
-   margin-bottom: 20px;
-+}
-+div.deleteAccount,
-+div.deleteAccount form div.buttons {
-+  margin-top: 1em;
-+}
-+div.deleteAccount fieldset {
-+  margin: 0;
- }
-\ No newline at end of file
-Index: papaya-themes/default/basic.css
-===================================================================
---- papaya-themes/default/basic.css	(Revision 38500)
-+++ papaya-themes/default/basic.css	(Arbeitskopie)
-@@ -72,6 +72,9 @@
- 
- /* Forms
- ----------------------------------------------- */
-+form h2 {
-+  margin: 0.7em 0 0.2em 0;
-+}
- form p {
-   margin-bottom: .8em;
- }
-@@ -80,6 +83,9 @@
-   padding: 0;
-   border: none;
- }
-+form div.field {
-+  margin-top: 0.2em;
-+}
- form label {
-   display: block;
-   font-weight: bold;
-@@ -91,6 +97,8 @@
-   padding-left: .5em;
- }
- form input.text,
-+form input.password,
-+form input.file,
- form textarea,
- form select {
-   border: 1px solid #CCC;
-@@ -114,13 +122,27 @@
-   vertical-align: middle;
-   width: auto;
- }
-+form .radio {
-+  float: left;
-+  margin-right: 0.8em;
-+}
-+form input.radio {
-+  margin-right: 0.2em;
-+}
-+form div.buttons {
-+  margin-top: 15px;
-+}
- form button {
-   border: 1px solid #90A33B;
-   cursor: pointer;
-   font-weight: bold;
-   font-size: 100%;
-   padding: 1px;
-+  margin-right: 0.5em;
- }
-+form div.hint {
-+  margin-top: 0.3em;
-+}
- 
- 
- /* Accessibility
-@@ -184,7 +206,7 @@
-   font-size: 90%;
- }
- 
--/* Messages 
-+/* Messages
- ----------------------------------------------- */
- div.message, div.error {
-   border: 1px solid #90A33B;
-@@ -240,22 +262,22 @@
- /* Mobile rules, resize page and move elements
-    for small windows
- ----------------------------------------------- */
--@media only screen and (max-width: 480px), 
-+@media only screen and (max-width: 480px),
-        only screen and (max-device-width: 480px) {
- 
-   p {
-     margin-bottom: 1.5em;
-     width: 20em;
-   }
--  
-+
-   h1, h2, h3, h4, h5, h6, caption {
-     font-weight: bold;
-     margin-bottom: 0.6em;
-     width: 20em;
-   }
--  
-+
-   h1 {
-     font-size: 120%;
-     padding-top: 17em;
-   }
--}  
-+}
-Index: papaya-themes/default/page_thumbs.css
-===================================================================
---- papaya-themes/default/page_thumbs.css	(Revision 38500)
-+++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
-@@ -1,6 +1,6 @@
- .galleryThumbnail {
-   float: left;
--  padding: 20px;
-+  padding: 0.4em;
- }
- a.galleryThumbnailFrame {
-   display: block;
