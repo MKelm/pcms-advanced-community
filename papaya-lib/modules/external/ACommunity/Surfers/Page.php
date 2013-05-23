@@ -58,8 +58,14 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     'limit' => array(
       'Limit', 'isNum', TRUE, 'input', 30, '', 15
     ),
+    'show_filter_navigation' => array(
+      'Show Filter Navigation', 'isNum', TRUE, 'yesno', NULL, '', 1
+    ),
+    'show_search_dialog' => array(
+      'Show Search Dialog', 'isNum', TRUE, 'yesno', NULL, '', 1
+    ),
     'show_paging' => array(
-      'Show paging', 'isNum', TRUE, 'yesno', NULL, '', 1
+      'Show Paging', 'isNum', TRUE, 'yesno', NULL, '', 1
     ),
     'Captions',
     'caption_surfers' => array(
@@ -67,6 +73,12 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     ),
     'caption_all' => array(
       'All', 'isNoHTML', TRUE, 'input', 200, '', 'All'
+    ),
+    'caption_dialog_search' => array(
+      'Search', 'isNoHTML', TRUE, 'input', 200, '', 'Search'
+    ),
+    'caption_dialog_send' => array(
+      'Send', 'isNoHTML', TRUE, 'input', 200, '', 'Send'
     ),
     'Messages',
     'message_empty_list' => array(
@@ -78,7 +90,9 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    * Names of caption data
    * @var array
    */
-  protected $_captionNames = array('caption_surfers', 'caption_all');
+  protected $_captionNames = array(
+    'caption_surfers', 'caption_all', 'caption_dialog_search', 'caption_dialog_send'
+  );
 
   /**
    * Names of message data

@@ -117,7 +117,12 @@ class ACommunitySurfers extends ACommunityUiContent {
     } else {
       $this->data()->initialize();
       if ($this->data()->displayMode == 'surfers') {
-        $this->_appendFilterNavigationTo($listElement);
+        if (!empty($this->data()->showFilterNavigation)) {
+          $this->_appendFilterNavigationTo($listElement);
+        }
+        if (!empty($this->data()->showSearchDialog)) {
+          $this->_appendSimpleSearchDialogTo($listElement);
+        }
       }
       if (empty($this->data()->surfers)) {
         $listElement->appendElement(
@@ -138,6 +143,11 @@ class ACommunitySurfers extends ACommunityUiContent {
     }
   }
 
+  /**
+   * Append filter navigation for sufers view
+   *
+   * @param PapayaXmlElement $parent
+   */
   protected function _appendFilterNavigationTo($parent) {
     $filterNavigation = $parent->appendElement('filter-navigation');
     $abc = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -154,6 +164,40 @@ class ACommunitySurfers extends ACommunityUiContent {
       array('href' => $this->data()->reference()->getRelative()),
       $this->data()->captions['all']
     );
+  }
+
+  /**
+   * Append search dialog for sufers view
+   *
+   * @param PapayaXmlElement $parent
+   */
+  protected function _appendSimpleSearchDialogTo($parent) {
+    $search = $parent->appendElement('search');
+    $dialog = new PapayaUiDialog();
+    $dialog->parameterMethod(PapayaUiDialog::METHOD_GET);
+    $options = new PapayaUiDialogOptions();
+    $options->useConfirmation = FALSE;
+    $options->useToken = FALSE;
+    $dialog->options($options);
+
+    $dialog->papaya($this->papaya());
+    $dialog->parameterGroup($this->parameterGroup());
+    $dialog->parameters($this->parameters());
+    $dialog->action($this->data()->reference()->getRelative());
+    $dialog->caption = NULL;
+
+    $dialog->fields[] = $field = new PapayaUiDialogFieldInput(
+      $this->data()->captions['dialog_search'],
+      'search',
+      200,
+      NULL,
+      new PapayaFilterText(PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS)
+    );
+    $field->setMandatory(TRUE);
+    $field->setId('dialogSurfersSearchField');
+    $dialog->buttons[] = new PapayaUiDialogButtonSubmit($this->data()->captions['dialog_send']);
+
+    $dialog->appendTo($search);
   }
 
   /**

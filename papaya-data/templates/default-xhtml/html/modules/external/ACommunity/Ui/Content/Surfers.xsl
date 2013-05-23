@@ -7,9 +7,11 @@
 >
 
   <xsl:import href="Paging.xsl"/>
+  <xsl:import href="Dialog.xsl"/>
 
   <xsl:template name="acommunity-surfers">
     <xsl:param name="content" />
+    <xsl:param name="surferSingleLine" select="false()" />
     <xsl:choose>
       <xsl:when test="count($content/group) &gt; 0">
         <xsl:for-each select="$content/group">
@@ -18,6 +20,7 @@
             <h2><xsl:value-of select="@caption" /></h2>
             <xsl:call-template name="acommunity-surfers-surfer">
               <xsl:with-param name="content" select="." />
+              <xsl:with-param name="surferSingleLine" select="$surferSingleLine" />
             </xsl:call-template>
             <xsl:call-template name="acommunity-content-paging">
               <xsl:with-param name="paging" select="paging" />
@@ -30,8 +33,13 @@
         <xsl:call-template name="acommunity-surfers-filter-navigation">
           <xsl:with-param name="content" select="$content/filter-navigation" />
         </xsl:call-template>
+        <xsl:call-template name="acommunity-content-dialog">
+          <xsl:with-param name="dialog" select="$content/search/dialog-box" />
+          <xsl:with-param name="className" select="'dialogSurfersSearch'" />
+        </xsl:call-template>
         <xsl:call-template name="acommunity-surfers-surfer">
           <xsl:with-param name="content" select="$content" />
+          <xsl:with-param name="surferSingleLine" select="$surferSingleLine" />
         </xsl:call-template>
         <xsl:call-template name="acommunity-content-paging">
           <xsl:with-param name="paging" select="$content/paging" />
@@ -54,11 +62,22 @@
 
   <xsl:template name="acommunity-surfers-surfer">
     <xsl:param name="content" />
+    <xsl:param name="surferSingleLine" select="false()" />
     <xsl:choose>
       <xsl:when test="count($content/surfer) &gt; 0">
         <ul class="surfers">
           <xsl:for-each select="$content/surfer">
             <li>
+              <xsl:attribute name="class">
+                <xsl:choose>
+                  <xsl:when test="$surferSingleLine">
+                    <xsl:text>singleLine</xsl:text>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:text>doubleLine</xsl:text>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
               <span class="surferAvatar"><a href="{@page-link}"><img src="{@avatar}" alt="" /></a></span>
               <xsl:text> </xsl:text>
               <span class="surferDetails">

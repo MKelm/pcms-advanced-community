@@ -38,9 +38,6 @@
 /*
  CSS rules for ACommunitySurfersPage / ACommunitySurferContactsPage
 */
-#content .surfersFilterNavigation {
-
-}
 #content .surfersFilterNavigation li {
   display: inline;
   background-position: 0 0.2em;
@@ -73,6 +70,9 @@
 #content ul.surfers li .surferName {
   margin-top: 0.7em;
   font-size: 1.2em;
+}
+#content ul.surfers li.singleLine .surferName {
+  margin-top: 1.4em;
 }
 #content ul.surfers li .surferCommand {
   margin-right: 0.7em;

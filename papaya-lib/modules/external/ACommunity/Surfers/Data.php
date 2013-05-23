@@ -48,6 +48,18 @@ class ACommunitySurfersData extends ACommunityUiContentData {
   protected $_timeframe = NULL;
 
   /**
+   * Flag to show filter navigation or not
+   * @var boolean
+   */
+  public $showFilterNavigation = FALSE;
+
+  /**
+   * Flag to show search dialog or not
+   * @var boolean
+   */
+  public $showSearchDialog = FALSE;
+
+  /**
    * Flag to show paging or not
    * @var boolean
    */
@@ -88,7 +100,15 @@ class ACommunitySurfersData extends ACommunityUiContentData {
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
     $this->_surferAvatarSize = (int)$data['avatar_size'];
     $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
-    $this->_timeframe = $data['timeframe'];
+    if (isset($data['timeframe'])) {
+      $this->_timeframe = $data['timeframe'];
+    }
+    if (isset($data['show_filter_navigation'])) {
+      $this->showFilterNavigation = $data['show_filter_navigation'];
+    }
+    if (isset($data['show_search_dialog'])) {
+      $this->showSearchDialog = $data['show_search_dialog'];
+    }
     $this->pagingItemsPerPage = (int)$data['limit'];
     $this->showPaging = !isset($data['show_paging']) ? TRUE : (bool)$data['show_paging'];
     parent::setPluginData($data, $captionNames, $messageNames);
