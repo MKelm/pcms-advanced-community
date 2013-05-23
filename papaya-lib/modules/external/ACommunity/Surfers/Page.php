@@ -123,7 +123,21 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     if (isset($definition)) {
       $this->_cacheDefiniton = $definition;
     } elseif (NULL == $this->_cacheDefiniton) {
-      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+      include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+      $values = new ACommunityCacheIdentifierValues();
+      $definitionValues = array(
+        'acommunity_surfers_page',
+        $this->_displayMode,
+        $values->surferLastRegistrationTime(),
+        $values->lastChangeTime('surfer_names')
+      );
+      $definitionParameters = array(
+        'surfers_search', 'surfers_character', 'surfers_list_page'
+      );
+      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+        new PapayaCacheIdentifierDefinitionValues($definitionValues),
+        new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
+      );
     }
     return $this->_cacheDefiniton;
   }
