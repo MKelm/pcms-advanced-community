@@ -183,6 +183,7 @@ abstract class ACommunitySurfersBox extends base_actionbox implements PapayaPlug
       $this->_surfers = new ACommunitySurfers();
       $this->_surfers->parameterGroup($this->paramName);
       $this->_surfers->data()->languageId = $this->papaya()->request->languageId;
+      $this->_surfers->data()->displayMode = $this->_displayMode;
     }
     return $this->_surfers;
   }
