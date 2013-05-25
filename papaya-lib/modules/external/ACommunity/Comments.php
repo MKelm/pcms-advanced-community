@@ -114,9 +114,9 @@ class ACommunityComments extends ACommunityUiContent {
           array('ressource' => 'comments', 'time' => time())
         );
         $this->data()->lastChange()->save();
+        $this->parameters()->set('command', 'reply');
+        $this->parameters()->set('comment_id', 0);
       }
-      $this->parameters()->set('command', 'reply');
-      $this->parameters()->set('comment_id', 0);
     }
   }
 
