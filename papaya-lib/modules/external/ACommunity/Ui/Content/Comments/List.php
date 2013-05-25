@@ -120,6 +120,10 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
               $subComment->surferPageLink = $subCommentData['surfer']['page_link'];
               $subComment->surferAvatar = $subCommentData['surfer']['avatar'];
 
+              if (isset($commandLinks[$subCommentId]['delete'])) {
+                $subComment->linkDelete = $commandLinks[$subCommentId]['delete'];
+                $subComment->linkDeleteCaption = $this->data()->captions['command_delete'];
+              }
               if (isset($commandLinks[$subCommentId]['vote_up'])) {
                 $subComment->linkVoteUp = $commandLinks[$subCommentId]['vote_up'];
                 $subComment->linkVoteUpCaption = $this->data()->captions['command_vote_up'];

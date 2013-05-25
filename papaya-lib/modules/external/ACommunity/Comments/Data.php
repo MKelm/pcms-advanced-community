@@ -204,17 +204,17 @@ class ACommunityCommentsData extends ACommunityUiContentData {
             );
             $links[$id]['reply'] = $reference->getRelative();
           }
-          if ($surferIsModerator) {
-            $reference = clone $this->reference();
-            $reference->setParameters(
-              array(
-                'command' => 'delete',
-                'comment_id' => $id
-              ),
-              $this->owner->parameterGroup()
-            );
-            $links[$id]['delete'] = $reference->getRelative();
-          }
+        }
+        if ($surferIsModerator) {
+          $reference = clone $this->reference();
+          $reference->setParameters(
+            array(
+              'command' => 'delete',
+              'comment_id' => $id
+            ),
+            $this->owner->parameterGroup()
+          );
+          $links[$id]['delete'] = $reference->getRelative();
         }
 
         if (empty($votingCookieData[$id])) {
