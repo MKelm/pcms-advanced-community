@@ -22,8 +22,7 @@
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityUiContent extends PapayaObjectInteractive
-  implements PapayaXmlAppendable {
+class ACommunityUiContent extends PapayaUiControlInteractive {
 
   /**
    * Community connector
