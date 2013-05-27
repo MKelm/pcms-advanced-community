@@ -123,7 +123,7 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaP
       'surfer',
       $this,
       array('surfer' => 'surfer_handle'),
-      array('surfer' => array('surfer_handle', 'folder_id')),
+      array('surfer' => array('surfer_handle', 'folder_id', 'offset')),
       array('surfer' => 'enlarge')
     );
   }
