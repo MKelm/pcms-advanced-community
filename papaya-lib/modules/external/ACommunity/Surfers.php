@@ -150,6 +150,13 @@ class ACommunitySurfers extends ACommunityUiContent {
    */
   protected function _appendFilterNavigationTo($parent) {
     $filterNavigation = $parent->appendElement('filter-navigation');
+    $reference = clone $this->data()->reference();
+    $reference->setParameters(array('surfers_character' => ''), $this->parameterGroup());
+    $filterNavigation->appendElement(
+      'character',
+      array('href' => $reference->getRelative()),
+      $this->data()->captions['all']
+    );
     $abc = array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
       'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
     foreach ($abc as $character) {
@@ -159,13 +166,6 @@ class ACommunitySurfers extends ACommunityUiContent {
         'character', array('href' => $reference->getRelative()), $character
       );
     }
-    $reference = clone $this->data()->reference();
-    $reference->setParameters(array('surfers_character' => ''), $this->parameterGroup());
-    $filterNavigation->appendElement(
-      'character',
-      array('href' => $reference->getRelative()),
-      $this->data()->captions['all']
-    );
   }
 
   /**
