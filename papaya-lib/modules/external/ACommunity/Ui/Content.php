@@ -76,22 +76,6 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
   }
 
   /**
-   * Compile output xml.
-   *
-   * @return string
-   */
-  public function getXml() {
-    $dom = new PapayaXmlDocument();
-    $dom->appendElement('ui-content');
-    $this->appendTo($dom->documentElement);
-    $xml = '';
-    foreach ($dom->documentElement->childNodes as $node) {
-      $xml .= $node->ownerDocument->saveXml($node);
-    }
-    return $xml;
-  }
-
-  /**
    * Get/set community connector
    *
    * @param object $connector
