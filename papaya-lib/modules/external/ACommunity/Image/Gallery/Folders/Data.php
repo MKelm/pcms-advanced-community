@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery folders data class to handle all sorts of related data
+ * Advanced community image gallery folders data class to handle all sorts of related data
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -20,12 +20,12 @@
 require_once(dirname(__FILE__).'/../Data.php');
 
 /**
- * Advanced community surfer gallery upload data class to handle all sorts of related data
+ * Advanced community image gallery upload data class to handle all sorts of related data
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryFoldersData extends ACommunitySurferGalleryData {
+class ACommunityImageGalleryFoldersData extends ACommunityImageGalleryData {
 
   /**
    * Ressource needs active surfer

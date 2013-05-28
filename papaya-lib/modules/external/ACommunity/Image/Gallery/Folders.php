@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery folders
+ * Advanced community image gallery folders
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -22,12 +22,12 @@
 require_once(dirname(__FILE__).'/../../Ui/Content.php');
 
 /**
- * Advanced community surfer gallery folders
+ * Advanced community image gallery folders
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryFolders extends ACommunityUiContent {
+class ACommunityImageGalleryFolders extends ACommunityUiContent {
 
   /**
    * Ui content surfer gallery folder dialog
@@ -37,22 +37,22 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContent {
 
   /**
    * Gallery deletion object
-   * @var ACommunitySurferGalleryDeletion
+   * @var ACommunityImageGalleryDeletion
    */
   protected $_galleryDeletion = NULL;
 
   /**
-   * Get/set surfer gallery folders data
+   * Get/set image gallery folders data
    *
-   * @param ACommunitySurferGalleryFoldersData $data
-   * @return ACommunitySurferGalleryFoldersData
+   * @param ACommunityImageGalleryFoldersData $data
+   * @return ACommunityImageGalleryFoldersData
    */
-  public function data(ACommunitySurferGalleryFoldersData $data = NULL) {
+  public function data(ACommunityImageGalleryFoldersData $data = NULL) {
     if (isset($data)) {
       $this->_data = $data;
     } elseif (is_null($this->_data)) {
       include_once(dirname(__FILE__).'/Folders/Data.php');
-      $this->_data = new ACommunitySurferGalleryFoldersData();
+      $this->_data = new ACommunityImageGalleryFoldersData();
       $this->_data->papaya($this->papaya());
       $this->_data->owner = $this;
     }
@@ -150,17 +150,17 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContent {
   }
 
   /**
-  * Access to the ui content surfer gallery folder dialog control
+  * Access to the ui content image gallery folder dialog control
   *
-  * @param ACommunityUiContentSurferGalleryFolderDialog $uiContentFolderDialog
-  * @return ACommunityUiContentSurferGalleryFolderDialog
+  * @param ACommunityUiContentImageGalleryFolderDialog $uiContentFolderDialog
+  * @return ACommunityUiContentImageGalleryFolderDialog
   */
-  public function uiContentFolderDialog(ACommunityUiContentSurferGalleryFolderDialog $uiContentFolderDialog = NULL) {
+  public function uiContentFolderDialog(ACommunityUiContentImageGalleryFolderDialog $uiContentFolderDialog = NULL) {
     if (isset($uiContentFolderDialog)) {
       $this->_uiContentFolderDialog = $uiContentFolderDialog;
     } elseif (is_null($this->_uiContentFolderDialog)) {
-      include_once(dirname(__FILE__).'/../../Ui/Content/Surfer/Gallery/Folder/Dialog.php');
-      $this->_uiContentFolderDialog = new ACommunityUiContentSurferGalleryFolderDialog(
+      include_once(dirname(__FILE__).'/../../Ui/Content/Image/Gallery/Folder/Dialog.php');
+      $this->_uiContentFolderDialog = new ACommunityUiContentImageGalleryFolderDialog(
         $this->data()->gallery()
       );
       $this->_uiContentFolderDialog->data($this->data());
@@ -171,16 +171,16 @@ class ACommunitySurferGalleryFolders extends ACommunityUiContent {
   }
 
   /**
-  * Set/get gallery deletion object
+  * Set/get image gallery deletion object
   *
-  * @return ACommunitySurferGalleryDeletion
+  * @return ACommunityImageGalleryDeletion
   */
-  public function galleryDeletion(ACommunitySurferGalleryDeletion $galleryDeletion = NULL) {
+  public function galleryDeletion(ACommunityImageGalleryDeletion $galleryDeletion = NULL) {
     if (isset($galleryDeletion)) {
       $this->_galleryDeletion = $galleryDeletion;
     } elseif (is_null($this->_galleryDeletion)) {
       include_once(dirname(__FILE__).'/Deletion.php');
-      $this->_galleryDeletion = new ACommunitySurferGalleryDeletion();
+      $this->_galleryDeletion = new ACommunityImageGalleryDeletion();
       $this->_galleryDeletion->papaya($this->papaya());
     }
     return $this->_galleryDeletion;

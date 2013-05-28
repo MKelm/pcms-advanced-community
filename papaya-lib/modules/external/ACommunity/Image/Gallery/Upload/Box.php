@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery upload box
+ * Advanced community image gallery upload box
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -22,12 +22,12 @@
 require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
 
 /**
- * Advanced community surfer gallery upload box
+ * Advanced community image gallery upload box
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaPluginCacheable {
+class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
@@ -80,7 +80,7 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaP
 
   /**
    * Gallery upload object
-   * @var ACommunitySurferGalleryUpload
+   * @var ACommunityImageGalleryUpload
    */
   protected $_upload = NULL;
 
@@ -108,7 +108,7 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaP
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       } else {
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues(
-          array('acommunity_surfer_gallery_upload')
+          array('acommunity_image_gallery_upload')
         );
       }
     }
@@ -129,16 +129,16 @@ class ACommunitySurferGalleryUploadBox extends base_actionbox implements PapayaP
   }
 
   /**
-  * Get (and, if necessary, initialize) the ACommunitySurferGalleryUpload object
+  * Get (and, if necessary, initialize) the ACommunityImageGalleryUpload object
   *
-  * @return ACommunitySurferGalleryUpload $upload
+  * @return ACommunityImageGalleryUpload $upload
   */
-  public function upload(ACommunitySurferGalleryUpload $upload = NULL) {
+  public function upload(ACommunityImageGalleryUpload $upload = NULL) {
     if (isset($upload)) {
       $this->_upload = $upload;
     } elseif (is_null($this->_upload)) {
       include_once(dirname(__FILE__).'/../Upload.php');
-      $this->_upload = new ACommunitySurferGalleryUpload();
+      $this->_upload = new ACommunityImageGalleryUpload();
       $this->_upload->parameterGroup($this->paramName);
       $this->_upload->data()->languageId = $this->papaya()->request->languageId;
     }

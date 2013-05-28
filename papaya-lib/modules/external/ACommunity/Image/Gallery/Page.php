@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery page
+ * Advanced community image gallery page
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -22,12 +22,12 @@
 require_once(PAPAYA_INCLUDE_PATH.'modules/free/thumbs/Image/Gallery/Page.php');
 
 /**
- * Advanced community surfer gallery page
+ * Advanced community image gallery page
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements PapayaPluginCacheable {
+class ACommunityImageGalleryPage extends MediaImageGalleryPage implements PapayaPluginCacheable {
 
   /**
    * Use a advanced community parameter group name
@@ -60,7 +60,7 @@ class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements Papay
     } elseif (is_null($this->_cacheDefinition)) {
       $this->initializeParams();
       $ressource = $this->setRessourceData();
-      $definitionValues = array('acommunity_surfer_gallery');
+      $definitionValues = array('acommunity_image_gallery');
       if (!empty($ressource)) {
         $command = isset($this->params['command']) ? $this->params['command'] : NULL;
         if (!empty($command)) {
@@ -106,16 +106,16 @@ class ACommunitySurferGalleryPage extends MediaImageGalleryPage implements Papay
   }
 
   /**
-  * Get (and, if necessary, initialize) the ACommunitySurferGallery object
+  * Get (and, if necessary, initialize) the ACommunityImageGallery object
   *
-  * @return ACommunitySurferGallery $gallery
+  * @return ACommunityImageGallery $gallery
   */
-  public function gallery(ACommunitySurferGallery $gallery = NULL) {
+  public function gallery(ACommunityImageGallery $gallery = NULL) {
     if (isset($gallery)) {
       $this->_gallery = $gallery;
     } elseif (is_null($this->_gallery)) {
       include_once(dirname(__FILE__).'/../Gallery.php');
-      $this->_gallery = new ACommunitySurferGallery();
+      $this->_gallery = new ACommunityImageGallery();
       $this->_gallery->papaya($this->papaya());
       $this->_gallery->parameterGroup($this->paramName);
       $this->_gallery->languageId = $this->papaya()->request->languageId;

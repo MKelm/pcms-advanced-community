@@ -64,8 +64,8 @@ class ACommunitySurferDeletion extends PapayaObject {
    * @param string $surferId
    */
   public function deleteSurferGalleries($surferId) {
-    include_once(dirname(__FILE__).'/Gallery/Deletion.php');
-    $deletion = new ACommunitySurferGalleryDeletion();
+    include_once(dirname(__FILE__).'/../Image/Gallery/Deletion.php');
+    $deletion = new ACommunityImageGalleryDeletion();
     $deletion->papaya($this->papaya());
     $deletion->deleteSurferGalleries($surferId);
   }

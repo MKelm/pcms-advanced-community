@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery upload
+ * Advanced community image gallery upload
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -22,31 +22,31 @@
 require_once(dirname(__FILE__).'/../../Ui/Content.php');
 
 /**
- * Advanced community surfer gallery upload
+ * Advanced community image gallery upload
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryUpload extends ACommunityUiContent {
+class ACommunityImageGalleryUpload extends ACommunityUiContent {
 
   /**
    * Ui content surfer gallery upload dialog
-   * @var ACommunityUiContentSurferGalleryUploadDialog
+   * @var ACommunityUiContentImageGalleryUploadDialog
    */
   protected $_uiContentUploadDialog = NULL;
 
   /**
-   * Get/set surfer gallery upload data
+   * Get/set image gallery upload data
    *
-   * @param ACommunitySurferGalleryUploadData $data
-   * @return ACommunitySurferGalleryUploadData
+   * @param ACommunityImageGalleryUploadData $data
+   * @return ACommunityImageGalleryUploadData
    */
-  public function data(ACommunitySurferGalleryUploadData $data = NULL) {
+  public function data(ACommunityImageGalleryUploadData $data = NULL) {
     if (isset($data)) {
       $this->_data = $data;
     } elseif (is_null($this->_data)) {
       include_once(dirname(__FILE__).'/Upload/Data.php');
-      $this->_data = new ACommunitySurferGalleryUploadData();
+      $this->_data = new ACommunityImageGalleryUploadData();
       $this->_data->papaya($this->papaya());
       $this->_data->owner = $this;
     }
@@ -76,17 +76,17 @@ class ACommunitySurferGalleryUpload extends ACommunityUiContent {
   /**
   * Access to the ui content surfer gallery upload dialog control
   *
-  * @param ACommunityUiContentSurferGalleryUploadDialog $uiContentUploadDialog
-  * @return ACommunityUiContentSurferGalleryUploadDialog
+  * @param ACommunityUiContentImageGalleryUploadDialog $uiContentUploadDialog
+  * @return ACommunityUiContentImageGalleryUploadDialog
   */
   public function uiContentUploadDialog(
-           ACommunityUiContentSurferGalleryUploadDialog $uiContentUploadDialog = NULL
+           ACommunityUiContentImageGalleryUploadDialog $uiContentUploadDialog = NULL
          ) {
     if (isset($uiContentUploadDialog)) {
       $this->_uiContentUploadDialog = $uiContentUploadDialog;
     } elseif (is_null($this->_uiContentUploadDialog)) {
-      include_once(dirname(__FILE__).'/../../Ui/Content/Surfer/Gallery/Upload/Dialog.php');
-      $this->_uiContentUploadDialog = new ACommunityUiContentSurferGalleryUploadDialog();
+      include_once(dirname(__FILE__).'/../../Ui/Content/Image/Gallery/Upload/Dialog.php');
+      $this->_uiContentUploadDialog = new ACommunityUiContentImageGalleryUploadDialog();
       $this->_uiContentUploadDialog->data($this->data());
       $this->_uiContentUploadDialog->parameters($this->parameters());
       $this->_uiContentUploadDialog->parameterGroup($this->parameterGroup());

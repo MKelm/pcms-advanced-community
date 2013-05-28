@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery folders box
+ * Advanced community image gallery folders box
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -22,12 +22,12 @@
 require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
 
 /**
- * Advanced community gallery folders box
+ * Advanced community image gallery folders box
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryFoldersBox extends base_actionbox implements PapayaPluginCacheable {
+class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
@@ -102,7 +102,7 @@ class ACommunitySurferGalleryFoldersBox extends base_actionbox implements Papaya
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       } else {
         $ressource = $this->setRessourceData();
-        $definitionValues = array('acommunity_surfer_gallery_folders', $currentSurferId);
+        $definitionValues = array('acommunity_image_gallery_folders', $currentSurferId);
         if (!empty($ressource)) {
           include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
@@ -136,16 +136,16 @@ class ACommunitySurferGalleryFoldersBox extends base_actionbox implements Papaya
   }
 
   /**
-  * Get (and, if necessary, initialize) the ACommunitySurferGalleryFolders object
+  * Get (and, if necessary, initialize) the ACommunityImageGalleryFolders object
   *
-  * @return ACommunitySurferGalleryFolders $folders
+  * @return ACommunityImageGalleryFolders $folders
   */
-  public function folders(ACommunitySurferGalleryFolders $folders = NULL) {
+  public function folders(ACommunityImageGalleryFolders $folders = NULL) {
     if (isset($folders)) {
       $this->_folders = $folders;
     } elseif (is_null($this->_folders)) {
       include_once(dirname(__FILE__).'/../Folders.php');
-      $this->_folders = new ACommunitySurferGalleryFolders();
+      $this->_folders = new ACommunityImageGalleryFolders();
       $this->_folders->parameterGroup($this->paramName);
       $this->_folders->data()->languageId = $this->papaya()->request->languageId;
     }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery teaser box
+ * Advanced community image gallery teaser box
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -22,12 +22,12 @@
 require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
 
 /**
- * Advanced community surfer gallery teaser box
+ * Advanced community image gallery teaser box
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryTeaserBox extends base_actionbox implements PapayaPluginCacheable {
+class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPluginCacheable {
 
   /**
    * Parameter prefix name
@@ -86,7 +86,7 @@ class ACommunitySurferGalleryTeaserBox extends base_actionbox implements PapayaP
       $this->_cacheDefinition = $definition;
     } elseif (NULL == $this->_cacheDefinition) {
       $ressource = $this->setRessourceData();
-      $definitionValues = array('acommunity_surfer_gallery_teaser');
+      $definitionValues = array('acommunity_image_gallery_teaser');
       if (!empty($ressource)) {
         $ressource = $this->setRessourceData();
         if (!empty($ressource)) {
@@ -122,16 +122,16 @@ class ACommunitySurferGalleryTeaserBox extends base_actionbox implements PapayaP
   }
 
   /**
-  * Get (and, if necessary, initialize) the ACommunitySurferGalleryTeaser object
+  * Get (and, if necessary, initialize) the ACommunityImageGalleryTeaser object
   *
-  * @return ACommunitySurferGalleryTeaser $teaser
+  * @return ACommunityImageGalleryTeaser $teaser
   */
-  public function teaser(ACommunitySurferGalleryTeaser $teaser = NULL) {
+  public function teaser(ACommunityImageGalleryTeaser $teaser = NULL) {
     if (isset($teaser)) {
       $this->_teaser = $teaser;
     } elseif (is_null($this->_teaser)) {
       include_once(dirname(__FILE__).'/../Teaser.php');
-      $this->_teaser = new ACommunitySurferGalleryTeaser();
+      $this->_teaser = new ACommunityImageGalleryTeaser();
       $this->_teaser->parameterGroup($this->paramName);
       $this->_teaser->data()->languageId = $this->papaya()->request->languageId;
     }

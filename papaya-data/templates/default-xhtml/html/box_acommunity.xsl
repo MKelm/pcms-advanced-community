@@ -8,8 +8,8 @@
 <!--
   @papaya:modules ACommunityPageCommentsBox, ACommunitySurferCommentsBox,
     ACommunityImageCommentsBox, ACommunityCommentsRankingBox,
-    ACommunityCommentersRankingBox, ACommunitySurferGalleryUploadBox,
-    ACommunitySurferGalleryFoldersBox, ACommunitySurferGalleryTeaserBox,
+    ACommunityCommentersRankingBox, ACommunityImageGalleryUploadBox,
+    ACommunityImageGalleryFoldersBox, ACommunityImageGalleryTeaserBox,
     ACommunitySurferStatusBox, ACommunitySurferContactsBox,
     ACommunitySurfersLastActionBox, ACommunitySurfersRegistrationBox,
     ACommunityMessageConversationsBox

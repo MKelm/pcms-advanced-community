@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery database record
+ * Advanced community image gallery upload data class to handle all sorts of related data
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -16,30 +16,21 @@
  * @subpackage External-ACommunity
  */
 
+// Gallery data object
+require_once(dirname(__FILE__).'/../Data.php');
+
 /**
- * Advanced community surfer gallery database record
+ * Advanced community image gallery upload data class to handle all sorts of related data
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityContentSurferGallery extends PapayaDatabaseRecord {
+class ACommunityImageGalleryUploadData extends ACommunityImageGalleryData {
 
   /**
-   * Map field names to more convinient property names
-   *
-   * @var array(string=>string)
+   * Ressource needs active surfer
+   * @var boolean
    */
-  protected $_fields = array(
-	  'id' => 'gallery_id',
-    'surfer_id' => 'surfer_id',
-    'folder_id' => 'gallery_folder_id',
-    'parent_folder_id' => 'gallery_parent_folder_id'
-  );
+  protected $_ressourceNeedsActiveSurfer = TRUE;
 
-  /**
-   * Table containing books
-   *
-   * @var string
-   */
-  protected $_tableName = 'acommunity_surfer_galleries';
 }

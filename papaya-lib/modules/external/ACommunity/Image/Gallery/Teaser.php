@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery teaser
+ * Advanced community image gallery teaser
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -22,25 +22,25 @@
 require_once(dirname(__FILE__).'/../../Ui/Content.php');
 
 /**
- * Advanced community surfer gallery teaser
+ * Advanced community image gallery teaser
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryTeaser extends ACommunityUiContent {
+class ACommunityImageGalleryTeaser extends ACommunityUiContent {
 
   /**
-   * Get/set surfer gallery teaser data
+   * Get/set image gallery teaser data
    *
-   * @param ACommunitySurferGalleryTeaserData $data
-   * @return ACommunitySurferGalleryTeaserData
+   * @param ACommunityImageGalleryTeaserData $data
+   * @return ACommunityImageGalleryTeaserData
    */
-  public function data(ACommunitySurferGalleryTeaserData $data = NULL) {
+  public function data(ACommunityImageGalleryTeaserData $data = NULL) {
     if (isset($data)) {
       $this->_data = $data;
     } elseif (is_null($this->_data)) {
       include_once(dirname(__FILE__).'/Teaser/Data.php');
-      $this->_data = new ACommunitySurferGalleryTeaserData();
+      $this->_data = new ACommunityImageGalleryTeaserData();
       $this->_data->papaya($this->papaya());
       $this->_data->owner = $this;
     }
@@ -61,11 +61,12 @@ class ACommunitySurferGalleryTeaser extends ACommunityUiContent {
       $gallery = reset($this->data()->galleries()->toArray());
       $images = NULL;
       if (!empty($gallery)) {
-        $files = $this->data()->mediaDB()->getFiles($gallery['folder_id'], $this->data()->thumbnailAmount);
+        $files = $this->data()->mediaDBEdit()
+          ->getFiles($gallery['folder_id'], $this->data()->thumbnailAmount);
         if (!empty($files)) {
+          include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
+          $thumbnail = new base_thumbnail;
           foreach ($files as $file) {
-            include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
-            $thumbnail = new base_thumbnail;
             $images[] = 'media.thumb.'.$thumbnail->getThumbnail(
               $file['file_id'], NULL, $this->data()->thumbnailSize, $this->data()->thumbnailSize,
               $this->data()->thumbnailResizeMode

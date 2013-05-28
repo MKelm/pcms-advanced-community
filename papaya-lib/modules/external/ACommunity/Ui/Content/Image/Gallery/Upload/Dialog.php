@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery upload dialog
+ * Advanced community image gallery upload dialog
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,12 +17,12 @@
  */
 
 /**
- * Advanced surfer gallery upload dialog
+ * Advanced community image gallery upload dialog
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlCommandDialog {
+class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommandDialog {
 
   /**
   * Comments data
@@ -43,12 +43,12 @@ class ACommunityUiContentSurferGalleryUploadDialog extends PapayaUiControlComman
   protected $_imageFieldName = 'image';
 
   /**
-   * Get/set surfer gallery data
+   * Get/set image gallery upload data
    *
-   * @param ACommunitySurferGalleryUploadData $data
-   * @return ACommunitySurferGalleryUploadData
+   * @param ACommunityImageGalleryUploadData $data
+   * @return ACommunityImageGalleryUploadData
    */
-  public function data(ACommunitySurferGalleryUploadData $data = NULL) {
+  public function data(ACommunityImageGalleryUploadData $data = NULL) {
     if (isset($data)) {
       $this->_data = $data;
     }

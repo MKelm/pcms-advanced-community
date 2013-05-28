@@ -4,14 +4,14 @@
   <xsl:import href="./Ui/Content/Surfers.xsl"/>
   <xsl:import href="./Ui/Content/Dialog.xsl"/>
   <xsl:import href="./Ui/Content/Paging.xsl"/>
-  <xsl:import href="./Ui/Content/Surfer/Gallery.xsl"/>
+  <xsl:import href="./Ui/Content/Image/Gallery.xsl"/>
   <xsl:import href="./Ui/Content/Surfer/Editor.xsl"/>
 
   <xsl:template name="page-styles">
     <xsl:call-template name="link-style">
       <xsl:with-param name="file">
         <xsl:choose>
-          <xsl:when test="/page/content/topic/@module = 'ACommunitySurferGalleryPage'">page_thumbs.css</xsl:when>
+          <xsl:when test="/page/content/topic/@module = 'ACommunityImageGalleryPage'">page_thumbs.css</xsl:when>
           <xsl:when test="/page/content/topic/@module = 'ACommunitySurferEditorPage'">page_community.css</xsl:when>
           <xsl:otherwise>page_acommunity.css</xsl:otherwise>
         </xsl:choose>
@@ -42,7 +42,7 @@
           <xsl:with-param name="pageContent" select="$pageContent"/>
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="$pageContent/@module = 'ACommunitySurferGalleryPage'">
+      <xsl:when test="$pageContent/@module = 'ACommunityImageGalleryPage'">
         <xsl:call-template name="module-content-image-gallery">
           <xsl:with-param name="pageContent" select="$pageContent"/>
         </xsl:call-template>

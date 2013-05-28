@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery deletion
+ * Advanced community image gallery deletion
  *
  * This class offers methods to delete and modify community data on surfer deletion
  *
@@ -19,12 +19,12 @@
  */
 
 /**
- * Advanced community surfer gallery deletion
+ * Advanced community image gallery deletion
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryDeletion extends PapayaObject {
+class ACommunityImageGalleryDeletion extends PapayaObject {
 
   /**
   * Stored database access object
@@ -57,10 +57,10 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
   protected $_mediaDBEdit = NULL;
 
   /**
-   * Surfer galleries database records
+   * Image galleries database records
    * @var object
    */
-  protected $_surferGalleries = NULL;
+  protected $_imageGalleries = NULL;
 
   /**
   * Set/get database access object
@@ -84,7 +84,7 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
    */
   public function deleteSurferGalleries($surferId) {
     $this->surferGalleries()->load(array('surfer_id' => $surferId));
-    $surferGalleries = $this->surferGalleries()->toArray();
+    $surferGalleries = $this->imageGalleries()->toArray();
     $result = TRUE;
     if (!empty($surferGalleries)) {
       foreach ($surferGalleries as $surferGallery) {
@@ -106,7 +106,7 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
    */
   public function deleteSurferGalleryByFolderId($folderId) {
     $this->surferGalleries()->load(array('folder_id' => $folderId));
-    $surferGallery = reset($this->surferGalleries()->toArray());
+    $surferGallery = reset($this->imageGalleries()->toArray());
     $result = 0;
     if (!empty($surferGallery)) {
       if ($this->_deleteMediaDBFolder($surferGallery['folder_id'])) {
@@ -180,19 +180,19 @@ class ACommunitySurferGalleryDeletion extends PapayaObject {
   }
 
   /**
-  * Access to the surfer galleries database records data
+  * Access to the image galleries database records data
   *
-  * @param ACommunityContentSurferGalleries $comments
-  * @return ACommunityContentSurferGalleries
+  * @param ACommunityContentImageGalleries $comments
+  * @return ACommunityContentImageGalleries
   */
-  public function surferGalleries(ACommunityContentSurferGalleries $galleries = NULL) {
+  public function surferGalleries(ACommunityContentImageGalleries $galleries = NULL) {
     if (isset($galleries)) {
-      $this->_surferGalleries = $galleries;
-    } elseif (is_null($this->_surferGalleries)) {
-      include_once(dirname(__FILE__).'/../../Content/Surfer/Galleries.php');
-      $this->_surferGalleries = new ACommunityContentSurferGalleries();
-      $this->_surferGalleries->papaya($this->papaya());
+      $this->_imageGalleries = $galleries;
+    } elseif (is_null($this->_imageGalleries)) {
+      include_once(dirname(__FILE__).'/../../Content/Image/Galleries.php');
+      $this->_imageGalleries = new ACommunityContentImageGalleries();
+      $this->_imageGalleries->papaya($this->papaya());
     }
-    return $this->_surferGalleries;
+    return $this->_imageGalleries;
   }
 }

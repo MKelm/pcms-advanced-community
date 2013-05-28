@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer galleries database records
+ * Advanced community image gallery database record
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,13 +17,13 @@
  */
 
 /**
- * Advanced community surfer galleries database records
+ * Advanced community image gallery database record
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityContentSurferGalleries extends PapayaDatabaseRecords {
-  
+class ACommunityContentImageGallery extends PapayaDatabaseRecord {
+
   /**
    * Map field names to more convinient property names
    *
@@ -42,12 +42,4 @@ class ACommunityContentSurferGalleries extends PapayaDatabaseRecords {
    * @var string
    */
   protected $_tableName = 'acommunity_surfer_galleries';
-
-  /**
-   * An array of properties, used to compile the identifer
-   *
-   * @var array(string)
-   */
-  protected $_identifierProperties = array('id');
-
 }

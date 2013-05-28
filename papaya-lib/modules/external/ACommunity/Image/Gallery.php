@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery
+ * Advanced community image gallery
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -27,7 +27,7 @@ require_once(PAPAYA_INCLUDE_PATH.'modules/free/thumbs/Image/Gallery.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGallery extends MediaImageGallery {
+class ACommunityImageGallery extends MediaImageGallery {
 
   /**
    * Id of current file id in enlarge view
@@ -138,7 +138,7 @@ class ACommunitySurferGallery extends MediaImageGallery {
       $this->_data = $data;
     } elseif (is_null($this->_data)) {
       include_once(dirname(__FILE__).'/Gallery/Data.php');
-      $this->_data = new ACommunitySurferGalleryData();
+      $this->_data = new ACommunityImageGalleryData();
       $this->_data->papaya($this->papaya());
       $this->_data->owner = $this;
     }

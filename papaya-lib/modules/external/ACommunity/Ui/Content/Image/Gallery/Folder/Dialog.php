@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery folder dialog
+ * Advanced community image gallery folder dialog
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,12 +17,12 @@
  */
 
 /**
- * Advanced surfer gallery folder dialog
+ * Advanced image gallery folder dialog
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityUiContentSurferGalleryFolderDialog
+class ACommunityUiContentImageGalleryFolderDialog
   extends PapayaUiControlCommandDialogDatabaseRecord {
 
   /**
@@ -44,12 +44,12 @@ class ACommunityUiContentSurferGalleryFolderDialog
   protected $_newFolderId = NULL;
 
   /**
-   * Get/set surfer gallery data
+   * Get/set image gallery folders data
    *
-   * @param ACommunitySurferGalleryUploadData $data
-   * @return ACommunitySurferGalleryUploadData
+   * @param ACommunityImageGalleryFoldersData $data
+   * @return ACommunityImageGalleryFoldersData
    */
-  public function data(ACommunitySurferGalleryUploadData $data = NULL) {
+  public function data(ACommunityImageGalleryFoldersData $data = NULL) {
     if (isset($data)) {
       $this->_data = $data;
     }

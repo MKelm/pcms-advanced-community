@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community surfer gallery data class to handle all sorts of related data
+ * Advanced community image gallery data class to handle all sorts of related data
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Data.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferGalleryData extends ACommunityUiContentData {
+class ACommunityImageGalleryData extends ACommunityUiContentData {
 
   /**
    * Ressource needs active surfer
@@ -55,34 +55,34 @@ class ACommunitySurferGalleryData extends ACommunityUiContentData {
   protected $_mediaDBEdit = NULL;
 
   /**
-  * Access to the surfer gallery database record data
+  * Access to the image gallery database record data
   *
-  * @param ACommunityContentSurferGallery $gallery
-  * @return ACommunityContentSurferGallery
+  * @param ACommunityContentImageGallery $gallery
+  * @return ACommunityContentImageGallery
   */
-  public function gallery(ACommunityContentSurferGallery $gallery = NULL) {
+  public function gallery(ACommunityContentImageGallery $gallery = NULL) {
     if (isset($gallery)) {
       $this->_gallery = $gallery;
     } elseif (is_null($this->_gallery)) {
-      include_once(dirname(__FILE__).'/../../Content/Surfer/Gallery.php');
-      $this->_gallery = new ACommunityContentSurferGallery();
+      include_once(dirname(__FILE__).'/../../Content/Image/Gallery.php');
+      $this->_gallery = new ACommunityContentImageGallery();
       $this->_gallery->papaya($this->papaya());
     }
     return $this->_gallery;
   }
 
   /**
-  * Access to the surfer galleries database records data
+  * Access to the image galleries database records data
   *
-  * @param ACommunityContentSurferGalleries $galleries
-  * @return ACommunityContentSurferGalleries
+  * @param ACommunityContentImageGalleries $galleries
+  * @return ACommunityContentImageGalleries
   */
-  public function galleries(ACommunityContentSurferGalleries $galleries = NULL) {
+  public function galleries(ACommunityContentImageGalleries $galleries = NULL) {
     if (isset($galleries)) {
       $this->_galleries = $galleries;
     } elseif (is_null($this->_galleries)) {
-      include_once(dirname(__FILE__).'/../../Content/Surfer/Galleries.php');
-      $this->_galleries = new ACommunityContentSurferGalleries();
+      include_once(dirname(__FILE__).'/../../Content/Image/Galleries.php');
+      $this->_galleries = new ACommunityContentImageGalleries();
       $this->_galleries->papaya($this->papaya());
     }
     return $this->_galleries;
@@ -103,5 +103,4 @@ class ACommunitySurferGalleryData extends ACommunityUiContentData {
     }
     return $this->_mediaDBEdit;
   }
-
 }
