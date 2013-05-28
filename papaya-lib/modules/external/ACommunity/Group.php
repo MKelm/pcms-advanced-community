@@ -61,8 +61,7 @@ class ACommunityGroup extends ACommunityUiContent {
       $page->appendElement(
         'time', array('caption' => $this->data()->captions['time']), $this->data()->time
       );
-      $text = $page->appendElement('text');
-      $text->appendXml($this->data()->text);
+      $page->appendXml($this->data()->text);
       $page->appendElement('image', array(), PapayaUtilStringXml::escape($this->data()->image));
     } else {
       $page->appendElement('message', array('type' => 'error'), $this->data()->messages['no_group']);
