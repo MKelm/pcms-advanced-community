@@ -57,13 +57,13 @@ class ACommunityCommentsData extends ACommunityUiContentData {
    * Contains comments list data
    * @var array
    */
-  public $_commentsList = NULL;
+  protected $_commentsList = NULL;
 
   /**
    * Contains command links by comment id to be used
    * @var array
    */
-  public $_commandLinks = NULL;
+  protected $_commandLinks = NULL;
 
   /**
    * Comments database records
