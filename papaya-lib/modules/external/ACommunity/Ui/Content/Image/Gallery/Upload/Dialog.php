@@ -151,7 +151,7 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
                   $_FILES[$parameterGroup]['tmp_name'][$this->_imageFieldName],
                   $_FILES[$parameterGroup]['name'][$this->_imageFieldName],
                   $folderId,
-                  $ressource['id']
+                  $this->data()->currentSurferId()
                 );
                 if (empty($added)) {
                   $error = 'dialog_error_media_db';
