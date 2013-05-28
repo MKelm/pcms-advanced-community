@@ -73,19 +73,29 @@ class ACommunityImageGallery extends MediaImageGallery {
     $command = $this->parameters()->get('command', NULL);
     $fileId = $this->parameters()->get('id', NULL);
     if ($command == 'delete_image' && !empty($fileId) &&
-        ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) {
-      if ($this->data()->mediaDBEdit()->deleteFile($fileId)) {
-        $ressource = $this->data()->ressource();
-        $folderId = $this->parameters()->get('folder_id', 0);
-        if (!($folderId > 0)) {
-          $ressource = 'surfer_gallery_images:folder_base:surfer_'.$ressource['id'];
-        } else {
-          $ressource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
+        (($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) {
+
+      $ressource = $this->data()->ressource();
+      if (($ressource['type'] == 'surfer' &&
+           ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) ||
+          ($ressource['type'] == 'group' &&
+           ($this->data()->surferIsGroupOwner() || $this->data()->surferIsModerator()))) {
+
+        if ($this->data()->mediaDBEdit()->deleteFile($fileId)) {
+
+          $folderId = $this->parameters()->get('folder_id', 0);
+          if (!($folderId > 0)) {
+            $ressource = $ressource['type'].'_gallery_images:folder_base:'.
+              $ressource['type'].'_'.$ressource['id'];
+          } else {
+            $ressource = $ressource['type'].'_gallery_images:folder_'.$folderId.':'.
+              $ressource['type'].'_'.$ressource['id'];
+          }
+          $this->data()->lastChange()->assign(
+            array('ressource' => $ressource, 'time' => time())
+          );
+          $this->data()->lastChange()->save();
         }
-        $this->data()->lastChange()->assign(
-          array('ressource' => $ressource, 'time' => time())
-        );
-        $this->data()->lastChange()->save();
       }
     }
   }
