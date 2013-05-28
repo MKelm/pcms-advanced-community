@@ -100,8 +100,8 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
   public function filter($value) {
     $value = parent::filter($value);
     $this->_textOptions = $this->acommunityConnector()->getTextOptions();
-    $value = sprintf('<text-raw>%s</text-raw>', $value);
-    $value .= sprintf(
+    $result = sprintf('<text-raw>%s</text-raw>', $value);
+    $result .= sprintf(
       '<text>%s</text>',
       preg_replace_callback(
         $this->_urlPattern,
@@ -110,13 +110,13 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
       )
     );
     if (count($this->_thumbnailLinks) > 0) {
-      $value .= '<text-thumbnail-links>';
+      $result .= '<text-thumbnail-links>';
       foreach ($this->_thumbnailLinks as $link) {
-        $value .= $link;
+        $result .= $link;
       }
-      $value .= '</text-thumbnail-links>';
+      $result .= '</text-thumbnail-links>';
     }
-    return $value;
+    return $result;
   }
 
   /**
