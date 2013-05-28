@@ -73,7 +73,8 @@ class ACommunityUiContentGroupsList extends PapayaUiControl {
           $groupData['id'],
           $groupData['title'],
           $groupData['time'],
-          $groupData['image']
+          $groupData['image'],
+          $groupData['page_link']
         );
         if (isset($commandLinks[$id]) && isset($commandLinks[$id]['delete'])) {
           $group->deleteLink = $commandLinks[$id]['delete'];

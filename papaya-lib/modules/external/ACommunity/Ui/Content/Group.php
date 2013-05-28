@@ -65,6 +65,12 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   protected $_deleteLinkCaption = NULL;
 
   /**
+   * Group page link
+   * @var string
+   */
+  protected $_pageLink = NULL;
+
+  /**
   * Allow to assign the internal (protected) variables using a public property
   *
   * @var array
@@ -75,7 +81,8 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
     'title' => array('_title', '_title'),
     'time' => array('_time', 'setTime'),
     'deleteLink' => array('_deleteLink', '_deleteLink'),
-    'deleteLinkCaption' => array('_deleteLinkCaption', '_deleteLinkCaption')
+    'deleteLinkCaption' => array('_deleteLinkCaption', '_deleteLinkCaption'),
+    'pageLink' => array('_pageLink', '_pageLink')
   );
 
   /**
@@ -86,11 +93,12 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   * @param string $surferHandle
   * @param integer $time
   */
-  public function __construct($id, $title, $time, $image) {
+  public function __construct($id, $title, $time, $image, $pageLink) {
     $this->id = $id;
     $this->title = $title;
     $this->time = $time;
     $this->image = $image;
+    $this->pageLink = $pageLink;
   }
 
   /**
@@ -124,7 +132,8 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
         'id' => $this->id,
         'title' => PapayaUtilStringXml::escapeAttribute($this->title),
         'time' => $this->time,
-        'image' => PapayaUtilStringXml::escapeAttribute($this->image)
+        'image' => PapayaUtilStringXml::escapeAttribute($this->image),
+        'page-link' => PapayaUtilStringXml::escapeAttribute($this->pageLink)
       )
     );
     if (!empty($this->_deleteLink) && !empty($this->_deleteLinkCaption)) {

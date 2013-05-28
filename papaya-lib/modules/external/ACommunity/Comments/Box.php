@@ -151,7 +151,10 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
     return $this->comments()->data()->ressource(
       $this->_ressourceType,
       $this,
-      array('surfer' => array('user_name', 'user_handle', 'surfer_handle'))
+      array(
+        'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
+        'group' => array('group_id')
+      )
     );
   }
 

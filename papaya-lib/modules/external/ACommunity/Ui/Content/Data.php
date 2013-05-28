@@ -390,6 +390,12 @@ class ACommunityUiContentData extends PapayaObject {
         case 'page':
           $id = $this->papaya()->request->pageId;
           break;
+        case 'group':
+          if (!empty($parameterValue)) {
+            $id = $parameterValue;
+            $this->ressourceParameters($parameterGroup, $parameters);
+          }
+          break;
       }
       if (!empty($id)) {
         $this->_ressource = array('type' => $type, 'id' => $id, 'surfer_handle' => $parameterValue);

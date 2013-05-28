@@ -92,6 +92,9 @@ class ACommunityConnector extends base_connector {
     'surfer_gallery_page_id' => array(
       'Surfer Gallery', 'isNum', TRUE, 'pageid', 30, NULL, NULL
     ),
+    'group_page_id' => array(
+      'Group', 'isNum', TRUE, 'pageid', 30, '', NULL
+    ),
     'messages_page_id' => array(
       'Messages / Notifications', 'isNum', TRUE, 'pageid', 30, '', NULL
     ),
@@ -391,6 +394,19 @@ class ACommunityConnector extends base_connector {
     }
     return $this->_getPageLink(
       'messages_page_id', $surferId, $parameters, 'acmp', $parameterNamePostfix, NULL, $handle
+    );
+  }
+
+  /**
+   * Get link to group page by group id
+   *
+   * @param string $groupId
+   * @return string|NULL
+   */
+  public function getGroupPageLink($groupId) {
+    $parameters = array('group_id' => $groupId);
+    return $this->_getPageLink(
+      'group_page_id', NULL, $parameters, 'acg', '-page', NULL, 'group'
     );
   }
 

@@ -106,7 +106,7 @@ class ACommunityGroupsData extends ACommunityUiContentData {
     $this->pagingItemsPerPage = $data['groups_per_page'];
     $this->groupsPerRow = $data['groups_per_row'];
     $this->_imageThumbnailSize = (int)$data['image_size'];
-    $this->_imageThumnailResizeMode = $data['image_resize_mode'];
+    $this->_imageThumbnailResizeMode = $data['image_resize_mode'];
     parent::setPluginData($data, $captionNames, $messageNames);
   }
 
@@ -235,6 +235,8 @@ class ACommunityGroupsData extends ACommunityUiContentData {
           $this->_imageThumbnailResizeMode
         );
       }
+      $listData['data'][$key]['page_link'] = $this->owner->acommunityConnector()
+        ->getGroupPageLink($values['id']);
     }
     return $listData;
   }
