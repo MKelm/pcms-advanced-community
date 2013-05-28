@@ -84,6 +84,28 @@ class ACommunityCommentsData extends ACommunityUiContentData {
   protected $_referenceParametersExpression = 'comments_page|comment_([0-9]+)_page';
 
   /**
+   * Check if the current active surfer is the owner of the current ressource
+   *
+   * @return boolean
+   */
+  public function surferIsRessourceOwner() {
+    $ressource = $this->ressource();
+    if ($ressource['type'] == 'surfer' && $this->ressourceIsActiveSurfer) {
+      return TRUE;
+    } elseif ($ressource['type'] == 'image') {
+      $ressourceParameters = reset($this->ressourceParameters());
+      if (!empty($ressourceParameters) && !empty($ressourceParameters['surfer_handle'])) {
+        $ownerHandle = $this->owner->communityConnector()->getHandleById($this->currentSurferId());
+        if ($ownerHandle == $ressourceParameters['surfer_handle']) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
+  }
+
+
+  /**
    * Set data by plugin object
    *
    * @param array $data
@@ -189,6 +211,7 @@ class ACommunityCommentsData extends ACommunityUiContentData {
   protected function _getCommandLinks(&$links, $commentsList, $votingCookieData) {
     if (!empty($commentsList['data'])) {
       $surferIsModerator = $this->surferIsModerator();
+      $surferIsRessourceOwner = $this->surferIsRessourceOwner();
       foreach ($commentsList['data'] as $id => $comment) {
 
         $links[$id]['reply'] = NULL;
@@ -205,7 +228,7 @@ class ACommunityCommentsData extends ACommunityUiContentData {
             $links[$id]['reply'] = $reference->getRelative();
           }
         }
-        if ($surferIsModerator) {
+        if ($surferIsModerator || $surferIsRessourceOwner) {
           $reference = clone $this->reference();
           $reference->setParameters(
             array(

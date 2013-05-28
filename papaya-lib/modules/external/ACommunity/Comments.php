@@ -93,7 +93,8 @@ class ACommunityComments extends ACommunityUiContent {
             $lastChange = time();
           }
         }
-      } elseif ($command == 'delete') {
+      } elseif ($command == 'delete' &&
+                ($this->data()->surferIsModerator() || $this->data()->surferIsRessourceOwner())) {
         $comment = clone $this->data()->comment();
         $comment->load($commentId);
         if ($comment->delete()) {
@@ -111,7 +112,7 @@ class ACommunityComments extends ACommunityUiContent {
         );
         $lastChange->save();
         $this->data()->lastChange()->assign(
-          array('ressource' => 'comments', 'time' => time())
+          array('ressource' => 'comments', 'time' => $lastChange)
         );
         $this->data()->lastChange()->save();
         $this->parameters()->set('command', 'reply');
@@ -131,8 +132,8 @@ class ACommunityComments extends ACommunityUiContent {
       $this->performCommands();
       $comments = $parent->appendElement('acommunity-comments');
       if ($this->data()->mode == 'list') {
-        $currentSurfer = $this->communityConnector()->getCurrentSurfer();
-        if ($currentSurfer->isValid) {
+        $currentSurferId = $this->data()->currentSurferId();
+        if (!empty($currentSurferId)) {
 
           $dom = new PapayaXmlDocument();
           $dom->appendElement('dialog');
@@ -212,5 +213,4 @@ class ACommunityComments extends ACommunityUiContent {
     }
     return $this->_uiCommentsList;
   }
-
 }
