@@ -13,6 +13,14 @@ This package contains modules to extend your papaya CMS community.
 - Some improvements
 - Groups for surfers
 
+-----------
+|  Ideas  |
+-----------
+
+- Surfer network graphs with cytoscape http://goo.gl/vgiUs
+- Surfer pages with front end content editor
+-- support for "Topic with image" and "Category with image"
+
 ----------------
 | Installation |
 ----------------
