@@ -109,7 +109,7 @@ class ACommunityUiContentGroupDialog
       200,
       NULL,
       new PapayaFilterLogicalAnd(
-        new PapayaFilterText(PapayaFilterText::ALLOW_SPACES, PapayaFilterText::ALLOW_DIGITS),
+        new PapayaFilterText(PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS),
         new PapayaFilterNotEmpty()
       )
     );
