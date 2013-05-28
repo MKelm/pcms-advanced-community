@@ -9,7 +9,8 @@
   @papaya:modules ACommunityPageCommentsBox, ACommunitySurferCommentsBox,
     ACommunityImageCommentsBox, ACommunityCommentsRankingBox,
     ACommunityCommentersRankingBox, ACommunityImageGalleryUploadBox,
-    ACommunityImageGalleryFoldersBox, ACommunityImageGalleryTeaserBox,
+    ACommunityImageGalleryFoldersBox, ACommunitySurferImageGalleryTeaserBox,
+    ACommunityGroupImageGalleryTeaserBox,
     ACommunitySurferStatusBox, ACommunitySurferContactsBox,
     ACommunitySurfersLastActionBox, ACommunitySurfersRegistrationBox,
     ACommunityMessageConversationsBox
