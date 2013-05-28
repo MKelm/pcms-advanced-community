@@ -33,7 +33,13 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acsg';
+  public $paramName = 'acig';
+
+  /**
+   * Ressource type
+   * @var string
+   */
+  protected $_ressourceType = NULL;
 
   /**
    * Edit fields
@@ -95,9 +101,14 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
           $definitionValues[] = $this->teaser()->data()->ressourceIsActiveSurfer;
           $definitionValues[] = $ressource['type'];
           $definitionValues[] = $ressource['id'];
-          $definitionValues[] = $values->lastChangeTime(
-            'surfer_gallery_images:folder_base:surfer_'.$ressource['id']
-          );
+          if ($ressource['type'] == 'surfer') {
+            $lastChangeRessource = 'surfer_gallery_images:folder_base:surfer_'.$ressource['id'];
+          } elseif ($ressource['type'] == 'group') {
+            $lastChangeRessource = 'group_gallery_images:folder_base:group_'.$ressource['id'];
+          }
+          if (isset($lastChangeRessource)) {
+            $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
+          }
         }
       }
       $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues($definitionValues);
@@ -110,7 +121,10 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
    */
   public function setRessourceData() {
     return $this->teaser()->data()->ressource(
-      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_handle')
+      $this->_ressourceType,
+      $this,
+      array('surfer' => 'surfer_handle', 'group' => 'group_id'),
+      array('surfer' => 'surfer_handle', 'group' => 'group_id')
     );
   }
 

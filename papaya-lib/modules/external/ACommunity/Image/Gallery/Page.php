@@ -33,7 +33,7 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
    * Use a advanced community parameter group name
    * @var string
    */
-  public $paramName = 'acsg';
+  public $paramName = 'acig';
 
   /**
    * Id of elected surfer gallery folder
@@ -68,13 +68,18 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
         } else {
           include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $ressource['type'];
           $definitionValues[] = $ressource['id'];
           $definitionValues[] = (int)$this->gallery()->data()->ressourceIsActiveSurfer;
+          $definitionValues[] = (int)$this->gallery()->data()->surferIsGroupOwner();
           $definitionValues[] = (int)$this->gallery()->data()->surferIsModerator();
           $definitionValues[] = $folder;
-          $definitionValues[] = $values->lastChangeTime(
-            'surfer_gallery_images:folder_'.$folder.':surfer_'.$ressource['id']
-          );
+          if ($ressource['type'] == 'group') {
+            $lastChangeRessource = 'group_gallery_images:folder_'.$folder.':group_'.$ressource['id'];
+          } else {
+            $lastChangeRessource = 'surfer_gallery_images:folder_'.$folder.':surfer_'.$ressource['id'];
+          }
+          $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
           $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
             new PapayaCacheIdentifierDefinitionValues($definitionValues),
             new PapayaCacheIdentifierDefinitionParameters(
@@ -94,15 +99,25 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
    * @param string $outputMode
    */
   public function checkURLFileName($currentFileName, $outputMode) {
-    $this->setRessourceData();
-    return $this->gallery()->checkURLFileName($this, $currentFileName, $outputMode, 's-gallery');
+    $ressource = $this->setRessourceData();
+    if ($ressource['type'] == 'group') {
+      $pageNamePostfix = '-gallery';
+    } else {
+      $pageNamePostfix = 's-gallery';
+    }
+    return $this->gallery()->checkURLFileName($this, $currentFileName, $outputMode, $pageNamePostfix);
   }
 
   /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    return $this->gallery()->data()->ressource('surfer', $this, array('surfer' => 'surfer_handle'));
+    $groupId = $this->gallery()->parameters()->get('group_id', 0);
+    return $this->gallery()->data()->ressource(
+      $groupId > 0 ? 'group' : 'surfer',
+      $this,
+      array('surfer' => 'surfer_handle', 'group' => 'group_id')
+    );
   }
 
   /**
@@ -142,7 +157,7 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
     if (is_null($this->_galleryFolderId)) {
       $ressource = $this->gallery()->data()->ressource();
       if (!empty($ressource)) {
-        $filter = array('surfer_id' => $ressource['id']);
+        $filter = array('ressource_type' => $ressource['type'], 'ressource_id' => $ressource['id']);
         $command = isset($this->params['command']) ? $this->params['command'] : NULL;
         if ($command != 'delete_folder' && !empty($this->params['folder_id'])) {
           $filter['folder_id'] = $this->params['folder_id'];
@@ -164,10 +179,11 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
             );
             if (!empty($newFolderId)) {
               $this->gallery()->data()->mediaDBEdit()->addFolderTranslation(
-                $newFolderId, $languageId, $ressource['id']
+                $newFolderId, $languageId, $ressource['type'].'_'.$ressource['id']
               );
               $gallery = $this->gallery()->data()->gallery();
-              $gallery['surfer_id'] = $ressource['id'];
+              $gallery['ressource_type'] = $ressource['type'];
+              $gallery['ressource_id'] = $ressource['id'];
               $gallery['folder_id'] = $newFolderId;
               $gallery['parent_folder_id'] = 0;
               $gallery->save();
@@ -200,6 +216,8 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
     $additionalParameters = array();
     if (isset($this->params['surfer_handle'])) {
       $additionalParameters['surfer_handle'] = $this->params['surfer_handle'];
+    } elseif (isset($this->params['group_id'])) {
+      $additionalParameters['group_id'] = $this->params['group_id'];
     }
     $command = isset($this->params['command']) ? $this->params['command'] : NULL;
     if ($command != 'delete_folder' && isset($this->params['folder_id'])) {

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<table name="acommunity_surfer_galleries" prefix="yes">
+<table name="acommunity_galleries" prefix="yes">
   <fields>
     <field name="gallery_id" type="integer" size="4" null="no" autoinc="yes"/>
-    <field name="surfer_id" type="string" size="32" null="no"/>
+    <field name="ressource_type" type="string" size="50" null="no"/>
+    <field name="ressource_id" type="string" size="32" null="no"/>
     <field name="gallery_parent_folder_id" type="integer" size="4" null="no"/>
     <field name="gallery_folder_id" type="integer" size="4" null="no"/>
   </fields>
@@ -10,8 +11,11 @@
     <primary-key>
       <field>gallery_id</field>
     </primary-key>
-    <key name="surfer_id">
-      <field>surfer_id</field>
+    <key name="ressource_type">
+      <field>ressource_type</field>
+    </key>
+    <key name="ressource_id">
+      <field>ressource_id</field>
     </key>
     <key name="gallery_parent_folder_id">
       <field>gallery_parent_folder_id</field>

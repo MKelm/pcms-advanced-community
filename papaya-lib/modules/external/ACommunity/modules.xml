@@ -35,9 +35,14 @@
             file="Commenters/Ranking/Box.php">Get a list of commenters orderd by submitted comments</module>
     <module type="box"
             guid="4e0143a6c0b344c88decd26d5a1b5ef7"
-            name="Image Gallery Teaser Box"
-            class="ACommunityImageGalleryTeaserBox"
-            file="Image/Gallery/Teaser/Box.php">An teaser box for the gallery's base folder</module>
+            name="Surfer Image Gallery Teaser Box"
+            class="ACommunitySurferImageGalleryTeaserBox"
+            file="Surfer/Image/Gallery/Teaser/Box.php">An teaser box for the surfer's gallery</module>
+    <module type="box"
+            guid="2cb3188d0ef149a88b5c7ae753fdfe08"
+            name="Group Image Gallery Teaser Box"
+            class="ACommunityGroupImageGalleryTeaserBox"
+            file="Group/Image/Gallery/Teaser/Box.php">An teaser box for the group's gallery</module>
     <module type="box"
             guid="f1ade379722f40668198253c179b98d8"
             name="Image Gallery Upload Box"
@@ -132,12 +137,12 @@
   <tables>
     <table name="acommunity_comments"/>
     <table name="acommunity_last_changes"/>
+    <table name="acommunity_galleries"/>
     <table name="acommunity_groups"/>
     <table name="acommunity_messages"/>
     <table name="acommunity_message_surfers"/>
     <table name="acommunity_notifications"/>
     <table name="acommunity_notification_settings"/>
     <table name="acommunity_notification_trans"/>
-    <table name="acommunity_surfer_galleries"/>
   </tables>
 </modulegroup>

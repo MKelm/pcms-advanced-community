@@ -127,7 +127,8 @@ class ACommunityUiContentImageGalleryFolderDialog
         $this->_newFolderId = $newFolderId;
         $record->assign(
           array(
-            'surfer_id' => $ressource['id'],
+            'ressource_type' => $ressource['type'],
+            'ressource_id' => $ressource['id'],
             'parent_folder_id' => $parentFolderId,
             'folder_id' => $newFolderId
           )
@@ -150,11 +151,13 @@ class ACommunityUiContentImageGalleryFolderDialog
   */
   public function callbackExecuteSuccessful($context, $dialog) {
     $ressource = $this->data()->ressource();
+    if ($ressource['type'] == 'group') {
+      $lastChangeRessource = 'group_gallery_folders:group_'.$ressource['id'];
+    } else {
+      $lastChangeRessource = 'surfer_gallery_folders:surfer_'.$ressource['id'];
+    }
     $this->data()->lastChange()->assign(
-      array(
-        'ressource' => 'surfer_gallery_folders:surfer_'.$ressource['id'],
-        'time' => time()
-      )
+      array('ressource' => $lastChangeRessource, 'time' => time())
     );
     $this->data()->lastChange()->save();
     $this->data()->owner->parameters()->set('remove_dialog', 1);

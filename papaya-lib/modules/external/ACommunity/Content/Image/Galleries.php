@@ -31,7 +31,8 @@ class ACommunityContentImageGalleries extends PapayaDatabaseRecords {
    */
   protected $_fields = array(
 	  'id' => 'gallery_id',
-    'surfer_id' => 'surfer_id',
+    'ressource_type' => 'ressource_type',
+    'ressource_id' => 'ressource_id',
     'folder_id' => 'gallery_folder_id',
     'parent_folder_id' => 'gallery_parent_folder_id'
   );
@@ -41,7 +42,7 @@ class ACommunityContentImageGalleries extends PapayaDatabaseRecords {
    *
    * @var string
    */
-  protected $_tableName = 'acommunity_surfer_galleries';
+  protected $_tableName = 'acommunity_galleries';
 
   /**
    * An array of properties, used to compile the identifer

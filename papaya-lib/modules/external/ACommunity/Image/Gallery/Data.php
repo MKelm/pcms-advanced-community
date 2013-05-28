@@ -49,10 +49,58 @@ class ACommunityImageGalleryData extends ACommunityUiContentData {
   protected $_galleries = NULL;
 
   /**
+   * Group database record
+   * @var object
+   */
+  protected $_group = NULL;
+
+  /**
    * Media db edit object
    * @var object
    */
   protected $_mediaDBEdit = NULL;
+
+  /**
+   * Status of group owner
+   * @var boolean
+   */
+  protected $_surferIsGroupOwner = NULL;
+
+  /**
+   * Detects if the current active surfer is the owner of the selected group
+   *
+   * @return bolean
+   */
+  public function surferIsGroupOwner() {
+    if (is_null($this->_surferIsGroupOwner)) {
+      $ressource = $this->ressource();
+      if ($ressource['type'] == 'group' && !empty($ressource['id'])) {
+        $this->group()->load($ressource['id']);
+        $group = $this->group()->toArray();
+        if (isset($group['owner'])) {
+          $this->_surferIsGroupOwner = $this->currentSurferId() == $group['owner'];
+        }
+      }
+    }
+    return $this->_surferIsGroupOwner;
+  }
+
+  /**
+  * Access to group database record data
+  *
+  * @param ACommunityContentGroup $group
+  * @return ACommunityContentGroup
+  */
+  public function group(ACommunityContentGroup $group = NULL) {
+    if (isset($group)) {
+      $this->_group = $group;
+    } elseif (is_null($this->_group)) {
+      include_once(dirname(__FILE__).'/../../Content/Group.php');
+      $this->_group = new ACommunityContentGroup();
+      $this->_group->papaya($this->papaya());
+    }
+    return $this->_group;
+  }
 
   /**
   * Access to the image gallery database record data

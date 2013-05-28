@@ -33,7 +33,7 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acsg';
+  public $paramName = 'acig';
 
   /**
    * Edit fields
@@ -108,12 +108,12 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $ressource['type'];
           $definitionValues[] = $ressource['id'];
-          $definitionValues[] = $values->lastChangeTime(
-            'surfer_gallery_folders:surfer_'.$ressource['id']
-          );
-        } else {
-          $definitionValues[] = 'surfer';
-          $definitionValues[] = 'null';
+          if ($ressource['type'] == 'group') {
+            $lastChangeRessource = 'group_gallery_folders:group_'.$ressource['id'];
+          } else {
+            $lastChangeRessource = 'surfer_gallery_folders:surfer_'.$ressource['id'];
+          }
+          $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
         }
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
           new PapayaCacheIdentifierDefinitionValues($definitionValues),
@@ -130,8 +130,12 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
+    $ressourceType = !empty($this->parentObj->moduleObj->params['group_id']) ? 'group' : 'surfer';
     return $this->folders()->data()->ressource(
-      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_handle')
+      $ressourceType,
+      $this,
+      array('surfer' => 'surfer_handle', 'group' => 'group_id'),
+      array('surfer' => 'surfer_handle', 'group' => 'group_id')
     );
   }
 
@@ -159,7 +163,7 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
    */
   public function getParsedData() {
     $this->initializeParams();
-    $this->setRessourceData();
+    $ressource = $this->setRessourceData();
     $this->setDefaultData();
     $captionNames = array(
       'caption_base_folder', 'caption_add_folder', 'caption_delete_folder',

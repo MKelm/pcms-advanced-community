@@ -54,10 +54,16 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $galleryTeaser = $parent->appendElement('acommunity-surfer-gallery-teaser');
+    $galleryTeaser = $parent->appendElement('acommunity-image-gallery-teaser');
     $ressource = $this->data()->ressource();
     if (!empty($ressource)) {
-      $this->data()->galleries()->load(array('surfer_id' => $ressource['id'], 'parent_folder_id' => 0));
+      $this->data()->galleries()->load(
+        array(
+          'ressource_type' => $ressource['type'],
+          'ressource_id' => $ressource['id'],
+          'parent_folder_id' => 0
+        )
+      );
       $gallery = reset($this->data()->galleries()->toArray());
       $images = NULL;
       if (!empty($gallery)) {
@@ -74,10 +80,16 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
           }
         }
       }
-      if (empty($images) && $this->data()->ressourceIsActiveSurfer) {
+      if (empty($images) && $ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) {
         $galleryTeaser->appendElement(
           'add-new-images-link',
-          array('href' => $this->acommunityConnector()->getSurferGalleryPageLink($ressource['id'])),
+          array('href' => $this->acommunityConnector()->getGalleryPageLink('surfer', $ressource['id'])),
+          $this->data()->captions['add_new_images_link']
+        );
+      } elseif (empty($images) && $ressource['type'] == 'group' && $this->data()->surferIsGroupOwner()) {
+        $galleryTeaser->appendElement(
+          'add-new-images-link',
+          array('href' => $this->acommunityConnector()->getGalleryPageLink('group', $ressource['id'])),
           $this->data()->captions['add_new_images_link']
         );
       } else {
@@ -87,7 +99,9 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
         }
         $galleryTeaser->appendElement(
           'more-images-link',
-          array('href' => $this->acommunityConnector()->getSurferGalleryPageLink($ressource['id'])),
+          array(
+            'href' => $this->acommunityConnector()->getGalleryPageLink($ressource['type'], $ressource['id'])
+          ),
           $this->data()->captions['more_images_link']
         );
       }

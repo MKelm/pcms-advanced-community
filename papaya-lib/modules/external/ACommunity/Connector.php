@@ -89,8 +89,8 @@ class ACommunityConnector extends base_connector {
     'surfer_contacts_page_id' => array(
       'Surfer Contacts', 'isNum', TRUE, 'pageid', 30, '', NULL
     ),
-    'surfer_gallery_page_id' => array(
-      'Surfer Gallery', 'isNum', TRUE, 'pageid', 30, NULL, NULL
+    'gallery_page_id' => array(
+      'Gallery', 'isNum', TRUE, 'pageid', 30, NULL, NULL
     ),
     'group_page_id' => array(
       'Group', 'isNum', TRUE, 'pageid', 30, '', NULL
@@ -365,13 +365,27 @@ class ACommunityConnector extends base_connector {
   }
 
   /**
-   * Get link to surfer gallery page by surfer id
+   * Get link to gallery page by ressource
    *
-   * @param string $surferId
+   * @param string $ressourceType
+   * @param string|integer $ressourceId
    * @return string|NULL
    */
-  public function getSurferGalleryPageLink($surferId) {
-    return $this->_getPageLink('surfer_gallery_page_id', $surferId, TRUE, 'acsg', 's-gallery');
+  public function getGalleryPageLink($ressourceType, $ressourceId) {
+    if ($ressourceType == 'surfer') {
+      $surferId = $ressourceId;
+      $parameters = TRUE;
+      $handle = NULL;
+      $pageNamePostfix = 's-gallery';
+    } else {
+      $surferId = NULL;
+      $parameters = array('group_id' => $ressourceId);
+      $handle = 'group';
+      $pageNamePostfix = '-gallery';
+    }
+    return $this->_getPageLink(
+      'gallery_page_id', $surferId, $parameters, 'acig', $pageNamePostfix, NULL, $handle
+    );
   }
 
   /**

@@ -33,7 +33,7 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'acsg';
+  public $paramName = 'acig';
 
   /**
    * Edit fields
@@ -119,12 +119,16 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
+    $ressourceType = !empty($this->parentObj->moduleObj->params['group_id']) ? 'group' : 'surfer';
     return $this->upload()->data()->ressource(
-      'surfer',
+      $ressourceType,
       $this,
-      array('surfer' => 'surfer_handle'),
-      array('surfer' => array('surfer_handle', 'folder_id', 'offset')),
-      array('surfer' => 'enlarge')
+      array('surfer' => 'surfer_handle', 'group' => 'group_id'),
+      array(
+        'surfer' => array('surfer_handle', 'folder_id', 'offset'),
+        'group' => array('group_id', 'folder_id', 'offset')
+      ),
+      array('surfer' => 'enlarge', 'group' => 'enlarge')
     );
   }
 

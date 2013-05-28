@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community groups owner page
+ * Advanced community group image gallery teaser box
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,22 +17,22 @@
  */
 
 /**
-* Basic class page module
-*/
-require_once(dirname(__FILE__).'/../Page.php');
+ * Basic box class
+ */
+require_once(dirname(__FILE__).'/../../../../Image/Gallery/Teaser/Box.php');
 
 /**
- * Advanced community groups owner page
+ * Advanced community group image gallery teaser box
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityGroupsOwnerPage extends ACommunityGroupsPage {
+class ACommunityGroupImageGalleryTeaserBox extends ACommunityImageGalleryTeaserBox {
 
   /**
-   * Contains current groups onwer status
-   * Overwrite this property to get a page with owned groups only
-   * @var boolean
+   * Ressource type
+   * @var string
    */
-  protected $_surferIsGroupsOwner = TRUE;
+  protected $_ressourceType = 'group';
+
 }

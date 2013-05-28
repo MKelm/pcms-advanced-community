@@ -113,7 +113,7 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
   */
   public function callbackUploadImage($context, $dialog) {
     $ressource = $this->data()->ressource();
-    $filter = array('surfer_id' => $ressource['id']);
+    $filter = array('ressource_type' => $ressource['type'], 'ressource_id' => $ressource['id']);
     $ressourceParameters = reset($this->data()->ressourceParameters());
     if (!empty($ressourceParameters['folder_id'])) {
       $filter['folder_id'] = $ressourceParameters['folder_id'];
@@ -159,9 +159,11 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
 
                   $ressource = $this->data()->ressource();
                   if ($gallery['parent_folder_id'] == 0) {
-                    $ressource = 'surfer_gallery_images:folder_base:surfer_'.$ressource['id'];
+                    $ressource = $ressource['type'].'_gallery_images:folder_base:'.
+                      $ressource['type'].'_'.$ressource['id'];
                   } else {
-                    $ressource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
+                    $ressource = $ressource['type'].'_gallery_images:folder_'.$folderId.':'.
+                      $ressource['type'].'_'.$ressource['id'];
                   }
                   $this->data()->lastChange()->assign(
                     array('ressource' => $ressource, 'time' => time())

@@ -66,11 +66,12 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $galleryFolders = $parent->appendElement('acommunity-surfer-gallery-folders');
+    $galleryFolders = $parent->appendElement('acommunity-image-gallery-folders');
     $ressource = $this->data()->ressource();
     if (!empty($ressource)) {
 
-      if ($this->data()->ressourceIsActiveSurfer) {
+      if (($ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) ||
+          ($ressource['type'] == 'group' && $this->data()->surferIsGroupOwner())) {
         $command = $this->parameters()->get('command', NULL);
         switch ($command) {
           case 'add_folder':
@@ -96,10 +97,11 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
           case 'delete_folder':
             $folderId = $this->parameters()->get('folder_id', NULL);
             if (!empty($folderId)) {
-              if ($this->galleryDeletion()->deleteSurferGalleryByFolderId($folderId)) {
+              if ($this->galleryDeletion()->deleteGalleryByFolderId($folderId)) {
                 $this->data()->lastChange()->assign(
                   array(
-                    'ressource' => 'surfer_gallery_folders:surfer_'.$ressource['id'],
+                    'ressource' => $ressource['type'].'_gallery_folders:'.
+                      $ressourceType.'_'.$ressource['id'],
                     'time' => time()
                   )
                 );
@@ -124,7 +126,8 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
         );
       }
 
-      if ($this->data()->ressourceIsActiveSurfer) {
+      if (($ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) ||
+          ($ressource['type'] == 'group' && $this->data()->surferIsGroupOwner())) {
         $this->data()->loadCommandLinks();
         $commandLinks = $galleryFolders->appendElement('command-links');
         foreach ($this->data()->commandLinks as $command => $link) {

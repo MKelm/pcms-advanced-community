@@ -39,10 +39,10 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
   protected $_tableNameComments = 'acommunity_comments';
 
   /**
-   * Table name of surfer galleries
+   * Table name of galleries
    * @var string
    */
-  protected $_tableNameSurferGalleries = 'acommunity_surfer_galleries';
+  protected $_tableNameGalleries = 'acommunity_galleries';
 
   /**
    * Table name of last changes
@@ -77,46 +77,48 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
   }
 
   /**
-   * Delete all surfer galleries and related data by one surfer id
+   * Delete all galleries and related data by ressource
    *
    * @param string $surferId
    * @param boolean $result
    */
-  public function deleteSurferGalleries($surferId) {
-    $this->surferGalleries()->load(array('surfer_id' => $surferId));
-    $surferGalleries = $this->imageGalleries()->toArray();
+  public function deleteGalleries($ressourceType, $ressourceId) {
+    $this->imageGalleries()->load(
+      array('ressource_type' => $ressourceType, 'ressource_id' => $ressourceId)
+    );
+    $galleries = $this->imageGalleries()->toArray();
     $result = TRUE;
-    if (!empty($surferGalleries)) {
-      foreach ($surferGalleries as $surferGallery) {
-        $this->_deleteMediaDBFolder($surferGallery['folder_id']);
+    if (!empty($galleries)) {
+      foreach ($galleries as $gallery) {
+        $this->_deleteMediaDBFolder($gallery['folder_id']);
       }
       $result = $result && $this->databaseAccess()->deleteRecord(
-        $this->databaseAccess()->getTableName($this->_tableNameSurferGalleries),
-        array('surfer_id' => $surferId)
+        $this->databaseAccess()->getTableName($this->_tableNameGalleries),
+        array('ressource_type' => $ressourceType, 'ressource_id' => $ressourceId)
       );
     }
     return $result;
   }
 
   /**
-   * Delete one surfer gallery by folder id
+   * Delete one gallery by folder id
    *
    * @param integer $folderId
    * @param boolean $result
    */
-  public function deleteSurferGalleryByFolderId($folderId) {
-    $this->surferGalleries()->load(array('folder_id' => $folderId));
-    $surferGallery = reset($this->imageGalleries()->toArray());
-    $result = 0;
-    if (!empty($surferGallery)) {
-      if ($this->_deleteMediaDBFolder($surferGallery['folder_id'])) {
+  public function deleteGalleryByFolderId($folderId) {
+    $this->imageGalleries()->load(array('folder_id' => $folderId));
+    $gallery = reset($this->imageGalleries()->toArray());
+    $result = FALSE;
+    if (!empty($gallery)) {
+      if ($this->_deleteMediaDBFolder($gallery['folder_id'])) {
         $result = $this->databaseAccess()->deleteRecord(
-          $this->databaseAccess()->getTableName($this->_tableNameSurferGalleries),
-          array('gallery_folder_id' => $surferGallery['folder_id'])
+          $this->databaseAccess()->getTableName($this->_tableNameGalleries),
+          array('gallery_folder_id' => $gallery['folder_id'])
         );
       }
     }
-    return (boolean)$result;
+    return $result;
   }
 
   /**
@@ -185,7 +187,7 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
   * @param ACommunityContentImageGalleries $comments
   * @return ACommunityContentImageGalleries
   */
-  public function surferGalleries(ACommunityContentImageGalleries $galleries = NULL) {
+  public function imageGalleries(ACommunityContentImageGalleries $galleries = NULL) {
     if (isset($galleries)) {
       $this->_imageGalleries = $galleries;
     } elseif (is_null($this->_imageGalleries)) {

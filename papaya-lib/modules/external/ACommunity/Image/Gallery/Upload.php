@@ -60,9 +60,10 @@ class ACommunityImageGalleryUpload extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $upload = $parent->appendElement('acommunity-surfer-gallery-upload');
+    $upload = $parent->appendElement('acommunity-image-gallery-upload');
     $ressource = $this->data()->ressource();
-    if (!empty($ressource)) {
+    if (($ressource['type'] == 'surfer' && !empty($ressource)) ||
+        ($ressource['type'] == 'group' && $this->data()->surferIsGroupOwner())) {
       $this->uiContentUploadDialog()->appendTo($upload);
       $errorMessage = $this->uiContentUploadDialog()->errorMessage();
       if (!empty($errorMessage)) {
