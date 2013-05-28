@@ -72,8 +72,7 @@ class ACommunityImageGallery extends MediaImageGallery {
     parent::initialize($module, $data, $dataMode);
     $command = $this->parameters()->get('command', NULL);
     $fileId = $this->parameters()->get('id', NULL);
-    if ($command == 'delete_image' && !empty($fileId) &&
-        (($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) {
+    if ($command == 'delete_image' && !empty($fileId)) {
 
       $ressource = $this->data()->ressource();
       if (($ressource['type'] == 'surfer' &&
