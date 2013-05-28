@@ -55,19 +55,65 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'groups_per_page' => array(
       'Groups Per Page', 'isNum', TRUE, 'input', 30, '', 12
     ),
-    'Captions',
-    'caption_command_add' => array(
-      'Command Add Group', 'isNoHTML', TRUE, 'input', 200, '', 'Add group'
+    'group_images_folder' => array(
+      'Group Images Folder', 'isNum', TRUE, 'mediafolder', 30, '', NULL
     ),
-    'caption_dialog_button_add' => array(
-      'Dialog Button Add', 'isNoHTML', TRUE, 'input', 200, '', 'Add'
+    'Command Captions',
+    'caption_command_add' => array(
+      'Add Group', 'isNoHTML', TRUE, 'input', 200, '', 'Add group'
     ),
     'caption_command_delete' => array(
-      'Command Delete Group', 'isNoHTML', TRUE, 'input', 200, '', 'Delete'
+      'Delete Group', 'isNoHTML', TRUE, 'input', 200, '', 'Delete'
     ),
-    'Messages',
+    'Dialog Captions',
+    'caption_dialog_is_public' => array(
+      'Is Public', 'isNoHTML', TRUE, 'input', 200, '', 'Is public?'
+    ),
+    'caption_dialog_is_public_yes' => array(
+      'Is Public Yes', 'isNoHTML', TRUE, 'input', 200, '', 'Yes'
+    ),
+    'caption_dialog_is_public_no' => array(
+      'Is Public No', 'isNoHTML', TRUE, 'input', 200, '', 'No'
+    ),
+    'caption_dialog_title' => array(
+      'Title', 'isNoHTML', TRUE, 'input', 200, '', 'Title'
+    ),
+    'caption_dialog_description' => array(
+      'Description', 'isNoHTML', TRUE, 'input', 200, '', 'Description'
+    ),
+    'caption_dialog_image' => array(
+      'Image', 'isNoHTML', TRUE, 'input', 200, '', 'Image'
+    ),
+    'caption_dialog_button_add' => array(
+      'Add Button', 'isNoHTML', TRUE, 'input', 200, '', 'Add'
+    ),
+    'Error Messages',
     'message_no_groups' => array(
       'No Groups', 'isNoHTML', TRUE, 'input', 200, '', 'No groups.'
+    ),
+    'message_dialog_input_error' => array(
+      'Dialog Input Error', 'isNoHTML', TRUE, 'input', 200, '',
+      'Invalid input. Please check the field(s) "%s".'
+    ),
+    'message_dialog_error_no_folder' => array(
+      'Dialog No Folder Error', 'isNoHTML', TRUE, 'input', 200, '',
+      'Could not find images folder.'
+    ),
+    'message_dialog_error_upload' => array(
+      'Dialog Upload Error', 'isNoHTML', TRUE, 'input', 200, '',
+      'Upload error.'
+    ),
+    'message_dialog_error_file_extension' => array(
+      'Dialog File Extension Error', 'isNoHTML', TRUE, 'input', 200, '',
+      'Wrong file extension.'
+    ),
+    'message_dialog_error_file_type' => array(
+      'Dialog File Type Error', 'isNoHTML', TRUE, 'input', 200, '',
+      'Wrong file type.'
+    ),
+    'message_dialog_error_media_db' => array(
+      'Dialog Media DB Error', 'isNoHTML', TRUE, 'input', 200, '',
+      'Could not comple upload process in Media DB.'
     )
   );
 
@@ -76,6 +122,8 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
    * @var array
    */
   protected $_captionNames = array(
+    'caption_dialog_is_public', 'caption_dialog_title', 'caption_dialog_description',
+    'caption_dialog_image', 'caption_dialog_is_public_yes', 'caption_dialog_is_public_no',
     'caption_dialog_button_add', 'caption_command_delete', 'caption_command_add'
   );
 
@@ -83,7 +131,12 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
    * Names of message data
    * @var array
    */
-  protected $_messageNames = array('message_no_groups');
+  protected $_messageNames = array(
+    'message_no_groups', 'message_dialog_input_error', 'message_dialog_error_no_folder',
+    'message_dialog_error_upload',
+    'message_dialog_error_file_extension', 'message_dialog_error_file_type',
+    'message_dialog_error_media_db'
+  );
 
   /**
    * Groups object
@@ -119,8 +172,8 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
       $values = new ACommunityCacheIdentifierValues();
 
       $this->setRessourceData();
-      $moderator = (int)$this->groups()->data()->surferIsModerator();
-      $owner = (int)$this->groups()->data()->surferIsGroupsOwner();
+      $moderator = $this->groups()->data()->surferIsModerator();
+      $owner = $this->groups()->data()->surferIsGroupsOwner();
       if ($owner) {
         $lastChangeRessource = 'groups:surfer_'.$this->groups()->data()->currentSurferId();
       } else {
@@ -129,8 +182,8 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
 
       $definitionValues = array(
         'acommunity_groups_page',
-        $moderator,
-        $owner,
+        (int)$moderator,
+        (int)$owner,
         $values->lastChangeTime($lastChangeRessource)
       );
       $definitionParameters = array('groups_page');
@@ -164,7 +217,7 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
    */
   public function setRessourceData() {
     $this->groups()->data()->surferIsGroupsOwner($this->_surferIsGroupsOwner);
-    return $this->groups()->data()->ressource('surfer', $this);
+    return $this->groups()->data()->ressource('surfer', $this, NULL, array('surfer' => array()));
   }
 
   /**

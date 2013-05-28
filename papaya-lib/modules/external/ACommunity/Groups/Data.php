@@ -84,6 +84,18 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   protected $_imageThumbnailResizeMode = NULL;
 
   /**
+   * Media folder id for group images
+   * @var integer
+   */
+  public $groupImagesFolderId = NULL;
+
+  /**
+   * Media db edit object
+   * @var object
+   */
+  protected $_mediaDBEdit = NULL;
+
+  /**
    * Check if the current active surfer is the owner of groups
    *
    * @return boolean
@@ -105,6 +117,7 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
     $this->pagingItemsPerPage = $data['groups_per_page'];
     $this->groupsPerRow = $data['groups_per_row'];
+    $this->groupImagesFolderId = $data['group_images_folder'];
     $this->_imageThumbnailSize = (int)$data['image_size'];
     $this->_imageThumbnailResizeMode = $data['image_resize_mode'];
     parent::setPluginData($data, $captionNames, $messageNames);
@@ -239,5 +252,21 @@ class ACommunityGroupsData extends ACommunityUiContentData {
         ->getGroupPageLink($values['id']);
     }
     return $listData;
+  }
+
+  /**
+   * Media DB Edit to save image uploads
+   *
+   * @param base_mediadb_edit $mediaDBEdit
+   * @return base_mediadb_edit
+   */
+  public function mediaDBEdit(base_mediadb_edit $mediaDBEdit = NULL) {
+    if (isset($mediaDBEdit)) {
+      $this->_mediaDBEdit = $mediaDBEdit;
+    } elseif (is_null($this->_mediaDBEdit)) {
+      include_once(PAPAYA_INCLUDE_PATH.'system/base_mediadb_edit.php');
+      $this->_mediaDBEdit = new base_mediadb_edit();
+    }
+    return $this->_mediaDBEdit;
   }
 }

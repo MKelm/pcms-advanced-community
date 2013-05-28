@@ -120,12 +120,23 @@ class ACommunityGroups extends ACommunityUiContent {
 
       $command = $this->parameters()->get('command', '');
       if ($command == 'add_group' && $this->data()->surferIsGroupsOwner()) {
-        $this->uiContentGroupDialog()->appendTo($groups);
-        $errorMessage = $this->uiContentGroupDialog()->errorMessage();
-        if (!empty($errorMessage)) {
-          $comments->appendElement(
-            'dialog-message', array('type' => 'error'), $errorMessage
-          );
+
+        $dom = new PapayaXmlDocument();
+        $dom->appendElement('dialog');
+        $this->uiContentGroupDialog()->appendTo($dom->documentElement);
+        $removeDialog = $this->parameters()->get('remove_dialog', 0);
+        if (empty($removeDialog)) {
+          $xml = '';
+          foreach ($dom->documentElement->childNodes as $node) {
+            $xml .= $node->ownerDocument->saveXml($node);
+          }
+          $groups->appendXml($xml);
+          $errorMessage = $this->uiContentGroupDialog()->errorMessage();
+          if (!empty($errorMessage)) {
+            $groups->appendElement(
+              'dialog-message', array('type' => 'error'), $errorMessage
+            );
+          }
         }
       }
     }
