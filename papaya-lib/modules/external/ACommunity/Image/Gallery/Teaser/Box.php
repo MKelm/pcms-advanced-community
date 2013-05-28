@@ -109,16 +109,9 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $surferHandle = NULL;
-    if (!empty($this->parentObj->moduleObj->paramName)) {
-      $parameters = $this->papaya()->request->getParameterGroup(
-        $this->parentObj->moduleObj->paramName
-      );
-      if (isset($parameters['surfer_handle'])) {
-        $surferHandle = $parameters['surfer_handle'];
-      }
-    }
-    return $this->teaser()->data()->ressource('surfer', $surferHandle);
+    return $this->teaser()->data()->ressource(
+      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_handle')
+    );
   }
 
   /**
