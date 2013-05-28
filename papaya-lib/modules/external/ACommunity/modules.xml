@@ -103,6 +103,16 @@
             name="Surfers Page"
             class="ACommunitySurfersPage"
             file="Surfers/Page.php">Shows a list of surfers, searchable and with fiters</module>
+    <module type="page"
+            guid="a31fb00cdec640d9b0b7ec2e6f17a2da"
+            name="Groups Page"
+            class="ACommunityGroupsPage"
+            file="Groups/Page.php">Shows a list of groups</module>
+    <module type="page"
+            guid="9c42e2058cd04ffb9bd219dec266db1f"
+            name="Groups Owner Page"
+            class="ACommunityGroupsOwnerPage"
+            file="Groups/Owner/Page.php">Shows a list of groups of the current surfer</module>
     <module type="connector"
             guid="0badeb14ea2d41d5bcfd289e9d190534"
             name="Connector"
@@ -112,6 +122,7 @@
   <tables>
     <table name="acommunity_comments"/>
     <table name="acommunity_last_changes"/>
+    <table name="acommunity_groups"/>
     <table name="acommunity_messages"/>
     <table name="acommunity_message_surfers"/>
     <table name="acommunity_notifications"/>

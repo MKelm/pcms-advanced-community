@@ -49,6 +49,10 @@ class ACommunityConnector extends base_connector {
       'How to display names in outputs',
       'names'
     ),
+    'Groups',
+    'groups_default_image_id' => array(
+      'Default Image', 'isGUID', TRUE, 'mediaimage', 32, NULL, NULL
+    ),
     'Notifications',
     'notification_sender_email' => array(
       'Sender E-Mail', 'isEmail', TRUE, 'input', 200, 'Sender address for use in notification emails.', ''
@@ -181,6 +185,15 @@ class ACommunityConnector extends base_connector {
    */
   public function getModeratorGroupId() {
     return papaya_module_options::readOption($this->_guid, 'moderator_group_id', 0);
+  }
+
+  /**
+   * Get groups default image id
+   *
+   * @return integer
+   */
+  public function getGroupsDefaultImageId() {
+    return papaya_module_options::readOption($this->_guid, 'groups_default_image_id', NULL);
   }
 
   /**

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<table name="acommunity_groups" prefix="yes">
+  <fields>
+    <field name="group_id" type="integer" size="4" null="no" autoinc="yes"/>
+    <field name="group_owner" type="string" size="32" null="no"/>
+    <field name="group_public" type="integer" size="2" default="0"/>
+    <field name="group_time" type="integer" size="4" null="no"/>
+    <field name="group_title" type="string" size="200" null="no"/>
+    <field name="group_description" type="string" size="65535" null="no"/>
+    <field name="group_image" type="string" size="32" null="no" />
+  </fields>
+  <keys>
+    <primary-key>
+      <field>group_id</field>
+    </primary-key>
+    <key name="group_owner">
+      <field>group_owner</field>
+    </key>
+    <key name="group_public">
+      <field>group_public</field>
+    </key>
+  </keys>
+</table>
