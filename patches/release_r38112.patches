@@ -1,3 +1,38 @@
+Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Arbeitskopie)
+@@ -6,7 +6,7 @@
+   exclude-result-prefixes="#default"
+ >
+ <!--
+-  @papaya:modules content_thumbs
++  @papaya:modules MediaImageGalleryPage
+ -->
+ 
+ <!-- import main layout rules, this will import the default rules, too -->
+Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Arbeitskopie)
+@@ -325,6 +325,9 @@
+       </xsl:when>
+     </xsl:choose>
+   </div>
++  <xsl:if test="$field/@hint != ''">
++    <div class="hint"><xsl:value-of select="$field/@hint" /></div>
++  </xsl:if>
+ </xsl:template>
+ 
+ <xsl:template name="dialog-field-input">
+@@ -708,6 +711,7 @@
+   <label for="{$elementId}" class="radio">
+     <xsl:value-of select="$labelText" />
+   </label>
++  <xsl:call-template name="float-fix" />
+ </xsl:template>
+ 
+ <xsl:template name="dialog-element-select">
 Index: papaya-data/templates/default-xhtml/html/boxes.xml
 ===================================================================
 --- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38500)
@@ -74,32 +109,6 @@ Index: papaya-data/templates/default-xhtml/html/boxes.xml
 -</boxes>
 \ No newline at end of file
 +</boxes>
-Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
-===================================================================
---- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Arbeitskopie)
-@@ -6,7 +6,7 @@
-   exclude-result-prefixes="#default"
- >
- <!--
--  @papaya:modules content_thumbs
-+  @papaya:modules MediaImageGalleryPage
- -->
- 
- <!-- import main layout rules, this will import the default rules, too -->
-Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
-===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Arbeitskopie)
-@@ -2,4 +2,7 @@
-   <text ident="FILE_NAME">File</text>
-   <text ident="FILE_DATE">Date</text>
-   <text ident="FILE_SIZE">Size</text>
-+  <text ident="NO_IMAGES">No images found.</text>
-+  <text ident="ORIGINAL_IMAGE">Original image</text>
-+  <text ident="IMAGE_DOWNLOAD">Download</text>
- </texts>
-\ No newline at end of file
 Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
 ===================================================================
 --- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Revision 38500)
@@ -446,6 +455,19 @@ Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thum
 +
 +</xsl:stylesheet>
 \ No newline at end of file
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38500)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Arbeitskopie)
+@@ -2,4 +2,7 @@
+   <text ident="FILE_NAME">File</text>
+   <text ident="FILE_DATE">Date</text>
+   <text ident="FILE_SIZE">Size</text>
++  <text ident="NO_IMAGES">No images found.</text>
++  <text ident="ORIGINAL_IMAGE">Original image</text>
++  <text ident="IMAGE_DOWNLOAD">Download</text>
+ </texts>
+\ No newline at end of file
 Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl
 ===================================================================
 --- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38500)
@@ -564,28 +586,557 @@ Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_
 +</xsl:template>
 +
  </xsl:stylesheet>
-Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php
 ===================================================================
---- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Arbeitskopie)
-@@ -325,6 +325,9 @@
-       </xsl:when>
-     </xsl:choose>
-   </div>
-+  <xsl:if test="$field/@hint != ''">
-+    <div class="hint"><xsl:value-of select="$field/@hint" /></div>
-+  </xsl:if>
- </xsl:template>
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php	(Revision 38500)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php	(Arbeitskopie)
+@@ -14,14 +14,16 @@
+   */
+   public function testGetThemeConfigurationWithAllFields() {
+     $expected = array(
+-      'name' => 'Theme 1',
+-      'templates' => 'theme-1',
+-      'version' => '1.0',
+-      'date' => '2010-04-07',
+-      'author' => 'Papaya Software GmbH',
+-      'description' => 'This is the 1st test theme.',
+-      'thumbMedium' => 'thumb1_theme1.jpg',
+-      'thumbLarge' => 'thumb2_theme1.jpg'
++      '' => array(
++        'name' => 'Theme 1',
++        'templates' => 'theme-1',
++        'version' => '1.0',
++        'date' => '2010-04-07',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 1st test theme.',
++        'thumbMedium' => 'thumb1_theme1.jpg',
++        'thumbLarge' => 'thumb2_theme1.jpg'
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme1';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -33,14 +35,16 @@
+   */
+   public function testGetThemeConfigurationOnlyWithNameAndTemplates() {
+     $expected = array(
+-      'name' => 'Theme 2',
+-      'templates' => 'theme-2',
+-      'version' => '',
+-      'date' => '',
+-      'author' => '',
+-      'description' => '',
+-      'thumbMedium' => '',
+-      'thumbLarge' => ''
++      '' => array(
++        'name' => 'Theme 2',
++        'templates' => 'theme-2',
++        'version' => '',
++        'date' => '',
++        'author' => '',
++        'description' => '',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme2';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -52,14 +56,16 @@
+   */
+   public function testGetThemeConfigurationWithoutThumbs() {
+     $expected = array(
+-      'name' => 'Theme 3',
+-      'templates' => 'theme-3',
+-      'version' => '6.7',
+-      'date' => '2009-12-31',
+-      'author' => 'Papaya Software GmbH',
+-      'description' => 'This is the 3rd test theme.',
+-      'thumbMedium' => '',
+-      'thumbLarge' => ''
++      '' => array(
++        'name' => 'Theme 3',
++        'templates' => 'theme-3',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 3rd test theme.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme3';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -69,6 +75,47 @@
+   /**
+   * @covers PapayaUiAdministrationBrowserThemeConfiguration::getThemeConfiguration
+   */
++  public function testGetThemeConfigurationWithSubThemes() {
++    $expected = array(
++      '' => array(
++        'name' => 'Theme 4',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'suba' => array(
++        'name' => 'Theme 4 A',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme with A.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'subb' => array(
++        'name' => 'Theme 4 B',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme with B.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
++    );
++    $themePath = dirname(__FILE__).'/../TestData/theme4';
++    $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
++    $this->assertSame($expected, $themeObject->getThemeConfiguration($themePath));
++  }
++
++  /**
++  * @covers PapayaUiAdministrationBrowserThemeConfiguration::getThemeConfiguration
++  */
+   public function testGetThemeConfigurationWithInvalidConfigurationFile() {
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+     $themePath = dirname(__FILE__).'/../TestData/theme999';
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php	(Revision 38500)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php	(Arbeitskopie)
+@@ -162,6 +162,7 @@
  
- <xsl:template name="dialog-field-input">
-@@ -708,6 +711,7 @@
-   <label for="{$elementId}" class="radio">
-     <xsl:value-of select="$labelText" />
-   </label>
-+  <xsl:call-template name="float-fix" />
- </xsl:template>
+   /**
+   * @covers PapayaUiAdministrationBrowserTheme::getXml
++  * @medium
+   */
+   public function testGetXmlWithThemeInParamsDefaultViewMode() {
+     $path = dirname(__FILE__).'/TestData/';
+@@ -217,6 +218,7 @@
  
- <xsl:template name="dialog-element-select">
+   /**
+   * @covers PapayaUiAdministrationBrowserTheme::getXml
++  * @medium
+   */
+   public function testGetXmlWithThemeInDataDefaultViewMode() {
+     $path = dirname(__FILE__).'/TestData/';
+@@ -272,6 +274,7 @@
+ 
+   /**
+   * @covers PapayaUiAdministrationBrowserTheme::getXml
++  * @medium
+   */
+   public function testGetXmlWithoutThemeDefaultViewMode() {
+     $path = dirname(__FILE__).'/TestData/';
+@@ -318,6 +321,7 @@
+ 
+   /**
+   * @covers PapayaUiAdministrationBrowserTheme::getXml
++  * @medium
+   */
+   public function testGetXmlWithViewModeSet() {
+     $params = array('mode_view' => 'thumbs');
+@@ -446,22 +450,132 @@
+   public function callbackGetThemeConfiguration($directory) {
+     $themes = array(
+       'theme3' => array(
+-        'name' => 'Theme 3',
+-        'templates' => 'theme3',
+-        'thumbMedium' => 'thumb1_theme3.jpg',
+-        'thumbLarge' => 'thumb2_theme3.jpg'
++        '' => array(
++          'name' => 'Theme 3',
++          'templates' => 'theme3',
++          'thumbMedium' => 'thumb1_theme3.jpg',
++          'thumbLarge' => 'thumb2_theme3.jpg'
++        )
+       ),
+       'theme2' => array(
++        '' => array(
++          'name' => 'Theme 2',
++          'templates' => 'theme2',
++          'thumbMedium' => 'thumb1_theme2.jpg',
++          'thumbLarge' => 'thumb2_theme2.jpg'
++        )
++      ),
++      'theme1' => array(
++        '' => array(
++          'name' => 'Theme 1',
++          'templates' => 'theme1',
++          'thumbMedium' => '',
++          'thumbLarge' => ''
++        )
++      )
++    );
++    return $themes[basename($directory)];
++  }
++
++  /**
++  * @covers PapayaUiAdministrationBrowserTheme::getThemes
++  */
++  public function testGetThemesWithSubThemes() {
++    $expected = array(
++      'theme1' => array(
++        'name' => 'Theme 1',
++        'templates' => 'theme1',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'theme1-subthemea' => array(
++        'name' => 'Theme 1 Subtheme A',
++        'templates' => 'theme1',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'theme1-subthemeb' => array(
++        'name' => 'Theme 1 Subtheme B',
++        'templates' => 'theme1',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'theme2' => array(
+         'name' => 'Theme 2',
+         'templates' => 'theme2',
+         'thumbMedium' => 'thumb1_theme2.jpg',
+         'thumbLarge' => 'thumb2_theme2.jpg'
+       ),
++      'theme3' => array(
++        'name' => 'Theme 3',
++        'templates' => 'theme3',
++        'thumbMedium' => 'thumb1_theme3.jpg',
++        'thumbLarge' => 'thumb2_theme3.jpg'
++      ),
++      'theme3-subthemea' => array(
++        'name' => 'Theme 3 Subtheme A',
++        'templates' => 'theme3',
++        'thumbMedium' => 'thumb1_theme3.jpg',
++        'thumbLarge' => 'thumb2_theme3.jpg'
++      ),
++    );
++    $themeObject = $this->_getThemeObjectFixture();
++    $themeObject->setThemesPath(dirname(__FILE__).'/TestData/');
++    $configurationObject = $this->getMock('PapayaUiAdministrationBrowserThemeConfiguration');
++    $configurationObject
++      ->expects($this->exactly(3))
++      ->method('getThemeConfiguration')
++      ->with($this->isType('string'))
++      ->will(
++        $this->returnCallback(array($this, 'callbackGetThemeConfigurationWithSubThemes'))
++      );
++    $themeObject->setThemeConfigurationObject($configurationObject);
++    $this->assertEquals($expected, $themeObject->getThemes());
++  }
++
++  public function callbackGetThemeConfigurationWithSubThemes($directory) {
++    $themes = array(
++      'theme3' => array(
++        '' => array(
++          'name' => 'Theme 3',
++          'templates' => 'theme3',
++          'thumbMedium' => 'thumb1_theme3.jpg',
++          'thumbLarge' => 'thumb2_theme3.jpg'
++        ),
++        'subthemea' => array(
++          'name' => 'Theme 3 Subtheme A',
++          'templates' => 'theme3',
++          'thumbMedium' => 'thumb1_theme3.jpg',
++          'thumbLarge' => 'thumb2_theme3.jpg'
++        )
++      ),
++      'theme2' => array(
++        '' => array(
++          'name' => 'Theme 2',
++          'templates' => 'theme2',
++          'thumbMedium' => 'thumb1_theme2.jpg',
++          'thumbLarge' => 'thumb2_theme2.jpg'
++        )
++      ),
+       'theme1' => array(
+-        'name' => 'Theme 1',
+-        'templates' => 'theme1',
+-        'thumbMedium' => '',
+-        'thumbLarge' => ''
++        '' => array(
++          'name' => 'Theme 1',
++          'templates' => 'theme1',
++          'thumbMedium' => '',
++          'thumbLarge' => ''
++        ),
++        'subthemea' => array(
++          'name' => 'Theme 1 Subtheme A',
++          'templates' => 'theme1',
++          'thumbMedium' => '',
++          'thumbLarge' => ''
++        ),
++        'subthemeb' => array(
++          'name' => 'Theme 1 Subtheme B',
++          'templates' => 'theme1',
++          'thumbMedium' => '',
++          'thumbLarge' => ''
++        )
+       )
+     );
+     return $themes[basename($directory)];
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-suba.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-suba.xml	(Revision 0)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-suba.xml	(Revision 0)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<papaya-theme>
++  <name>Theme 4 A</name>
++  <templates directory="theme-4" />
++  <version number="6.7" date="2009-12-31" />
++  <author>Papaya Software GmbH</author>
++  <description>This is the 4th test theme with A.</description>
++  <sub-theme>suba</sub-theme>
++</papaya-theme>
+\ No newline at end of file
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-subb.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-subb.xml	(Revision 0)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-subb.xml	(Revision 0)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<papaya-theme>
++  <name>Theme 4 B</name>
++  <templates directory="theme-4" />
++  <version number="6.7" date="2009-12-31" />
++  <author>Papaya Software GmbH</author>
++  <description>This is the 4th test theme with B.</description>
++  <sub-theme>subb</sub-theme>
++</papaya-theme>
+\ No newline at end of file
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml	(Revision 0)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml	(Revision 0)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<papaya-theme>
++  <name>Theme 4</name>
++  <templates directory="theme-4" />
++  <version number="6.7" date="2009-12-31" />
++  <author>Papaya Software GmbH</author>
++  <description>This is the 4th test theme.</description>
++  <sub-theme></sub-theme>
++</papaya-theme>
+\ No newline at end of file
+Index: tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php	(Revision 38500)
++++ tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php	(Arbeitskopie)
+@@ -48,6 +48,45 @@
+   /**
+   * @covers PapayaThemeHandler::getUrl
+   */
++  public function testGetUrlWithSubThemeName() {
++    $url = $this->getMock('PapayaUrl', array('getHostUrl'));
++    $url
++      ->expects($this->once())
++      ->method('getHostUrl')
++      ->will($this->returnValue('http://test.tld'));
++    $request = $this->getMock('PapayaRequest', array('getParameter', 'getUrl'));
++    $request
++      ->expects($this->once())
++      ->method('getParameter')
++      ->will($this->returnValue(FALSE));
++    $request
++      ->expects($this->once())
++      ->method('getUrl')
++      ->will($this->returnValue($url));
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Request' => $request,
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'http://test.tld/themes/theme/',
++      $handler->getUrl()
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
+   public function testGetUrlWithThemeNameParameter() {
+     $url = $this->getMock('PapayaUrl', array('getHostUrl'));
+     $url
+@@ -83,6 +122,65 @@
+   /**
+   * @covers PapayaThemeHandler::getUrl
+   */
++  public function testGetUrlWithSubThemeNameParameter() {
++    $url = $this->getMock('PapayaUrl', array('getHostUrl'));
++    $url
++      ->expects($this->once())
++      ->method('getHostUrl')
++      ->will($this->returnValue('http://test.tld'));
++    $request = $this->getMock('PapayaRequest', array('getParameter', 'getUrl'));
++    $request
++      ->expects($this->once())
++      ->method('getUrl')
++      ->will($this->returnValue($url));
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Request' => $request,
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'http://test.tld/themes/theme/',
++      $handler->getUrl('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
++  public function testGetThemeAndSubTheme() {
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'theme-subtheme',
++      $handler->getTheme().'-'.$handler->getSubTheme('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
+   public function testGetUrlWithCdn() {
+     $request = $this->getMock('PapayaRequest', array('getParameter'));
+     $request
+@@ -199,6 +297,31 @@
+   * @covers PapayaThemeHandler::getLocalThemePath
+   * @backupGlobals enabled
+   */
++  public function testGetLocalThemePathWithSubThemeParameter() {
++    $_SERVER['DOCUMENT_ROOT'] = '/document/root';
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      '/document/root/themes/theme/',
++      $handler->getLocalThemePath('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getLocalThemePath
++  * @backupGlobals enabled
++  */
+   public function testGetLocalThemePathWithThemeName() {
+     $_SERVER['DOCUMENT_ROOT'] = '/document/root';
+     $handler = new PapayaThemeHandler();
+Index: tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml	(Revision 38500)
++++ tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml	(Arbeitskopie)
+@@ -12,20 +12,22 @@
+   <dynamic-values>
+     <page name="MAIN" title="Sample Page 1">
+       <group name="FONT" title="Sample Group 1.1">
+-        <value name="COLOR" title="Font color" type="color" default="#FF0000"/>
++        <value name="COLOR" title="Font color" type="text" field="color" default="#FF0000">
++          <hint>main font color</hint>
++        </value>
+       </group>
+       <group name="PARAGRAPH" title="Sample Group 1.2">
+-        <value name="ALIGNMENT" title="Alignment" type="select" default="left">
+-          <type-parameter name="justify">Justify</type-parameter>
+-          <type-parameter name="left">Left</type-parameter>
+-          <type-parameter name="right">Right</type-parameter>
+-        </value> 
++        <value name="ALIGNMENT" title="Alignment" field="select" default="left" hint="Text Alignment">
++          <field-parameter key="justify">Justify</field-parameter>
++          <field-parameter key="left">Left</field-parameter>
++          <field-parameter key="right">Right</field-parameter>
++        </value>
+       </group>
+       <group name="HEADER" title="Sample Group 1.3">
+-        <value name="TITLE" title="Title" type="text" type-parameter="200"/>
+-        <value name="BACKGROUND_IMAGE" title="Backgroudn image" type="select">
+-          <type-parameter>foo.png</type-parameter>
+-          <type-parameter>bar.png</type-parameter>
++        <value name="TITLE" title="Title" field="text" field-parameter="200"/>
++        <value name="BACKGROUND_IMAGE" title="Background image" field="select">
++          <field-parameter>foo.png</field-parameter>
++          <field-parameter>bar.png</field-parameter>
+         </value> 
+       </group>
+     </page>
+Index: papaya-themes/default/page_community.css
+===================================================================
+--- papaya-themes/default/page_community.css	(Revision 38500)
++++ papaya-themes/default/page_community.css	(Arbeitskopie)
+@@ -48,4 +48,11 @@
+ img.communityUserAvatar {
+   margin-top: 20px;
+   margin-bottom: 20px;
++}
++div.deleteAccount,
++div.deleteAccount form div.buttons {
++  margin-top: 1em;
++}
++div.deleteAccount fieldset {
++  margin: 0;
+ }
+\ No newline at end of file
 Index: papaya-themes/default/page_thumbs.css
 ===================================================================
 --- papaya-themes/default/page_thumbs.css	(Revision 38500)
@@ -695,36 +1246,1198 @@ Index: papaya-themes/default/basic.css
    }
 -}  
 +}
-Index: papaya-themes/default/page_community.css
+Index: papaya-lib/system/Papaya/Filter/Text.php
 ===================================================================
---- papaya-themes/default/page_community.css	(Revision 38500)
-+++ papaya-themes/default/page_community.css	(Arbeitskopie)
-@@ -48,4 +48,11 @@
- img.communityUserAvatar {
-   margin-top: 20px;
-   margin-bottom: 20px;
-+}
-+div.deleteAccount,
-+div.deleteAccount form div.buttons {
-+  margin-top: 1em;
-+}
-+div.deleteAccount fieldset {
-+  margin: 0;
+--- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
++++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
+@@ -49,7 +49,7 @@
+    * @return string^
+    */
+   private function getPattern() {
+-    $result = '([^\\pL\\pP';
++    $result = '([^\\pL\\pP=';
+     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
+       $result .= '\\p{Zs} ';
+     }
+Index: papaya-lib/system/Papaya/Theme/Handler.php
+===================================================================
+--- papaya-lib/system/Papaya/Theme/Handler.php	(Revision 38500)
++++ papaya-lib/system/Papaya/Theme/Handler.php	(Arbeitskopie)
+@@ -26,6 +26,11 @@
+ class PapayaThemeHandler extends PapayaObject {
+ 
+   /**
++   * Name of sub theme.
++   */
++  protected $_subThemeName = NULL;
++
++  /**
+   * Get url for theme files, is $themeName is empty the current theme is used.
+   *
+   * @param string $themeName
+@@ -51,10 +56,15 @@
+       );
+     }
+     if (empty($themeName)) {
+-      return $baseUrl.$this->getTheme().'/';
++      $themeName = $this->getTheme();
+     } else {
+-      return $baseUrl.$themeName.'/';
++      $themeNameParts = explode('-', $themeName);
++      if (count($themeNameParts) == 2) {
++        $themeName = $themeNameParts[0];
++        $this->_subThemeName = $themeNameParts[1];
++      }
+     }
++    return $baseUrl.$themeName.'/';
+   }
+ 
+   /**
+@@ -82,6 +92,12 @@
+   public function getLocalThemePath($themeName = NULL) {
+     if (empty($themeName)) {
+       $themeName = $this->getTheme();
++    } else {
++      $themeNameParts = explode('-', $themeName);
++      if (count($themeNameParts) == 2) {
++        $themeName = $themeNameParts[0];
++        $this->_subThemeName = $themeNameParts[1];
++      }
+     }
+     return PapayaUtilFilePath::cleanup(
+       $this->getLocalPath().$themeName
+@@ -125,10 +141,24 @@
+         ->options
+         ->getOption('PAPAYA_LAYOUT_THEME');
+     }
++    $themeNameParts = explode('-', $theme);
++    if (count($themeNameParts) == 2) {
++      $theme = $themeNameParts[0];
++      $this->_subThemeName = $themeNameParts[1];
++    }
+     return $theme;
+   }
+ 
+   /**
++  * Get the currently active sub theme name
++  *
++  * @return string
++  */
++  public function getSubTheme() {
++    return $this->_subThemeName;
++  }
++
++  /**
+   * Get the currently active theme set id
+   *
+   * @return string
+Index: papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php	(Revision 38500)
++++ papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php	(Arbeitskopie)
+@@ -353,10 +353,16 @@
+       while ($directoryName = readdir($directory)) {
+         if (is_dir($themesPath.$directoryName) && substr($directoryName, 0, 1) != '.') {
+           $currentConfiguration = $configuration->getThemeConfiguration(
+-            $themesPath . $directoryName
++            $themesPath.$directoryName
+           );
+           if (!empty($currentConfiguration)) {
+-            $result[$directoryName] = $currentConfiguration;
++            foreach ($currentConfiguration as $subTheme => $values) {
++              if (empty($subTheme)) {
++                $result[$directoryName] = $values;
++              } else {
++                $result[$directoryName.'-'.$subTheme] = $values;
++              }
++            }
+           }
+         }
+       }
+Index: papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php	(Revision 38500)
++++ papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php	(Arbeitskopie)
+@@ -35,7 +35,7 @@
+   * XML configuration file of theme.
+   * @var string
+   */
+-  private $_themeConfigurationFile = 'theme.xml';
++  private $_themeConfigurationFile = '~theme(-.+)?\.xml~i';
+ 
+   /***************************************************************************/
+   /** Methods                                                                */
+@@ -62,33 +62,53 @@
+   public function getThemeConfiguration($themePath) {
+     $result = array();
+     $document = $this->getDOMDocumentObject();
+-    $xmlFile = $themePath . '/' . $this->_themeConfigurationFile;
+-    if ($this->loadXml($xmlFile)) {
+-      $xpath = new DOMXPath($document);
+-      $result['name'] = $xpath->evaluate('string(//papaya-theme/name)', $document);
+-      $result['templates'] = $xpath->evaluate(
+-        'string(//papaya-theme/templates/@directory)',
+-        $document
+-      );
+-      $result['version'] = $xpath->evaluate(
+-        'string(//papaya-theme/version/@number)',
+-        $document
+-      );
+-      $result['date'] = $xpath->evaluate(
+-        'string(//papaya-theme/version/@date)',
+-        $document
+-      );
+-      $result['author'] = $xpath->evaluate('string(//papaya-theme/author)', $document);
+-      $result['description'] = $xpath->evaluate('string(//papaya-theme/description)', $document);
+-      $result['thumbMedium'] = $xpath->evaluate(
+-        "string(//papaya-theme/thumbs/thumb[@size = 'medium']/@src)",
+-        $document
+-      );
+-      $result['thumbLarge'] = $xpath->evaluate(
+-        "string(//papaya-theme/thumbs/thumb[@size = 'large']/@src)",
+-        $document
+-      );
++
++    if (is_dir($themePath) && $directory = opendir($themePath)) {
++      while ($fileName = readdir($directory)) {
++        if (is_file($themePath.'/'.$fileName) &&
++            preg_match($this->_themeConfigurationFile, $fileName)) {
++          $xmlFile = $themePath . '/' . $fileName;
++          if ($this->loadXml($xmlFile)) {
++            $xpath = new DOMXPath($document);
++            $config['name'] = $xpath->evaluate('string(//papaya-theme/name)', $document);
++            $config['templates'] = $xpath->evaluate(
++              'string(//papaya-theme/templates/@directory)',
++              $document
++            );
++            $config['version'] = $xpath->evaluate(
++              'string(//papaya-theme/version/@number)',
++              $document
++            );
++            $config['date'] = $xpath->evaluate(
++              'string(//papaya-theme/version/@date)',
++              $document
++            );
++            $config['author'] = $xpath->evaluate('string(//papaya-theme/author)', $document);
++            $config['description'] = $xpath->evaluate('string(//papaya-theme/description)', $document);
++            $config['thumbMedium'] = $xpath->evaluate(
++              "string(//papaya-theme/thumbs/thumb[@size = 'medium']/@src)",
++              $document
++            );
++            $config['thumbLarge'] = $xpath->evaluate(
++              "string(//papaya-theme/thumbs/thumb[@size = 'large']/@src)",
++              $document
++            );
++            $subTheme = $xpath->evaluate(
++              'string(//papaya-theme/sub-theme)',
++              $document
++            );
++            if (empty($subTheme)) {
++              $subTheme = '';
++            }
++            $result[$subTheme] = $config;
++          }
++        }
++      }
++      closedir($directory);
+     }
++    if (count($result) > 0) {
++      ksort($result);
++    }
+     return $result;
+   }
+ 
+Index: papaya-lib/system/papaya_mediadb.php
+===================================================================
+--- papaya-lib/system/papaya_mediadb.php	(Revision 38500)
++++ papaya-lib/system/papaya_mediadb.php	(Arbeitskopie)
+@@ -677,7 +677,14 @@
+         }
+         break;
+       case 'crop_image_window':
+-        $this->getImageCropWindow();
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $this->getImageCropWindow();
++        } else {
++          $this->addMsg(
++            MSG_WARNING,
++            $this->_gt('You can crop image/jpeg files only, please convert the image first.')
++          );
++        }
+         break;
+       case 'crop_image_rpc':
+         header('Content-type: text/xml; charset=utf-8');
+@@ -1195,9 +1202,9 @@
+             'actions-edit-copy',
+             'Copy file to clipboard'
+           );
+-          if ($this->currentFile['mimetype_ext'] == 'jpg' ||
+-              $this->currentFile['mimetype_ext'] == 'gif' ||
+-              $this->currentFile['mimetype_ext'] == 'png') {
++          if ($this->currentFile['mimetype'] == 'image/jpeg' ||
++              $this->currentFile['mimetype'] == 'image/gif' ||
++              $this->currentFile['mimetype'] == 'image/png') {
+             $convertParams = array(
+               'cmd' => 'convert_image',
+               'file_id' => $this->params['file_id'],
+@@ -1212,22 +1219,33 @@
+           }
+         }
+ 
+-        if (strtolower($this->getFileExtension($this->currentFile['file_name'])) == 'jpg') {
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $cropLink = sprintf(
++            "javascript:window.open('%s', 'cropwindow',
++             'width=656,height=556,top=100,left=100'); return false;",
++            $this->getLink(
++              array(
++                'cmd' => 'crop_image_window',
++                'file_id' => $this->params['file_id']
++              )
++            )
++          );
++        } elseif ($this->currentFile['mimetype'] == 'image/gif' ||
++                  $this->currentFile['mimetype'] == 'image/png') {
+           $cropLink = $this->getLink(
+             array(
+               'cmd' => 'crop_image_window',
+               'file_id' => $this->params['file_id']
+             )
+           );
++        }
++        if (!empty($cropLink)) {
+           $this->menubar->addButton(
+             'Crop',
+-            sprintf(
+-              "javascript:window.open('%s', 'cropwindow',
+-               'width=656,height=556,top=100,left=100'); return false;",
+-              $cropLink
+-            ),
++            $cropLink,
+             'actions-edit-crop',
+-            'Crop image'
++            'Crop image',
++            isset($this->params['cmd']) && $this->params['cmd'] == 'crop_image_window'
+           );
+         }
+ 
+Index: papaya-lib/system/base_mediadb_edit.php
+===================================================================
+--- papaya-lib/system/base_mediadb_edit.php	(Revision 38500)
++++ papaya-lib/system/base_mediadb_edit.php	(Arbeitskopie)
+@@ -653,6 +653,8 @@
+           $doDelete = TRUE;
+         }
+         if ($doDelete) {
++          $this->deleteFileDerivations($fileId);
++          $this->deleteFileTrans($fileId);
+           $condition = array('file_id' => $fileId);
+           return (FALSE !== $this->databaseDeleteRecord($this->tableFiles, $condition));
+         }
+@@ -662,6 +664,20 @@
+   }
+ 
+   /**
++   * Delete file translation by id
++   *
++   * @param string $fileId
++   * @return boolean
++   */
++  function deleteFileTrans($fileId) {
++    if (!empty($fileId)) {
++      $condition = array('file_id' => $fileId);
++      return FALSE !== $this->databaseDeleteRecord($this->tableFilesTrans, $condition);
++    }
++    return FALSE;
++  }
++
++  /**
+   * delete a version of a file
+   *
+   * use this method to delete a specific version of a file
+@@ -679,6 +695,7 @@
+       include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
+       $thumbnail = new base_thumbnail;
+       $thumbnail->deleteThumbs($fileId);
++      $this->deleteFileDerivations($fileId, $versionId);
+       return (FALSE !== $this->databaseDeleteRecord($this->tableFilesVersions, $condition));
+     }
+   }
+@@ -695,6 +712,7 @@
+     if ($fileId != '') {
+       $versions = $this->getFileVersions($fileId);
+       if (is_array($versions) && count($versions) > 0) {
++        $this->deleteFileDerivations($fileId, array_keys($versions));
+         foreach ($versions as $versionId => $version) {
+           $fileName = $this->getFileName($fileId, $versionId, TRUE);
+           if (!is_file($fileName) || unlink($fileName)) {
+@@ -717,6 +735,31 @@
+   }
+ 
+   /**
++   * Delete file derivations by file or file version.
++   *
++   * @param string $fileId
++   * @param integer $versionId
++   * @return boolean
++   */
++  function deleteFileDerivations($fileId, $versionId = NULL) {
++    if (!empty($fileId)) {
++      $condition = array('parent_file_id' => $fileId);
++      if (!empty($versionId)) {
++        $condition['parent_file_version_id'] = $versionId;
++      }
++      $result1 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++      if (empty($versionId)) {
++        $condition = array('child_file_id' => $fileId);
++        $result2 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++        return $result1 && $result2;
++      } else {
++        return $result1;
++      }
++    }
++    return FALSE;
++  }
++
++  /**
+   * move multiple files to a different folder
+   *
+   * use this method to move multiple files to a different folder
+@@ -1009,4 +1052,4 @@
+     return $size;
+   }
  }
+-?>
++?>
 \ No newline at end of file
-Index: papaya-lib/modules/free/thumbs/modules.xml
+Index: papaya-lib/system/papaya_publictopic.php
 ===================================================================
---- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38500)
-+++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
-@@ -5,7 +5,7 @@
-   <modules>
-     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
-     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
--    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
-+    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
-     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
-   </modules>
-   <tables>
+--- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
++++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
+@@ -229,7 +229,7 @@
+         $definition
+       );
+     } else {
+-      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
++      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+     }
+   }
+ 
+Index: papaya-lib/system/papaya_page.php
+===================================================================
+--- papaya-lib/system/papaya_page.php	(Revision 38500)
++++ papaya-lib/system/papaya_page.php	(Arbeitskopie)
+@@ -265,7 +265,7 @@
+     if (isset($_GET['exit'])) {
+       $this->allowSessionRedirects = FALSE;
+       $this->startSession();
+-      $urlPattern = '(^/sid'.preg_quote($this->sessionName).'([a-zA-Z\d,-]{20,40})([^?]*))i';
++      $urlPattern = '(^/sid[a-z]+([a-zA-Z\d,-]{20,40})((?:/.*)|$))i';
+       if (preg_match($urlPattern, $_SERVER['REQUEST_URI'], $regs)) {
+         $this->doRedirectToPath(
+           301,
+@@ -1534,6 +1534,7 @@
+       }
+       $themeHandler = new PapayaThemeHandler();
+       $this->layout->setParam('PAGE_THEME', $themeHandler->getTheme());
++      $this->layout->setParam('PAGE_SUB_THEME', $themeHandler->getSubTheme());
+       $this->layout->setParam('PAGE_THEME_SET', $themeHandler->getThemeSet());
+       $this->layout->setParam('PAGE_THEME_PATH', $themeHandler->getUrl());
+       $this->layout->setParam('PAGE_THEME_PATH_LOCAL', $themeHandler->getLocalThemePath());
+Index: papaya-lib/system/base_topic_edit.php
+===================================================================
+--- papaya-lib/system/base_topic_edit.php	(Revision 38500)
++++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
+@@ -1623,9 +1623,14 @@
+                 //delete page
+                 if (FALSE !== $this->databaseDeleteRecord(
+                       $this->tableTopicsTrans, $filter)) {
+-                  return FALSE !== $this->databaseDeleteRecord(
+-                    $this->tableTopics, $filter
+-                  );
++                  if (FALSE !== $this->databaseDeleteRecord(
++                        $this->tableTopics, $filter)) {
++                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
++                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
++                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
++                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
++                    return TRUE;
++                  }
+                 }
+               }
+             }
+Index: papaya-lib/modules/_base/filter_xslt.php
+===================================================================
+--- papaya-lib/modules/_base/filter_xslt.php	(Revision 38500)
++++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
+@@ -161,8 +161,8 @@
+         } else {
+           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
+           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
+-            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
+-              $moduleNames = explode(',', $match[1]);
++            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
++              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
+               foreach ($moduleNames as $key => $value) {
+                 $moduleNames[trim($value)] = TRUE;
+                 unset($moduleNames[$key]);
+Index: papaya-lib/modules/_base/community/content_userdata.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
+@@ -522,7 +522,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+@@ -1005,4 +1006,4 @@
+     return $result;
+   }
+ }
+-?>
+\ No newline at end of file
++?>
+Index: papaya-lib/modules/_base/community/connector_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/connector_surfers.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/connector_surfers.php	(Arbeitskopie)
+@@ -103,6 +103,7 @@
+ * $string|NULL = $surfersObj->getDefaultContact()
+ * $string|NULL = $surfersObj->getBackendSurferLink($surferId)
+ * $string = $surfersObj->getPasswordHash($password)
++* $string = $surfersObj->getPermCombo($name, $field, $data, $paramName = NULL)
+ *
+ * ============== Native methods ==============
+ *
+@@ -568,11 +569,12 @@
+   *
+   * @see surfer_admin::createSurfer Detailed description
+   * @param array $data Surfer's data
++  * @param boolean $ignoreIllegal optional, default FALSE
+   * @return mixed string|FALSE Status
+   */
+-  function createSurfer($data) {
++  function createSurfer($data, $ignoreIllegal = FALSE) {
+     $this->_initSurferAdmin();
+-    return $this->surferAdmin->createSurfer($data);
++    return $this->surferAdmin->createSurfer($data, $ignoreIllegal);
+   }
+ 
+   /**
+@@ -627,18 +629,21 @@
+   *
+   * @see existID() for behavior on blocked surfers
+   * @see surfer_admin::searchSurfers Detailed description
+-  * @access public
+-  * @param string $pattern Search pattern
+-  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
++  * @param string|array $pattern Search pattern or multiple search patterns
++  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
+   * @param boolean $includeBlocked Seach in blocked surfers too
+-  * @param string $orderBy Order search results by a given (NULL = disabled)
++  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
++  * @param integer $limit max results to fetch
++  * @param integer $offset fetch results from offset
++  * @param boolean $patternFirstChar using a pattern to get the first char of result string
+   * @return array $result Surfers data (id, handle, email, givenname, surfname)
+   */
+-  function searchSurfers($pattern, $handleOnly = FALSE,
+-                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
++  function searchSurfers($pattern, $searchFields = NULL,
++                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
++                         $limit = NULL, $offset = NULL, $patternFirstChar = FALSE) {
+     $this->_initSurferAdmin();
+     return $this->surferAdmin->searchSurfers(
+-      $pattern, $handleOnly, $includeBlocked, $orderBy
++      $pattern, $searchFields, $includeBlocked, $orderBy, $limit, $offset, $patternFirstChar
+     );
+   }
+ 
+@@ -1604,5 +1609,23 @@
+     }
+     return $groups;
+   }
++
++  /**
++  * Get Permission combo
++  *
++  * Callback function that makes all active permissions
++  * available as a select field
++  *
++  * @param string $name
++  * @param array $field
++  * @param mixed $data
++  * @param string $paramName optional, default NULL
++  * @access public
++  * @return string XML
++  */
++  function getPermCombo($name, $field, $data, $paramName = NULL) {
++    $this->_initSurferAdmin();
++    return $this->surferAdmin->getPermCombo($name, $field, $data, $paramName);
++  }
+ }
+ ?>
+\ No newline at end of file
+Index: papaya-lib/modules/_base/community/content_register.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
+@@ -1928,7 +1928,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+Index: papaya-lib/modules/_base/community/base_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
+@@ -773,16 +773,16 @@
+           );
+         }
+       }
+-
+-      if ($isMultiples) {
+-        // case 1: multiples ids
+-        return $result;
+-      } else if (count($result) > 0) {
+-        // case 2: one id lookup
+-        return reset($result);
+-      }
+     }
+-    return '';
++    if ($isMultiples) {
++      // case 1: multiples ids
++      return $result;
++    } elseif (count($result) > 0) {
++      // case 2: one id lookup
++      return reset($result);
++    } else {
++      return '';
++    }
+   }
+ 
+   /**
+@@ -1863,9 +1863,10 @@
+   * If the surfer record can be created successfully, its surfer id is returned.
+   *
+   * @param array $data Surfer's data
++  * @param boolean $ignoreIllegal optional, default FALSE
+   * @return mixed string|FALSE Status
+   */
+-  function createSurfer($data) {
++  function createSurfer($data, $ignoreIllegal = FALSE) {
+     $mailCheck = isset($data['surfer_email']) && isset($data['surfer_handle']) &&
+       trim($data['surfer_email']) != '' && trim($data['surfer_handle']) != '';
+     if (!$mailCheck) {
+@@ -1874,11 +1875,20 @@
+     if (!checkit::isEMail($data['surfer_email'])) {
+       return FALSE;
+     }
+-    if (!preg_match('{^[A-Za-z0-9-]{4,20}$}', $data['surfer_handle'])) {
++    if (!$ignoreIllegal &&
++      !preg_match(
++        '{^[A-Za-z0-9-]{4,'.PAPAYA_COMMUNITY_HANDLE_MAX_LENGTH.'}$}',
++        $data['surfer_handle'])
++      ) {
+       return FALSE;
+     }
+-    $surferExists = $this->existEmail($data['surfer_email'], TRUE) ||
+-      $this->existHandle($data['surfer_handle'], TRUE);
++    if ($ignoreIllegal) {
++      $surferExists = $this->existEmail($data['surfer_email'], TRUE) &&
++        $this->existHandle($data['surfer_handle'], TRUE);
++    } else {
++      $surferExists = $this->existEmail($data['surfer_email'], TRUE) ||
++        $this->existHandle($data['surfer_handle'], TRUE);
++    }
+     if ($surferExists) {
+       return FALSE;
+     }
+@@ -2213,41 +2223,74 @@
+   * Returns an empty array if no surfers match the pattern.
+   *
+   * @see existID() for behavior on blocked surfers
+-  * @access public
+-  * @param string $pattern Search pattern
+-  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
++  * @param string|array $pattern Search pattern or multiple search patterns
++  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
+   * @param boolean $includeBlocked Seach in blocked surfers too
+-  * @param string $orderBy Order search results by a given (NULL = disabled)
++  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
++  * @param integer $limit max results to fetch
++  * @param integer $offset fetch results from offset
++  * @param boolean $patternFirstChar using a pattern to get the first char of result string
+   * @return array $result Surfers data (id, handle, email, givenname, surfname)
+   */
+-  function searchSurfers($pattern, $handleOnly = FALSE,
+-                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
++  function searchSurfers($pattern, $searchFields = NULL,
++                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
++                         $limit  = NULL, $offset = NULL, $patternFirstChar = FALSE) {
+     $result = array();
+-
+-    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
+-    $parser = new searchStringParser();
+-    if ($handleOnly) {
++    // backward compatibility for search fields parameter, handle only mode
++    if ($searchFields === TRUE) {
+       $searchFields = array('surfer_handle');
+-    } else {
++    } elseif ($searchFields === FALSE || $searchFields === NULL) {
+       $searchFields = array('surfer_handle', 'surfer_givenname', 'surfer_surname');
+     }
+-    if ($filter = $parser->getSQL($pattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
+-      $sql = "SELECT surfer_id,
+-                     surfer_handle,
+-                     surfer_email,
+-                     surfer_givenname,
+-                     surfer_surname
+-              FROM %s
+-              WHERE ".str_replace('%', '%%', $filter)." %s";
++    $whereCondition = '';
++    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
++    $parser = new searchStringParser();
++    if ($patternFirstChar == TRUE) {
++      $parser->tokenMinLength = 1;
++    }
++    $validFilter = TRUE;
++    if (!empty($pattern)) {
++      if (!is_array($pattern)) {
++        $pattern = array($pattern);
++      }
++      foreach ($pattern as $currentPattern) {
++        if ($filter = $parser->getSQL($currentPattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
++          if ($patternFirstChar == TRUE) {
++            $filter = str_replace("LIKE '%", "LIKE '", $filter);
++          }
++          $whereCondition .= $whereCondition == '' ? " WHERE " : " AND ";
++          $whereCondition .= str_replace('%', '%%', $filter);
++        } else {
++          $validFilter = FALSE;
++        }
++      }
++    }
++    if ($validFilter == TRUE) {
++      if (is_array($orderBy)) {
++        $orderByField = ", CONCAT(".implode(",", $orderBy).") AS order_by";
++      } else {
++        $orderByField = "";
++      }
++      $sql = "SELECT surfer_id, surfer_handle, surfer_email,
++                     surfer_givenname, surfer_surname$orderByField
++                FROM %s
++                $whereCondition %s";
+       if (in_array($orderBy, array('surfer_handle', 'surfer_email', 'surfer_surname'))) {
+         $sql .= " ORDER BY ".$orderBy." ASC";
++      } elseif (is_array($orderBy)) {
++        $sql .= " ORDER BY order_by ASC";
+       }
+-      $blockedClause = ($includeBlocked === FALSE) ? ' AND surfer_valid != 4' : '';
++      $blockedClause = empty($whereCondition) ? " WHERE " : " AND ";
++      $blockedClause .= ($includeBlocked === FALSE) ? ' surfer_valid != 4' : '';
+       $sqlParams = array($this->tableSurfer, $blockedClause);
+-      if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
++      if ($res = $this->databaseQueryFmt($sql, $sqlParams, $limit, $offset)) {
+         while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++          if (isset($row['order_by'])) {
++            unset($row['order_by']);
++          }
+           $result[$row['surfer_id']] = $row;
+         }
++        $this->surfersAbsCount = $res->absCount();
+       }
+     }
+     return $result;
+@@ -2293,7 +2336,8 @@
+                    surfergroup_title,
+                    surfergroup_profile_page,
+                    surfergroup_redirect_page,
+-                   surfergroup_admin_group
++                   surfergroup_admin_group,
++                   surfergroup_identifier
+               FROM %s";
+     if ($adminGroups !== NULL) {
+       if (!in_array(0, $adminGroups)) {
+@@ -3506,13 +3550,13 @@
+   * @param integer $lng Language id
+   * @return array $dynamicEditFields Fields configuration
+   */
+-  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
++  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
+     // Create field condition
+     $fieldCondition = '';
+     if (is_numeric($fields) && $fields > 0) {
+-      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
++      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
+     } elseif (is_string($fields) && $fields != '0') {
+-      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
++      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
+     } elseif (is_array($fields)) {
+       // Check whether we have got an array of categories (numeric) or of names
+       $numeric = TRUE;
+@@ -3522,23 +3566,43 @@
+         }
+       }
+       if ($numeric) {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
+       } else {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
+       }
+     }
+     if ($fieldCondition != '') {
+       $fieldCondition = " AND ".$fieldCondition;
+     }
+-    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
+-                   surferdata_values, surferdata_check, surferdata_class,
+-                   surferdata_available, surferdata_mandatory, surferdata_order
+-              FROM %s
+-             WHERE surferdata_available = 1".
++
++    if ($getClasses = TRUE) {
++      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
++      $joinSurferDataClassTitles = sprintf(
++        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
++        "AND ct.surferdataclasstitle_lang = %d)",
++        $this->tableDataClassTitles,
++        $lng
++      );
++      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
++    } else {
++      $fieldSurferDataClassTitle = '';
++      $joinSurferDataClassTitles = '';
++      $orderBySurferDataClassTitle = '';
++    }
++
++    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
++                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
++                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
++              FROM %s AS d
++              %s
++             WHERE d.surferdata_available = 1".
+                    $fieldCondition."
+-          ORDER BY surferdata_order, surferdata_name";
+-    $sqlParams = array($this->tableData);
++          ORDER BY %sd.surferdata_order, d.surferdata_name";
++    $sqlParams = array(
++      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
++    );
+     $fields = array();
++
+     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
+       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
+         $fields[] = $row;
+@@ -3562,9 +3626,15 @@
+         }
+       }
+     }
++
+     // Create the edit fields
+     $dynamicEditFields = array();
++    $lastClassTitle = NULL;
+     foreach ($fields as $field) {
++      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
++        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
++        $lastClassTitle = $field['surferdataclasstitle_name'];
++      }
+       $fieldName = $field['surferdata_name'];
+       if ($prefix != '') {
+         $fieldName = $prefix.'_'.$fieldName;
+@@ -4437,6 +4507,28 @@
+   }
+ 
+   /**
++  * Get a surfer group id by its external identifier
++  *
++  * @param string $identifier
++  * @return integer
++  */
++  function getGroupIdByIdentifier($identifier) {
++    $result = 0;
++    if ($identifier != '') {
++      $sql = "SELECT surfergroup_id, surfergroup_identifier
++                FROM %s
++               WHERE surfergroup_identifier = '%s'";
++      $sqlData = array($this->tableGroups, $identifier);
++      if ($res = $this->databaseQueryFmt($sql, $sqlData)) {
++        if ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++          $result = $row['surfergroup_id'];
++        }
++      }
++    }
++    return $result;
++  }
++
++  /**
+    * Load surfers with a more complex statement see table papaya_surfer for handling.
+    *
+    * @access public
+@@ -4527,7 +4619,7 @@
+       $identifier = substr($identifier, 0, strpos($identifier, '@'));
+     }
+     // Step 2: Replace one or more special chars by '-'
+-    $identifier = preg_replace('([^a-z\d-]+)i', '-', $identifier);
++    $identifier = preg_replace('([^a-z\d._-]+)i', '-', $identifier);
+     // Step 3: Replace more than one '-' by a single '-'
+     $identifier = preg_replace('(\-{2,})', '-', $identifier);
+     // Step 4: Shorten to 14 characters max.
+@@ -4565,6 +4657,80 @@
+   }
+ 
+   /**
++  * Load permission list
++  *
++  * Loads the full list of available permissions
++  * Stores them in the permissionList attribute
++  * Returns true if this is possible
++  * or false if not
++  *
++  * @access public
++  * @return boolean
++  */
++  function loadPermList() {
++    $this->permissionsList = array();
++    $sql = "SELECT surferperm_id, surferperm_title, surferperm_active
++              FROM %s
++             ORDER BY surferperm_title ASC, surferperm_id DESC";
++    if ($res = $this->databaseQueryFmt($sql, array($this->tablePerm))) {
++      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++        $this->permissionsList[$row['surferperm_id']] = $row;
++      }
++      return TRUE;
++    }
++    return FALSE;
++  }
++
++  /**
++  * Get Permission combo
++  *
++  * Callback function that makes all active permissions
++  * available as a select field
++  *
++  * @param string $name
++  * @param array $field
++  * @param mixed $data
++  * @param string $paramName optional, default NULL
++  * @access public
++  * @return string XML
++  */
++  function getPermCombo($name, $field, $data, $paramName = NULL) {
++    if ($paramName === NULL) {
++      $paramName = $this->paramName;
++    }
++    // Reload permission list if not set
++    if (!(isset($this->permissionsList) && is_array($this->permissionsList))) {
++      $this->loadPermList();
++    }
++    // Create select field
++    $result = sprintf(
++      '<select id="field_type" name="%s[%s]" class="dialogSelect dialogScale" size="1">'.LF,
++      papaya_strings::escapeHTMLChars($paramName),
++      papaya_strings::escapeHTMLChars($name)
++    );
++    $result .= sprintf(
++      '<option value="0">[%s]</option>'.LF,
++      papaya_strings::escapeHTMLChars($this->_gt('globally allowed'))
++    );
++    // Iterate over all permissions
++    foreach ($this->permissionsList as $perm) {
++      // Use only active permissions
++      if ($perm['surferperm_active']) {
++        // Mark current permission as selected if it's the field value
++        $selected = ($perm['surferperm_id'] == $data) ? ' selected="selected"' : '';
++        $result .= sprintf(
++          '<option value="%s" %s>%s</option>'.LF,
++          papaya_strings::escapeHTMLChars($perm['surferperm_id']),
++          $selected,
++          papaya_strings::escapeHTMLChars($perm['surferperm_title'])
++        );
++      }
++    }
++    $result .= '</select>'.LF;
++    return $result;
++  }
++
++  /**
+    * Clear old registrations and change requests.
+    *
+    * Deletes any records from the surfer table
+Index: papaya-lib/modules/_base/community/content_profile.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_profile.php	(Revision 38500)
++++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
+@@ -240,6 +240,10 @@
+           'Query string for redirect url',
+           ''
+         ),
++        'Dynamic Data',
++        'dynamic_class' => array(
++          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
++        )
+       ),
+     ),
+     array(
+@@ -576,6 +580,15 @@
+         ),
+         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
+         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
++        'caption_section_email' => array(
++          'Section email',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Change email"',
++          ''
++        ),
+         'caption_change_email' => array(
+           'Change email',
+           'isNoHTML',
+@@ -617,6 +630,15 @@
+         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
+         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
+         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
++        'caption_section_password' => array(
++          'Section password',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Old password"',
++          ''
++        ),
+         'caption_old_password' => array(
+           'Old password',
+           'isNoHTML',
+@@ -705,6 +727,24 @@
+           '',
+           'Enter the new password twice or leave blank to keep the old one.'
+         ),
++        'descr_old_password' => array(
++          'Old password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password if you want to change your email.'
++        ),
++        'descr_need_old_password' => array(
++          'Change password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password to confirm changes.'
++        ),
+         'descr_delete_account' => array(
+           'Delete account',
+           'isSomeText',
+@@ -828,6 +868,9 @@
+     }
+ 
+     if ($this->data['change_email'] == 1) {
++      if (!empty($this->data['caption_section_email'])) {
++        $fields[] = $this->data['caption_section_email'];
++      }
+       $fields['surfer_new_email'] = array(
+         $this->data['caption_change_email'],
+         'isEmail',
+@@ -842,6 +885,9 @@
+     }
+ 
+     if ($this->data['change_password'] == 1) {
++      if (!empty($this->data['caption_section_password'])) {
++        $fields[] = $this->data['caption_section_password'];
++      }
+       $fields['surfer_password1'] = array(
+         $this->data['caption_new_password'],
+         'isPassword',
+@@ -854,21 +900,53 @@
+         'isSomeText',
+         FALSE,
+         'password',
+-        200
++        200,
++        $this->data['descr_change_password']
+       );
++    }
++    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
+       $fields['surfer_password3'] = array(
+         $this->data['caption_old_password'],
+         'isSomeText',
+-        FALSE,
++        !empty($this->data['need_oldpassword']),
+         'password',
+         200,
+-        $this->data['descr_change_password']
++        !empty($this->data['need_oldpassword']) ?
++          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
+       );
+     }
+ 
++    // Add dynamic data fields
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $dynFields = $this->baseSurfers->getDynamicEditFields(
++        $this->data['dynamic_class'],
++        'dynamic',
++        $this->parentObj->topic['TRANSLATION']['lng_id'],
++        TRUE
++      );
++      $fields = array_merge($fields, $dynFields);
++    }
++
++    $data = $this->surferData;
++    // Get existing dynamic data
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      $dynData = $this->baseSurfers->getDynamicData(
++        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
++        $fieldNames
++      );
++      if ($dynData != NULL) {
++        foreach ($dynData as $fieldName => $fieldValue) {
++          $data['dynamic_'.$fieldName] = $fieldValue;
++        }
++      }
++    }
++
+     $hidden = array('save' => 1);
+     $this->profileForm = new base_frontend_form(
+-      $this, $this->paramName, $fields, $this->surferData, $hidden
++      $this, $this->paramName, $fields, $data, $hidden
+     );
+     $this->profileForm->msgs = &$this->msgs;
+     $this->profileForm->loadParams();
+@@ -996,7 +1074,25 @@
+     if ($this->data['edit_gender'] == 0) {
+       unset($this->surferData['surfer_gender']);
+     }
+-    return $this->baseSurfers->saveSurfer($this->surferData);
++    $result = $this->baseSurfers->saveSurfer($this->surferData);
++
++    // Now save the dynamic data, if necessary
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      // Get the field names
++      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      // Get those fields that are actually set
++      $dynFields = array();
++      foreach ($dynFieldNames as $fieldName) {
++        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
++          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
++        }
++      }
++      if (!empty($dynFields)) {
++        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
++      }
++    }
++    return $result;
+   }
+ 
+   /**
+@@ -1538,7 +1634,14 @@
+           // If an error field exists, the error_input message is displayed
+           // Otherwise it is a token error with a different message
+           if ($errorField == $field) {
+-            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
++            if (in_array(
++                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
++               ) {
++              $message = $this->data['error_password'];
++            } else {
++              $message = $this->data['error_input'];
++            }
++            $result .= $this->getErrorMessageXml($message, $errorField);
+           } else {
+             $result .= $this->getErrorMessageXml(
+               'Invalid Token. Progress is canceled', $errorField
+@@ -1625,5 +1728,53 @@
+   function getCacheId() {
+     return FALSE;
+   }
++
++  /**
++  * Get form xml to select dynamic data categories by callback.
++  *
++  * @param string $name Field name
++  * @param array $element Field element configurations
++  * @param string $data Current field data
++  * @return string $result XML
++  */
++  function callbackClasses($name, $element, $data) {
++    $this->_initBaseSurfers();
++    $result = '';
++    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
++    $commonTitle = $this->_gt('Category');
++    $sql = "SELECT c.surferdataclass_id,
++                   ct.surferdataclasstitle_classid,
++                   ct.surferdataclasstitle_name,
++                   ct.surferdataclasstitle_lang
++              FROM %s AS c LEFT OUTER JOIN %s AS ct
++                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
++             WHERE ct.surferdataclasstitle_lang = %d";
++    $sqlParams = array(
++      $this->baseSurfers->tableDataClasses,
++      $this->baseSurfers->tableDataClassTitles,
++      $lng
++    );
++    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
++      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++        if (isset($row['surferdataclasstitle_name']) &&
++            trim($row['surferdataclasstitle_name']) != '') {
++          $title = $row['surferdataclasstitle_name'];
++        } else {
++          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
++        }
++        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
++          ' checked="checked"' : '';
++        $result .= sprintf(
++          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
++          $this->paramName,
++          $name,
++          $row['surferdataclass_id'],
++          $checked,
++          $title
++        );
++      }
++    }
++    return $result;
++  }
+ }
+ ?>
+Index: papaya-lib/modules/free/calendar/output_calendar.php
+===================================================================
+--- papaya-lib/modules/free/calendar/output_calendar.php	(Revision 38500)
++++ papaya-lib/modules/free/calendar/output_calendar.php	(Arbeitskopie)
+@@ -611,10 +611,10 @@
+         isset($this->contentModules[$this->date['date_content_guid']])) {
+       // sets module to local variable and content from date to xml
+       $module = $this->contentModules[$this->date['date_content_guid']];
+-      $content = (strpos($this->date['date_data'], '<data>') === 0) ?
++      $content = (strpos($this->date['date_data'], '<data') === 0) ?
+         $this->date['date_data'] :
+       sprintf(
+-        '<data><data-element name="text"><![CDATA[%s]]></data-element></data>',
++        '<data version="2"><data-element name="text"><![CDATA[%s]]></data-element></data>',
+         papaya_strings::escapeHTMLChars($this->date['date_data'])
+       );
+       // uses getModuleEdit to get content formular
 Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 ===================================================================
 --- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38500)
@@ -1883,969 +3596,16 @@ Index: papaya-lib/modules/free/thumbs/Image/Gallery/Page.php
 +  }
 +}
 \ No newline at end of file
-Index: papaya-lib/modules/_base/community/base_surfers.php
+Index: papaya-lib/modules/free/thumbs/modules.xml
 ===================================================================
---- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
-@@ -773,16 +773,16 @@
-           );
-         }
-       }
--
--      if ($isMultiples) {
--        // case 1: multiples ids
--        return $result;
--      } else if (count($result) > 0) {
--        // case 2: one id lookup
--        return reset($result);
--      }
-     }
--    return '';
-+    if ($isMultiples) {
-+      // case 1: multiples ids
-+      return $result;
-+    } elseif (count($result) > 0) {
-+      // case 2: one id lookup
-+      return reset($result);
-+    } else {
-+      return '';
-+    }
-   }
- 
-   /**
-@@ -1863,9 +1863,10 @@
-   * If the surfer record can be created successfully, its surfer id is returned.
-   *
-   * @param array $data Surfer's data
-+  * @param boolean $ignoreIllegal optional, default FALSE
-   * @return mixed string|FALSE Status
-   */
--  function createSurfer($data) {
-+  function createSurfer($data, $ignoreIllegal = FALSE) {
-     $mailCheck = isset($data['surfer_email']) && isset($data['surfer_handle']) &&
-       trim($data['surfer_email']) != '' && trim($data['surfer_handle']) != '';
-     if (!$mailCheck) {
-@@ -1874,11 +1875,20 @@
-     if (!checkit::isEMail($data['surfer_email'])) {
-       return FALSE;
-     }
--    if (!preg_match('{^[A-Za-z0-9-]{4,20}$}', $data['surfer_handle'])) {
-+    if (!$ignoreIllegal &&
-+      !preg_match(
-+        '{^[A-Za-z0-9-]{4,'.PAPAYA_COMMUNITY_HANDLE_MAX_LENGTH.'}$}',
-+        $data['surfer_handle'])
-+      ) {
-       return FALSE;
-     }
--    $surferExists = $this->existEmail($data['surfer_email'], TRUE) ||
--      $this->existHandle($data['surfer_handle'], TRUE);
-+    if ($ignoreIllegal) {
-+      $surferExists = $this->existEmail($data['surfer_email'], TRUE) &&
-+        $this->existHandle($data['surfer_handle'], TRUE);
-+    } else {
-+      $surferExists = $this->existEmail($data['surfer_email'], TRUE) ||
-+        $this->existHandle($data['surfer_handle'], TRUE);
-+    }
-     if ($surferExists) {
-       return FALSE;
-     }
-@@ -2213,41 +2223,74 @@
-   * Returns an empty array if no surfers match the pattern.
-   *
-   * @see existID() for behavior on blocked surfers
--  * @access public
--  * @param string $pattern Search pattern
--  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
-+  * @param string|array $pattern Search pattern or multiple search patterns
-+  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
-   * @param boolean $includeBlocked Seach in blocked surfers too
--  * @param string $orderBy Order search results by a given (NULL = disabled)
-+  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
-+  * @param integer $limit max results to fetch
-+  * @param integer $offset fetch results from offset
-+  * @param boolean $patternFirstChar using a pattern to get the first char of result string
-   * @return array $result Surfers data (id, handle, email, givenname, surfname)
-   */
--  function searchSurfers($pattern, $handleOnly = FALSE,
--                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
-+  function searchSurfers($pattern, $searchFields = NULL,
-+                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
-+                         $limit  = NULL, $offset = NULL, $patternFirstChar = FALSE) {
-     $result = array();
--
--    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
--    $parser = new searchStringParser();
--    if ($handleOnly) {
-+    // backward compatibility for search fields parameter, handle only mode
-+    if ($searchFields === TRUE) {
-       $searchFields = array('surfer_handle');
--    } else {
-+    } elseif ($searchFields === FALSE || $searchFields === NULL) {
-       $searchFields = array('surfer_handle', 'surfer_givenname', 'surfer_surname');
-     }
--    if ($filter = $parser->getSQL($pattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
--      $sql = "SELECT surfer_id,
--                     surfer_handle,
--                     surfer_email,
--                     surfer_givenname,
--                     surfer_surname
--              FROM %s
--              WHERE ".str_replace('%', '%%', $filter)." %s";
-+    $whereCondition = '';
-+    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
-+    $parser = new searchStringParser();
-+    if ($patternFirstChar == TRUE) {
-+      $parser->tokenMinLength = 1;
-+    }
-+    $validFilter = TRUE;
-+    if (!empty($pattern)) {
-+      if (!is_array($pattern)) {
-+        $pattern = array($pattern);
-+      }
-+      foreach ($pattern as $currentPattern) {
-+        if ($filter = $parser->getSQL($currentPattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
-+          if ($patternFirstChar == TRUE) {
-+            $filter = str_replace("LIKE '%", "LIKE '", $filter);
-+          }
-+          $whereCondition .= $whereCondition == '' ? " WHERE " : " AND ";
-+          $whereCondition .= str_replace('%', '%%', $filter);
-+        } else {
-+          $validFilter = FALSE;
-+        }
-+      }
-+    }
-+    if ($validFilter == TRUE) {
-+      if (is_array($orderBy)) {
-+        $orderByField = ", CONCAT(".implode(",", $orderBy).") AS order_by";
-+      } else {
-+        $orderByField = "";
-+      }
-+      $sql = "SELECT surfer_id, surfer_handle, surfer_email,
-+                     surfer_givenname, surfer_surname$orderByField
-+                FROM %s
-+                $whereCondition %s";
-       if (in_array($orderBy, array('surfer_handle', 'surfer_email', 'surfer_surname'))) {
-         $sql .= " ORDER BY ".$orderBy." ASC";
-+      } elseif (is_array($orderBy)) {
-+        $sql .= " ORDER BY order_by ASC";
-       }
--      $blockedClause = ($includeBlocked === FALSE) ? ' AND surfer_valid != 4' : '';
-+      $blockedClause = empty($whereCondition) ? " WHERE " : " AND ";
-+      $blockedClause .= ($includeBlocked === FALSE) ? ' surfer_valid != 4' : '';
-       $sqlParams = array($this->tableSurfer, $blockedClause);
--      if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
-+      if ($res = $this->databaseQueryFmt($sql, $sqlParams, $limit, $offset)) {
-         while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-+          if (isset($row['order_by'])) {
-+            unset($row['order_by']);
-+          }
-           $result[$row['surfer_id']] = $row;
-         }
-+        $this->surfersAbsCount = $res->absCount();
-       }
-     }
-     return $result;
-@@ -2293,7 +2336,8 @@
-                    surfergroup_title,
-                    surfergroup_profile_page,
-                    surfergroup_redirect_page,
--                   surfergroup_admin_group
-+                   surfergroup_admin_group,
-+                   surfergroup_identifier
-               FROM %s";
-     if ($adminGroups !== NULL) {
-       if (!in_array(0, $adminGroups)) {
-@@ -3506,13 +3550,13 @@
-   * @param integer $lng Language id
-   * @return array $dynamicEditFields Fields configuration
-   */
--  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
-+  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
-     // Create field condition
-     $fieldCondition = '';
-     if (is_numeric($fields) && $fields > 0) {
--      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
-+      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
-     } elseif (is_string($fields) && $fields != '0') {
--      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
-+      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
-     } elseif (is_array($fields)) {
-       // Check whether we have got an array of categories (numeric) or of names
-       $numeric = TRUE;
-@@ -3522,23 +3566,43 @@
-         }
-       }
-       if ($numeric) {
--        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
-+        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
-       } else {
--        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
-+        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
-       }
-     }
-     if ($fieldCondition != '') {
-       $fieldCondition = " AND ".$fieldCondition;
-     }
--    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
--                   surferdata_values, surferdata_check, surferdata_class,
--                   surferdata_available, surferdata_mandatory, surferdata_order
--              FROM %s
--             WHERE surferdata_available = 1".
-+
-+    if ($getClasses = TRUE) {
-+      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
-+      $joinSurferDataClassTitles = sprintf(
-+        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
-+        "AND ct.surferdataclasstitle_lang = %d)",
-+        $this->tableDataClassTitles,
-+        $lng
-+      );
-+      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
-+    } else {
-+      $fieldSurferDataClassTitle = '';
-+      $joinSurferDataClassTitles = '';
-+      $orderBySurferDataClassTitle = '';
-+    }
-+
-+    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
-+                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
-+                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
-+              FROM %s AS d
-+              %s
-+             WHERE d.surferdata_available = 1".
-                    $fieldCondition."
--          ORDER BY surferdata_order, surferdata_name";
--    $sqlParams = array($this->tableData);
-+          ORDER BY %sd.surferdata_order, d.surferdata_name";
-+    $sqlParams = array(
-+      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
-+    );
-     $fields = array();
-+
-     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
-       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-         $fields[] = $row;
-@@ -3562,9 +3626,15 @@
-         }
-       }
-     }
-+
-     // Create the edit fields
-     $dynamicEditFields = array();
-+    $lastClassTitle = NULL;
-     foreach ($fields as $field) {
-+      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
-+        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
-+        $lastClassTitle = $field['surferdataclasstitle_name'];
-+      }
-       $fieldName = $field['surferdata_name'];
-       if ($prefix != '') {
-         $fieldName = $prefix.'_'.$fieldName;
-@@ -4437,6 +4507,28 @@
-   }
- 
-   /**
-+  * Get a surfer group id by its external identifier
-+  *
-+  * @param string $identifier
-+  * @return integer
-+  */
-+  function getGroupIdByIdentifier($identifier) {
-+    $result = 0;
-+    if ($identifier != '') {
-+      $sql = "SELECT surfergroup_id, surfergroup_identifier
-+                FROM %s
-+               WHERE surfergroup_identifier = '%s'";
-+      $sqlData = array($this->tableGroups, $identifier);
-+      if ($res = $this->databaseQueryFmt($sql, $sqlData)) {
-+        if ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-+          $result = $row['surfergroup_id'];
-+        }
-+      }
-+    }
-+    return $result;
-+  }
-+
-+  /**
-    * Load surfers with a more complex statement see table papaya_surfer for handling.
-    *
-    * @access public
-@@ -4527,7 +4619,7 @@
-       $identifier = substr($identifier, 0, strpos($identifier, '@'));
-     }
-     // Step 2: Replace one or more special chars by '-'
--    $identifier = preg_replace('([^a-z\d-]+)i', '-', $identifier);
-+    $identifier = preg_replace('([^a-z\d._-]+)i', '-', $identifier);
-     // Step 3: Replace more than one '-' by a single '-'
-     $identifier = preg_replace('(\-{2,})', '-', $identifier);
-     // Step 4: Shorten to 14 characters max.
-@@ -4565,6 +4657,80 @@
-   }
- 
-   /**
-+  * Load permission list
-+  *
-+  * Loads the full list of available permissions
-+  * Stores them in the permissionList attribute
-+  * Returns true if this is possible
-+  * or false if not
-+  *
-+  * @access public
-+  * @return boolean
-+  */
-+  function loadPermList() {
-+    $this->permissionsList = array();
-+    $sql = "SELECT surferperm_id, surferperm_title, surferperm_active
-+              FROM %s
-+             ORDER BY surferperm_title ASC, surferperm_id DESC";
-+    if ($res = $this->databaseQueryFmt($sql, array($this->tablePerm))) {
-+      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-+        $this->permissionsList[$row['surferperm_id']] = $row;
-+      }
-+      return TRUE;
-+    }
-+    return FALSE;
-+  }
-+
-+  /**
-+  * Get Permission combo
-+  *
-+  * Callback function that makes all active permissions
-+  * available as a select field
-+  *
-+  * @param string $name
-+  * @param array $field
-+  * @param mixed $data
-+  * @param string $paramName optional, default NULL
-+  * @access public
-+  * @return string XML
-+  */
-+  function getPermCombo($name, $field, $data, $paramName = NULL) {
-+    if ($paramName === NULL) {
-+      $paramName = $this->paramName;
-+    }
-+    // Reload permission list if not set
-+    if (!(isset($this->permissionsList) && is_array($this->permissionsList))) {
-+      $this->loadPermList();
-+    }
-+    // Create select field
-+    $result = sprintf(
-+      '<select id="field_type" name="%s[%s]" class="dialogSelect dialogScale" size="1">'.LF,
-+      papaya_strings::escapeHTMLChars($paramName),
-+      papaya_strings::escapeHTMLChars($name)
-+    );
-+    $result .= sprintf(
-+      '<option value="0">[%s]</option>'.LF,
-+      papaya_strings::escapeHTMLChars($this->_gt('globally allowed'))
-+    );
-+    // Iterate over all permissions
-+    foreach ($this->permissionsList as $perm) {
-+      // Use only active permissions
-+      if ($perm['surferperm_active']) {
-+        // Mark current permission as selected if it's the field value
-+        $selected = ($perm['surferperm_id'] == $data) ? ' selected="selected"' : '';
-+        $result .= sprintf(
-+          '<option value="%s" %s>%s</option>'.LF,
-+          papaya_strings::escapeHTMLChars($perm['surferperm_id']),
-+          $selected,
-+          papaya_strings::escapeHTMLChars($perm['surferperm_title'])
-+        );
-+      }
-+    }
-+    $result .= '</select>'.LF;
-+    return $result;
-+  }
-+
-+  /**
-    * Clear old registrations and change requests.
-    *
-    * Deletes any records from the surfer table
-Index: papaya-lib/modules/_base/community/content_profile.php
-===================================================================
---- papaya-lib/modules/_base/community/content_profile.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
-@@ -240,6 +240,10 @@
-           'Query string for redirect url',
-           ''
-         ),
-+        'Dynamic Data',
-+        'dynamic_class' => array(
-+          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
-+        )
-       ),
-     ),
-     array(
-@@ -576,6 +580,15 @@
-         ),
-         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
-         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
-+        'caption_section_email' => array(
-+          'Section email',
-+          'isNoHTML',
-+          FALSE,
-+          'input',
-+          200,
-+          'Adds a section caption above "Change email"',
-+          ''
-+        ),
-         'caption_change_email' => array(
-           'Change email',
-           'isNoHTML',
-@@ -617,6 +630,15 @@
-         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
-         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
-         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
-+        'caption_section_password' => array(
-+          'Section password',
-+          'isNoHTML',
-+          FALSE,
-+          'input',
-+          200,
-+          'Adds a section caption above "Old password"',
-+          ''
-+        ),
-         'caption_old_password' => array(
-           'Old password',
-           'isNoHTML',
-@@ -705,6 +727,24 @@
-           '',
-           'Enter the new password twice or leave blank to keep the old one.'
-         ),
-+        'descr_old_password' => array(
-+          'Old password',
-+          'isSomeText',
-+          FALSE,
-+          'simplerichtext',
-+          7,
-+          '',
-+          'Enter the old password if you want to change your email.'
-+        ),
-+        'descr_need_old_password' => array(
-+          'Change password',
-+          'isSomeText',
-+          FALSE,
-+          'simplerichtext',
-+          7,
-+          '',
-+          'Enter the old password to confirm changes.'
-+        ),
-         'descr_delete_account' => array(
-           'Delete account',
-           'isSomeText',
-@@ -828,6 +868,9 @@
-     }
- 
-     if ($this->data['change_email'] == 1) {
-+      if (!empty($this->data['caption_section_email'])) {
-+        $fields[] = $this->data['caption_section_email'];
-+      }
-       $fields['surfer_new_email'] = array(
-         $this->data['caption_change_email'],
-         'isEmail',
-@@ -842,6 +885,9 @@
-     }
- 
-     if ($this->data['change_password'] == 1) {
-+      if (!empty($this->data['caption_section_password'])) {
-+        $fields[] = $this->data['caption_section_password'];
-+      }
-       $fields['surfer_password1'] = array(
-         $this->data['caption_new_password'],
-         'isPassword',
-@@ -854,21 +900,53 @@
-         'isSomeText',
-         FALSE,
-         'password',
--        200
-+        200,
-+        $this->data['descr_change_password']
-       );
-+    }
-+    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
-       $fields['surfer_password3'] = array(
-         $this->data['caption_old_password'],
-         'isSomeText',
--        FALSE,
-+        !empty($this->data['need_oldpassword']),
-         'password',
-         200,
--        $this->data['descr_change_password']
-+        !empty($this->data['need_oldpassword']) ?
-+          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
-       );
-     }
- 
-+    // Add dynamic data fields
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      $dynFields = $this->baseSurfers->getDynamicEditFields(
-+        $this->data['dynamic_class'],
-+        'dynamic',
-+        $this->parentObj->topic['TRANSLATION']['lng_id'],
-+        TRUE
-+      );
-+      $fields = array_merge($fields, $dynFields);
-+    }
-+
-+    $data = $this->surferData;
-+    // Get existing dynamic data
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
-+      $dynData = $this->baseSurfers->getDynamicData(
-+        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
-+        $fieldNames
-+      );
-+      if ($dynData != NULL) {
-+        foreach ($dynData as $fieldName => $fieldValue) {
-+          $data['dynamic_'.$fieldName] = $fieldValue;
-+        }
-+      }
-+    }
-+
-     $hidden = array('save' => 1);
-     $this->profileForm = new base_frontend_form(
--      $this, $this->paramName, $fields, $this->surferData, $hidden
-+      $this, $this->paramName, $fields, $data, $hidden
-     );
-     $this->profileForm->msgs = &$this->msgs;
-     $this->profileForm->loadParams();
-@@ -996,7 +1074,25 @@
-     if ($this->data['edit_gender'] == 0) {
-       unset($this->surferData['surfer_gender']);
-     }
--    return $this->baseSurfers->saveSurfer($this->surferData);
-+    $result = $this->baseSurfers->saveSurfer($this->surferData);
-+
-+    // Now save the dynamic data, if necessary
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      // Get the field names
-+      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
-+      // Get those fields that are actually set
-+      $dynFields = array();
-+      foreach ($dynFieldNames as $fieldName) {
-+        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
-+          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
-+        }
-+      }
-+      if (!empty($dynFields)) {
-+        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
-+      }
-+    }
-+    return $result;
-   }
- 
-   /**
-@@ -1538,7 +1634,14 @@
-           // If an error field exists, the error_input message is displayed
-           // Otherwise it is a token error with a different message
-           if ($errorField == $field) {
--            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
-+            if (in_array(
-+                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
-+               ) {
-+              $message = $this->data['error_password'];
-+            } else {
-+              $message = $this->data['error_input'];
-+            }
-+            $result .= $this->getErrorMessageXml($message, $errorField);
-           } else {
-             $result .= $this->getErrorMessageXml(
-               'Invalid Token. Progress is canceled', $errorField
-@@ -1625,5 +1728,53 @@
-   function getCacheId() {
-     return FALSE;
-   }
-+
-+  /**
-+  * Get form xml to select dynamic data categories by callback.
-+  *
-+  * @param string $name Field name
-+  * @param array $element Field element configurations
-+  * @param string $data Current field data
-+  * @return string $result XML
-+  */
-+  function callbackClasses($name, $element, $data) {
-+    $this->_initBaseSurfers();
-+    $result = '';
-+    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
-+    $commonTitle = $this->_gt('Category');
-+    $sql = "SELECT c.surferdataclass_id,
-+                   ct.surferdataclasstitle_classid,
-+                   ct.surferdataclasstitle_name,
-+                   ct.surferdataclasstitle_lang
-+              FROM %s AS c LEFT OUTER JOIN %s AS ct
-+                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
-+             WHERE ct.surferdataclasstitle_lang = %d";
-+    $sqlParams = array(
-+      $this->baseSurfers->tableDataClasses,
-+      $this->baseSurfers->tableDataClassTitles,
-+      $lng
-+    );
-+    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
-+      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-+        if (isset($row['surferdataclasstitle_name']) &&
-+            trim($row['surferdataclasstitle_name']) != '') {
-+          $title = $row['surferdataclasstitle_name'];
-+        } else {
-+          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
-+        }
-+        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
-+          ' checked="checked"' : '';
-+        $result .= sprintf(
-+          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
-+          $this->paramName,
-+          $name,
-+          $row['surferdataclass_id'],
-+          $checked,
-+          $title
-+        );
-+      }
-+    }
-+    return $result;
-+  }
- }
- ?>
-Index: papaya-lib/modules/_base/community/content_userdata.php
-===================================================================
---- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
-@@ -522,7 +522,8 @@
-         $dynFields = $this->baseSurfers->getDynamicEditFields(
-           $this->data['dynamic_class'],
-           'dynamic',
--          $this->parentObj->topic['TRANSLATION']['lng_id']
-+          $this->parentObj->topic['TRANSLATION']['lng_id'],
-+          TRUE
-         );
-         $fields = array_merge($fields, $dynFields);
-       }
-@@ -1005,4 +1006,4 @@
-     return $result;
-   }
- }
--?>
-\ No newline at end of file
-+?>
-Index: papaya-lib/modules/_base/community/connector_surfers.php
-===================================================================
---- papaya-lib/modules/_base/community/connector_surfers.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/connector_surfers.php	(Arbeitskopie)
-@@ -103,6 +103,7 @@
- * $string|NULL = $surfersObj->getDefaultContact()
- * $string|NULL = $surfersObj->getBackendSurferLink($surferId)
- * $string = $surfersObj->getPasswordHash($password)
-+* $string = $surfersObj->getPermCombo($name, $field, $data, $paramName = NULL)
- *
- * ============== Native methods ==============
- *
-@@ -568,11 +569,12 @@
-   *
-   * @see surfer_admin::createSurfer Detailed description
-   * @param array $data Surfer's data
-+  * @param boolean $ignoreIllegal optional, default FALSE
-   * @return mixed string|FALSE Status
-   */
--  function createSurfer($data) {
-+  function createSurfer($data, $ignoreIllegal = FALSE) {
-     $this->_initSurferAdmin();
--    return $this->surferAdmin->createSurfer($data);
-+    return $this->surferAdmin->createSurfer($data, $ignoreIllegal);
-   }
- 
-   /**
-@@ -627,18 +629,21 @@
-   *
-   * @see existID() for behavior on blocked surfers
-   * @see surfer_admin::searchSurfers Detailed description
--  * @access public
--  * @param string $pattern Search pattern
--  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
-+  * @param string|array $pattern Search pattern or multiple search patterns
-+  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
-   * @param boolean $includeBlocked Seach in blocked surfers too
--  * @param string $orderBy Order search results by a given (NULL = disabled)
-+  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
-+  * @param integer $limit max results to fetch
-+  * @param integer $offset fetch results from offset
-+  * @param boolean $patternFirstChar using a pattern to get the first char of result string
-   * @return array $result Surfers data (id, handle, email, givenname, surfname)
-   */
--  function searchSurfers($pattern, $handleOnly = FALSE,
--                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
-+  function searchSurfers($pattern, $searchFields = NULL,
-+                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
-+                         $limit = NULL, $offset = NULL, $patternFirstChar = FALSE) {
-     $this->_initSurferAdmin();
-     return $this->surferAdmin->searchSurfers(
--      $pattern, $handleOnly, $includeBlocked, $orderBy
-+      $pattern, $searchFields, $includeBlocked, $orderBy, $limit, $offset, $patternFirstChar
-     );
-   }
- 
-@@ -1604,5 +1609,23 @@
-     }
-     return $groups;
-   }
-+
-+  /**
-+  * Get Permission combo
-+  *
-+  * Callback function that makes all active permissions
-+  * available as a select field
-+  *
-+  * @param string $name
-+  * @param array $field
-+  * @param mixed $data
-+  * @param string $paramName optional, default NULL
-+  * @access public
-+  * @return string XML
-+  */
-+  function getPermCombo($name, $field, $data, $paramName = NULL) {
-+    $this->_initSurferAdmin();
-+    return $this->surferAdmin->getPermCombo($name, $field, $data, $paramName);
-+  }
- }
- ?>
-\ No newline at end of file
-Index: papaya-lib/modules/_base/community/content_register.php
-===================================================================
---- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
-@@ -1928,7 +1928,8 @@
-         $dynFields = $this->baseSurfers->getDynamicEditFields(
-           $this->data['dynamic_class'],
-           'dynamic',
--          $this->parentObj->topic['TRANSLATION']['lng_id']
-+          $this->parentObj->topic['TRANSLATION']['lng_id'],
-+          TRUE
-         );
-         $fields = array_merge($fields, $dynFields);
-       }
-Index: papaya-lib/modules/_base/filter_xslt.php
-===================================================================
---- papaya-lib/modules/_base/filter_xslt.php	(Revision 38500)
-+++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
-@@ -161,8 +161,8 @@
-         } else {
-           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
-           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
--            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
--              $moduleNames = explode(',', $match[1]);
-+            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
-+              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
-               foreach ($moduleNames as $key => $value) {
-                 $moduleNames[trim($value)] = TRUE;
-                 unset($moduleNames[$key]);
-Index: papaya-lib/system/Papaya/Filter/Text.php
-===================================================================
---- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
-+++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
-@@ -49,7 +49,7 @@
-    * @return string^
-    */
-   private function getPattern() {
--    $result = '([^\\pL\\pP';
-+    $result = '([^\\pL\\pP=';
-     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
-       $result .= '\\p{Zs} ';
-     }
-Index: papaya-lib/system/base_topic_edit.php
-===================================================================
---- papaya-lib/system/base_topic_edit.php	(Revision 38500)
-+++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
-@@ -1623,9 +1623,14 @@
-                 //delete page
-                 if (FALSE !== $this->databaseDeleteRecord(
-                       $this->tableTopicsTrans, $filter)) {
--                  return FALSE !== $this->databaseDeleteRecord(
--                    $this->tableTopics, $filter
--                  );
-+                  if (FALSE !== $this->databaseDeleteRecord(
-+                        $this->tableTopics, $filter)) {
-+                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
-+                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-+                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
-+                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
-+                    return TRUE;
-+                  }
-                 }
-               }
-             }
-Index: papaya-lib/system/papaya_mediadb.php
-===================================================================
---- papaya-lib/system/papaya_mediadb.php	(Revision 38500)
-+++ papaya-lib/system/papaya_mediadb.php	(Arbeitskopie)
-@@ -677,7 +677,14 @@
-         }
-         break;
-       case 'crop_image_window':
--        $this->getImageCropWindow();
-+        if ($this->currentFile['mimetype'] == 'image/jpeg') {
-+          $this->getImageCropWindow();
-+        } else {
-+          $this->addMsg(
-+            MSG_WARNING,
-+            $this->_gt('You can crop image/jpeg files only, please convert the image first.')
-+          );
-+        }
-         break;
-       case 'crop_image_rpc':
-         header('Content-type: text/xml; charset=utf-8');
-@@ -1195,9 +1202,9 @@
-             'actions-edit-copy',
-             'Copy file to clipboard'
-           );
--          if ($this->currentFile['mimetype_ext'] == 'jpg' ||
--              $this->currentFile['mimetype_ext'] == 'gif' ||
--              $this->currentFile['mimetype_ext'] == 'png') {
-+          if ($this->currentFile['mimetype'] == 'image/jpeg' ||
-+              $this->currentFile['mimetype'] == 'image/gif' ||
-+              $this->currentFile['mimetype'] == 'image/png') {
-             $convertParams = array(
-               'cmd' => 'convert_image',
-               'file_id' => $this->params['file_id'],
-@@ -1212,22 +1219,33 @@
-           }
-         }
- 
--        if (strtolower($this->getFileExtension($this->currentFile['file_name'])) == 'jpg') {
-+        if ($this->currentFile['mimetype'] == 'image/jpeg') {
-+          $cropLink = sprintf(
-+            "javascript:window.open('%s', 'cropwindow',
-+             'width=656,height=556,top=100,left=100'); return false;",
-+            $this->getLink(
-+              array(
-+                'cmd' => 'crop_image_window',
-+                'file_id' => $this->params['file_id']
-+              )
-+            )
-+          );
-+        } elseif ($this->currentFile['mimetype'] == 'image/gif' ||
-+                  $this->currentFile['mimetype'] == 'image/png') {
-           $cropLink = $this->getLink(
-             array(
-               'cmd' => 'crop_image_window',
-               'file_id' => $this->params['file_id']
-             )
-           );
-+        }
-+        if (!empty($cropLink)) {
-           $this->menubar->addButton(
-             'Crop',
--            sprintf(
--              "javascript:window.open('%s', 'cropwindow',
--               'width=656,height=556,top=100,left=100'); return false;",
--              $cropLink
--            ),
-+            $cropLink,
-             'actions-edit-crop',
--            'Crop image'
-+            'Crop image',
-+            isset($this->params['cmd']) && $this->params['cmd'] == 'crop_image_window'
-           );
-         }
- 
-Index: papaya-lib/system/papaya_publictopic.php
-===================================================================
---- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
-+++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
-@@ -229,7 +229,7 @@
-         $definition
-       );
-     } else {
--      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
-+      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-     }
-   }
- 
-Index: papaya-lib/system/base_mediadb_edit.php
-===================================================================
---- papaya-lib/system/base_mediadb_edit.php	(Revision 38500)
-+++ papaya-lib/system/base_mediadb_edit.php	(Arbeitskopie)
-@@ -653,6 +653,8 @@
-           $doDelete = TRUE;
-         }
-         if ($doDelete) {
-+          $this->deleteFileDerivations($fileId);
-+          $this->deleteFileTrans($fileId);
-           $condition = array('file_id' => $fileId);
-           return (FALSE !== $this->databaseDeleteRecord($this->tableFiles, $condition));
-         }
-@@ -662,6 +664,20 @@
-   }
- 
-   /**
-+   * Delete file translation by id
-+   *
-+   * @param string $fileId
-+   * @return boolean
-+   */
-+  function deleteFileTrans($fileId) {
-+    if (!empty($fileId)) {
-+      $condition = array('file_id' => $fileId);
-+      return FALSE !== $this->databaseDeleteRecord($this->tableFilesTrans, $condition);
-+    }
-+    return FALSE;
-+  }
-+
-+  /**
-   * delete a version of a file
-   *
-   * use this method to delete a specific version of a file
-@@ -679,6 +695,7 @@
-       include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
-       $thumbnail = new base_thumbnail;
-       $thumbnail->deleteThumbs($fileId);
-+      $this->deleteFileDerivations($fileId, $versionId);
-       return (FALSE !== $this->databaseDeleteRecord($this->tableFilesVersions, $condition));
-     }
-   }
-@@ -695,6 +712,7 @@
-     if ($fileId != '') {
-       $versions = $this->getFileVersions($fileId);
-       if (is_array($versions) && count($versions) > 0) {
-+        $this->deleteFileDerivations($fileId, array_keys($versions));
-         foreach ($versions as $versionId => $version) {
-           $fileName = $this->getFileName($fileId, $versionId, TRUE);
-           if (!is_file($fileName) || unlink($fileName)) {
-@@ -717,6 +735,31 @@
-   }
- 
-   /**
-+   * Delete file derivations by file or file version.
-+   *
-+   * @param string $fileId
-+   * @param integer $versionId
-+   * @return boolean
-+   */
-+  function deleteFileDerivations($fileId, $versionId = NULL) {
-+    if (!empty($fileId)) {
-+      $condition = array('parent_file_id' => $fileId);
-+      if (!empty($versionId)) {
-+        $condition['parent_file_version_id'] = $versionId;
-+      }
-+      $result1 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
-+      if (empty($versionId)) {
-+        $condition = array('child_file_id' => $fileId);
-+        $result2 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
-+        return $result1 && $result2;
-+      } else {
-+        return $result1;
-+      }
-+    }
-+    return FALSE;
-+  }
-+
-+  /**
-   * move multiple files to a different folder
-   *
-   * use this method to move multiple files to a different folder
-@@ -1009,4 +1052,4 @@
-     return $size;
-   }
- }
--?>
-+?>
-\ No newline at end of file
+--- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38500)
++++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
+@@ -5,7 +5,7 @@
+   <modules>
+     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
+     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
+-    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
++    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
+     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
+   </modules>
+   <tables>
