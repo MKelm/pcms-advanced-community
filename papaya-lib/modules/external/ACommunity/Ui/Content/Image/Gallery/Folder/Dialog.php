@@ -91,7 +91,13 @@ class ACommunityUiContentImageGalleryFolderDialog
 
     $dialog->fields[] = $field = new PapayaUiDialogFieldInput(
       $this->data()->captions['dialog_folder_name'],
-      'folder_name'
+      'folder_name',
+      200,
+      NULL,
+      new PapayaFilterLogicalAnd(
+        new PapayaFilterText(PapayaFilterText::ALLOW_SPACES, PapayaFilterText::ALLOW_DIGITS),
+        new PapayaFilterNotEmpty()
+      )
     );
     $field->setMandatory(TRUE);
     $field->setId('dialogGalleryFolderName');
@@ -173,11 +179,13 @@ class ACommunityUiContentImageGalleryFolderDialog
     if ($this->_newFolderId > 0) {
       $this->data()->mediaDBEdit()->deleteFolder($this->_newFolderId);
     }
-    $this->errorMessage(
-      sprintf(
-        $this->data()->messages['dialog_input_error'],
-        implode(', ', $dialog->errors()->getSourceCaptions())
-      )
-    );
+    if (empty($this->_errorMessage)) {
+      $this->errorMessage(
+        sprintf(
+          $this->data()->messages['dialog_input_error'],
+          implode(', ', $dialog->errors()->getSourceCaptions())
+        )
+      );
+    }
   }
 }
