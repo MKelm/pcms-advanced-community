@@ -144,7 +144,7 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   public function surferIsGroupOwner($groupId) {
     if (!isset($this->_surferIsGroupOwner[$groupId])) {
       $this->groupSurferRelations()->load(
-        array('group_id' => $groupId, 'surfer_id' => $this->currentSurferId())
+        array('id' => $groupId, 'surfer_id' => $this->currentSurferId())
       );
       $groupSurferRelations = $this->groupSurferRelations();
       $this->_surferIsGroupOwner[$groupId] = isset($groupSurferRelations[$groupId]) &&
