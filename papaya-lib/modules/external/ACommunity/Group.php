@@ -52,7 +52,84 @@ class ACommunityGroup extends ACommunityUiContent {
    */
   protected function _performCommands() {
     $command = $this->parameters()->get('command', NULL);
-    $groupId = $this->parameters()->get('group_id', NULL);
+    $ressource = $this->data()->ressource();
+    if (!empty($ressource)) {
+      $lastChange = 0;
+      $changeType = 'members_pending';
+      switch ($command) {
+        case 'request_membership':
+          $groupSurferRelation = clone $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
+          );
+          if ($groupSurferRelation['id'] == NULL) {
+            $groupSurferRelation = clone $this->data()->groupSurferRelation();
+            $groupSurferRelation->assign(
+              array(
+                'id' => $ressource['id'],
+                'surfer_id' => $this->data()->currentSurferId(),
+                'surfer_status_pending' => 1
+              )
+            );
+            if ($groupSurferRelation->save()) {
+              $lastChange = time();
+            }
+          }
+          break;
+        case 'remove_membership_request':
+          $groupSurferRelation = $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array(
+              'id' => $ressource['id'],
+              'surfer_id' => $this->data()->currentSurferId(),
+              'surfer_pending_status' => 1
+            )
+          );
+          if (isset($groupSurferRelation['id'])) {
+            if ($groupSurferRelation->delete()) {
+              $lastChange = time();
+            }
+          }
+          break;
+        case 'accept_membership_invitation':
+          $groupSurferRelation = $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array(
+              'id' => $ressource['id'],
+              'surfer_id' => $this->data()->currentSurferId(),
+              'surfer_pending_status' => 2
+            )
+          );
+          if (isset($groupSurferRelation['id'])) {
+            $groupSurferRelation->assign(
+              array(
+                'id' => $ressource['id'],
+                'surfer_id' => $this->data()->currentSurferId(),
+                'surfer_pending_status' => 0
+              )
+            );
+            if ($groupSurferRelation->save()) {
+              $lastChange = time();
+              $changeType = 'members';
+            }
+          }
+          break;
+      }
+      if ($lastChange > 0) {
+        $lastChange = clone $this->data()->lastChange();
+        $lastChange->assign(
+          array(
+            'ressource' => 'group:'.$changeType.':'.$ressource['type'].'_'.$ressource['id'],
+            'time' => $lastChange
+          )
+        );
+        $lastChange->save();
+        $this->data()->lastChange()->assign(
+          array('ressource' => 'comments', 'time' => $lastChange)
+        );
+        $this->data()->lastChange()->save();
+      }
+    }
   }
 
   /**
@@ -63,6 +140,8 @@ class ACommunityGroup extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
+      $this->_performCommands();
+
       $this->data()->initialize();
       $parent->appendElement('title', array(), $this->data()->title);
       $parent->appendElement(
@@ -70,8 +149,6 @@ class ACommunityGroup extends ACommunityUiContent {
       );
       $parent->appendXml($this->data()->text);
       $parent->appendElement('image', array(), PapayaUtilStringXml::escape($this->data()->image));
-
-      $this->_performCommands();
 
       if (!empty($this->data()->commands)) {
         $commands = $parent->appendElement('commands');

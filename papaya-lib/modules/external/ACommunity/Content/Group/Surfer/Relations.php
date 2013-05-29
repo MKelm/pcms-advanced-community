@@ -1,6 +1,6 @@
 <?php
 /**
- * Advanced community group surfer relation database record
+ * Advanced community group surfer relations database records
  *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
@@ -17,7 +17,7 @@
  */
 
 /**
- * Advanced community group surfer relation database record
+ * Advanced community group surfer relations database records
  *
  * @package Papaya-Modules
  * @subpackage External-Guestbook
@@ -39,14 +39,14 @@ class ACommunityContentGroupSurferRelations extends PapayaDatabaseRecords {
   );
 
   /**
-   * Table containing message surfers
+   * Table containing group surfers
    *
    * @var string
    */
   protected $_tableNameGroupSurfers = 'acommunity_group_surfers';
 
   /**
-   * Table containing messages
+   * Table containing groups
    *
    * @var string
    */

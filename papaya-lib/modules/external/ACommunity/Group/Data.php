@@ -72,6 +72,12 @@ class ACommunityGroupData extends ACommunityUiContentData {
   protected $_group = NULL;
 
   /**
+   * Group surfer relation database record
+   * @var object
+   */
+  protected $_groupSurferRelation = NULL;
+
+  /**
    * Group surfer relations database records
    * @var object
    */
@@ -117,6 +123,25 @@ class ACommunityGroupData extends ACommunityUiContentData {
       $this->_group->papaya($this->papaya());
     }
     return $this->_group;
+  }
+
+  /**
+  * Access to group surfer relation database record data
+  *
+  * @param ACommunityContentGroupSurferRelation $group
+  * @return ACommunityContentGroupSurferRelation
+  */
+  public function groupSurferRelation(
+           ACommunityContentGroupSurferRelation $groupSurferRelation = NULL
+         ) {
+    if (isset($groupSurferRelation)) {
+      $this->_groupSurferRelation = $groupSurferRelation;
+    } elseif (is_null($this->_groupSurferRelation)) {
+      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relation.php');
+      $this->_groupSurferRelation = new ACommunityContentGroupSurferRelation();
+      $this->_groupSurferRelation->papaya($this->papaya());
+    }
+    return $this->_groupSurferRelation;
   }
 
   /**
