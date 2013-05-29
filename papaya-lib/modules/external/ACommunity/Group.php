@@ -55,7 +55,7 @@ class ACommunityGroup extends ACommunityUiContent {
     $ressource = $this->data()->ressource();
     if (!empty($ressource)) {
       $lastChange = 0;
-      $changeType = 'members_pending';
+      $changeType = 'membership_requests';
       switch ($command) {
         case 'request_membership':
           $groupSurferRelation = clone $this->data()->groupSurferRelation();
@@ -111,13 +111,13 @@ class ACommunityGroup extends ACommunityUiContent {
             );
             if ($groupSurferRelation->save()) {
               $lastChange = time();
-              $changeType = 'members';
+              $changeType = 'memberships';
             }
           }
           break;
       }
       if ($lastChange > 0) {
-        $lastChange = clone $this->data()->lastChange();
+        $lastChange = $this->data()->lastChange();
         $lastChange->assign(
           array(
             'ressource' => 'group:'.$changeType.':'.'group_'.$ressource['id'],
@@ -125,10 +125,6 @@ class ACommunityGroup extends ACommunityUiContent {
           )
         );
         $lastChange->save();
-        $this->data()->lastChange()->assign(
-          array('ressource' => 'comments', 'time' => $lastChange)
-        );
-        $this->data()->lastChange()->save();
       }
     }
   }

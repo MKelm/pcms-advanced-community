@@ -123,10 +123,10 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
           $definitionValues[] = $currentSurferId;
           $definitionValues[] = $ressource['id'];
           $definitionValues[] = $values->lastChangeTime('group:group_'.$ressource['id']);
-          $definitionValues[] = $values->lastChangeTime('group:members:group_'.$ressource['id']);
+          $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource['id']);
           $surferGroupStatus = $this->group()->data()->surferGroupStatus();
           if ($surferGroupStatus['is_owner'] > 0) {
-            $definitionValues[] = $values->lastChangeTime('group:members_pending:group_'.$ressource['id']);
+            $definitionValues[] = $values->lastChangeTime('group:membership_requests:group_'.$ressource['id']);
           }
         } else {
           $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
