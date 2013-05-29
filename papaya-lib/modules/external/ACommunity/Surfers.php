@@ -58,26 +58,61 @@ class ACommunitySurfers extends ACommunityUiContent {
    * Perform commands to change surfer contact
    */
   protected function _performCommands() {
-    $this->data()->ressource();
-    $surferId = $this->communityConnector()->getIdByHandle(
-      $this->parameters()->get('surfer_handle', NULL)
-    );
-    if ($this->data()->ressourceIsActiveSurfer == TRUE && !empty($surferId)) {
-      $currentSurferId = $this->data()->currentSurferId();
+    if ($this->data()->displayMode == 'contacts_and_requests') {
+      $surferId = $this->communityConnector()->getIdByHandle(
+        $this->parameters()->get('surfer_handle', NULL)
+      );
+      if ($this->data()->ressourceIsActiveSurfer == TRUE && !empty($surferId)) {
+        $currentSurferId = $this->data()->currentSurferId();
+        $command = $this->parameters()->get('command', NULL);
+        switch ($command) {
+          case 'remove_contact_request':
+            $this->data()->contactChanges()->deleteContactRequest($currentSurferId, $surferId);
+            break;
+          case 'accept_contact_request':
+            $this->data()->contactChanges()->acceptContactRequest($currentSurferId, $surferId);
+            break;
+          case 'decline_contact_request':
+            $this->data()->contactChanges()->declineContactRequest($currentSurferId, $surferId);
+            break;
+          case 'remove_contact':
+            $this->data()->contactChanges()->deleteContact($currentSurferId, $surferId);
+            break;
+        }
+      }
+    } elseif ($this->data()->displayMode == 'surfers') {
       $command = $this->parameters()->get('command', NULL);
-      switch ($command) {
-        case 'remove_contact_request':
-          $this->data()->contactChanges()->deleteContactRequest($currentSurferId, $surferId);
-          break;
-        case 'accept_contact_request':
-          $this->data()->contactChanges()->acceptContactRequest($currentSurferId, $surferId);
-          break;
-        case 'decline_contact_request':
-          $this->data()->contactChanges()->declineContactRequest($currentSurferId, $surferId);
-          break;
-        case 'remove_contact':
-          $this->data()->contactChanges()->deleteContact($currentSurferId, $surferId);
-          break;
+      $ressource = $this->data()->ressource();
+      if ($command == 'invite_surfer_to_group' && $ressource['type'] == 'group') {
+        $surferId = $this->communityConnector()->getIdByHandle(
+          $this->parameters()->get('surfer_handle', NULL)
+        );
+        if (!empty($surferId) && $surferId != $this->data()->currentSurferId()) {
+          $groupSurferRelation = clone $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array('id' => $ressource['id'], 'surfer_id' => $surferId)
+          );
+          if ($groupSurferRelation['id'] == NULL) {
+            $groupSurferRelation = clone $this->data()->groupSurferRelation();
+            $groupSurferRelation->assign(
+              array(
+                'id' => $ressource['id'],
+                'surfer_id' => $surferId,
+                'surfer_status_pending' => 2
+              )
+            );
+            if ($groupSurferRelation->save()) {
+              $lastChange = $this->data()->lastChange();
+              $lastChange->assign(
+                array(
+                  'ressource' => 'group:membership_invitations:'.'group_'.$ressource['id'],
+                  'time' => time()
+                )
+              );
+              $lastChange->save();
+            }
+          }
+        }
       }
     }
   }
@@ -90,8 +125,9 @@ class ACommunitySurfers extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     $listElement = $parent->appendElement('acommunity-surfers');
+    $this->_performCommands();
+
     if ($this->data()->displayMode == 'contacts_and_requests') {
-      $this->_performCommands();
       $this->data()->initialize();
       foreach ($this->data()->surfers as $groupName => $surfers) {
         $groupElement = $listElement->appendElement(
@@ -176,7 +212,6 @@ class ACommunitySurfers extends ACommunityUiContent {
   protected function _appendSimpleSearchDialogTo($parent) {
     $search = $parent->appendElement('search');
     $dialog = new PapayaUiDialog();
-    $dialog->parameterMethod(PapayaUiDialog::METHOD_GET);
     $options = new PapayaUiDialogOptions();
     $options->useConfirmation = FALSE;
     $options->useToken = FALSE;

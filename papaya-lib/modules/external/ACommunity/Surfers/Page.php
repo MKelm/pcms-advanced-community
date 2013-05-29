@@ -71,6 +71,10 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     'caption_surfers' => array(
       'Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Surfers'
     ),
+    'caption_command_invite_surfer_to_group' => array(
+      'Command Invite Surfer To Group', 'isNoHTML', TRUE, 'input', 200, '', 'Invite to group'
+    ),
+    'Dialog Captions',
     'caption_all' => array(
       'All', 'isNoHTML', TRUE, 'input', 200, '', 'All'
     ),
@@ -80,6 +84,7 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     'caption_dialog_send' => array(
       'Send', 'isNoHTML', TRUE, 'input', 200, '', 'Send'
     ),
+
     'Messages',
     'message_empty_list' => array(
       'No Entries', 'isNoHTML', TRUE, 'input', 200, '', 'No entries.'
@@ -91,7 +96,8 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    * @var array
    */
   protected $_captionNames = array(
-    'caption_surfers', 'caption_all', 'caption_dialog_search', 'caption_dialog_send'
+    'caption_surfers', 'caption_all', 'caption_dialog_search', 'caption_dialog_send',
+    'caption_command_invite_surfer_to_group'
   );
 
   /**
@@ -123,21 +129,35 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     if (isset($definition)) {
       $this->_cacheDefiniton = $definition;
     } elseif (NULL == $this->_cacheDefiniton) {
-      include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
-      $values = new ACommunityCacheIdentifierValues();
-      $definitionValues = array(
-        'acommunity_surfers_page',
-        $this->_displayMode,
-        $values->surferLastRegistrationTime(),
-        $values->lastChangeTime('surfer_names')
-      );
-      $definitionParameters = array(
-        'surfers_search', 'surfers_character', 'surfers_list_page'
-      );
-      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-        new PapayaCacheIdentifierDefinitionValues($definitionValues),
-        new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
-      );
+      $ressource = $this->setRessourceData();
+      $command = $this->surfers()->parameters()->get('command', NULL);
+      if (empty($command)) {
+        include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+        $values = new ACommunityCacheIdentifierValues();
+        $definitionValues = array(
+          'acommunity_surfers_page',
+          $this->_displayMode,
+          $values->surferLastRegistrationTime(),
+          $values->lastChangeTime('surfer_names')
+        );
+        if (isset($ressource['type']) && $ressource['type'] == 'group') {
+          $mode = $this->surfers()->parameters()->get('mode', NULL);
+          if ($mode == 'invite_surfers') {
+            $definitionValues = $values->lastChangeTime(
+              'group:membership_invitations:group_'.$ressource['id']
+            );
+          }
+        }
+        $definitionParameters = array(
+          'surfers_search', 'surfers_character', 'surfers_list_page', 'mode', 'group_handle'
+        );
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
+        );
+      } else {
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+      }
     }
     return $this->_cacheDefiniton;
   }
@@ -164,6 +184,11 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
+    if (!empty($this->parentObj->moduleObj->params['group_handle'])) {
+      return $this->surfers()->data()->ressource(
+        'group', $this, array('group' => 'group_handle'), array('group' => array())
+      );
+    }
     return NULL;
   }
 

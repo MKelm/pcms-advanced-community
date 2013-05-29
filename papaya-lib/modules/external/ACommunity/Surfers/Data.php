@@ -84,12 +84,24 @@ class ACommunitySurfersData extends ACommunityUiContentData {
   protected $_contactChanges = NULL;
 
   /**
+   * Group surfer relation database record
+   * @var object
+   */
+  protected $_groupSurferRelation = NULL;
+
+  /**
+   * Group surfer relations database records
+   * @var object
+   */
+  protected $_groupSurferRelations = NULL;
+
+  /**
    * Set reference parameters expression on construct
    */
   public function __construct() {
     $this->_referenceParametersExpression =
       '(lastaction|registration|contacts|own_contact_requests|contact_requests)_list_page'.
-      '|surfers_search|surfers_character';
+      '|surfers_search|surfers_character|group_handle|mode';
   }
 
   /**
@@ -114,6 +126,44 @@ class ACommunitySurfersData extends ACommunityUiContentData {
     $this->pagingItemsPerPage = (int)$data['limit'];
     $this->showPaging = !isset($data['show_paging']) ? TRUE : (bool)$data['show_paging'];
     parent::setPluginData($data, $captionNames, $messageNames);
+  }
+
+  /**
+  * Access to group surfer relation database record data
+  *
+  * @param ACommunityContentGroupSurferRelation $group
+  * @return ACommunityContentGroupSurferRelation
+  */
+  public function groupSurferRelation(
+           ACommunityContentGroupSurferRelation $groupSurferRelation = NULL
+         ) {
+    if (isset($groupSurferRelation)) {
+      $this->_groupSurferRelation = $groupSurferRelation;
+    } elseif (is_null($this->_groupSurferRelation)) {
+      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relation.php');
+      $this->_groupSurferRelation = new ACommunityContentGroupSurferRelation();
+      $this->_groupSurferRelation->papaya($this->papaya());
+    }
+    return $this->_groupSurferRelation;
+  }
+
+  /**
+  * Access to group surfer relations database records data
+  *
+  * @param ACommunityContentGroupSurferRelations $group
+  * @return ACommunityContentGroupSurferRelations
+  */
+  public function groupSurferRelations(
+           ACommunityContentGroupSurferRelations $groupSurferRelations = NULL
+         ) {
+    if (isset($groupSurferRelations)) {
+      $this->_groupSurferRelations = $groupSurferRelations;
+    } elseif (is_null($this->_groupSurferRelations)) {
+      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relations.php');
+      $this->_groupSurferRelations = new ACommunityContentGroupSurferRelations();
+      $this->_groupSurferRelations->papaya($this->papaya());
+    }
+    return $this->_groupSurferRelations;
   }
 
   /**
@@ -292,6 +342,23 @@ class ACommunitySurfersData extends ACommunityUiContentData {
           $search, $searchFields, FALSE, $orderBy, $this->pagingItemsPerPage, $offset, $patternFirstChar
         );
         $surfers = $this->getSurfer(array_keys($surfers), NULL, $surfers);
+        if ($this->owner->parameters()->get('mode') == 'invite_surfers') {
+          $this->groupSurferRelations()->load(
+            array('id' => $ressource['id'], 'surfer_status_pending' => 2)
+          );
+          $groupSurferRelations = $this->groupSurferRelations()->toArray();
+          foreach ($surfers as $key => $surfer) {
+            if (!isset($groupSurferRelations[$surfer['id']]) &&
+                $surfer['id'] != $this->currentSurferId()) {
+              $reference = clone $this->reference();
+              $reference->setParameters(
+                array('command' => 'invite_surfer_to_group', 'surfer_handle' => $surfer['handle']),
+                $this->owner->parameterGroup()
+              );
+              $surfers[$key]['commands']['invite_surfer_to_group'] = $reference->getRelative();
+            }
+          }
+        }
         $this->pagingItemsAbsCount = $this->owner->communityConnector()->surferAdmin->surfersAbsCount;
         break;
     }
