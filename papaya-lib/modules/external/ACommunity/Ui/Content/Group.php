@@ -65,6 +65,18 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   protected $_deleteLinkCaption = NULL;
 
   /**
+   * Edit link
+   * @var string
+   */
+  protected $_editLink = NULL;
+
+  /**
+   * Edit link caption
+   * @var string
+   */
+  protected $_editLinkCaption = NULL;
+
+  /**
    * Group page link
    * @var string
    */
@@ -82,6 +94,8 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
     'time' => array('_time', 'setTime'),
     'deleteLink' => array('_deleteLink', '_deleteLink'),
     'deleteLinkCaption' => array('_deleteLinkCaption', '_deleteLinkCaption'),
+    'editLink' => array('_editLink', '_editLink'),
+    'editLinkCaption' => array('_editLinkCaption', '_editLinkCaption'),
     'pageLink' => array('_pageLink', '_pageLink')
   );
 
@@ -136,13 +150,22 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
         'page-link' => PapayaUtilStringXml::escapeAttribute($this->pageLink)
       )
     );
-    if (!empty($this->_deleteLink) && !empty($this->_deleteLinkCaption)) {
+    if (isset($this->_deleteLink) || isset($this->_editLink)) {
       $commands = $message->appendElement('commands');
-      $commands->appendElement(
-        'delete',
-        array('caption' => PapayaUtilStringXml::escapeAttribute($this->deleteLinkCaption)),
-        PapayaUtilStringXml::escape($this->deleteLink)
-      );
+      if (isset($this->_editLink)) {
+        $commands->appendElement(
+          'edit',
+          array('caption' => PapayaUtilStringXml::escapeAttribute($this->editLinkCaption)),
+          PapayaUtilStringXml::escape($this->editLink)
+        );
+      }
+      if (isset($this->_deleteLink)) {
+        $commands->appendElement(
+          'delete',
+          array('caption' => PapayaUtilStringXml::escapeAttribute($this->deleteLinkCaption)),
+          PapayaUtilStringXml::escape($this->deleteLink)
+        );
+      }
     }
   }
 }

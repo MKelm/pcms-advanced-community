@@ -69,7 +69,7 @@ class ACommunityGroupsData extends ACommunityUiContentData {
    * A regular expression to filter reference parameters
    * @var string
    */
-  protected $_referenceParametersExpression = 'groups_page';
+  protected $_referenceParametersExpression = 'groups_page|group_handle|command|mode';
 
   /**
    * Contains flag to show groups of the current active surfer only
@@ -246,6 +246,15 @@ class ACommunityGroupsData extends ACommunityUiContentData {
           );
           $links[$id]['delete'] = $reference->getRelative();
         }
+        if ($this->showOwnGroups() && isset($groupSurferRelations[$id]) &&
+            !empty($groupSurferRelations[$id]['is_owner'])) {
+          $reference = clone $this->reference();
+          $reference->setParameters(
+            array('command' => 'edit_group', 'group_handle' => $group['handle']),
+            $this->owner->parameterGroup()
+          );
+          $links[$id]['edit']= $reference->getRelative();
+        }
       }
     }
   }
@@ -308,10 +317,6 @@ class ACommunityGroupsData extends ACommunityUiContentData {
       }
       $listData['data'][$key]['page_link'] = $this->owner->acommunityConnector()
         ->getGroupPageLink($values['handle']);
-      if ($this->showOwnGroups() && !empty($groupSurferRelations[$key])) {
-        $listData['data'][$key]['surfer_status'] =
-          !empty($groupSurferRelations[$key]['is_owner']) ? 'is_owner' : 'is_member';
-      }
     }
     return $listData;
   }

@@ -79,15 +79,17 @@ class ACommunityGroups extends ACommunityUiContent {
           }
         }
         if ($lastChange > 0) {
-          $ressource = $this->data()->ressource();
-          $lastChange = clone $this->data()->lastChange();
-          $lastChange->assign(
-            array(
-              'ressource' => 'groups:'.$ressource['type'].'_'.$ressource['id'],
-              'time' => $lastChange
-            )
-          );
-          $lastChange->save();
+          if ($this->data()->showOwnGroups()) {
+            $ressource = $this->data()->ressource();
+            $lastChange = clone $this->data()->lastChange();
+            $lastChange->assign(
+              array(
+                'ressource' => 'groups:'.$ressource['type'].'_'.$ressource['id'],
+                'time' => $lastChange
+              )
+            );
+            $lastChange->save();
+          }
           $this->data()->lastChange()->assign(
             array('ressource' => 'groups', 'time' => $lastChange)
           );
@@ -128,24 +130,26 @@ class ACommunityGroups extends ACommunityUiContent {
     if ($this->data()->surferIsModerator() || $this->data()->showOwnGroups()) {
       $this->performCommands();
 
-      $command = $this->parameters()->get('command', '');
-      if ($command == 'add_group' && $this->data()->showOwnGroups()) {
+      if ($this->data()->showOwnGroups()) {
+        $command = $this->parameters()->get('command', '');
+        if ($command == 'add_group' || $command == 'edit_group') {
 
-        $dom = new PapayaXmlDocument();
-        $dom->appendElement('dialog');
-        $this->uiContentGroupDialog()->appendTo($dom->documentElement);
-        $removeDialog = $this->parameters()->get('remove_dialog', 0);
-        if (empty($removeDialog)) {
-          $xml = '';
-          foreach ($dom->documentElement->childNodes as $node) {
-            $xml .= $node->ownerDocument->saveXml($node);
-          }
-          $groups->appendXml($xml);
-          $errorMessage = $this->uiContentGroupDialog()->errorMessage();
-          if (!empty($errorMessage)) {
-            $groups->appendElement(
-              'dialog-message', array('type' => 'error'), $errorMessage
-            );
+          $dom = new PapayaXmlDocument();
+          $dom->appendElement('dialog');
+          $this->uiContentGroupDialog()->appendTo($dom->documentElement);
+          $removeDialog = $this->parameters()->get('remove_dialog', 0);
+          if (empty($removeDialog)) {
+            $xml = '';
+            foreach ($dom->documentElement->childNodes as $node) {
+              $xml .= $node->ownerDocument->saveXml($node);
+            }
+            $groups->appendXml($xml);
+            $errorMessage = $this->uiContentGroupDialog()->errorMessage();
+            if (!empty($errorMessage)) {
+              $groups->appendElement(
+                'dialog-message', array('type' => 'error'), $errorMessage
+              );
+            }
           }
         }
       }

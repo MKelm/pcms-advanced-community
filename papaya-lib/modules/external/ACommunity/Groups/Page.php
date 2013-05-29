@@ -62,6 +62,9 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'caption_command_add' => array(
       'Add Group', 'isNoHTML', TRUE, 'input', 200, '', 'Add group'
     ),
+    'caption_command_edit' => array(
+      'Edit Group', 'isNoHTML', TRUE, 'input', 200, '', 'Edit'
+    ),
     'caption_command_delete' => array(
       'Delete Group', 'isNoHTML', TRUE, 'input', 200, '', 'Delete'
     ),
@@ -90,8 +93,8 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'caption_dialog_button_add' => array(
       'Add Button', 'isNoHTML', TRUE, 'input', 200, '', 'Add'
     ),
-    'caption_dialog_button_reset' => array(
-      'Cancel Button', 'isNoHTML', TRUE, 'input', 200, '', 'Cancel'
+    'caption_dialog_button_edit' => array(
+      'Edit Button', 'isNoHTML', TRUE, 'input', 200, '', 'Edit'
     ),
     'Error Messages',
     'message_no_groups' => array(
@@ -135,7 +138,7 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'caption_dialog_is_public', 'caption_dialog_title', 'caption_dialog_description',
     'caption_dialog_image', 'caption_dialog_is_public_yes', 'caption_dialog_is_public_no',
     'caption_dialog_button_add', 'caption_command_delete', 'caption_command_add',
-    'caption_dialog_button_reset', 'caption_dialog_handle'
+    'caption_dialog_button_edit', 'caption_dialog_handle', 'caption_command_edit'
   );
 
   /**
