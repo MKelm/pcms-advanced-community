@@ -85,14 +85,14 @@ class ACommunityGroup extends ACommunityUiContent {
               'surfer_pending_status' => 1
             )
           );
-          if (isset($groupSurferRelation['id'])) {
+          if ($groupSurferRelation['id'] != NULL) {
             if ($groupSurferRelation->delete()) {
               $lastChange = time();
             }
           }
           break;
         case 'accept_membership_invitation':
-          $groupSurferRelation = $this->data()->groupSurferRelation();
+          $groupSurferRelation = clone $this->data()->groupSurferRelation();
           $groupSurferRelation->load(
             array(
               'id' => $ressource['id'],
@@ -100,7 +100,8 @@ class ACommunityGroup extends ACommunityUiContent {
               'surfer_pending_status' => 2
             )
           );
-          if (isset($groupSurferRelation['id'])) {
+          if ($groupSurferRelation['id'] != NULL) {
+            $groupSurferRelation = clone $this->data()->groupSurferRelation();
             $groupSurferRelation->assign(
               array(
                 'id' => $ressource['id'],
@@ -119,7 +120,7 @@ class ACommunityGroup extends ACommunityUiContent {
         $lastChange = clone $this->data()->lastChange();
         $lastChange->assign(
           array(
-            'ressource' => 'group:'.$changeType.':'.$ressource['type'].'_'.$ressource['id'],
+            'ressource' => 'group:'.$changeType.':'.'group_'.$ressource['id'],
             'time' => $lastChange
           )
         );
