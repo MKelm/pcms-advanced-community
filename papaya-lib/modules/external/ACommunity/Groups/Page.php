@@ -75,6 +75,9 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'caption_dialog_is_public_no' => array(
       'Is Public No', 'isNoHTML', TRUE, 'input', 200, '', 'No'
     ),
+    'caption_dialog_handle' => array(
+      'Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'
+    ),
     'caption_dialog_title' => array(
       'Title', 'isNoHTML', TRUE, 'input', 200, '', 'Title'
     ),
@@ -87,9 +90,16 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'caption_dialog_button_add' => array(
       'Add Button', 'isNoHTML', TRUE, 'input', 200, '', 'Add'
     ),
+    'caption_dialog_button_reset' => array(
+      'Cancel Button', 'isNoHTML', TRUE, 'input', 200, '', 'Cancel'
+    ),
     'Error Messages',
     'message_no_groups' => array(
       'No Groups', 'isNoHTML', TRUE, 'input', 200, '', 'No groups.'
+    ),
+    'dialog_error_handle_duplicate' => array(
+      'Dialog Handle Duplicate Error', 'isNoHTML', TRUE, 'input', 200, '',
+      'The group handle exists already, please choose another one.'
     ),
     'message_dialog_input_error' => array(
       'Dialog Input Error', 'isNoHTML', TRUE, 'input', 200, '',
@@ -124,7 +134,8 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
   protected $_captionNames = array(
     'caption_dialog_is_public', 'caption_dialog_title', 'caption_dialog_description',
     'caption_dialog_image', 'caption_dialog_is_public_yes', 'caption_dialog_is_public_no',
-    'caption_dialog_button_add', 'caption_command_delete', 'caption_command_add'
+    'caption_dialog_button_add', 'caption_command_delete', 'caption_command_add',
+    'caption_dialog_button_reset', 'caption_dialog_handle'
   );
 
   /**
@@ -135,7 +146,7 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'message_no_groups', 'message_dialog_input_error', 'message_dialog_error_no_folder',
     'message_dialog_error_upload',
     'message_dialog_error_file_extension', 'message_dialog_error_file_type',
-    'message_dialog_error_media_db'
+    'message_dialog_error_media_db', 'dialog_error_handle_duplicate'
   );
 
   /**

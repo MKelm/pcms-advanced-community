@@ -3,11 +3,15 @@
   <fields>
     <field name="group_id" type="integer" size="4" null="no"/>
     <field name="surfer_id" type="string" size="32" null="no"/>
+    <field name="surfer_status_pending" type="integer" size="2" default="0"/>
   </fields>
   <keys>
     <primary-key>
       <field>group_id</field>
       <field>surfer_id</field>
     </primary-key>
+    <key name="surfer_status_pending">
+      <field>surfer_status_pending</field>
+    </key>
   </keys>
 </table>

@@ -142,15 +142,15 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
            $pageModule, $currentFileName, $outputMode, $pageNamePostfix, $handle = NULL
          ) {
     $ressource = $this->data()->ressource();
-    if (!empty($handle) || !empty($ressource['surfer_handle'])) {
-      $handle = empty($handle) ? $ressource['surfer_handle'] : $handle;
+    if (!empty($handle) || !empty($ressource['handle'])) {
+      $handle = empty($handle) ? $ressource['handle'] : $handle;
       $ressourcePageName = $pageModule->parentObj->escapeForFilename($handle.$pageNamePostfix);
       if ($currentFileName == $ressourcePageName) {
         return FALSE;
       } else {
         return $pageModule->getWebLink(
           $pageModule->parentObj->topic['topic_id'], NULL, $outputMode,
-          array('surfer_handle' => $ressource['surfer_handle']),
+          array($ressource['type'].'_handle' => $ressource['handle']),
           $pageModule->paramName, $ressourcePageName
         );
       }

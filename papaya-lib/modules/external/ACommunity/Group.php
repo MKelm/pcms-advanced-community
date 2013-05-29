@@ -48,23 +48,45 @@ class ACommunityGroup extends ACommunityUiContent {
   }
 
   /**
+   * Perform surfer group commands
+   */
+  protected function _performCommands() {
+    $command = $this->parameters()->get('command', NULL);
+    $groupId = $this->parameters()->get('group_id', NULL);
+  }
+
+  /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
   *
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $page = $parent->appendElement('group-page');
     if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
       $this->data()->initialize();
-      $page->appendElement('title', array(), $this->data()->title);
-      $page->appendElement(
+      $parent->appendElement('title', array(), $this->data()->title);
+      $parent->appendElement(
         'time', array('caption' => $this->data()->captions['time']), $this->data()->time
       );
-      $page->appendXml($this->data()->text);
-      $page->appendElement('image', array(), PapayaUtilStringXml::escape($this->data()->image));
+      $parent->appendXml($this->data()->text);
+      $parent->appendElement('image', array(), PapayaUtilStringXml::escape($this->data()->image));
+
+      $this->_performCommands();
+
+      if (!empty($this->data()->commands)) {
+        $commands = $parent->appendElement('commands');
+        foreach ($this->data()->commands as $name => $command) {
+          $commands->appendElement(
+            str_replace('_', '-', $name),
+            array(
+              'href' => PapayaUtilStringXml::escapeAttribute($command['href']),
+              'caption' => PapayaUtilStringXml::escapeAttribute($command['caption'])
+            )
+          );
+        }
+      }
     } else {
-      $page->appendElement('message', array('type' => 'error'), $this->data()->messages['no_group']);
+      $parent->appendElement('message', array('type' => 'error'), $this->data()->messages['no_group']);
     }
   }
 

@@ -31,8 +31,10 @@ class ACommunityContentGroup extends PapayaDatabaseRecord {
    */
   protected $_fields = array(
 	  'id' => 'group_id',
+    'owner' => 'group_owner',
     'public' => 'group_public',
     'time' => 'group_time',
+    'handle' => 'group_handle',
     'title' => 'group_title',
     'description' => 'group_description',
     'image' => 'group_image'

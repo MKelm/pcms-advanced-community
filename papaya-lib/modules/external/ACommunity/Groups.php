@@ -64,8 +64,8 @@ class ACommunityGroups extends ACommunityUiContent {
    */
   public function performCommands() {
     $command = $this->parameters()->get('command', '');
-    $groupId = $this->parameters()->get('group_id', 0);
-    if ($groupId > 0 && (
+    $groupHandle = $this->parameters()->get('group_handle', NULL);
+    if (!empty($groupHandle) && (
          (!$this->data()->showOwnGroups() && $this->data()->surferIsModerator()) ||
          ($this->data()->showOwnGroups() && $this->data()->surferIsGroupOwner($groupId))
         )) {
@@ -73,7 +73,7 @@ class ACommunityGroups extends ACommunityUiContent {
         $lastChange = 0;
         if ($command == 'delete_group') {
           $group = clone $this->data()->group();
-          $group->load($groupId);
+          $group->load(array('handle' => $groupHandle));
           if ($group->delete()) {
             $lastChange = time();
           }
@@ -116,7 +116,12 @@ class ACommunityGroups extends ACommunityUiContent {
         array('command' => 'add_group'), $this->parameterGroup()
       );
       $commands->appendElement(
-        'add', array('caption' => $this->data()->captions['command_add']), $reference->getRelative()
+        'add',
+        array(
+          'caption' => $this->data()->captions['command_add'],
+          'active' => $this->parameters()->get('command') == 'add_group' ? 1 : 0
+        ),
+        $reference->getRelative()
       );
     }
 

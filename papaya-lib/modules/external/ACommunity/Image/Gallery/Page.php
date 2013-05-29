@@ -99,24 +99,19 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
    * @param string $outputMode
    */
   public function checkURLFileName($currentFileName, $outputMode) {
-    $ressource = $this->setRessourceData();
-    if ($ressource['type'] == 'group') {
-      $pageNamePostfix = '-gallery';
-    } else {
-      $pageNamePostfix = 's-gallery';
-    }
-    return $this->gallery()->checkURLFileName($this, $currentFileName, $outputMode, $pageNamePostfix);
+    $this->setRessourceData();
+    return $this->gallery()->checkURLFileName($this, $currentFileName, $outputMode, 's-gallery');
   }
 
   /**
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $groupId = $this->gallery()->parameters()->get('group_id', 0);
+    $groupHandle = $this->gallery()->parameters()->get('group_handle', NULL);
     return $this->gallery()->data()->ressource(
-      $groupId > 0 ? 'group' : 'surfer',
+      isset($groupHandle) ? 'group' : 'surfer',
       $this,
-      array('surfer' => 'surfer_handle', 'group' => 'group_id')
+      array('surfer' => 'surfer_handle', 'group' => 'group_handle')
     );
   }
 
@@ -216,8 +211,8 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
     $additionalParameters = array();
     if (isset($this->params['surfer_handle'])) {
       $additionalParameters['surfer_handle'] = $this->params['surfer_handle'];
-    } elseif (isset($this->params['group_id'])) {
-      $additionalParameters['group_id'] = $this->params['group_id'];
+    } elseif (isset($this->params['group_handle'])) {
+      $additionalParameters['group_handle'] = $this->params['group_handle'];
     }
     $command = isset($this->params['command']) ? $this->params['command'] : NULL;
     if ($command != 'delete_folder' && isset($this->params['folder_id'])) {

@@ -95,11 +95,17 @@ class ACommunityConnector extends base_connector {
     'group_page_id' => array(
       'Group', 'isNum', TRUE, 'pageid', 30, '', NULL
     ),
+    'surfer_groups_page_id' => array(
+      'Surfer Groups', 'isNum', TRUE, 'pageid', 30, '', NULL
+    ),
     'messages_page_id' => array(
       'Messages / Notifications', 'isNum', TRUE, 'pageid', 30, '', NULL
     ),
     'notification_settings_page_id' => array(
       'Notification Settings', 'isNum', TRUE, 'pageid', 30, '', NULL
+    ),
+    'surfers_page_id' => array(
+      'Surfers', 'isNum', TRUE, 'pageid', 30, 'To invite surfers to a group.', NULL
     ),
     'Parameter Groups',
     'surfer_page_parameter_group' => array(
@@ -152,6 +158,12 @@ class ACommunityConnector extends base_connector {
    * @var ACommunityNotificationHandler
    */
   protected $_notifcationHandler = NULL;
+
+  /**
+   * Group database record to get group ids / handles
+   * @var object
+   */
+  protected $_group = NULL;
 
   /**
   * Get form xml to select a surfer group by callback.
@@ -343,6 +355,24 @@ class ACommunityConnector extends base_connector {
   }
 
   /**
+   * Get link to surfers page
+   *
+   * Used by group page to invite surfers to a group, mode = invite_surfers
+   *
+   * @return string
+   */
+  public function getSurfersPageLink($languageId, $mode = NULL, $groupHandle = NULL) {
+    if ($mode !== NULL && $groupHandle !== NULL) {
+      $parameters = array('mode' => $mode, 'group_handle' => $groupHandle);
+    } else {
+      $parameters = FALSE;
+    }
+    return $this->_getPageLink(
+      'surfers_page_id', NULL, $parameters, 'acss', NULL, NULL, NULL, $languageId
+    );
+  }
+
+  /**
    * Get link to surfer contacts page by surfer id
    *
    * @var string $surferId
@@ -376,15 +406,13 @@ class ACommunityConnector extends base_connector {
       $surferId = $ressourceId;
       $parameters = TRUE;
       $handle = NULL;
-      $pageNamePostfix = 's-gallery';
     } else {
       $surferId = NULL;
-      $parameters = array('group_id' => $ressourceId);
-      $handle = 'group';
-      $pageNamePostfix = '-gallery';
+      $handle = $this->getGroupHandleById($ressourceId);
+      $parameters = array('group_handle' => $handle);
     }
     return $this->_getPageLink(
-      'gallery_page_id', $surferId, $parameters, 'acig', $pageNamePostfix, NULL, $handle
+      'gallery_page_id', $surferId, $parameters, 'acig', 's-gallery', NULL, $handle
     );
   }
 
@@ -414,15 +442,38 @@ class ACommunityConnector extends base_connector {
   /**
    * Get link to group page by group id
    *
-   * @param string $groupId
+   * @param string $groupHandle
    * @return string|NULL
    */
-  public function getGroupPageLink($groupId) {
-    $parameters = array('group_id' => $groupId);
+  public function getGroupPageLink($groupHandle) {
+    $parameters = array('group_handle' => $groupHandle);
     return $this->_getPageLink(
-      'group_page_id', NULL, $parameters, 'acg', '-page', NULL, 'group'
+      'group_page_id', NULL, $parameters, 'acg', 's-page', NULL, $groupHandle
     );
   }
+
+  /**
+   * Get link to groups page by mode / group handle
+   *
+   * @param integer $languageId
+   * @param string $mode
+   * @param string $handle
+   * @return string|NULL
+   */
+  public function getSurferGroupsPageLink($languageId, $mode = NULL, $groupHandle = NULL) {
+    $parameters = array();
+    if (isset($mode)) {
+      $parameters['mode'] = $mode;
+    }
+    if (isset($groupHandle)) {
+      $parameters['group_handle'] = $groupHandle;
+    }
+    return $this->_getPageLink(
+      'surfer_groups_page_id', NULL, $parameters, 'acgs', NULL
+    );
+  }
+
+
 
   /**
    * Get link to notification settings page
@@ -434,6 +485,36 @@ class ACommunityConnector extends base_connector {
     return $this->_getPageLink(
       'notification_settings_page_id', $surferId, FALSE, NULL, 's-notification-settings'
     );
+  }
+
+  /**
+   * Get group id by handle
+   *
+   * @param string $handle
+   * @return integer
+   */
+  public function getGroupIdByHandle($handle) {
+    $group = clone $this->group();
+    $group->load(array('handle' => $handle));
+    if (!empty($group['id'])) {
+      return (int)$group['id'];
+    }
+    return 0;
+  }
+
+  /**
+   * Get group handle by id
+   *
+   * @param integer $id
+   * @return string
+   */
+  public function getGroupHandleById($id) {
+    $group = clone $this->group();
+    $group->load($id);
+    if (!empty($group['handle'])) {
+      return $group['handle'];
+    }
+    return NULL;
   }
 
   /**
@@ -566,5 +647,22 @@ class ACommunityConnector extends base_connector {
       );
     }
     return $this->_pagesConnector;
+  }
+
+  /**
+  * Access to group database record data
+  *
+  * @param ACommunityContentGroup $group
+  * @return ACommunityContentGroup
+  */
+  public function group(ACommunityContentGroup $group = NULL) {
+    if (isset($group)) {
+      $this->_group = $group;
+    } elseif (is_null($this->_group)) {
+      include_once(dirname(__FILE__).'/Content/Group.php');
+      $this->_group = new ACommunityContentGroup();
+      $this->_group->papaya($this->papaya());
+    }
+    return $this->_group;
   }
 }

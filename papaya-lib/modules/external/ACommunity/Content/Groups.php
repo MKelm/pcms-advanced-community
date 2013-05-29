@@ -33,6 +33,7 @@ class ACommunityContentGroups extends PapayaDatabaseRecords {
 	  'id' => 'group_id',
     'public' => 'group_public',
     'time' => 'group_time',
+    'handle' => 'group_handle',
     'title' => 'group_title',
     'image' => 'group_image'
   );

@@ -72,5 +72,4 @@ class ACommunityContentComments extends PapayaDatabaseRecords {
       'votes_score' => PapayaDatabaseInterfaceOrder::DESCENDING
     );
   }
-
 }

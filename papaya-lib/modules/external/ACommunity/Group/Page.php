@@ -53,6 +53,36 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     'caption_time' => array(
       'Exists Sine', 'isNoHTML', TRUE, 'input', 200, '', 'Exists since'
     ),
+    'Command Captions',
+    'caption_command_request_membership' => array(
+      'Request Membership', 'isNoHTML', TRUE, 'input', 200, '', 'Request membership'
+    ),
+    'caption_command_remove_membership_request' => array(
+      'Remove Membership Request', 'isNoHTML', TRUE, 'input', 200, '', 'Remove membership request'
+    ),
+    'caption_command_accept_membership_invitation' => array(
+      'Accept Membership Invitation', 'isNoHTML', TRUE, 'input', 200, '', 'Accept membership invitation'
+    ),
+    'caption_command_invite_surfers' => array(
+      'Invite Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Invite surfers'
+    ),
+
+    'caption_command_membership_request' => array(
+      'Membership Request', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with membership requests mode.', '%d membership request'
+    ),
+    'caption_command_membership_requests' => array(
+      'Membership Requests', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with membership requests mode.', '%d membership requests'
+    ),
+    'caption_command_membership_invitation' => array(
+      'Membership Invitation', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with membership invitations mode.', '%d membership invitation'
+    ),
+    'caption_command_membership_invitations' => array(
+      'Membership Invitations', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with membership requests mode.', '%d membership invitations'
+    ),
     'Message',
     'message_no_group' => array(
       'No Group', 'isNoHTML', TRUE, 'input', 200, '', 'No group selected.'
@@ -87,7 +117,7 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
       if (!empty($ressource)) {
         $command = NULL;
         if (empty($command)) {
-          $currentSurferId = $this->surfer()->data()->currentSurferId();
+          $currentSurferId = $this->group()->data()->currentSurferId();
           include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $currentSurferId;
@@ -115,14 +145,18 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
    */
   public function checkURLFileName($currentFileName, $outputMode) {
     $this->setRessourceData();
-    return $this->surfer()->checkURLFileName($this, $currentFileName, $outputMode, '-page');
+    return $this->group()->checkURLFileName(
+      $this, $currentFileName, $outputMode, 's-page'
+    );
   }
 
   /**
    * Set group ressource data to load corresponding group
    */
   public function setRessourceData() {
-    return $this->group()->data()->ressource('group', $this, array('group' => 'group_id'));
+    return $this->group()->data()->ressource(
+      'group', $this, array('group' => 'group_handle')
+    );
   }
 
   /**
@@ -151,7 +185,12 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     $this->initializeParams();
     $this->setRessourceData();
     $this->setDefaultData();
-    $captionNames = array('caption_time');
+    $captionNames = array(
+      'caption_time', 'caption_command_request_membership', 'caption_command_remove_membership_request',
+      'caption_command_accept_membership_invitation', 'caption_command_invite_surfers',
+      'caption_command_membership_request', 'caption_command_membership_requests',
+      'caption_command_membership_invitation', 'caption_command_membership_invitations'
+    );
     $this->group()->data()->setPluginData($this->data, $captionNames, array('message_no_group'));
     return $this->group()->getXml();
   }

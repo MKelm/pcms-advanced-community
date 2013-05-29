@@ -75,9 +75,7 @@ class ACommunityUiContentGroupDialog
   * @return PapayaUiDialog
   */
   public function createDialog() {
-    $buttonCaption = $this->data()->captions['dialog_button_add'];
-
-    $dialog = new PapayaUiDialogDatabaseSave($this->record());
+    $dialog = new PapayaUiDialogDatabaseSave(clone $this->record());
     $dialog->callbacks()->onBeforeSave = array($this, 'callbackBeforeSaveRecord');
 
     $dialog->papaya($this->papaya());
@@ -102,6 +100,19 @@ class ACommunityUiContentGroupDialog
     if (NULL === $this->parameters()->get('public', NULL)) {
       $dialog->data()->set('public', 1);
     }
+
+    $dialog->fields[] = $field = new PapayaUiDialogFieldInput(
+      $this->data()->captions['dialog_handle'],
+      'handle',
+      200,
+      NULL,
+      new PapayaFilterLogicalAnd(
+        new PapayaFilterText(PapayaFilterText::ALLOW_DIGITS),
+        new PapayaFilterNotEmpty()
+      )
+    );
+    $field->setMandatory(TRUE);
+    $field->setId('dialogGroupHandle');
 
     $dialog->fields[] = $field = new PapayaUiDialogFieldInput(
       $this->data()->captions['dialog_title'],
@@ -133,11 +144,13 @@ class ACommunityUiContentGroupDialog
     $dialog->fields[] = $field = new ACommunityUiDialogFieldInputFile(
       $this->data()->captions['dialog_image'],
       $this->_imageFieldName,
-      TRUE
+      FALSE
     );
     $field->setId('dialogGroupImage');
 
-    $dialog->buttons[] = new PapayaUiDialogButtonSubmit($buttonCaption);
+    $dialog->buttons[] = new PapayaUiDialogButtonSubmit(
+      $this->data()->captions['dialog_button_add']
+    );
 
     $this->callbacks()->onExecuteSuccessful = array($this, 'callbackExecuteSuccessful');
     $this->callbacks()->onExecuteFailed = array($this, 'callbackShowError');
@@ -197,18 +210,24 @@ class ACommunityUiContentGroupDialog
       }
     }
     if (empty($error)) {
-      $record->assign(
-        array(
-          'owner' => $this->data()->currentSurferId(),
-          'time' => time(),
-          'image' => isset($mediaId) ? $mediaId : NULL
-        )
-      );
-      return TRUE;
+      $recordForHandleCheck = clone $this->record();
+      $recordForHandleCheck->load(array('handle' => $record['handle']));
+      if (!empty($recordForHandleCheck['id'])) {
+        $this->_errorMessage = $this->data()->messages['dialog_error_handle_duplicate'];
+      } else {
+        $record->assign(
+          array(
+            'owner' => $this->data()->currentSurferId(),
+            'time' => time(),
+            'image' => isset($mediaId) ? $mediaId : NULL
+          )
+        );
+        return TRUE;
+      }
     } else {
       $this->_errorMessage = $this->data()->messages[$error];
-      return FALSE;
     }
+    return FALSE;
   }
 
   /**
@@ -221,8 +240,8 @@ class ACommunityUiContentGroupDialog
     $ressource = $this->data()->ressource();
 
     $lastChange = time();
-    $owner = $this->data()->surferIsGroupsOwner();
-    if ($owner) {
+    $ownGroups = $this->data()->showOwnGroups();
+    if ($ownGroups) {
       $lastChangeRessource = 'groups:surfer_'.$this->data()->currentSurferId();
       $lastChange = clone $this->data()->lastChange();
       $lastChange->assign(

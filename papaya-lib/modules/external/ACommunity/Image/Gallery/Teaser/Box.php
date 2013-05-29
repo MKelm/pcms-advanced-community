@@ -128,8 +128,8 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
       return $this->teaser()->data()->ressource(
         $ressourceType,
         $this,
-        array('surfer' => array('user_name', 'user_handle', 'surfer_handle'), 'group' => 'group_id'),
-        array('surfer' => array('user_name', 'user_handle', 'surfer_handle'), 'group' => 'group_id')
+        array('surfer' => array('user_name', 'user_handle', 'surfer_handle'), 'group' => 'group_handle'),
+        array('surfer' => array('user_name', 'user_handle', 'surfer_handle'), 'group' => 'group_handle')
       );
     }
     return NULL;

@@ -130,12 +130,12 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $ressourceType = !empty($this->parentObj->moduleObj->params['group_id']) ? 'group' : 'surfer';
+    $ressourceType = isset($this->parentObj->moduleObj->params['group_handle']) ? 'group' : 'surfer';
     return $this->folders()->data()->ressource(
       $ressourceType,
       $this,
-      array('surfer' => 'surfer_handle', 'group' => 'group_id'),
-      array('surfer' => 'surfer_handle', 'group' => 'group_id')
+      array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
+      array('surfer' => 'surfer_handle', 'group' => 'group_handle')
     );
   }
 

@@ -72,6 +72,24 @@ class ACommunityGroupData extends ACommunityUiContentData {
   protected $_group = NULL;
 
   /**
+   * Group surfer relations database records
+   * @var object
+   */
+  protected $_groupSurferRelations = NULL;
+
+  /**
+   * Boolean status of surfer in relation to the current group
+   * @var array
+   */
+  protected $_surferGroupStatus = NULL;
+
+  /**
+   * A regular expression to filter reference parameters by name
+   * @var string
+   */
+  protected $_referenceParametersExpression = 'group_handle';
+
+  /**
    * Set data by plugin object
    *
    * @param array $data
@@ -102,6 +120,47 @@ class ACommunityGroupData extends ACommunityUiContentData {
   }
 
   /**
+  * Access to group surfer relations database records data
+  *
+  * @param ACommunityContentGroupSurferRelations $group
+  * @return ACommunityContentGroupSurferRelations
+  */
+  public function groupSurferRelations(
+           ACommunityContentGroupSurferRelations $groupSurferRelations = NULL
+         ) {
+    if (isset($groupSurferRelations)) {
+      $this->_groupSurferRelations = $groupSurferRelations;
+    } elseif (is_null($this->_groupSurferRelations)) {
+      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relations.php');
+      $this->_groupSurferRelations = new ACommunityContentGroupSurferRelations();
+      $this->_groupSurferRelations->papaya($this->papaya());
+    }
+    return $this->_groupSurferRelations;
+  }
+
+  /**
+   * Status of the current surfer in relation to the selected group
+   *
+   * @return string
+   */
+  public function surferGroupStatus() {
+    if (!isset($this->_surferGroupStatus)) {
+      $this->_surferGroupStatus = array();
+      $ressource = $this->ressource();
+      if (!empty($ressource)) {
+        $this->groupSurferRelations()->load(
+          array('group_id' => $ressource['id'], 'surfer_id' => $this->currentSurferId())
+        );
+        $groupSurferRelations = $this->groupSurferRelations();
+        if (isset($groupSurferRelations[$ressource['id']])) {
+          $this->_surferGroupStatus = $groupSurferRelations[$ressource['id']];
+        }
+      }
+    }
+    return $this->_surferGroupStatus;
+  }
+
+  /**
    * Intitialize surfer data
    */
   public function initialize() {
@@ -122,6 +181,96 @@ class ACommunityGroupData extends ACommunityUiContentData {
           $group['image'], NULL, $this->_imageThumbnailSize, $this->_imageThumbnailSize,
           $this->_imageThumbnailResizeMode
         );
+      }
+
+      $this->commands = array();
+      $surferGroupStatus = $this->surferGroupStatus();
+      $referenceParameters = $this->referenceParameters();
+
+      // load member command links
+      if ($surferGroupStatus == NULL) {
+        // request membership
+        $reference = clone $this->reference();
+        $reference->setParameters(
+          array('command' => 'request_membership'),
+          $this->owner->parameterGroup()
+        );
+        $this->commands['request_membership'] = array(
+          'href' => $reference->getRelative(),
+          'caption' => $this->captions['command_request_membership']
+        );
+      } elseif (!empty($surferGroupStatus['is_pending']) && $surferGroupStatus['is_pending'] == 1) {
+        // remove membership request
+        $reference = clone $this->reference();
+        $reference->setParameters(
+          array('command' => 'remove_membership_request'),
+          $this->owner->parameterGroup()
+        );
+        $this->commands['remove_membership_request'] = array(
+          'href' => $reference->getRelative(),
+          'caption' => $this->captions['command_remove_membership_request']
+        );
+      } elseif (!empty($surferGroupStatus['is_pending']) && $surferGroupStatus['is_pending'] == 2) {
+        // accept membership invitation
+        $reference = clone $this->reference();
+        $reference->setParameters(
+          array('command' => 'accept_membership_invitation'),
+          $this->owner->parameterGroup()
+        );
+        $this->commands['accept_membership_invitation'] = array(
+          'href' => $reference->getRelative(),
+          'caption' => $this->captions['command_accept_membership_invitation']
+        );
+      } elseif (!empty($surferGroupStatus['is_owner'])) {
+        // invite surfers
+        $this->commands['invite_surfers'] = array(
+          'href' => $this->owner->acommunityConnector()
+            ->getSurfersPageLink(
+              $this->languageId, 'invite_surfers', $referenceParameters['group_handle']
+            ),
+          'caption' => $this->captions['command_invite_surfers']
+        );
+      }
+
+      if (!empty($surferGroupStatus['is_owner'])) {
+        // n requests pending
+        $this->groupSurferRelations()->load(
+          array('group_id' => $ressource['id'], 'count' => 1, 'surfer_status_pending' => 1)
+        );
+        $groupSurferRelations = $this->groupSurferRelations();
+        if (!empty($groupSurferRelations[$ressource['id']]['count'])) {
+          $this->commands['membership_requests'] = array(
+            'href' => $this->owner->acommunityConnector()
+              ->getSurferGroupsPageLink(
+                $this->languageId, 'membership_requests', $referenceParameters['group_handle']
+              ),
+            'caption' => sprintf(
+              $groupSurferRelations[$ressource['id']]['count'] > 1 ?
+                $this->captions['command_membership_requests'] :
+                $this->captions['command_membership_request'],
+              $groupSurferRelations[$ressource['id']]['count']
+            )
+          );
+        }
+        // n invites pending
+        $this->groupSurferRelations()->load(
+          array('group_id' => $ressource['id'], 'count' => 1, 'surfer_status_pending' => 2)
+        );
+        $groupSurferRelations = $this->groupSurferRelations();
+        if (!empty($groupSurferRelations[$ressource['id']]['count'])) {
+          $this->commands['membership_invitations'] = array(
+            'href' => $this->owner->acommunityConnector()
+              ->getSurferGroupsPageLink(
+                $this->languageId, 'membership_invitations', $referenceParameters['group_handle']
+              ),
+            'caption' => sprintf(
+              $groupSurferRelations[$ressource['id']]['count'] > 1 ?
+                $this->captions['command_membership_invitations'] :
+                $this->captions['command_membership_invitation'],
+              $groupSurferRelations[$ressource['id']]['count']
+            )
+          );
+        }
       }
     }
   }

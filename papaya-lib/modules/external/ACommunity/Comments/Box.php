@@ -163,7 +163,7 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
         $this,
         array(
           'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
-          'group' => array('group_id')
+          'group' => array('group_handle')
         )
       );
     }

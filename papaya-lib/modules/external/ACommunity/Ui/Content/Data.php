@@ -392,13 +392,17 @@ class ACommunityUiContentData extends PapayaObject {
           break;
         case 'group':
           if (!empty($parameterValue)) {
-            $id = $parameterValue;
-            $this->ressourceParameters($parameterGroup, $parameters);
+            if (!empty($parameterValue)) {
+              $id = $this->owner->acommunityConnector()->getGroupIdByHandle($parameterValue);
+              if (!empty($id)) {
+                $this->ressourceParameters($parameterGroup, $parameters);
+              }
+            }
           }
           break;
       }
       if (!empty($id)) {
-        $this->_ressource = array('type' => $type, 'id' => $id, 'surfer_handle' => $parameterValue);
+        $this->_ressource = array('type' => $type, 'id' => $id, 'handle' => $parameterValue);
       } else {
         $this->_ressource = FALSE;
       }

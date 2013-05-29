@@ -236,12 +236,11 @@ class ACommunityGroupsData extends ACommunityUiContentData {
         if ((!$this->showOwnGroups() && $this->surferIsModerator()) ||
             ($this->showOwnGroups() && isset($groupSurferRelations[$id]) &&
              !empty($groupSurferRelations[$id]['is_owner']))) {
-          $links[$id]['delete'] = NULL;
           $reference = clone $this->reference();
           $reference->setParameters(
             array(
               'command' => 'delete_group',
-              'group_id' => $id
+              'group_handle' => $group['handle']
             ),
             $this->owner->parameterGroup()
           );
@@ -308,7 +307,7 @@ class ACommunityGroupsData extends ACommunityUiContentData {
         );
       }
       $listData['data'][$key]['page_link'] = $this->owner->acommunityConnector()
-        ->getGroupPageLink($values['id']);
+        ->getGroupPageLink($values['handle']);
       if ($this->showOwnGroups() && !empty($groupSurferRelations[$key])) {
         $listData['data'][$key]['surfer_status'] =
           !empty($groupSurferRelations[$key]['is_owner']) ? 'is_owner' : 'is_member';

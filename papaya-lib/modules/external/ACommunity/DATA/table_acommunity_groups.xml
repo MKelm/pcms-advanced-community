@@ -5,6 +5,7 @@
     <field name="group_owner" type="string" size="32" null="no"/>
     <field name="group_public" type="integer" size="2" default="0"/>
     <field name="group_time" type="integer" size="4" null="no"/>
+    <field name="group_handle" type="string" size="200" null="no"/>
     <field name="group_title" type="string" size="200" null="no"/>
     <field name="group_description" type="string" size="65535" null="no"/>
     <field name="group_image" type="string" size="32" null="yes" />
@@ -18,6 +19,9 @@
     </key>
     <key name="group_public">
       <field>group_public</field>
+    </key>
+    <key name="group_handle" unique="yes">
+      <field>group_handle</field>
     </key>
   </keys>
 </table>
