@@ -92,7 +92,7 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
           array('href' => $this->acommunityConnector()->getGalleryPageLink('group', $ressource['id'])),
           $this->data()->captions['add_new_images_link']
         );
-      } else {
+      } elseif (!empty($images)) {
         $galleryImages = $galleryTeaser->appendElement('images');
         foreach ($images as $image) {
           $galleryImages->appendElement('image', array('src' => $image));

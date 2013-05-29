@@ -49,10 +49,10 @@ class ACommunityImageGalleryData extends ACommunityUiContentData {
   protected $_galleries = NULL;
 
   /**
-   * Group database record
+   * Group surfer relations database records
    * @var object
    */
-  protected $_group = NULL;
+  protected $_groupSurferRelations = NULL;
 
   /**
    * Media db edit object
@@ -75,31 +75,34 @@ class ACommunityImageGalleryData extends ACommunityUiContentData {
     if (is_null($this->_surferIsGroupOwner)) {
       $ressource = $this->ressource();
       if ($ressource['type'] == 'group' && !empty($ressource['id'])) {
-        $this->group()->load($ressource['id']);
-        $group = $this->group()->toArray();
-        if (isset($group['owner'])) {
-          $this->_surferIsGroupOwner = $this->currentSurferId() == $group['owner'];
-        }
+        $this->groupSurferRelations()->load(
+          array('group_id' => $ressource['id'], 'surfer_id' => $this->currentSurferId())
+        );
+        $groupSurferRelations = $this->groupSurferRelations();
+        $this->_surferIsGroupOwner = isset($groupSurferRelations[$ressource['id']]) &&
+          !empty($groupSurferRelations[$ressource['id']]['is_owner']);
       }
     }
     return $this->_surferIsGroupOwner;
   }
 
   /**
-  * Access to group database record data
+  * Access to group surfer relations database records data
   *
-  * @param ACommunityContentGroup $group
-  * @return ACommunityContentGroup
+  * @param ACommunityContentGroupSurferRelations $group
+  * @return ACommunityContentGroupSurferRelations
   */
-  public function group(ACommunityContentGroup $group = NULL) {
-    if (isset($group)) {
-      $this->_group = $group;
-    } elseif (is_null($this->_group)) {
-      include_once(dirname(__FILE__).'/../../Content/Group.php');
-      $this->_group = new ACommunityContentGroup();
-      $this->_group->papaya($this->papaya());
+  public function groupSurferRelations(
+           ACommunityContentGroupSurferRelations $groupSurferRelations = NULL
+         ) {
+    if (isset($groupSurferRelations)) {
+      $this->_groupSurferRelations = $groupSurferRelations;
+    } elseif (is_null($this->_groupSurferRelations)) {
+      include_once(dirname(__FILE__).'/../../Content/Group/Surfer/Relations.php');
+      $this->_groupSurferRelations = new ACommunityContentGroupSurferRelations();
+      $this->_groupSurferRelations->papaya($this->papaya());
     }
-    return $this->_group;
+    return $this->_groupSurferRelations;
   }
 
   /**

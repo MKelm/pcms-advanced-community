@@ -30,9 +30,8 @@ require_once(dirname(__FILE__).'/../../Groups/Page.php');
 class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
 
   /**
-   * Contains current groups onwer status
-   * Overwrite this property to get a page with owned groups only
+   * Contains groups of current active surfer only
    * @var boolean
    */
-  protected $_surferIsGroupsOwner = TRUE;
+  protected $_showOwnGroups = TRUE;
 }

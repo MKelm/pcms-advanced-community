@@ -65,31 +65,36 @@ class ACommunityGroups extends ACommunityUiContent {
   public function performCommands() {
     $command = $this->parameters()->get('command', '');
     $groupId = $this->parameters()->get('group_id', 0);
-    if (!empty($command) && $groupId > 0) {
-      $lastChange = 0;
-      if ($command == 'delete_group') {
-        $group = clone $this->data()->group();
-        $group->load($groupId);
-        if ($group->delete()) {
-          $lastChange = time();
+    if ($groupId > 0 && (
+         (!$this->data()->showOwnGroups() && $this->data()->surferIsModerator()) ||
+         ($this->data()->showOwnGroups() && $this->data()->surferIsGroupOwner($groupId))
+        )) {
+      if (!empty($command)) {
+        $lastChange = 0;
+        if ($command == 'delete_group') {
+          $group = clone $this->data()->group();
+          $group->load($groupId);
+          if ($group->delete()) {
+            $lastChange = time();
+          }
         }
-      }
-      if ($lastChange > 0) {
-        $ressource = $this->data()->ressource();
-        $lastChange = clone $this->data()->lastChange();
-        $lastChange->assign(
-          array(
-            'ressource' => 'groups:'.$ressource['type'].'_'.$ressource['id'],
-            'time' => $lastChange
-          )
-        );
-        $lastChange->save();
-        $this->data()->lastChange()->assign(
-          array('ressource' => 'groups', 'time' => $lastChange)
-        );
-        $this->data()->lastChange()->save();
-        $this->parameters()->set('command', '');
-        $this->parameters()->set('group_id', 0);
+        if ($lastChange > 0) {
+          $ressource = $this->data()->ressource();
+          $lastChange = clone $this->data()->lastChange();
+          $lastChange->assign(
+            array(
+              'ressource' => 'groups:'.$ressource['type'].'_'.$ressource['id'],
+              'time' => $lastChange
+            )
+          );
+          $lastChange->save();
+          $this->data()->lastChange()->assign(
+            array('ressource' => 'groups', 'time' => $lastChange)
+          );
+          $this->data()->lastChange()->save();
+          $this->parameters()->set('command', '');
+          $this->parameters()->set('group_id', 0);
+        }
       }
     }
   }
@@ -104,7 +109,7 @@ class ACommunityGroups extends ACommunityUiContent {
     $groups = $parent->appendElement(
       'acommunity-groups', array('groups-per-row' => $this->data()->groupsPerRow)
     );
-    if ($this->data()->surferIsGroupsOwner()) {
+    if ($this->data()->showOwnGroups()) {
       $commands = $groups->appendElement('commands');
       $reference = clone $this->data()->reference();
       $reference->setParameters(
@@ -115,11 +120,11 @@ class ACommunityGroups extends ACommunityUiContent {
       );
     }
 
-    if ($this->data()->surferIsModerator() || $this->data()->surferIsGroupsOwner()) {
+    if ($this->data()->surferIsModerator() || $this->data()->showOwnGroups()) {
       $this->performCommands();
 
       $command = $this->parameters()->get('command', '');
-      if ($command == 'add_group' && $this->data()->surferIsGroupsOwner()) {
+      if ($command == 'add_group' && $this->data()->showOwnGroups()) {
 
         $dom = new PapayaXmlDocument();
         $dom->appendElement('dialog');

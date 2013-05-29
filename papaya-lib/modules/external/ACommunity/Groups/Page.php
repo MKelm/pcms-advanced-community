@@ -151,11 +151,10 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
   protected $_cacheDefiniton = NULL;
 
   /**
-   * Contains current groups onwer status
-   * Overwrite this property to get a page with owned groups only
+   * Show groups of the current active surfer only
    * @var boolean
    */
-  protected $_surferIsGroupsOwner = FALSE;
+  protected $_showOwnGroups = FALSE;
 
   /**
    * Define the cache definition for output.
@@ -173,8 +172,8 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
 
       $this->setRessourceData();
       $moderator = $this->groups()->data()->surferIsModerator();
-      $owner = $this->groups()->data()->surferIsGroupsOwner();
-      if ($owner) {
+      $ownGroups = $this->groups()->data()->showOwnGroups();
+      if ($ownGroups) {
         $lastChangeRessource = 'groups:surfer_'.$this->groups()->data()->currentSurferId();
       } else {
         $lastChangeRessource = 'groups';
@@ -183,7 +182,7 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
       $definitionValues = array(
         'acommunity_groups_page',
         (int)$moderator,
-        (int)$owner,
+        (int)$ownGroups,
         $values->lastChangeTime($lastChangeRessource)
       );
       $definitionParameters = array('groups_page');
@@ -216,7 +215,7 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->groups()->data()->surferIsGroupsOwner($this->_surferIsGroupsOwner);
+    $this->groups()->data()->showOwnGroups($this->_showOwnGroups);
     return $this->groups()->data()->ressource('surfer', $this, NULL, array('surfer' => array()));
   }
 
