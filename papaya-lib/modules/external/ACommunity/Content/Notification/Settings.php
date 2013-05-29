@@ -97,7 +97,7 @@ class ACommunityContentNotificationSettings extends PapayaDatabaseRecords {
         $this->getDatabaseAccess()->getTableName($this->_tableNameTranslations),
         $filter['language_id']
       );
-      return $this->_loadRecords($sql, $parameters, $limit, $offset, 'notification_id');
+      return $this->_loadRecords($sql, $parameters, $limit, $offset, $this->_identifierProperties);
     }
     return FALSE;
   }

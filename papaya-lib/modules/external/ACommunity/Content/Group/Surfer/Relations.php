@@ -72,6 +72,11 @@ class ACommunityContentGroupSurferRelations extends PapayaDatabaseRecords {
   * @param NULL|integer $offset
   */
   public function load(array $filter, $limit = NULL, $offset = NULL) {
+    if (isset($filter['surfer_id'])) {
+      $this->_identifierProperties = array('id');
+    } else {
+      $this->_identifierProperties = array('surfer_id');
+    }
     if (isset($filter['count'])) {
       $fields = " g.group_id, COUNT(g.group_id) AS count,
                   (CASE WHEN gs.surfer_id IS NULL THEN g.group_owner ELSE gs.surfer_id END)
@@ -87,12 +92,13 @@ class ACommunityContentGroupSurferRelations extends PapayaDatabaseRecords {
                    AS current_surfer_id ";
     }
     unset($filter['count']);
+
+    $joinCondition = " ON gs.group_id = g.group_id ";
     if (isset($filter['surfer_id'])) {
-      $joinCondition = sprintf(
-        " ON (gs.group_id = g.group_id AND gs.surfer_id = '%s') ", $filter['surfer_id']
-      );
-    } else {
-      $joinCondition = " USING (group_id) ";
+      $joinCondition .= sprintf(" AND gs.surfer_id = '%s' ", $filter['surfer_id']);
+    }
+    if (isset($filter['surfer_status_pending'])) {
+      $joinCondition .= sprintf(" AND gs.surfer_status_pending = '%d' ", $filter['surfer_status_pending']);
     }
     $databaseAccess = $this->getDatabaseAccess();
     $sql = "SELECT $fields
@@ -105,7 +111,7 @@ class ACommunityContentGroupSurferRelations extends PapayaDatabaseRecords {
       $databaseAccess->getTableName($this->_tableNameGroups),
       $databaseAccess->getTableName($this->_tableNameGroupSurfers)
     );
-    return $this->_loadRecords($sql, $parameters, $limit, $offset, 'id');
+    return $this->_loadRecords($sql, $parameters, $limit, $offset, $this->_identifierProperties);
   }
 
   /**
@@ -127,9 +133,9 @@ class ACommunityContentGroupSurferRelations extends PapayaDatabaseRecords {
       unset($filter['surfer_id']);
       $prefix = " AND ";
     }
-    if (isset($filter['group_id'])) {
-      $result .= sprintf("%s g.group_id = '%d'" , $prefix, $filter['group_id']);
-      unset($filter['group_id']);
+    if (isset($filter['id'])) {
+      $result .= sprintf("%s g.group_id = '%d'" , $prefix, $filter['id']);
+      unset($filter['id']);
       $prefix = " AND ";
     }
     if (isset($filter['surfer_status_pending'])) {

@@ -104,6 +104,6 @@ class ACommunityContentMessageConversations extends PapayaDatabaseRecords {
       $databaseAccess->getTableName($this->_tableNameMessages),
       $filter['current_surfer_id']
     );
-    return $this->_loadRecords($sql, $parameters, $limit, $offset, 'id');
+    return $this->_loadRecords($sql, $parameters, $limit, $offset, $this->_identifierProperties);
   }
 }
