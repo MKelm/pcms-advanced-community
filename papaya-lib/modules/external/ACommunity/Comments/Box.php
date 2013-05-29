@@ -33,13 +33,7 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
    * Parameter prefix name
    * @var string $paramName
    */
-  public $paramName = 'accb';
-
-  /**
-   * Ressource type
-   * @var string
-   */
-  protected $_ressourceType = 'page';
+  public $paramName = 'accs';
 
   /**
    * Edit fields
@@ -148,14 +142,32 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    return $this->comments()->data()->ressource(
-      $this->_ressourceType,
-      $this,
-      array(
-        'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
-        'group' => array('group_id')
-      )
-    );
+    if (!empty($this->parentObj->moduleObj)) {
+      switch (get_class($this->parentObj->moduleObj)) {
+        case 'ACommunitySurferPage':
+        case 'content_showuser':
+          $ressourceType = 'surfer';
+          break;
+        case 'ACommunityImageGalleryPage':
+          $ressourceType = 'image';
+          break;
+        case 'ACommunityGroupPage':
+          $ressourceType = 'group';
+          break;
+        default:
+          $ressourceType = 'page';
+          break;
+      }
+      return $this->comments()->data()->ressource(
+        $ressourceType,
+        $this,
+        array(
+          'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
+          'group' => array('group_id')
+        )
+      );
+    }
+    return NULL;
   }
 
   /**

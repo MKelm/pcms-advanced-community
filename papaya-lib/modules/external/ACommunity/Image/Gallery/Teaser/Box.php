@@ -36,12 +36,6 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
   public $paramName = 'acig';
 
   /**
-   * Ressource type
-   * @var string
-   */
-  protected $_ressourceType = NULL;
-
-  /**
    * Edit fields
    * @var array $editFields
    */
@@ -98,7 +92,8 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
         if (!empty($ressource)) {
           include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
-          $definitionValues[] = $this->teaser()->data()->ressourceIsActiveSurfer;
+          $definitionValues[] = (int)$this->teaser()->data()->ressourceIsActiveSurfer;
+          $definitionValues[] = (int)$this->teaser()->data()->surferIsGroupOwner();
           $definitionValues[] = $ressource['type'];
           $definitionValues[] = $ressource['id'];
           if ($ressource['type'] == 'surfer') {
@@ -120,12 +115,24 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    return $this->teaser()->data()->ressource(
-      $this->_ressourceType,
-      $this,
-      array('surfer' => 'surfer_handle', 'group' => 'group_id'),
-      array('surfer' => 'surfer_handle', 'group' => 'group_id')
-    );
+    if (!empty($this->parentObj->moduleObj)) {
+      switch (get_class($this->parentObj->moduleObj)) {
+        case 'ACommunitySurferPage':
+        case 'content_showuser':
+          $ressourceType = 'surfer';
+          break;
+        case 'ACommunityGroupPage':
+          $ressourceType = 'group';
+          break;
+      }
+      return $this->teaser()->data()->ressource(
+        $ressourceType,
+        $this,
+        array('surfer' => array('user_name', 'user_handle', 'surfer_handle'), 'group' => 'group_id'),
+        array('surfer' => array('user_name', 'user_handle', 'surfer_handle'), 'group' => 'group_id')
+      );
+    }
+    return NULL;
   }
 
   /**
