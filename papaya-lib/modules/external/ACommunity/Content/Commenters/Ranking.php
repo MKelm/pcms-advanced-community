@@ -74,6 +74,6 @@ class ACommunityContentCommentersRanking extends PapayaDatabaseRecords {
     $parameters = array(
       $databaseAccess->getTableName($this->_tableName)
     );
-    return $this->_loadRecords($sql, $parameters, $limit, $offset, 'surfer_id');
+    return $this->_loadRecords($sql, $parameters, $limit, $offset, $this->_identifierProperties);
   }
 }
