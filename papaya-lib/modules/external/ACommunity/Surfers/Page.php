@@ -105,6 +105,9 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     'Messages',
     'message_empty_list' => array(
       'No Entries', 'isNoHTML', TRUE, 'input', 200, '', 'No entries.'
+    ),
+    'message_failed_to_execute_command' => array(
+      'Failed To Execute Command', 'isNoHTML', TRUE, 'input', 200, '', 'Failed to execute command.'
     )
   );
 
@@ -123,7 +126,7 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    * Names of message data
    * @var array
    */
-  protected $_messageNames = array('message_empty_list');
+  protected $_messageNames = array('message_empty_list', 'message_failed_to_execute_command');
 
   /**
    * Surfers object

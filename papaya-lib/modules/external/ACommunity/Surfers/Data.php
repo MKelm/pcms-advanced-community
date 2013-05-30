@@ -84,10 +84,10 @@ class ACommunitySurfersData extends ACommunityUiContentData {
   protected $_contactChanges = NULL;
 
   /**
-   * Group surfer relation database record
-   * @var object
+   * Perform changes to group surfers
+   * @var ACommunityGroupSurferChanges
    */
-  protected $_groupSurferRelation = NULL;
+  protected $_groupSurferChanges = NULL;
 
   /**
    * Group surfer relations database records
@@ -126,25 +126,6 @@ class ACommunitySurfersData extends ACommunityUiContentData {
     $this->pagingItemsPerPage = (int)$data['limit'];
     $this->showPaging = !isset($data['show_paging']) ? TRUE : (bool)$data['show_paging'];
     parent::setPluginData($data, $captionNames, $messageNames);
-  }
-
-  /**
-  * Access to group surfer relation database record data
-  *
-  * @param ACommunityContentGroupSurferRelation $group
-  * @return ACommunityContentGroupSurferRelation
-  */
-  public function groupSurferRelation(
-           ACommunityContentGroupSurferRelation $groupSurferRelation = NULL
-         ) {
-    if (isset($groupSurferRelation)) {
-      $this->_groupSurferRelation = $groupSurferRelation;
-    } elseif (is_null($this->_groupSurferRelation)) {
-      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relation.php');
-      $this->_groupSurferRelation = new ACommunityContentGroupSurferRelation();
-      $this->_groupSurferRelation->papaya($this->papaya());
-    }
-    return $this->_groupSurferRelation;
   }
 
   /**
@@ -499,12 +480,29 @@ class ACommunitySurfersData extends ACommunityUiContentData {
   */
   public function contactChanges(ACommunitySurferContactChanges $changes = NULL) {
     if (isset($changes)) {
-      $this->_changes = $changes;
-    } elseif (is_null($this->_changes)) {
+      $this->_contactChanges = $changes;
+    } elseif (is_null($this->_contactChanges)) {
       include_once(dirname(__FILE__).'/../Surfer/Contact/Changes.php');
-      $this->_changes = new ACommunitySurferContactChanges();
-      $this->_changes->papaya($this->papaya());
+      $this->_contactChanges = new ACommunitySurferContactChanges();
+      $this->_contactChanges->papaya($this->papaya());
     }
-    return $this->_changes;
+    return $this->_contactChanges;
+  }
+
+  /**
+  * Perform changes to group surfers
+  *
+  * @param ACommunityGroupSurferChanges $changes
+  * @return ACommunityGroupSurferChanges
+  */
+  public function groupSurferChanges(ACommunityGroupSurferChanges $changes = NULL) {
+    if (isset($changes)) {
+      $this->_groupSurferChanges = $changes;
+    } elseif (is_null($this->_groupSurferChanges)) {
+      include_once(dirname(__FILE__).'/../Group/Surfer/Changes.php');
+      $this->_groupSurferChanges = new ACommunityGroupSurferChanges();
+      $this->_groupSurferChanges->papaya($this->papaya());
+    }
+    return $this->_groupSurferChanges;
   }
 }
