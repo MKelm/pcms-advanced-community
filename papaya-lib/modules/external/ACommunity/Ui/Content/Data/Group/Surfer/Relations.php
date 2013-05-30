@@ -74,7 +74,7 @@ class ACommunityUiContentDataGroupSurferRelations extends ACommunityUiContentDat
    * @param integer $value of status
    * @return bolean
    */
-  public function surferHasStatus($groupId, $name, $value) {
+  public function surferHasStatus($groupId, $name = NULL, $value = NULL) {
     if (is_null($groupId)) {
       $ressource = $this->ressource();
       if (!empty($ressource) && $ressource['type'] == 'group') {
@@ -90,8 +90,10 @@ class ACommunityUiContentDataGroupSurferRelations extends ACommunityUiContentDat
         $this->_surferGroupStatus[$groupId] = FALSE;
       }
     }
-    if (isset($this->_surferGroupStatus[$groupId][$name])) {
+    if (isset($name) && isset($value) && isset($this->_surferGroupStatus[$groupId][$name])) {
       return $this->_surferGroupStatus[$groupId][$name] == $value;
+    } elseif (!empty($this->_surferGroupStatus[$groupId])) {
+      return TRUE;
     }
     return FALSE;
   }
