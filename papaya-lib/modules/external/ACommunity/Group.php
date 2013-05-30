@@ -87,14 +87,13 @@ class ACommunityGroup extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
+    if ($this->data()->surferHasGroupAccess()) {
       $result = $this->_performCommands();
       if ($result === FALSE) {
         $parent->appendElement(
           'message', array('type' => 'error'), $this->data()->messages['failed_to_execute_command']
         );
       }
-
       if (FALSE !== $this->data()->initialize()) {
         $parent->appendElement('title', array(), $this->data()->title);
         $parent->appendElement(
@@ -115,12 +114,11 @@ class ACommunityGroup extends ACommunityUiContent {
             );
           }
         }
-      } else {
-        $parent->appendElement('message', array('type' => 'error'), $this->data()->messages['private_group']);
+        return TRUE;
       }
-    } else {
-      $parent->appendElement('message', array('type' => 'error'), $this->data()->messages['no_group']);
     }
+    $parent->appendElement('message', array('type' => 'error'), $this->data()->messages['access_denied']);
+    return FALSE;
   }
 
 }
