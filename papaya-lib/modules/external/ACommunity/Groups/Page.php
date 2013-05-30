@@ -55,78 +55,13 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'groups_per_page' => array(
       'Groups Per Page', 'isNum', TRUE, 'input', 30, '', 12
     ),
-    'group_images_folder' => array(
-      'Group Images Folder', 'isNum', TRUE, 'mediafolder', 30, '', NULL
-    ),
     'Command Captions',
-    'caption_command_add' => array(
-      'Add Group', 'isNoHTML', TRUE, 'input', 200, '', 'Add group'
-    ),
-    'caption_command_edit' => array(
-      'Edit Group', 'isNoHTML', TRUE, 'input', 200, '', 'Edit'
-    ),
     'caption_command_delete' => array(
       'Delete Group', 'isNoHTML', TRUE, 'input', 200, '', 'Delete'
-    ),
-    'Dialog Captions',
-    'caption_dialog_is_public' => array(
-      'Is Public', 'isNoHTML', TRUE, 'input', 200, '', 'Is public?'
-    ),
-    'caption_dialog_is_public_yes' => array(
-      'Is Public Yes', 'isNoHTML', TRUE, 'input', 200, '', 'Yes'
-    ),
-    'caption_dialog_is_public_no' => array(
-      'Is Public No', 'isNoHTML', TRUE, 'input', 200, '', 'No'
-    ),
-    'caption_dialog_handle' => array(
-      'Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'
-    ),
-    'caption_dialog_title' => array(
-      'Title', 'isNoHTML', TRUE, 'input', 200, '', 'Title'
-    ),
-    'caption_dialog_description' => array(
-      'Description', 'isNoHTML', TRUE, 'input', 200, '', 'Description'
-    ),
-    'caption_dialog_image' => array(
-      'Image', 'isNoHTML', TRUE, 'input', 200, '', 'Image'
-    ),
-    'caption_dialog_button_add' => array(
-      'Add Button', 'isNoHTML', TRUE, 'input', 200, '', 'Add'
-    ),
-    'caption_dialog_button_edit' => array(
-      'Edit Button', 'isNoHTML', TRUE, 'input', 200, '', 'Edit'
     ),
     'Error Messages',
     'message_no_groups' => array(
       'No Groups', 'isNoHTML', TRUE, 'input', 200, '', 'No groups.'
-    ),
-    'dialog_error_handle_duplicate' => array(
-      'Dialog Handle Duplicate Error', 'isNoHTML', TRUE, 'input', 200, '',
-      'The group handle exists already, please choose another one.'
-    ),
-    'message_dialog_input_error' => array(
-      'Dialog Input Error', 'isNoHTML', TRUE, 'input', 200, '',
-      'Invalid input. Please check the field(s) "%s".'
-    ),
-    'message_dialog_error_no_folder' => array(
-      'Dialog No Folder Error', 'isNoHTML', TRUE, 'input', 200, '',
-      'Could not find images folder.'
-    ),
-    'message_dialog_error_upload' => array(
-      'Dialog Upload Error', 'isNoHTML', TRUE, 'input', 200, '',
-      'Upload error.'
-    ),
-    'message_dialog_error_file_extension' => array(
-      'Dialog File Extension Error', 'isNoHTML', TRUE, 'input', 200, '',
-      'Wrong file extension.'
-    ),
-    'message_dialog_error_file_type' => array(
-      'Dialog File Type Error', 'isNoHTML', TRUE, 'input', 200, '',
-      'Wrong file type.'
-    ),
-    'message_dialog_error_media_db' => array(
-      'Dialog Media DB Error', 'isNoHTML', TRUE, 'input', 200, '',
-      'Could not comple upload process in Media DB.'
     )
   );
 
