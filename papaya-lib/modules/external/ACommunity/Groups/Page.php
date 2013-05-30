@@ -106,34 +106,38 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     if (isset($definition)) {
       $this->_cacheDefiniton = $definition;
     } elseif (NULL == $this->_cacheDefiniton) {
-      include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
-      $values = new ACommunityCacheIdentifierValues();
-
-      $this->setRessourceData();
-      $moderator = $this->groups()->data()->surferIsModerator();
-      $ownGroups = $this->groups()->data()->showOwnGroups();
-      if ($ownGroups) {
-        if ($this->groups()->parameters()->get('mode') == 'invitations') {
-          $lastChangeRessource = 'groups:membership_invitations:surfer_'.
-            $this->groups()->data()->currentSurferId();
+      $command = $this->groups()->parameters()->get('command', NULL);
+      if (empty($command)) {
+        include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+        $values = new ACommunityCacheIdentifierValues();
+        $ressource = $this->setRessourceData();
+        $moderator = $this->groups()->data()->surferIsModerator();
+        $ownGroups = $this->groups()->data()->showOwnGroups();
+        if ($ownGroups) {
+          if ($this->groups()->parameters()->get('mode') == 'invitations') {
+            $lastChangeRessource = 'groups:membership_invitations:surfer_'.
+              $this->groups()->data()->currentSurferId();
+          } else {
+            $lastChangeRessource = 'groups:surfer_'.$this->groups()->data()->currentSurferId();
+          }
         } else {
-          $lastChangeRessource = 'groups:surfer_'.$this->groups()->data()->currentSurferId();
+          $lastChangeRessource = 'groups';
         }
+        $definitionValues = array(
+          'acommunity_groups_page', (int)$moderator, $values->lastChangeTime($lastChangeRessource)
+        );
+        if (!empty($ressource)) {
+          $definitionValues[] = $ressource['type'];
+          $definitionValues[] = $ressource['id'];
+        }
+        $definitionParameters = array('groups_page', 'mode');
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
+        );
       } else {
-        $lastChangeRessource = 'groups';
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       }
-
-      $definitionValues = array(
-        'acommunity_groups_page',
-        (int)$moderator,
-        (int)$ownGroups,
-        $values->lastChangeTime($lastChangeRessource)
-      );
-      $definitionParameters = array('groups_page');
-      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-        new PapayaCacheIdentifierDefinitionValues($definitionValues),
-        new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
-      );
     }
     return $this->_cacheDefiniton;
   }
@@ -160,7 +164,10 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
    */
   public function setRessourceData() {
     $this->groups()->data()->showOwnGroups($this->_showOwnGroups);
-    return $this->groups()->data()->ressource('surfer', $this, NULL, array('surfer' => array()));
+    if ($this->_showOwnGroups) {
+      return $this->groups()->data()->ressource('surfer', $this, NULL, array('surfer' => array()));
+    }
+    return NULL;
   }
 
   /**

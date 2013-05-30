@@ -65,7 +65,7 @@ class ACommunityGroups extends ACommunityUiContent {
   public function performCommands() {
     $command = $this->parameters()->get('command', '');
     $groupHandle = $this->parameters()->get('group_handle', NULL);
-    $lastChange = 0;
+    $lastChangeTime = 0;
     $groupId = $this->acommunityConnector()->getGroupIdByHandle($groupHandle);
 
     if ($command == 'delete_group' && !empty($groupId) && (
@@ -75,7 +75,7 @@ class ACommunityGroups extends ACommunityUiContent {
       $group = clone $this->data()->group();
       $group->load($groupId);
       if ($group->delete()) {
-        $lastChange = time();
+        $lastChangeTime = time();
       }
 
     } elseif (($command == 'accept_invitation' || $command == 'decline_invitation') &&
@@ -97,7 +97,7 @@ class ACommunityGroups extends ACommunityUiContent {
               )
             );
             if ($groupSurferRelation->save()) {
-              $lastChange = time();
+              $lastChangeTime = time();
             }
           }
           break;
@@ -108,14 +108,14 @@ class ACommunityGroups extends ACommunityUiContent {
           );
           if ($groupSurferRelation['surfer_status_pending'] == 2) {
             if ($groupSurferRelation->delete()) {
-              $lastChange = time();
+              $lastChangeTime = time();
             }
           }
           break;
       }
     }
 
-    if ($lastChange > 0) {
+    if ($lastChangeTime > 0) {
       if ($this->data()->showOwnGroups()) {
         $ressource = $this->data()->ressource();
         if ($command == 'accept_invitation' || $command == 'decline_invitation') {
@@ -123,7 +123,7 @@ class ACommunityGroups extends ACommunityUiContent {
           $lastChange->assign(
             array(
               'ressource' => 'groups:membership_invitations:'.$ressource['type'].'_'.$ressource['id'],
-              'time' => $lastChange
+              'time' => $lastChangeTime
             )
           );
           $lastChange->save();
@@ -131,7 +131,7 @@ class ACommunityGroups extends ACommunityUiContent {
           $lastChange->assign(
             array(
               'ressource' => 'group:membership_invitations:group_'.$groupId,
-              'time' => $lastChange
+              'time' => $lastChangeTime
             )
           );
           $lastChange->save();
@@ -141,7 +141,7 @@ class ACommunityGroups extends ACommunityUiContent {
           $lastChange->assign(
             array(
               'ressource' => 'group:memberships:group_'.$groupId,
-              'time' => $lastChange
+              'time' => $lastChangeTime
             )
           );
           $lastChange->save();
@@ -150,14 +150,14 @@ class ACommunityGroups extends ACommunityUiContent {
         $lastChange->assign(
           array(
             'ressource' => 'groups:'.$ressource['type'].'_'.$ressource['id'],
-            'time' => $lastChange
+            'time' => $lastChangeTime
           )
         );
         $lastChange->save();
       }
       if ($copmmand == 'delete_group') {
         $this->data()->lastChange()->assign(
-          array('ressource' => 'groups', 'time' => $lastChange)
+          array('ressource' => 'groups', 'time' => $lastChangeTime)
         );
         $this->data()->lastChange()->save();
       }
@@ -176,6 +176,36 @@ class ACommunityGroups extends ACommunityUiContent {
     $groups = $parent->appendElement(
       'acommunity-groups', array('groups-per-row' => $this->data()->groupsPerRow)
     );
+    $removeDialog = 0;
+    if ($this->data()->surferIsModerator() || $this->data()->showOwnGroups()) {
+      $this->performCommands();
+
+      if ($this->data()->showOwnGroups()) {
+        $command = $this->parameters()->get('command', '');
+        if ($command == 'add_group' || $command == 'edit_group') {
+
+          $dom = new PapayaXmlDocument();
+          $dom->appendElement('dialog');
+          $this->uiContentGroupDialog()->appendTo($dom->documentElement);
+          $removeDialog = $this->parameters()->get('remove_dialog', 0);
+          if (empty($removeDialog)) {
+            $xml = '';
+            foreach ($dom->documentElement->childNodes as $node) {
+              $xml .= $node->ownerDocument->saveXml($node);
+            }
+            $groups->appendXml($xml);
+            $errorMessage = $this->uiContentGroupDialog()->errorMessage();
+            if (!empty($errorMessage)) {
+              $groups->appendElement(
+                'dialog-message', array('type' => 'error'), $errorMessage
+              );
+            }
+          }
+        }
+      }
+    }
+    $this->uiGroupsList()->appendTo($groups);
+
     if ($this->data()->showOwnGroups()) {
       $mode = $this->parameters()->get('mode', NULL);
       $modes = $groups->appendElement('modes');
@@ -205,6 +235,7 @@ class ACommunityGroups extends ACommunityUiContent {
       );
       // commands
       if ($mode === NULL || $mode == 'groups') {
+        $command = $this->parameters()->get('command');
         $commands = $groups->appendElement('commands');
         $reference = clone $this->data()->reference();
         $reference->setParameters(
@@ -214,41 +245,23 @@ class ACommunityGroups extends ACommunityUiContent {
           'add',
           array(
             'caption' => $this->data()->captions['command_add'],
-            'active' => $this->parameters()->get('command') == 'add_group' ? 1 : 0
+            'active' => ($command == 'add_group' &&
+            $removeDialog == 0) ? 1 : 0
           ),
           $reference->getRelative()
         );
-      }
-    }
-
-    if ($this->data()->surferIsModerator() || $this->data()->showOwnGroups()) {
-      $this->performCommands();
-
-      if ($this->data()->showOwnGroups()) {
-        $command = $this->parameters()->get('command', '');
-        if ($command == 'add_group' || $command == 'edit_group') {
-
-          $dom = new PapayaXmlDocument();
-          $dom->appendElement('dialog');
-          $this->uiContentGroupDialog()->appendTo($dom->documentElement);
-          $removeDialog = $this->parameters()->get('remove_dialog', 0);
-          if (empty($removeDialog)) {
-            $xml = '';
-            foreach ($dom->documentElement->childNodes as $node) {
-              $xml .= $node->ownerDocument->saveXml($node);
-            }
-            $groups->appendXml($xml);
-            $errorMessage = $this->uiContentGroupDialog()->errorMessage();
-            if (!empty($errorMessage)) {
-              $groups->appendElement(
-                'dialog-message', array('type' => 'error'), $errorMessage
-              );
-            }
-          }
+        if ($command == 'edit_group' && $removeDialog == 0) {
+          $commands->appendElement(
+            'edit',
+            array(
+              'caption' => $this->data()->captions['command_edit_group'],
+              'active' => 1
+            ),
+            '#'
+          );
         }
       }
     }
-    $this->uiGroupsList()->appendTo($groups);
   }
 
   /**

@@ -73,10 +73,13 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
       'Decline Invitation', 'isNoHTML', TRUE, 'input', 200, '', 'Decline'
     ),
     'caption_command_add' => array(
-      'Add Group', 'isNoHTML', TRUE, 'input', 200, '', 'Add group'
+      'Navigation Add Group', 'isNoHTML', TRUE, 'input', 200, '', 'Add group'
     ),
     'caption_command_edit' => array(
       'Edit Group', 'isNoHTML', TRUE, 'input', 200, '', 'Edit'
+    ),
+    'caption_command_edit_group' => array(
+      'Navigation Edit Group', 'isNoHTML', TRUE, 'input', 200, '', 'Edit group'
     ),
     'caption_command_delete' => array(
       'Delete Group', 'isNoHTML', TRUE, 'input', 200, '', 'Delete'
@@ -155,7 +158,7 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'caption_dialog_image', 'caption_dialog_is_public_yes', 'caption_dialog_is_public_no',
     'caption_dialog_button_add', 'caption_command_delete', 'caption_command_add',
     'caption_dialog_button_edit', 'caption_dialog_handle', 'caption_command_edit',
-    'caption_mode_groups', 'caption_mode_invitations',
+    'caption_mode_groups', 'caption_mode_invitations', 'caption_command_edit_group',
     'caption_command_accept_invitation', 'caption_command_decline_invitation'
   );
 
