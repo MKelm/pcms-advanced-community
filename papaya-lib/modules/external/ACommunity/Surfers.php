@@ -81,36 +81,123 @@ class ACommunitySurfers extends ACommunityUiContent {
         }
       }
     } elseif ($this->data()->displayMode == 'surfers') {
-      $command = $this->parameters()->get('command', NULL);
       $ressource = $this->data()->ressource();
-      if ($command == 'invite_surfer_to_group' && $ressource['type'] == 'group') {
-        $surferId = $this->communityConnector()->getIdByHandle(
-          $this->parameters()->get('surfer_handle', NULL)
+      $command = $this->parameters()->get('command', NULL);
+      if ($ressource['type'] == 'group' && !empty($command)) {
+        $groupSurferRelations = clone $this->data()->groupSurferRelations();
+        $groupSurferRelations->load(
+          array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
         );
-        if (!empty($surferId) && $surferId != $this->data()->currentSurferId()) {
-          $groupSurferRelation = clone $this->data()->groupSurferRelation();
-          $groupSurferRelation->load(
-            array('id' => $ressource['id'], 'surfer_id' => $surferId)
+        $groupSurferRelation = reset($groupSurferRelations->toArray());
+        if (!empty($groupSurferRelation['is_owner'])) {
+          $surferId = $this->communityConnector()->getIdByHandle(
+            $this->parameters()->get('surfer_handle', NULL)
           );
-          if ($groupSurferRelation['id'] == NULL) {
-            $groupSurferRelation = clone $this->data()->groupSurferRelation();
-            $groupSurferRelation->assign(
-              array(
-                'id' => $ressource['id'],
-                'surfer_id' => $surferId,
-                'surfer_status_pending' => 2
-              )
-            );
-            if ($groupSurferRelation->save()) {
-              $lastChange = $this->data()->lastChange();
-              $lastChange->assign(
-                array(
-                  'ressource' => 'group:membership_invitations:'.'group_'.$ressource['id'],
-                  'time' => time()
-                )
-              );
-              $lastChange->save();
-            }
+          switch ($command) {
+            case 'invite':
+              if (!empty($surferId) && $surferId != $this->data()->currentSurferId()) {
+                $groupSurferRelation = clone $this->data()->groupSurferRelation();
+                $groupSurferRelation->load(
+                  array('id' => $ressource['id'], 'surfer_id' => $surferId)
+                );
+                if ($groupSurferRelation['id'] == NULL) {
+                  $groupSurferRelation = clone $this->data()->groupSurferRelation();
+                  $groupSurferRelation->assign(
+                    array(
+                      'id' => $ressource['id'],
+                      'surfer_id' => $surferId,
+                      'surfer_status_pending' => 2
+                    )
+                  );
+                  if ($groupSurferRelation->save()) {
+                    $lastChange = $this->data()->lastChange();
+                    $lastChange->assign(
+                      array(
+                        'ressource' => 'group:membership_invitations:'.'group_'.$ressource['id'],
+                        'time' => time()
+                      )
+                    );
+                    $lastChange->save();
+                  }
+                }
+              }
+              break;
+            case 'remove_invitation':
+              if (!empty($surferId)) {
+                $groupSurferRelation = clone $this->data()->groupSurferRelation();
+                $groupSurferRelation->load(
+                  array('id' => $ressource['id'], 'surfer_id' => $surferId, 'surfer_status_pending' => 2)
+                );
+                if ($groupSurferRelation['id'] > 0) {
+                  if ($groupSurferRelation->delete()) {
+                    $lastChange = $this->data()->lastChange();
+                    $lastChange->assign(
+                      array(
+                        'ressource' => 'group:membership_invitations:'.'group_'.$ressource['id'],
+                        'time' => time()
+                      )
+                    );
+                    $lastChange->save();
+                  }
+                }
+              }
+              break;
+            case 'accept_request':
+              if (!empty($surferId)) {
+                $groupSurferRelation = clone $this->data()->groupSurferRelation();
+                $groupSurferRelation->load(
+                  array('id' => $ressource['id'], 'surfer_id' => $surferId, 'surfer_status_pending' => 1)
+                );
+                if ($groupSurferRelation['id'] > 0) {
+                  $groupSurferRelation = clone $this->data()->groupSurferRelation();
+                  $groupSurferRelation->assign(
+                    array(
+                      'id' => $ressource['id'],
+                      'surfer_id' => $surferId,
+                      'surfer_status_pending' => 0
+                    )
+                  );
+                  if ($groupSurferRelation->save()) {
+                    $lastChange = clone $this->data()->lastChange();
+                    $lastChange->assign(
+                      array(
+                        'ressource' => 'group:membership_requests:'.'group_'.$ressource['id'],
+                        'time' => time()
+                      )
+                    );
+                    $lastChange->save();
+                    $lastChange = $this->data()->lastChange();
+                    $lastChange->assign(
+                      array(
+                        'ressource' => 'group:memberships:'.'group_'.$ressource['id'],
+                        'time' => time()
+                      )
+                    );
+                    $lastChange->save();
+                  }
+                }
+              }
+              break;
+            case 'decline_invitation':
+              if (!empty($surferId)) {
+                $groupSurferRelation = clone $this->data()->groupSurferRelation();
+                $groupSurferRelation->load(
+                  array('id' => $ressource['id'], 'surfer_id' => $surferId, 'surfer_status_pending' => 1)
+                );
+                if ($groupSurferRelation['id'] > 0) {
+                  if ($groupSurferRelation->delete()) {
+                    $lastChange = $this->data()->lastChange();
+                    $lastChange->assign(
+                      array(
+                        'ressource' => 'group:membership_requests:'.'group_'.$ressource['id'],
+                        'time' => time()
+                      )
+                    );
+                    $lastChange->save();
+                  }
+                }
+              }
+              break;
           }
         }
       }

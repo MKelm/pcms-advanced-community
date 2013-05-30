@@ -71,8 +71,21 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     'caption_surfers' => array(
       'Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Surfers'
     ),
-    'caption_command_invite_surfer_to_group' => array(
-      'Command Invite Surfer To Group', 'isNoHTML', TRUE, 'input', 200, '', 'Invite to group'
+    'caption_command_invite' => array(
+      'Command Invite', 'isNoHTML', TRUE, 'input', 200, 'In invite surfers mode for groups.',
+      'Invite to group'
+    ),
+    'caption_command_remove_invitation' => array(
+      'Command Remove Invitation', 'isNoHTML', TRUE, 'input', 200,
+      'In membership invitations mode for groups.', 'Remove invitation'
+    ),
+    'caption_command_accept_request' => array(
+      'Command Accept Request', 'isNoHTML', TRUE, 'input', 200,
+      'In membership requests mode for groups.', 'Accept request'
+    ),
+    'caption_command_decline_request' => array(
+      'Command Decline Request', 'isNoHTML', TRUE, 'input', 200,
+      'In membership requests mode for groups.', 'Decline request'
     ),
     'Dialog Captions',
     'caption_all' => array(
@@ -97,7 +110,8 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    */
   protected $_captionNames = array(
     'caption_surfers', 'caption_all', 'caption_dialog_search', 'caption_dialog_send',
-    'caption_command_invite_surfer_to_group'
+    'caption_command_invite', 'caption_command_remove_invitation',
+    'caption_command_accept_request', 'caption_command_decline_request'
   );
 
   /**
@@ -141,10 +155,16 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
           $values->lastChangeTime('surfer_names')
         );
         if (isset($ressource['type']) && $ressource['type'] == 'group') {
+          $definitionValues[] = $ressource['type'];
+          $definitionValues[] = $ressource['id'];
           $mode = $this->surfers()->parameters()->get('mode', NULL);
-          if ($mode == 'invite_surfers') {
+          if ($mode == 'invite_surfers' || $mode = 'membership_invitations') {
             $definitionValues = $values->lastChangeTime(
               'group:membership_invitations:group_'.$ressource['id']
+            );
+          } elseif ($mode == 'membership_requests') {
+            $definitionValues = $values->lastChangeTime(
+              'group:membership_requests:group_'.$ressource['id']
             );
           }
         }
