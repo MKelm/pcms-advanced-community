@@ -101,6 +101,12 @@ class ACommunityUiContentGroupDialog
     $dialog->papaya($this->papaya());
     $dialog->parameterGroup($this->parameterGroup());
     $dialog->parameters($this->parameters());
+    $dialog->hiddenFields()->merge(
+      array(
+        'command' => $command,
+        'group_handle' => $this->data()->owner->parameters()->get('group_handle', NULL)
+      )
+    );
     $dialog->action($this->data()->reference()->getRelative());
     $dialog->caption = NULL;
 
@@ -114,7 +120,7 @@ class ACommunityUiContentGroupDialog
       TRUE
     );
     $field->setId('dialogGroupIsPublic');
-    if (NULL === $this->parameters()->get('public', NULL)) {
+    if ($command != 'edit_group' && NULL === $this->parameters()->get('public', NULL)) {
       $dialog->data()->set('public', 1);
     }
 
@@ -230,7 +236,6 @@ class ACommunityUiContentGroupDialog
         $recordForHandleCheck->load(array('handle' => $record['handle']));
         if (!empty($recordForHandleCheck['id'])) {
           $this->_errorMessage = $this->data()->messages['dialog_error_handle_duplicate'];
-          var_dump(1);
         } else {
           $record->assign(
             array(
