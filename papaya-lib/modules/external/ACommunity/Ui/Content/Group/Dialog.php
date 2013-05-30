@@ -44,6 +44,12 @@ class ACommunityUiContentGroupDialog
   protected $_imageFieldName = 'image_upload';
 
   /**
+   * Flag for handle change
+   * @var boolean
+   */
+  protected $_handleChange = NULL;
+
+  /**
    * Get/set image gallery folders data
    *
    * @param ACommunityGroupsData $data
@@ -80,22 +86,33 @@ class ACommunityUiContentGroupDialog
     if ($command == 'edit_group') {
       $groupHandle = $this->parameters()->get('group_handle', '');
       if (!empty($groupHandle)) {
-        $this->record()->load(array('handle' => $groupHandle));
+        $record = clone $this->record();
+        $record->load(array('handle' => $groupHandle));
         $dom = new PapayaXmlDocument();
         $dom->appendElement('text');
-        $dom->documentElement->appendXml($this->record()->description);
+        $dom->documentElement->appendXml($record->description);
         $xml = '';
         foreach ($dom->documentElement->childNodes as $node) {
           if ($node->tagName == 'text-raw') {
             $xml .= $node->nodeValue;
           }
         }
-        $this->record()->description = $xml;
+        $record->description = $xml;
         $buttonCaption = $this->data()->captions['dialog_button_edit'];
+        $handle = $this->parameters()->get('handle');
+        if (!empty($handle) && $record->handle != $handle) {
+          $this->_handleChange = TRUE;
+        } else {
+          $this->_handleChange = FALSE;
+        }
+        $dialog = new PapayaUiDialogDatabaseSave($record);
       }
+    } else {
+      $this->_handleChange = TRUE;
+      $dialog = new PapayaUiDialogDatabaseSave(clone $this->record());
     }
 
-    $dialog = new PapayaUiDialogDatabaseSave(clone $this->record());
+
     $dialog->callbacks()->onBeforeSave = array($this, 'callbackBeforeSaveRecord');
 
     $dialog->papaya($this->papaya());
@@ -231,12 +248,15 @@ class ACommunityUiContentGroupDialog
       }
     }
     if (empty($error)) {
-      if (empty($record['id'])) {
+      if ($this->_handleChange) {
         $recordForHandleCheck = clone $this->record();
         $recordForHandleCheck->load(array('handle' => $record['handle']));
         if (!empty($recordForHandleCheck['id'])) {
           $this->_errorMessage = $this->data()->messages['dialog_error_handle_duplicate'];
-        } else {
+        }
+      }
+      if (empty($this->_errorMessage)) {
+        if (empty($record['id'])) {
           $record->assign(
             array(
               'owner' => $this->data()->currentSurferId(),
@@ -245,14 +265,14 @@ class ACommunityUiContentGroupDialog
             )
           );
           return TRUE;
+        } else {
+          $record->assign(
+            array(
+              'image' => isset($mediaId) ? $mediaId : NULL
+            )
+          );
+          return TRUE;
         }
-      } else {
-        $record->assign(
-          array(
-            'image' => isset($mediaId) ? $mediaId : NULL
-          )
-        );
-        return TRUE;
       }
     } else {
       $this->_errorMessage = $this->data()->messages[$error];
@@ -269,21 +289,21 @@ class ACommunityUiContentGroupDialog
   public function callbackExecuteSuccessful($context, $dialog) {
     $ressource = $this->data()->ressource();
 
-    $lastChange = time();
+    $lastChangeTime = time();
     if ($this->data()->showOwnGroups()) {
       $lastChangeRessource = 'groups:surfer_'.$this->data()->currentSurferId();
       $lastChange = clone $this->data()->lastChange();
       $lastChange->assign(
-        array('ressource' => $lastChangeRessource, 'time' => $lastChange)
+        array('ressource' => $lastChangeRessource, 'time' => $lastChangeTime)
       );
-      $lastChange->save();
+      $res = $lastChange->save();
     }
     $lastChangeRessource = 'groups';
     $lastChange = $this->data()->lastChange();
     $lastChange->assign(
-      array('ressource' => $lastChangeRessource, 'time' => $lastChange)
+      array('ressource' => $lastChangeRessource, 'time' => $lastChangeTime)
     );
-    $lastChange->save();
+    $res = $lastChange->save();
     $this->data()->owner->parameters()->set('remove_dialog', 1);
   }
 
