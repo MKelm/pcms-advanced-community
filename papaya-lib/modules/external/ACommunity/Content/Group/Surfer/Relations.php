@@ -139,10 +139,12 @@ class ACommunityContentGroupSurferRelations extends PapayaDatabaseRecords {
       $prefix = " AND ";
     }
     if (isset($filter['surfer_status_pending'])) {
-      $result .= sprintf(
-        "%s gs.surfer_status_pending = '%d' ", $prefix, $filter['surfer_status_pending']
-      );
-      $prefix = " AND ";
+      if (!isset($filter['include_owner_status'])) {
+        $result .= sprintf(
+          "%s gs.surfer_status_pending = '%d' ", $prefix, $filter['surfer_status_pending']
+        );
+        $prefix = " AND ";
+      }
       unset($filter['surfer_status_pending']);
     }
     $result .= parent::_compileCondition($filter, $prefix);
