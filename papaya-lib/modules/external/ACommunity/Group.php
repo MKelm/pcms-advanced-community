@@ -81,7 +81,7 @@ class ACommunityGroup extends ACommunityUiContent {
               array(
                 'id' => $ressource['id'],
                 'surfer_id' => $this->data()->currentSurferId(),
-                'surfer_pending_status' => 1
+                'surfer_status_pending' => 1
               )
             );
             if ($groupSurferRelation->delete()) {
@@ -97,7 +97,7 @@ class ACommunityGroup extends ACommunityUiContent {
               array(
                 'id' => $ressource['id'],
                 'surfer_id' => $this->data()->currentSurferId(),
-                'surfer_pending_status' => 0
+                'surfer_status_pending' => 0
               )
             );
             if ($groupSurferRelation->save()) {
@@ -130,25 +130,28 @@ class ACommunityGroup extends ACommunityUiContent {
     if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
       $this->_performCommands();
 
-      $this->data()->initialize();
-      $parent->appendElement('title', array(), $this->data()->title);
-      $parent->appendElement(
-        'time', array('caption' => $this->data()->captions['time']), $this->data()->time
-      );
-      $parent->appendXml($this->data()->text);
-      $parent->appendElement('image', array(), PapayaUtilStringXml::escape($this->data()->image));
+      if (FALSE !== $this->data()->initialize()) {
+        $parent->appendElement('title', array(), $this->data()->title);
+        $parent->appendElement(
+          'time', array('caption' => $this->data()->captions['time']), $this->data()->time
+        );
+        $parent->appendXml($this->data()->text);
+        $parent->appendElement('image', array(), PapayaUtilStringXml::escape($this->data()->image));
 
-      if (!empty($this->data()->commands)) {
-        $commands = $parent->appendElement('commands');
-        foreach ($this->data()->commands as $name => $command) {
-          $commands->appendElement(
-            str_replace('_', '-', $name),
-            array(
-              'href' => PapayaUtilStringXml::escapeAttribute($command['href']),
-              'caption' => PapayaUtilStringXml::escapeAttribute($command['caption'])
-            )
-          );
+        if (!empty($this->data()->commands)) {
+          $commands = $parent->appendElement('commands');
+          foreach ($this->data()->commands as $name => $command) {
+            $commands->appendElement(
+              str_replace('_', '-', $name),
+              array(
+                'href' => PapayaUtilStringXml::escapeAttribute($command['href']),
+                'caption' => PapayaUtilStringXml::escapeAttribute($command['caption'])
+              )
+            );
+          }
         }
+      } else {
+        $parent->appendElement('message', array('type' => 'error'), $this->data()->messages['private_group']);
       }
     } else {
       $parent->appendElement('message', array('type' => 'error'), $this->data()->messages['no_group']);

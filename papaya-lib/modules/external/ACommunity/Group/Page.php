@@ -97,7 +97,10 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     'Message',
     'message_no_group' => array(
       'No Group', 'isNoHTML', TRUE, 'input', 200, '', 'No group selected.'
-    )
+    ),
+    'message_private_group' => array(
+      'Private Group', 'isNoHTML', TRUE, 'input', 200, '', 'You do not have the permission to access this group.'
+    ),
   );
 
   /**
@@ -138,6 +141,7 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
           $surferGroupStatus = $this->group()->data()->surferGroupStatus();
           if ($surferGroupStatus['is_owner'] > 0) {
             $definitionValues[] = $values->lastChangeTime('group:membership_requests:group_'.$ressource['id']);
+            $definitionValues[] = $values->lastChangeTime('group:membership_invitations:group_'.$ressource['id']);
           }
         } else {
           $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
@@ -186,6 +190,7 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     } elseif (is_null($this->_group)) {
       include_once(dirname(__FILE__).'/../Group.php');
       $this->_group = new ACommunityGroup();
+      $this->_group->module = $this;
       $this->_group->parameterGroup($this->paramName);
       $this->_group->data()->languageId = $this->papaya()->request->languageId;
     }
@@ -208,7 +213,9 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
       'caption_link_membership_invitation', 'caption_link_membership_invitations',
       'caption_link_member', 'caption_link_members', 'caption_link_owner'
     );
-    $this->group()->data()->setPluginData($this->data, $captionNames, array('message_no_group'));
+    $this->group()->data()->setPluginData(
+      $this->data, $captionNames, array('message_no_group', 'message_private_group')
+    );
     return $this->group()->getXml();
   }
 }

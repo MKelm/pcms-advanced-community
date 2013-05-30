@@ -194,30 +194,34 @@ class ACommunityGroupData extends ACommunityUiContentData {
     $ressource = $this->ressource();
     if (!empty($ressource)) {
       $this->group()->load($ressource['id']);
-      $group = $this->group()->toArray();
-      if (!empty($group['title'])) {
-        $this->title = $group['title'];
-        $this->time = date('Y-m-d H:i:s', $group['time']);
-        $this->text = $group['description'];
-        if (empty($group['image'])) {
-          $group['image'] = $this->owner->acommunityConnector()->getGroupsDefaultImageId();
+      $surferGroupStatus = $this->surferGroupStatus();
+      if ($this->group()->public == 0 &&
+          (empty($surferGroupStatus['is_owner']) && empty($surferGroupStatus['is_member']))) {
+        $this->owner->module->params['group_handle'] = '';
+        return FALSE;
+      }
+      if (!empty($this->group()->title)) {
+        $this->title = $this->group()->title;
+        $this->time = date('Y-m-d H:i:s', $this->group()->time);
+        $this->text = $this->group()->description;
+        if (empty($this->group()->image)) {
+          $this->group()->image = $this->owner->acommunityConnector()->getGroupsDefaultImageId();
         }
         include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
         $thumbnail = new base_thumbnail;
         $this->image = 'media.thumb.'.$thumbnail->getThumbnail(
-          $group['image'], NULL, $this->_imageThumbnailSize, $this->_imageThumbnailSize,
+          $this->group()->image, NULL, $this->_imageThumbnailSize, $this->_imageThumbnailSize,
           $this->_imageThumbnailResizeMode
         );
       }
 
       $this->commands = array();
-      $surferGroupStatus = $this->surferGroupStatus();
       $referenceParameters = $this->referenceParameters();
 
       // load member command links
       if ($surferGroupStatus == NULL || $surferGroupStatus['is_owner'] == 0) {
         // link to group owner
-        $surfer = $this->getSurfer($group['owner']);
+        $surfer = $this->getSurfer($this->group()->owner);
         $this->commands['owner'] = array(
           'href' => $surfer['page_link'],
           'caption' => sprintf($this->captions['link_owner'], $surfer['name'])
