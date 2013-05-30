@@ -53,35 +53,46 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     'caption_time' => array(
       'Exists Sine', 'isNoHTML', TRUE, 'input', 200, '', 'Exists since'
     ),
-    'Command Captions',
-    'caption_command_request_membership' => array(
+    'Link Captions',
+    'caption_link_request_membership' => array(
       'Request Membership', 'isNoHTML', TRUE, 'input', 200, '', 'Request membership'
     ),
-    'caption_command_remove_membership_request' => array(
+    'caption_link_remove_membership_request' => array(
       'Remove Membership Request', 'isNoHTML', TRUE, 'input', 200, '', 'Remove membership request'
     ),
-    'caption_command_accept_membership_invitation' => array(
+    'caption_link_accept_membership_invitation' => array(
       'Accept Membership Invitation', 'isNoHTML', TRUE, 'input', 200, '', 'Accept membership invitation'
     ),
-    'caption_command_invite_surfers' => array(
+    'caption_link_invite_surfers' => array(
       'Invite Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Invite surfers'
     ),
-
-    'caption_command_membership_request' => array(
+    'caption_link_member' => array(
+      'Member', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with members mode.', '%d member'
+    ),
+    'caption_link_members' => array(
+      'Members', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with members mode.', '%d members'
+    ),
+    'caption_link_membership_request' => array(
       'Membership Request', 'isNoHTML', TRUE, 'input', 200,
       'Link to own groups page, with membership requests mode.', '%d membership request'
     ),
-    'caption_command_membership_requests' => array(
+    'caption_link_membership_requests' => array(
       'Membership Requests', 'isNoHTML', TRUE, 'input', 200,
       'Link to own groups page, with membership requests mode.', '%d membership requests'
     ),
-    'caption_command_membership_invitation' => array(
+    'caption_link_membership_invitation' => array(
       'Membership Invitation', 'isNoHTML', TRUE, 'input', 200,
       'Link to own groups page, with membership invitations mode.', '%d membership invitation'
     ),
-    'caption_command_membership_invitations' => array(
+    'caption_link_membership_invitations' => array(
       'Membership Invitations', 'isNoHTML', TRUE, 'input', 200,
       'Link to own groups page, with membership requests mode.', '%d membership invitations'
+    ),
+    'caption_link_owner' => array(
+      'Owner', 'isNoHTML', TRUE, 'input', 200,
+      'Link to owner page.', 'Owner %s'
     ),
     'Message',
     'message_no_group' => array(
@@ -191,10 +202,11 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     $this->setRessourceData();
     $this->setDefaultData();
     $captionNames = array(
-      'caption_time', 'caption_command_request_membership', 'caption_command_remove_membership_request',
-      'caption_command_accept_membership_invitation', 'caption_command_invite_surfers',
-      'caption_command_membership_request', 'caption_command_membership_requests',
-      'caption_command_membership_invitation', 'caption_command_membership_invitations'
+      'caption_time', 'caption_link_request_membership', 'caption_link_remove_membership_request',
+      'caption_link_accept_membership_invitation', 'caption_link_invite_surfers',
+      'caption_link_membership_request', 'caption_link_membership_requests',
+      'caption_link_membership_invitation', 'caption_link_membership_invitations',
+      'caption_link_member', 'caption_link_members', 'caption_link_owner'
     );
     $this->group()->data()->setPluginData($this->data, $captionNames, array('message_no_group'));
     return $this->group()->getXml();

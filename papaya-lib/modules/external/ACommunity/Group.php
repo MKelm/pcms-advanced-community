@@ -58,11 +58,8 @@ class ACommunityGroup extends ACommunityUiContent {
       $changeType = 'membership_requests';
       switch ($command) {
         case 'request_membership':
-          $groupSurferRelation = clone $this->data()->groupSurferRelation();
-          $groupSurferRelation->load(
-            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
-          );
-          if ($groupSurferRelation['id'] == NULL) {
+          $surferGroupStatus = $this->data()->surferGroupStatus();
+          if (empty($surferGroupStatus)) {
             $groupSurferRelation = clone $this->data()->groupSurferRelation();
             $groupSurferRelation->assign(
               array(
@@ -77,30 +74,24 @@ class ACommunityGroup extends ACommunityUiContent {
           }
           break;
         case 'remove_membership_request':
-          $groupSurferRelation = $this->data()->groupSurferRelation();
-          $groupSurferRelation->load(
-            array(
-              'id' => $ressource['id'],
-              'surfer_id' => $this->data()->currentSurferId(),
-              'surfer_pending_status' => 1
-            )
-          );
-          if ($groupSurferRelation['id'] != NULL) {
+          $surferGroupStatus = $this->data()->surferGroupStatus();
+          if ($surferGroupStatus['is_pending'] == 1) {
+            $groupSurferRelation = $this->data()->groupSurferRelation();
+            $groupSurferRelation->load(
+              array(
+                'id' => $ressource['id'],
+                'surfer_id' => $this->data()->currentSurferId(),
+                'surfer_pending_status' => 1
+              )
+            );
             if ($groupSurferRelation->delete()) {
               $lastChange = time();
             }
           }
           break;
         case 'accept_membership_invitation':
-          $groupSurferRelation = clone $this->data()->groupSurferRelation();
-          $groupSurferRelation->load(
-            array(
-              'id' => $ressource['id'],
-              'surfer_id' => $this->data()->currentSurferId(),
-              'surfer_pending_status' => 2
-            )
-          );
-          if ($groupSurferRelation['id'] != NULL) {
+          $surferGroupStatus = $this->data()->surferGroupStatus();
+          if ($surferGroupStatus['is_pending'] == 2) {
             $groupSurferRelation = clone $this->data()->groupSurferRelation();
             $groupSurferRelation->assign(
               array(
