@@ -49,6 +49,12 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
   protected $_data = NULL;
 
   /**
+   * base_actionbox or base_content module class
+   * @var object
+   */
+  public $module = NULL;
+
+  /**
    * Get/set content data
    *
    * @param ACommunityUiContentData $data
