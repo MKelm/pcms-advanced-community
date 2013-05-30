@@ -61,34 +61,29 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
       $ressource = $this->setRessourceData();
       $definitionValues = array('acommunity_image_gallery');
       if (!empty($ressource)) {
-        //$command = $this->gallery()->parameters()->get('command', NULL);
-        //if (!empty($command)) {
-          //$this->_cacheDefinition = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-        //} else {
-          include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
-          $values = new ACommunityCacheIdentifierValues();
-          $definitionValues[] = $ressource['type'];
-          $definitionValues[] = $ressource['id'];
-          $definitionValues[] = (int)$this->gallery()->data()->ressourceIsActiveSurfer;
-          $definitionValues[] = (int)$this->gallery()->data()->surferIsGroupOwner();
-          $definitionValues[] = (int)$this->gallery()->data()->surferIsModerator();
-          $folderId = $this->gallery()->parameters()->get('folder_id', 0);
-          if ($folderId == 0) {
-            $folderId = 'base';
-          }
-          if ($ressource['type'] == 'group') {
-            $lastChangeRessource = 'group_gallery_images:folder_'.$folderId.':group_'.$ressource['id'];
-          } else {
-            $lastChangeRessource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
-          }
-          $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
-          $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
-            new PapayaCacheIdentifierDefinitionValues($definitionValues),
-            new PapayaCacheIdentifierDefinitionParameters(
-              array('enlarge', 'index', 'offset', 'command', 'folder_id', 'id'), $this->paramName
-            )
-          );
-        //}
+        include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+        $values = new ACommunityCacheIdentifierValues();
+        $definitionValues[] = $ressource['type'];
+        $definitionValues[] = $ressource['id'];
+        $definitionValues[] = (int)$this->gallery()->data()->ressourceIsActiveSurfer;
+        $definitionValues[] = (int)$this->gallery()->data()->surferIsGroupOwner();
+        $definitionValues[] = (int)$this->gallery()->data()->surferIsModerator();
+        $folderId = $this->gallery()->parameters()->get('folder_id', 0);
+        if ($folderId == 0) {
+          $folderId = 'base';
+        }
+        if ($ressource['type'] == 'group') {
+          $lastChangeRessource = 'group_gallery_images:folder_'.$folderId.':group_'.$ressource['id'];
+        } else {
+          $lastChangeRessource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
+        }
+        $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
+        $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters(
+            array('enlarge', 'index', 'offset', 'command', 'folder_id', 'id'), $this->paramName
+          )
+        );
       }
     }
     return $this->_cacheDefinition;
