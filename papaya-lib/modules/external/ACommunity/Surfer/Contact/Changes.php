@@ -23,6 +23,11 @@
  */
 require_once(PAPAYA_INCLUDE_PATH.'modules/_base/community/base_contacts.php');
 
+/**
+ * Class for changeable content data
+ */
+require_once(dirname(__FILE__).'/../../Ui/Content/Data/Last/Change.php');
+
 
 /**
  * Advanced community surfer contact changes
@@ -30,19 +35,13 @@ require_once(PAPAYA_INCLUDE_PATH.'modules/_base/community/base_contacts.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurferContactChanges extends PapayaObject {
+class ACommunitySurferContactChanges extends ACommunityUiContentDataLastChange {
 
   /**
   * Stored database access object
   * @var PapayaDatabaseAccess
   */
   protected $_databaseAccess = NULL;
-
-  /**
-   * Last cahnge database record
-   * @var object
-   */
-  protected $_lastChange = NULL;
 
   /**
    * Table name of comments
@@ -62,23 +61,6 @@ class ACommunitySurferContactChanges extends PapayaObject {
       $this->_databaseAccess = $this->papaya()->database->createDatabaseAccess($this);
     }
     return $this->_databaseAccess;
-  }
-
-  /**
-  * Access to last change database record data
-  *
-  * @param ACommunityContentLastChange $lastChange
-  * @return ACommunityContentLastChange
-  */
-  public function lastChange(ACommunityContentLastChange $lastChange = NULL) {
-    if (isset($lastChange)) {
-      $this->_lastChange = $lastChange;
-    } elseif (is_null($this->_lastChange)) {
-      include_once(dirname(__FILE__).'/../../Content/Last/Change.php');
-      $this->_lastChange = new ACommunityContentLastChange();
-      $this->_lastChange->papaya($this->papaya());
-    }
-    return $this->_lastChange;
   }
 
   /**
@@ -106,11 +88,7 @@ class ACommunitySurferContactChanges extends PapayaObject {
     foreach ($ressources as $ressource) {
       foreach ($ressource as $ressourceName => $ressourceIds) {
         foreach ($ressourceIds as $ressourceId) {
-          $lastChange = clone $this->lastChange();
-          $lastChange->assign(
-            array('ressource' => $ressourceName.':surfer_'.$ressourceId, 'time' => time())
-          );
-          $result = $result && $lastChange->save();
+          $result = $result && $this->_setLastChangeTime($ressourceName.':surfer_'.$ressourceId);
         }
       }
     }
