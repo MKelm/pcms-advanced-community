@@ -137,7 +137,7 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
       if ($groupSurferRelation['id'] > 0) {
         if ($groupSurferRelation->delete()) {
           // change affects the amount of group's membership invitations
-          $result1 $this->_setLastChangeTime('group:membership_invitations:group_'.$groupId);
+          $result1 = $this->_setLastChangeTime('group:membership_invitations:group_'.$groupId);
           // change affects the group to surfer invitation relation
           $result2 = $this->_setLastChangeTime('invitation:group_'.$groupId.':surfer_'.$surferId);
           // change affects the amount of groups invitations by the invited surfer
