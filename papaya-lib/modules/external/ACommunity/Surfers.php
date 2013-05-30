@@ -94,7 +94,27 @@ class ACommunitySurfers extends ACommunityUiContent {
             $this->parameters()->get('surfer_handle', NULL)
           );
           switch ($command) {
-            case 'invite':
+            case 'remove_member':
+              if (!empty($surferId) && $surferId != $this->data()->currentSurferId()) {
+                $groupSurferRelation = clone $this->data()->groupSurferRelation();
+                $groupSurferRelation->load(
+                  array('id' => $ressource['id'], 'surfer_id' => $surferId, 'surfer_status_pending' => 0)
+                );
+                if ($groupSurferRelation['id'] > 0) {
+                  if ($groupSurferRelation->delete()) {
+                    $lastChange = $this->data()->lastChange();
+                    $lastChange->assign(
+                      array(
+                        'ressource' => 'group:memberships:'.'group_'.$ressource['id'],
+                        'time' => time()
+                      )
+                    );
+                    $lastChange->save();
+                  }
+                }
+              }
+              break;
+            case 'invite_surfer':
               if (!empty($surferId) && $surferId != $this->data()->currentSurferId()) {
                 $groupSurferRelation = clone $this->data()->groupSurferRelation();
                 $groupSurferRelation->load(

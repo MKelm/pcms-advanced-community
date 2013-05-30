@@ -313,7 +313,13 @@ class ACommunitySurfersData extends ACommunityUiContentData {
         if ($ressource['type'] == 'group') {
           $surferIds = NULL;
           $mode = $this->owner->parameters()->get('mode', NULL);
-          if ($mode == 'membership_invitations' || $mode == 'invite_surfers') {
+          if ($mode == 'members') {
+            $this->groupSurferRelations()->load(
+              array('id' => $ressource['id'], 'surfer_status_pending' => 0)
+            );
+            $groupSurferRelations = $this->groupSurferRelations()->toArray();
+            $surferIds = array_keys($groupSurferRelations);
+          } elseif ($mode == 'membership_invitations' || $mode == 'invite_surfers') {
             $this->groupSurferRelations()->load(
               array('id' => $ressource['id'], 'surfer_status_pending' => 2)
             );
@@ -385,20 +391,33 @@ class ACommunitySurfersData extends ACommunityUiContentData {
         $surfers = $this->getSurfer(array_keys($surfers), NULL, $surfers);
         // action commands for group modes
         if ($ressource['type'] == 'group') {
-          // add invite commands in invite_surfers mode
-          if ($mode == 'invite_surfers') {
+          if ($mode == 'members') {
+            // add remove member in members mode
+            foreach ($surfers as $key => $surfer) {
+              if ($surfer['id'] == $this->currentSurferId()) {
+                $reference = clone $this->reference();
+                $reference->setParameters(
+                  array('command' => 'remove_member', 'surfer_handle' => $surfer['handle']),
+                  $this->owner->parameterGroup()
+                );
+                $surfers[$key]['commands']['remove_member'] = $reference->getRelative();
+              }
+            }
+          } elseif ($mode == 'invite_surfers') {
+            // add invite commands in invite_surfers mode
             foreach ($surfers as $key => $surfer) {
               if (!isset($groupSurferRelations[$surfer['id']]) &&
                   $surfer['id'] != $this->currentSurferId()) {
                 $reference = clone $this->reference();
                 $reference->setParameters(
-                  array('command' => 'invite', 'surfer_handle' => $surfer['handle']),
+                  array('command' => 'invite_surfer', 'surfer_handle' => $surfer['handle']),
                   $this->owner->parameterGroup()
                 );
-                $surfers[$key]['commands']['invite'] = $reference->getRelative();
+                $surfers[$key]['commands']['invite_surfer'] = $reference->getRelative();
               }
             }
           } elseif ($mode == 'membership_invitations') {
+            // add remove invitation commands in invitations mode
             foreach ($surfers as $key => $surfer) {
               $reference = clone $this->reference();
               $reference->setParameters(
@@ -408,6 +427,7 @@ class ACommunitySurfersData extends ACommunityUiContentData {
               $surfers[$key]['commands']['remove_invitation'] = $reference->getRelative();
             }
           } elseif ($mode == 'membership_requests') {
+            // add accept / decline requests commands in requests mode
             foreach ($surfers as $key => $surfer) {
               $reference = clone $this->reference();
               $reference->setParameters(

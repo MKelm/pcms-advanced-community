@@ -71,13 +71,17 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     'caption_surfers' => array(
       'Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Surfers'
     ),
-    'caption_command_invite' => array(
+    'caption_command_invite_surfer' => array(
       'Command Invite', 'isNoHTML', TRUE, 'input', 200, 'In invite surfers mode for groups.',
       'Invite to group'
     ),
     'caption_command_remove_invitation' => array(
       'Command Remove Invitation', 'isNoHTML', TRUE, 'input', 200,
       'In membership invitations mode for groups.', 'Remove invitation'
+    ),
+    'caption_command_remove_member' => array(
+      'Command Remove Member', 'isNoHTML', TRUE, 'input', 200, 'In members mode for groups.',
+      'Remove member'
     ),
     'caption_command_accept_request' => array(
       'Command Accept Request', 'isNoHTML', TRUE, 'input', 200,
@@ -110,8 +114,9 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    */
   protected $_captionNames = array(
     'caption_surfers', 'caption_all', 'caption_dialog_search', 'caption_dialog_send',
-    'caption_command_invite', 'caption_command_remove_invitation',
-    'caption_command_accept_request', 'caption_command_decline_request'
+    'caption_command_invite_surfer', 'caption_command_remove_invitation',
+    'caption_command_accept_request', 'caption_command_decline_request',
+    'caption_command_remove_member'
   );
 
   /**
