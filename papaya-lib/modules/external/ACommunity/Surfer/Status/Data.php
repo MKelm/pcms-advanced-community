@@ -82,6 +82,7 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
         'messages_link' => $this->owner->acommunityConnector()->getMessagesPageLink(
           $ressource['id'], 'overview'
         ),
+        'groups_link' => $this->owner->acommunityConnector()->getSurferGroupsPageLink($this->languageId),
         'notifications_link' => $this->owner->acommunityConnector()->getMessagesPageLink(
           $ressource['id'], 'notifications'
         ),
@@ -94,37 +95,31 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
 
       $contactsCount = $this->owner->communityConnector()->getContactNumber($ressource['id']);
       if ($contactsCount > 0) {
-        $this->captions['contacts_link'] = sprintf(
-          $this->captions['contacts_link'], $contactsCount
+        $handle = ($contactsCount == 1) ? 'contact_link' : 'contacts_link';
+        $this->captions['contacts_link'] = sprintf($this->captions[$handle], $contactsCount);
+        $this->surfer['contacts_link'] = $this->owner->acommunityConnector()->getSurferContactsPageLink(
+          $ressource['id'], 'contacts'
         );
-        $this->surfer['contacts_link'] =
-          $this->owner->acommunityConnector()->getSurferContactsPageLink($ressource['id'], 'contacts');
-      } else {
-        unset($this->captions['contacts_link']);
       }
       $requestsReceivedCount = $this->owner->communityConnector()->getContactRequestsReceivedNumber(
         $ressource['id']
       );
       if ($requestsReceivedCount > 0) {
-        $this->captions['contact_requests_link'] = sprintf(
-          $this->captions['contact_requests_link'], $requestsReceivedCount
+        $handle = ($requestsReceivedCount == 1) ? 'contact_request_link' : 'contact_requests_link';
+        $this->captions['contact_requests_link'] = sprintf($this->captions[$handle], $requestsReceivedCount);
+        $this->surfer['contact_requests_link'] = $this->owner->acommunityConnector()->getSurferContactsPageLink(
+          $ressource['id'], 'contact_requests'
         );
-        $this->surfer['contact_requests_link'] =
-          $this->owner->acommunityConnector()->getSurferContactsPageLink($ressource['id'], 'contact_requests');
-      } else {
-        unset($this->captions['contact_requests_link']);
       }
       $ownRequestsCount = $this->owner->communityConnector()->getContactRequestsSentNumber(
         $ressource['id']
       );
       if ($ownRequestsCount > 0) {
-        $this->captions['contact_own_requests_link'] = sprintf(
-          $this->captions['contact_own_requests_link'], $ownRequestsCount
+        $handle = ($ownRequestsCount == 1) ? 'contact_own_request_link' : 'contact_own_requests_link';
+        $this->captions['contact_own_requests_link'] = sprintf($this->captions[$handle], $ownRequestsCount);
+        $this->surfer['contact_own_requests_link'] = $this->owner->acommunityConnector()->getSurferContactsPageLink(
+          $ressource['id'], 'own_contact_requests'
         );
-        $this->surfer['contact_own_requests_link'] =
-          $this->owner->acommunityConnector()->getSurferContactsPageLink($ressource['id'], 'own_contact_requests');
-      } else {
-        unset($this->captions['contact_own_requests_link']);
       }
 
     } else {

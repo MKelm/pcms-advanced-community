@@ -72,19 +72,19 @@ class ACommunitySurferStatus extends ACommunityUiContent {
         'edit-link', array('caption' => $this->data()->captions['edit_link']),
         PapayaUtilStringXml::escape($this->data()->surfer['edit_link'])
       );
-      if (isset($this->data()->captions['contacts_link'])) {
+      if (isset($this->data()->surfer['contacts_link'])) {
         $activeSurfer->appendElement(
           'contacts-link', array('caption' => $this->data()->captions['contacts_link']),
           PapayaUtilStringXml::escape($this->data()->surfer['contacts_link'])
         );
       }
-      if (isset($this->data()->captions['contact_requests_link'])) {
+      if (isset($this->data()->surfer['contact_requests_link'])) {
         $activeSurfer->appendElement(
           'contact-requests-link', array('caption' => $this->data()->captions['contact_requests_link']),
           PapayaUtilStringXml::escape($this->data()->surfer['contact_requests_link'])
         );
       }
-      if (isset($this->data()->captions['contact_own_requests_link'])) {
+      if (isset($this->data()->surfer['contact_own_requests_link'])) {
         $activeSurfer->appendElement(
           'contact-own-requests-link',
           array('caption' => $this->data()->captions['contact_own_requests_link']),
@@ -94,6 +94,10 @@ class ACommunitySurferStatus extends ACommunityUiContent {
       $activeSurfer->appendElement(
         'messages-link', array('caption' => $this->data()->captions['messages_link']),
         PapayaUtilStringXml::escape($this->data()->surfer['messages_link'])
+      );
+      $activeSurfer->appendElement(
+        'groups-link', array('caption' => $this->data()->captions['groups_link']),
+        PapayaUtilStringXml::escape($this->data()->surfer['groups_link'])
       );
       $activeSurfer->appendElement(
         'notifications-link', array('caption' => $this->data()->captions['notifications_link']),

@@ -55,24 +55,35 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
        ), '', 'mincrop'
     ),
     'Captions',
-    'caption_login_link' => array(
-      'Login Link', 'isNoHTML', TRUE, 'input', 200, 'For placeholder {%LOGIN_LINK%}', 'login'
+    'caption_contact_link' => array(
+      'Contact Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact'
     ),
-    'caption_registration_link' => array(
-      'Registration Link', 'isNoHTML', TRUE, 'input', 200,
-      'For placeholder {%REGISTRATION_LINK%}', 'register'
+    'caption_contacts_link' => array(
+      'Contacts Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contacts'
+    ),
+    'caption_contact_request_link' => array(
+      'Received Contact Request Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request received'
+    ),
+    'caption_contact_requests_link' => array(
+      'Received Contact Requests Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact requests received'
+    ),
+    'caption_contact_own_request_link' => array(
+      'Sent Contact Request Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request sent'
+    ),
+    'caption_contact_own_requests_link' => array(
+      'Sent Contact Requests Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request sent'
     ),
     'caption_edit_link' => array(
       'Edit Link', 'isNoHTML', TRUE, 'input', 200, 'Caption for edit surfer link.', 'Edit'
     ),
-    'caption_contacts_link' => array(
-      'Contacts Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact(s)'
+    'caption_groups_link' => array(
+      'Groups Link', 'isNoHTML', TRUE, 'input', 200, '', 'Groups'
     ),
-    'caption_contact_requests_link' => array(
-      'Received Contact Requests Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request(s) received'
+    'caption_login_link' => array(
+      'Login Link', 'isNoHTML', TRUE, 'input', 200, 'For placeholder {%LOGIN_LINK%}', 'login'
     ),
-    'caption_contact_own_requests_link' => array(
-      'Sent Contact Requests Link', 'isNoHTML', TRUE, 'input', 200, '', '%d contact request(s) sent'
+    'caption_logout_link' => array(
+      'Logout Link', 'isNoHTML', TRUE, 'input', 200, 'Caption for surfer logout link.', 'Logout'
     ),
     'caption_messages_link' => array(
       'Messages Link', 'isNoHTML', TRUE, 'input', 200, '', 'Messages'
@@ -83,8 +94,9 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
     'caption_notification_settings_link' => array(
       'Notification Settings Link', 'isNoHTML', TRUE, 'input', 200, '', 'Notification settings'
     ),
-    'caption_logout_link' => array(
-      'Logout Link', 'isNoHTML', TRUE, 'input', 200, 'Caption for surfer logout link.', 'Logout'
+    'caption_registration_link' => array(
+      'Registration Link', 'isNoHTML', TRUE, 'input', 200,
+      'For placeholder {%REGISTRATION_LINK%}', 'register'
     ),
     'Messages',
     'message_no_login' => array(
@@ -167,10 +179,11 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
       $this->data,
       array(
         'caption_login_link', 'caption_registration_link',
-        'caption_edit_link', 'caption_logout_link',
+        'caption_edit_link', 'caption_logout_link', 'caption_groups_link',
         'caption_contacts_link', 'caption_contact_requests_link',
         'caption_contact_own_requests_link', 'caption_messages_link',
-        'caption_notifications_link', 'caption_notification_settings_link'
+        'caption_notifications_link', 'caption_notification_settings_link',
+        'caption_contact_link', 'caption_contact_request_link', 'caption_contact_own_request_link'
       ),
       array('message_no_login')
     );
