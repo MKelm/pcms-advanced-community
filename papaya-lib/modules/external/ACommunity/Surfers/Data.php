@@ -340,8 +340,7 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
         $this->pagingItemsAbsCount = $this->owner->communityConnector()->surferAdmin->surfersAbsCount;
         $surfers = $this->getSurfer(array_keys($surfers), NULL, $surfers);
         // action commands for group modes
-        if ($ressource['type'] == 'group' && (bool)$surferGroupStatus['is_owner']) {
-          $surferGroupStatus = $this->surferGroupStatus();
+        if ($ressource['type'] == 'group' && $this->surferHasStatus(NULL, 'is_owner', 1)) {
           if ($mode == 'members') {
             // add remove member in members mode
             foreach ($surfers as $key => $surfer) {
