@@ -59,68 +59,76 @@ class ACommunitySurfers extends ACommunityUiContent {
    */
   protected function _performCommands() {
     if ($this->data()->displayMode == 'contacts_and_requests') {
-      $surferId = $this->communityConnector()->getIdByHandle(
-        $this->parameters()->get('surfer_handle', NULL)
-      );
-      if ($this->data()->ressourceIsActiveSurfer == TRUE && !empty($surferId)) {
-        $currentSurferId = $this->data()->currentSurferId();
-        $command = $this->parameters()->get('command', NULL);
-        switch ($command) {
-          case 'remove_contact_request':
-            return $this->data()->contactChanges()->deleteContactRequest($currentSurferId, $surferId);
-            break;
-          case 'accept_contact_request':
-            return $this->data()->contactChanges()->acceptContactRequest($currentSurferId, $surferId);
-            break;
-          case 'decline_contact_request':
-            return $this->data()->contactChanges()->declineContactRequest($currentSurferId, $surferId);
-            break;
-          case 'remove_contact':
-            return $this->data()->contactChanges()->deleteContact($currentSurferId, $surferId);
-            break;
-        }
-      }
-    } elseif ($this->data()->displayMode == 'surfers') {
-      $ressource = $this->data()->ressource();
       $command = $this->parameters()->get('command', NULL);
-      if ($ressource['type'] == 'group' && !empty($command)) {
-        $groupSurferRelations = clone $this->data()->groupSurferRelations();
-        $groupSurferRelations->load(
-          array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
-        );
-        $groupSurferRelation = reset($groupSurferRelations->toArray());
+      if (!empty($command)) {
         $surferId = $this->communityConnector()->getIdByHandle(
           $this->parameters()->get('surfer_handle', NULL)
         );
-        if (!empty($groupSurferRelation['is_owner']) && !empty($surferId)) {
+        if ($this->data()->ressourceIsActiveSurfer == TRUE && !empty($surferId)) {
+          $currentSurferId = $this->data()->currentSurferId();
           switch ($command) {
-            case 'remove_member':
-              return $this->data()->groupSurferChanges()->removeMember(
-                $ressource['id'], $surferId, $this->data()->currentSurferId()
-              );
+            case 'remove_contact_request':
+              return $this->data()->contactChanges()->deleteContactRequest($currentSurferId, $surferId);
               break;
-            case 'invite_surfer':
-              return $this->data()->groupSurferChanges()->inviteSurfer(
-                $ressource['id'], $surferId, $this->data()->currentSurferId()
-              );
+            case 'accept_contact_request':
+              return $this->data()->contactChanges()->acceptContactRequest($currentSurferId, $surferId);
               break;
-            case 'remove_invitation':
-              return $this->data()->groupSurferChanges()->removeInvitation(
-                $ressource['id'], $surferId, $this->data()->currentSurferId()
-              );
+            case 'decline_contact_request':
+              return $this->data()->contactChanges()->declineContactRequest($currentSurferId, $surferId);
               break;
-            case 'accept_request':
-              return $this->data()->groupSurferChanges()->acceptRequest(
-                $ressource['id'], $surferId, $this->data()->currentSurferId()
-              );
-              break;
-            case 'decline_request':
-              return $this->data()->groupSurferChanges()->declineRequest(
-                $ressource['id'], $surferId, $this->data()->currentSurferId()
-              );
+            case 'remove_contact':
+              return $this->data()->contactChanges()->deleteContact($currentSurferId, $surferId);
               break;
           }
         }
+        return FALSE;
+      }
+
+    } elseif ($this->data()->displayMode == 'surfers') {
+      $command = $this->parameters()->get('command', NULL);
+      if (!empty($command)) {
+        $ressource = $this->data()->ressource();
+        if ($ressource['type'] == 'group') {
+          $groupSurferRelations = clone $this->data()->groupSurferRelations();
+          $groupSurferRelations->load(
+            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
+          );
+          $groupSurferRelation = reset($groupSurferRelations->toArray());
+          $surferId = $this->communityConnector()->getIdByHandle(
+            $this->parameters()->get('surfer_handle', NULL)
+          );
+          if (!empty($groupSurferRelation['is_owner']) && !empty($surferId)) {
+            switch ($command) {
+              case 'remove_member':
+              var_dump(1);
+                return $this->data()->groupSurferChanges()->removeMember(
+                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                );
+                break;
+              case 'invite_surfer':
+                return $this->data()->groupSurferChanges()->inviteSurfer(
+                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                );
+                break;
+              case 'remove_invitation':
+                return $this->data()->groupSurferChanges()->removeInvitation(
+                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                );
+                break;
+              case 'accept_request':
+                return $this->data()->groupSurferChanges()->acceptRequest(
+                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                );
+                break;
+              case 'decline_request':
+                return $this->data()->groupSurferChanges()->declineRequest(
+                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                );
+                break;
+            }
+          }
+        }
+        return FALSE;
       }
     }
     return NULL;
