@@ -119,6 +119,9 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'message_no_invitations' => array(
       'No Invitations', 'isNoHTML', TRUE, 'input', 200, '', 'No invitations.'
     ),
+    'message_failed_to_execute_command' => array(
+      'Failed To Execute Command', 'isNoHTML', TRUE, 'input', 200, '', 'Failed to execute command.'
+    ),
     'message_dialog_error_handle_duplicate' => array(
       'Dialog Handle Duplicate Error', 'isNoHTML', TRUE, 'input', 200, '',
       'The group handle exists already, please choose another one.'
@@ -170,6 +173,7 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'message_no_groups', 'message_dialog_input_error', 'message_dialog_error_no_folder',
     'message_dialog_error_upload', 'message_no_invitations',
     'message_dialog_error_file_extension', 'message_dialog_error_file_type',
-    'message_dialog_error_media_db', 'message_dialog_error_handle_duplicate'
+    'message_dialog_error_media_db', 'message_dialog_error_handle_duplicate',
+    'message_failed_to_execute_command'
   );
 }
