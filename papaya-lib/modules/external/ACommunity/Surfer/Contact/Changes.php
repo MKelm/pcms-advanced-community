@@ -102,6 +102,7 @@ class ACommunitySurferContactChanges extends PapayaObject {
         $ressources[] = array('contact_own_requests' => array($contactId));
       }
     }
+    $result = TRUE;
     foreach ($ressources as $ressource) {
       foreach ($ressource as $ressourceName => $ressourceIds) {
         foreach ($ressourceIds as $ressourceId) {
@@ -109,10 +110,11 @@ class ACommunitySurferContactChanges extends PapayaObject {
           $lastChange->assign(
             array('ressource' => $ressourceName.':surfer_'.$ressourceId, 'time' => time())
           );
-          $lastChange->save();
+          $result = $result && $lastChange->save();
         }
       }
     }
+    return $result;
   }
 
   /**
@@ -132,9 +134,9 @@ class ACommunitySurferContactChanges extends PapayaObject {
       )
     );
     if ($result == TRUE) {
-      $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_PENDING);
+      return $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_PENDING);
     }
-    return $result;
+    return FALSE;
   }
 
   /**
@@ -143,7 +145,7 @@ class ACommunitySurferContactChanges extends PapayaObject {
    * @param string $surferId
    */
   public function acceptContactRequest($surferId, $contactId) {
-    $result1 = $this->databaseAccess()->updateRecord(
+    $result1 = FALSE !== $this->databaseAccess()->updateRecord(
       $this->_tableNameSurferContacts,
       array(
         'surfercontact_status' => SURFERCONTACT_STATUS_ACCEPTED,
@@ -154,7 +156,7 @@ class ACommunitySurferContactChanges extends PapayaObject {
         'surfercontact_requested' => $surferId
       )
     );
-    $result2 = $this->databaseAccess()->insertRecord(
+    $result2 = FALSE !== $this->databaseAccess()->insertRecord(
       $this->_tableNameSurferContacts,
       NULL,
       array(
@@ -164,11 +166,10 @@ class ACommunitySurferContactChanges extends PapayaObject {
         'surfercontact_timestamp' => time()
       )
     );
-    $result = $result1 !== FALSE && $result2 !== FALSE;
-    if ($result == TRUE) {
-      $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_ACCEPTED, FALSE);
+    if ($result1 && $result2) {
+      return $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_ACCEPTED, FALSE);
     }
-    return $result;
+    return FALSE;
   }
 
   /**
@@ -201,9 +202,9 @@ class ACommunitySurferContactChanges extends PapayaObject {
       )
     );
     if ($result == TRUE) {
-      $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_PENDING);
+      return $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_PENDING);
     }
-    return $result;
+    return FALSE;
   }
 
   /**
@@ -213,7 +214,7 @@ class ACommunitySurferContactChanges extends PapayaObject {
    * @param string $contactId
    */
   public function deleteContact($surferId, $contactId) {
-    $result1 = $this->databaseAccess()->deleteRecord(
+    $result1 = FALSE !== $this->databaseAccess()->deleteRecord(
       $this->_tableNameSurferContacts,
       array(
         'surfercontact_status' => SURFERCONTACT_STATUS_ACCEPTED,
@@ -221,7 +222,7 @@ class ACommunitySurferContactChanges extends PapayaObject {
         'surfercontact_requested' => $contactId
       )
     );
-    $result2 = $this->databaseAccess()->deleteRecord(
+    $result2 = FALSE !== $this->databaseAccess()->deleteRecord(
       $this->_tableNameSurferContacts,
       array(
         'surfercontact_status' => SURFERCONTACT_STATUS_ACCEPTED,
@@ -229,10 +230,9 @@ class ACommunitySurferContactChanges extends PapayaObject {
         'surfercontact_requested' => $surferId
       )
     );
-    $result = $result1 !== FALSE && $result2 !== FALSE;
-    if ($result == TRUE) {
-      $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_ACCEPTED, TRUE);
+    if ($result1 && $result2) {
+      return $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_ACCEPTED, TRUE);
     }
-    return $result;
+    return FALSE;
   }
 }
