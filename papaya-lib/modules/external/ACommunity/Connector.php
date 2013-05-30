@@ -456,20 +456,11 @@ class ACommunityConnector extends base_connector {
    * Get link to groups page by mode / group handle
    *
    * @param integer $languageId
-   * @param string $mode
-   * @param string $handle
    * @return string|NULL
    */
-  public function getSurferGroupsPageLink($languageId, $mode = NULL, $groupHandle = NULL) {
-    $parameters = array();
-    if (isset($mode)) {
-      $parameters['mode'] = $mode;
-    }
-    if (isset($groupHandle)) {
-      $parameters['group_handle'] = $groupHandle;
-    }
+  public function getSurferGroupsPageLink($languageId) {
     return $this->_getPageLink(
-      'surfer_groups_page_id', NULL, $parameters, 'acgs', NULL
+      'surfer_groups_page_id', NULL, FALSE, 'acgs', NULL
     );
   }
 
