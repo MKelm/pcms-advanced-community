@@ -167,15 +167,15 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
           $definitionValues[] = $ressource['id'];
           $mode = $this->surfers()->parameters()->get('mode', NULL);
           if ($mode == 'invite_surfers' || $mode = 'membership_invitations') {
-            $definitionValues = $values->lastChangeTime(
+            $definitionValues[] = $values->lastChangeTime(
               'group:membership_invitations:group_'.$ressource['id']
             );
           } elseif ($mode == 'membership_requests') {
-            $definitionValues = $values->lastChangeTime(
+            $definitionValues[] = $values->lastChangeTime(
               'group:membership_requests:group_'.$ressource['id']
             );
           } elseif ($mode == 'members') {
-            $definitionValues = $values->lastChangeTime(
+            $definitionValues[] = $values->lastChangeTime(
               'group:memberships:group_'.$ressource['id']
             );
           }
