@@ -69,23 +69,13 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
    * Names of caption data
    * @var array
    */
-  protected $_captionNames = array(
-    'caption_dialog_is_public', 'caption_dialog_title', 'caption_dialog_description',
-    'caption_dialog_image', 'caption_dialog_is_public_yes', 'caption_dialog_is_public_no',
-    'caption_dialog_button_add', 'caption_command_delete', 'caption_command_add',
-    'caption_dialog_button_edit', 'caption_dialog_handle', 'caption_command_edit'
-  );
+  protected $_captionNames = array('caption_command_delete');
 
   /**
    * Names of message data
    * @var array
    */
-  protected $_messageNames = array(
-    'message_no_groups', 'message_dialog_input_error', 'message_dialog_error_no_folder',
-    'message_dialog_error_upload',
-    'message_dialog_error_file_extension', 'message_dialog_error_file_type',
-    'message_dialog_error_media_db', 'dialog_error_handle_duplicate'
-  );
+  protected $_messageNames = array('message_no_groups');
 
   /**
    * Groups object
@@ -123,7 +113,12 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
       $moderator = $this->groups()->data()->surferIsModerator();
       $ownGroups = $this->groups()->data()->showOwnGroups();
       if ($ownGroups) {
-        $lastChangeRessource = 'groups:surfer_'.$this->groups()->data()->currentSurferId();
+        if ($this->groups()->parameters()->get('mode') == 'invitations') {
+          $lastChangeRessource = 'groups:membership_invitations:surfer_'.
+            $this->groups()->data()->currentSurferId();
+        } else {
+          $lastChangeRessource = 'groups:surfer_'.$this->groups()->data()->currentSurferId();
+        }
       } else {
         $lastChangeRessource = 'groups';
       }

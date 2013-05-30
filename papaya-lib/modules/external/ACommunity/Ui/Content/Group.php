@@ -53,6 +53,13 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   protected $_time = NULL;
 
   /**
+  * Is public flag
+  *
+  * @var string
+  */
+  protected $_isPublic = NULL;
+
+  /**
    * Delete link
    * @var string
    */
@@ -77,6 +84,30 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   protected $_editLinkCaption = NULL;
 
   /**
+   * Accept invitation link
+   * @var string
+   */
+  protected $_acceptInvitationLink = NULL;
+
+  /**
+   * Accept invitation link caption
+   * @var string
+   */
+  protected $_acceptInvitationLinkCaption = NULL;
+
+  /**
+   * Decline invitation link
+   * @var string
+   */
+  protected $_declineInvitationLink = NULL;
+
+  /**
+   * Decline invitation link caption
+   * @var string
+   */
+  protected $_declineInvitationLinkCaption = NULL;
+
+  /**
    * Group page link
    * @var string
    */
@@ -92,10 +123,15 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
     'image' => array('_image', '_image'),
     'title' => array('_title', '_title'),
     'time' => array('_time', 'setTime'),
+    'isPublic' => array('_isPublic', '_isPublic'),
     'deleteLink' => array('_deleteLink', '_deleteLink'),
     'deleteLinkCaption' => array('_deleteLinkCaption', '_deleteLinkCaption'),
     'editLink' => array('_editLink', '_editLink'),
     'editLinkCaption' => array('_editLinkCaption', '_editLinkCaption'),
+    'acceptInvitationLink' => array('_acceptInvitationLink', '_acceptInvitationLink'),
+    'acceptInvitationLinkCaption' => array('_acceptInvitationLinkCaption', '_acceptInvitationLinkCaption'),
+    'declineInvitationLink' => array('_declineInvitationLink', '_declineInvitationLink'),
+    'declineInvitationLinkCaption' => array('_declineInvitationLinkCaption', '_declineInvitationLinkCaption'),
     'pageLink' => array('_pageLink', '_pageLink')
   );
 
@@ -106,13 +142,16 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   * @param string $text
   * @param string $surferHandle
   * @param integer $time
+  * @param string $pageLink
+  * @param integer $isPublic
   */
-  public function __construct($id, $title, $time, $image, $pageLink) {
+  public function __construct($id, $title, $time, $image, $pageLink, $isPublic) {
     $this->id = $id;
     $this->title = $title;
     $this->time = $time;
     $this->image = $image;
     $this->pageLink = $pageLink;
+    $this->isPublic = $isPublic;
   }
 
   /**
@@ -140,17 +179,19 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $message = $parent->appendElement(
-      'group',
-      array(
-        'id' => $this->id,
-        'title' => PapayaUtilStringXml::escapeAttribute($this->title),
-        'time' => $this->time,
-        'image' => PapayaUtilStringXml::escapeAttribute($this->image),
-        'page-link' => PapayaUtilStringXml::escapeAttribute($this->pageLink)
-      )
+    $attributes = array(
+      'id' => (int)$this->id,
+      'title' => PapayaUtilStringXml::escapeAttribute($this->title),
+      'time' => $this->time,
+      'image' => PapayaUtilStringXml::escapeAttribute($this->image),
+      'page-link' => PapayaUtilStringXml::escapeAttribute($this->pageLink)
     );
-    if (isset($this->_deleteLink) || isset($this->_editLink)) {
+    if (!is_null($this->isPublic)) {
+      $attributes['is-public'] = (int)$this->isPublic;
+    }
+    $message = $parent->appendElement('group', $attributes);
+    if (isset($this->_deleteLink) || isset($this->_editLink) ||
+        isset($this->_acceptInvitationLink) || isset($this->_declineInvitationLink)) {
       $commands = $message->appendElement('commands');
       if (isset($this->_editLink)) {
         $commands->appendElement(
@@ -164,6 +205,20 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
           'delete',
           array('caption' => PapayaUtilStringXml::escapeAttribute($this->deleteLinkCaption)),
           PapayaUtilStringXml::escape($this->deleteLink)
+        );
+      }
+      if (isset($this->_acceptInvitationLink)) {
+        $commands->appendElement(
+          'accept-invitation',
+          array('caption' => PapayaUtilStringXml::escapeAttribute($this->acceptInvitationLinkCaption)),
+          PapayaUtilStringXml::escape($this->acceptInvitationLink)
+        );
+      }
+      if (isset($this->_declineInvitationLink)) {
+        $commands->appendElement(
+          'decline-invitation',
+          array('caption' => PapayaUtilStringXml::escapeAttribute($this->declineInvitationLinkCaption)),
+          PapayaUtilStringXml::escape($this->declineInvitationLink)
         );
       }
     }

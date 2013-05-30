@@ -74,7 +74,8 @@ class ACommunityUiContentGroupsList extends PapayaUiControl {
           $groupData['title'],
           $groupData['time'],
           $groupData['image'],
-          $groupData['page_link']
+          $groupData['page_link'],
+          isset($groupData['public']) ? $groupData['public'] : NULL
         );
         if (isset($commandLinks[$id]) && isset($commandLinks[$id]['delete'])) {
           $group->deleteLink = $commandLinks[$id]['delete'];
@@ -83,6 +84,14 @@ class ACommunityUiContentGroupsList extends PapayaUiControl {
         if (isset($commandLinks[$id]) && isset($commandLinks[$id]['edit'])) {
           $group->editLink = $commandLinks[$id]['edit'];
           $group->editLinkCaption = $this->data()->captions['command_edit'];
+        }
+        if (isset($commandLinks[$id]) && isset($commandLinks[$id]['accept_invitation'])) {
+          $group->acceptInvitationLink = $commandLinks[$id]['accept_invitation'];
+          $group->acceptInvitationLinkCaption = $this->data()->captions['command_accept_invitation'];
+        }
+        if (isset($commandLinks[$id]) && isset($commandLinks[$id]['decline_invitation'])) {
+          $group->declineInvitationLink = $commandLinks[$id]['decline_invitation'];
+          $group->declineInvitationLinkCaption = $this->data()->captions['command_decline_invitation'];
         }
         $this->groups[] = $group;
       }
@@ -97,8 +106,11 @@ class ACommunityUiContentGroupsList extends PapayaUiControl {
   public function appendTo(PapayaXmlElement $parent) {
     $this->fill();
     if (count($this->groups()->toArray()) == 0) {
+      $mode = $this->data()->owner->parameters()->get('mode', NULL);
       $parent->appendElement(
-        'message', array('type' => 'error'), $this->data()->messages['no_groups']
+        'message', array('type' => 'error'),
+        $mode == 'invitations' ?
+          $this->data()->messages['no_invitations'] : $this->data()->messages['no_groups']
       );
     } else {
       $this->groups()->appendTo($parent);

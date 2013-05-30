@@ -65,39 +65,104 @@ class ACommunityGroups extends ACommunityUiContent {
   public function performCommands() {
     $command = $this->parameters()->get('command', '');
     $groupHandle = $this->parameters()->get('group_handle', NULL);
-    if (!empty($groupHandle) && (
+    $lastChange = 0;
+    $groupId = $this->acommunityConnector()->getGroupIdByHandle($groupHandle);
+
+    if ($command == 'delete_group' && !empty($groupId) && (
          (!$this->data()->showOwnGroups() && $this->data()->surferIsModerator()) ||
-         ($this->data()->showOwnGroups() && $this->data()->surferIsGroupOwner($groupId))
+         ($this->data()->showOwnGroups() && $this->data()->surferHasStatus($groupId, 'is_owner', 1))
         )) {
-      if (!empty($command)) {
-        $lastChange = 0;
-        if ($command == 'delete_group') {
-          $group = clone $this->data()->group();
-          $group->load(array('handle' => $groupHandle));
-          if ($group->delete()) {
-            $lastChange = time();
-          }
-        }
-        if ($lastChange > 0) {
-          if ($this->data()->showOwnGroups()) {
-            $ressource = $this->data()->ressource();
-            $lastChange = clone $this->data()->lastChange();
-            $lastChange->assign(
+      $group = clone $this->data()->group();
+      $group->load($groupId);
+      if ($group->delete()) {
+        $lastChange = time();
+      }
+
+    } elseif (($command == 'accept_invitation' || $command == 'decline_invitation') &&
+              !empty($groupId) && $this->data()->showOwnGroups() &&
+              $this->data()->surferHasStatus($groupId, 'is_pending', 2)) {
+      switch ($command) {
+        case 'accept_invitation':
+          $groupSurferRelation = $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array('id' => $groupId, 'surfer_id' => $this->data()->currentSurferId())
+          );
+          if ($groupSurferRelation['surfer_status_pending'] == 2) {
+            $groupSurferRelation = clone $this->data()->groupSurferRelation();
+            $groupSurferRelation->assign(
               array(
-                'ressource' => 'groups:'.$ressource['type'].'_'.$ressource['id'],
-                'time' => $lastChange
+                'id' => $groupId,
+                'surfer_id' => $this->data()->currentSurferId(),
+                'surfer_status_pending' => 0
               )
             );
-            $lastChange->save();
+            if ($groupSurferRelation->save()) {
+              $lastChange = time();
+            }
           }
-          $this->data()->lastChange()->assign(
-            array('ressource' => 'groups', 'time' => $lastChange)
+          break;
+        case 'decline_invitation':
+          $groupSurferRelation = $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array('id' => $groupId, 'surfer_id' => $this->data()->currentSurferId())
           );
-          $this->data()->lastChange()->save();
-          $this->parameters()->set('command', '');
-          $this->parameters()->set('group_id', 0);
-        }
+          if ($groupSurferRelation['surfer_status_pending'] == 2) {
+            if ($groupSurferRelation->delete()) {
+              $lastChange = time();
+            }
+          }
+          break;
       }
+    }
+
+    if ($lastChange > 0) {
+      if ($this->data()->showOwnGroups()) {
+        $ressource = $this->data()->ressource();
+        if ($command == 'accept_invitation' || $command == 'decline_invitation') {
+          $lastChange = clone $this->data()->lastChange();
+          $lastChange->assign(
+            array(
+              'ressource' => 'groups:membership_invitations:'.$ressource['type'].'_'.$ressource['id'],
+              'time' => $lastChange
+            )
+          );
+          $lastChange->save();
+          $lastChange = clone $this->data()->lastChange();
+          $lastChange->assign(
+            array(
+              'ressource' => 'group:membership_invitations:group_'.$groupId,
+              'time' => $lastChange
+            )
+          );
+          $lastChange->save();
+        }
+        if ($command == 'accept_invitation') {
+          $lastChange = clone $this->data()->lastChange();
+          $lastChange->assign(
+            array(
+              'ressource' => 'group:memberships:group_'.$groupId,
+              'time' => $lastChange
+            )
+          );
+          $lastChange->save();
+        }
+        $lastChange = clone $this->data()->lastChange();
+        $lastChange->assign(
+          array(
+            'ressource' => 'groups:'.$ressource['type'].'_'.$ressource['id'],
+            'time' => $lastChange
+          )
+        );
+        $lastChange->save();
+      }
+      if ($copmmand == 'delete_group') {
+        $this->data()->lastChange()->assign(
+          array('ressource' => 'groups', 'time' => $lastChange)
+        );
+        $this->data()->lastChange()->save();
+      }
+      $this->parameters()->set('command', '');
+      $this->parameters()->set('group_id', 0);
     }
   }
 
@@ -112,19 +177,48 @@ class ACommunityGroups extends ACommunityUiContent {
       'acommunity-groups', array('groups-per-row' => $this->data()->groupsPerRow)
     );
     if ($this->data()->showOwnGroups()) {
-      $commands = $groups->appendElement('commands');
+      $mode = $this->parameters()->get('mode', NULL);
+      $modes = $groups->appendElement('modes');
       $reference = clone $this->data()->reference();
       $reference->setParameters(
-        array('command' => 'add_group'), $this->parameterGroup()
+        array('mode' => 'groups'), $this->parameterGroup()
       );
-      $commands->appendElement(
-        'add',
+      $modes->appendElement(
+        'groups',
         array(
-          'caption' => $this->data()->captions['command_add'],
-          'active' => $this->parameters()->get('command') == 'add_group' ? 1 : 0
+          'caption' => $this->data()->captions['mode_groups'],
+          'active' => $mode == 'groups' || $mode === NULL ? 1 : 0
         ),
         $reference->getRelative()
       );
+      $reference = clone $this->data()->reference();
+      $reference->setParameters(
+        array('mode' => 'invitations'), $this->parameterGroup()
+      );
+      $modes->appendElement(
+        'invitations',
+        array(
+          'caption' => $this->data()->captions['mode_invitations'],
+          'active' => $this->parameters()->get('mode') == 'invitations' ? 1 : 0
+        ),
+        $reference->getRelative()
+      );
+      // commands
+      if ($mode === NULL || $mode == 'groups') {
+        $commands = $groups->appendElement('commands');
+        $reference = clone $this->data()->reference();
+        $reference->setParameters(
+          array('command' => 'add_group'), $this->parameterGroup()
+        );
+        $commands->appendElement(
+          'add',
+          array(
+            'caption' => $this->data()->captions['command_add'],
+            'active' => $this->parameters()->get('command') == 'add_group' ? 1 : 0
+          ),
+          $reference->getRelative()
+        );
+      }
     }
 
     if ($this->data()->surferIsModerator() || $this->data()->showOwnGroups()) {

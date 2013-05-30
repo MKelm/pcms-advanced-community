@@ -58,7 +58,20 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'group_images_folder' => array(
       'Group Images Folder', 'isNum', TRUE, 'mediafolder', 30, '', NULL
     ),
+    'Mode Captions',
+    'caption_mode_groups' => array(
+      'Groups', 'isNoHTML', TRUE, 'input', 200, '', 'Groups'
+    ),
+    'caption_mode_invitations' => array(
+      'Invitations', 'isNoHTML', TRUE, 'input', 200, '', 'Invitations'
+    ),
     'Command Captions',
+    'caption_command_accept_invitation' => array(
+      'Accept Invitation', 'isNoHTML', TRUE, 'input', 200, '', 'Accept'
+    ),
+    'caption_command_decline_invitation' => array(
+      'Decline Invitation', 'isNoHTML', TRUE, 'input', 200, '', 'Decline'
+    ),
     'caption_command_add' => array(
       'Add Group', 'isNoHTML', TRUE, 'input', 200, '', 'Add group'
     ),
@@ -100,7 +113,10 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'message_no_groups' => array(
       'No Groups', 'isNoHTML', TRUE, 'input', 200, '', 'No groups.'
     ),
-    'dialog_error_handle_duplicate' => array(
+    'message_no_invitations' => array(
+      'No Invitations', 'isNoHTML', TRUE, 'input', 200, '', 'No invitations.'
+    ),
+    'message_dialog_error_handle_duplicate' => array(
       'Dialog Handle Duplicate Error', 'isNoHTML', TRUE, 'input', 200, '',
       'The group handle exists already, please choose another one.'
     ),
@@ -128,5 +144,29 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
       'Dialog Media DB Error', 'isNoHTML', TRUE, 'input', 200, '',
       'Could not comple upload process in Media DB.'
     )
+  );
+
+  /**
+   * Names of caption data
+   * @var array
+   */
+  protected $_captionNames = array(
+    'caption_dialog_is_public', 'caption_dialog_title', 'caption_dialog_description',
+    'caption_dialog_image', 'caption_dialog_is_public_yes', 'caption_dialog_is_public_no',
+    'caption_dialog_button_add', 'caption_command_delete', 'caption_command_add',
+    'caption_dialog_button_edit', 'caption_dialog_handle', 'caption_command_edit',
+    'caption_mode_groups', 'caption_mode_invitations',
+    'caption_command_accept_invitation', 'caption_command_decline_invitation'
+  );
+
+  /**
+   * Names of message data
+   * @var array
+   */
+  protected $_messageNames = array(
+    'message_no_groups', 'message_dialog_input_error', 'message_dialog_error_no_folder',
+    'message_dialog_error_upload', 'message_no_invitations',
+    'message_dialog_error_file_extension', 'message_dialog_error_file_type',
+    'message_dialog_error_media_db', 'message_dialog_error_handle_duplicate'
   );
 }

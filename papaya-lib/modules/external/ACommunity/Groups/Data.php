@@ -60,6 +60,12 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   protected $_group = NULL;
 
   /**
+   * Group surfer relation database record
+   * @var object
+   */
+  protected $_groupSurferRelation = NULL;
+
+  /**
    * Group surfer relations database records
    * @var object
    */
@@ -69,7 +75,7 @@ class ACommunityGroupsData extends ACommunityUiContentData {
    * A regular expression to filter reference parameters
    * @var string
    */
-  protected $_referenceParametersExpression = 'groups_page|group_handle|command|mode';
+  protected $_referenceParametersExpression = 'groups_page|mode';
 
   /**
    * Contains flag to show groups of the current active surfer only
@@ -102,10 +108,10 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   protected $_mediaDBEdit = NULL;
 
   /**
-   * Boolean status of group owner by group id for owner command actions
+   * Contains surfer status by group id
    * @var array
    */
-  protected $_surferIsGroupOwner = NULL;
+  protected $_surferStatus = NULL;
 
   /**
    * Set data by plugin object
@@ -139,18 +145,44 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   /**
    * Detects if the current active surfer is the owner of the selected group
    *
+   * @param integer $groupId
+   * @param string $name of status
+   * @param integer $value of status
    * @return bolean
    */
-  public function surferIsGroupOwner($groupId) {
-    if (!isset($this->_surferIsGroupOwner[$groupId])) {
+  public function surferHasStatus($groupId, $name, $value) {
+    if (is_null($this->_surferStatus[$groupId])) {
       $this->groupSurferRelations()->load(
         array('id' => $groupId, 'surfer_id' => $this->currentSurferId())
       );
-      $groupSurferRelations = $this->groupSurferRelations();
-      $this->_surferIsGroupOwner[$groupId] = isset($groupSurferRelations[$groupId]) &&
-        !empty($groupSurferRelations[$groupId]['is_owner']);
+      $this->_surferStatus[$groupId] = reset($this->groupSurferRelations()->toArray());
+      if (empty($this->_surferStatus[$groupId])) {
+        $this->_surferStatus[$groupId] = FALSE;
+      }
     }
-    return $this->_surferIsGroupOwner[$groupId];
+    if (!empty($this->_surferStatus[$groupId])) {
+      return $this->_surferStatus[$groupId][$name] == $value;
+    }
+    return FALSE;
+  }
+
+  /**
+  * Access to group surfer relation database record data
+  *
+  * @param ACommunityContentGroupSurferRelation $group
+  * @return ACommunityContentGroupSurferRelation
+  */
+  public function groupSurferRelation(
+           ACommunityContentGroupSurferRelation $groupSurferRelation = NULL
+         ) {
+    if (isset($groupSurferRelation)) {
+      $this->_groupSurferRelation = $groupSurferRelation;
+    } elseif (is_null($this->_groupSurferRelation)) {
+      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relation.php');
+      $this->_groupSurferRelation = new ACommunityContentGroupSurferRelation();
+      $this->_groupSurferRelation->papaya($this->papaya());
+    }
+    return $this->_groupSurferRelation;
   }
 
   /**
@@ -232,10 +264,11 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   protected function _getCommandLinks(&$links, $groupsList) {
     if (!empty($groupsList['data'])) {
       $groupSurferRelations = $this->groupSurferRelations();
+      $mode = $this->owner->parameters()->get('mode', NULL);
       foreach ($groupsList['data'] as $id => $group) {
         if ((!$this->showOwnGroups() && $this->surferIsModerator()) ||
-            ($this->showOwnGroups() && isset($groupSurferRelations[$id]) &&
-             !empty($groupSurferRelations[$id]['is_owner']))) {
+            ($this->showOwnGroups() && $mode != 'invitations' &&
+             isset($groupSurferRelations[$id]) && !empty($groupSurferRelations[$id]['is_owner']))) {
           $reference = clone $this->reference();
           $reference->setParameters(
             array(
@@ -246,14 +279,28 @@ class ACommunityGroupsData extends ACommunityUiContentData {
           );
           $links[$id]['delete'] = $reference->getRelative();
         }
-        if ($this->showOwnGroups() && isset($groupSurferRelations[$id]) &&
-            !empty($groupSurferRelations[$id]['is_owner'])) {
+        if ($this->showOwnGroups() && $mode != 'invitations' &&
+            isset($groupSurferRelations[$id]) && !empty($groupSurferRelations[$id]['is_owner'])) {
           $reference = clone $this->reference();
           $reference->setParameters(
             array('command' => 'edit_group', 'group_handle' => $group['handle']),
             $this->owner->parameterGroup()
           );
           $links[$id]['edit']= $reference->getRelative();
+        }
+        if ($this->showOwnGroups() && $mode == 'invitations') {
+          $reference = clone $this->reference();
+          $reference->setParameters(
+            array('command' => 'accept_invitation', 'group_handle' => $group['handle']),
+            $this->owner->parameterGroup()
+          );
+          $links[$id]['accept_invitation']= $reference->getRelative();
+          $reference = clone $this->reference();
+          $reference->setParameters(
+            array('command' => 'decline_invitation', 'group_handle' => $group['handle']),
+            $this->owner->parameterGroup()
+          );
+          $links[$id]['decline_invitation']= $reference->getRelative();
         }
       }
     }
@@ -284,8 +331,19 @@ class ACommunityGroupsData extends ACommunityUiContentData {
     $page = $this->owner->parameters()->get('groups_page', 0);
     $groupSurferRelations = array();
     if ($this->showOwnGroups()) {
+      $mode = $this->owner->parameters()->get('mode', NULL);
+      if ($mode == 'invitations') {
+        $filter = array(
+          'surfer_id' => $this->currentSurferId(), 'surfer_status_pending' => 2
+        );
+      } else {
+        $filter = array(
+          'surfer_id' => $this->currentSurferId(), 'surfer_status_pending' => 0,
+          'include_owner_status' => 1
+        );
+      }
       $this->groupSurferRelations()->load(
-        array('surfer_id' => $this->currentSurferId()),
+        $filter,
         $this->pagingItemsPerPage,
         ($page > 0) ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
@@ -315,8 +373,14 @@ class ACommunityGroupsData extends ACommunityUiContentData {
           $this->_imageThumbnailResizeMode
         );
       }
-      $listData['data'][$key]['page_link'] = $this->owner->acommunityConnector()
-        ->getGroupPageLink($values['handle']);
+      if (!($mode == 'invitations' && $values['public'] == 0)) {
+        $listData['data'][$key]['page_link'] = $this->owner->acommunityConnector()
+          ->getGroupPageLink($values['handle']);
+      }
+      if (!$this->showOwnGroups()) {
+        // the public state in public display mode is needless
+        unset($listData['data'][$key]['public']);
+      }
     }
     return $listData;
   }
