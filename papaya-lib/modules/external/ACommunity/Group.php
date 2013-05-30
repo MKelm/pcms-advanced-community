@@ -54,79 +54,30 @@ class ACommunityGroup extends ACommunityUiContent {
     $command = $this->parameters()->get('command', NULL);
     $ressource = $this->data()->ressource();
     if (!empty($ressource)) {
-      $lastChangeTime = 0;
-      $changeType = 'membership_requests';
       switch ($command) {
         case 'request_membership':
-          $groupSurferRelation = clone $this->data()->groupSurferRelation();
-          $groupSurferRelation->load(
-            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
+          return $this->data()->groupSurferChanges()->requestMembership(
+            $ressource['id'], $this->data()->currentSurferId()
           );
-          if (empty($surferGroupStatus)) {
-            $groupSurferRelation = clone $this->data()->groupSurferRelation();
-            $groupSurferRelation->assign(
-              array(
-                'id' => $ressource['id'],
-                'surfer_id' => $this->data()->currentSurferId(),
-                'surfer_status_pending' => 1
-              )
-            );
-            if ($groupSurferRelation->save()) {
-              $lastChangeTime = time();
-            }
-          }
           break;
         case 'remove_membership_request':
-          $groupSurferRelation = clone $this->data()->groupSurferRelation();
-          $groupSurferRelation->load(
-            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
+          return $this->data()->groupSurferChanges()->removeRequest(
+            $ressource['id'], $this->data()->currentSurferId()
           );
-          if ($groupSurferRelation['surfer_status_pending'] == 1) {
-            $groupSurferRelation = $this->data()->groupSurferRelation();
-            $groupSurferRelation->load(
-              array(
-                'id' => $ressource['id'],
-                'surfer_id' => $this->data()->currentSurferId(),
-                'surfer_status_pending' => 1
-              )
-            );
-            if ($groupSurferRelation->delete()) {
-              $lastChangeTime = time();
-            }
-          }
           break;
         case 'accept_membership_invitation':
-          $groupSurferRelation = clone $this->data()->groupSurferRelation();
-          $groupSurferRelation->load(
-            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
+          return $this->data()->groupSurferChanges()->acceptInvitation(
+            $ressource['id'], $this->data()->currentSurferId()
           );
-          if ($groupSurferRelation['surfer_status_pending'] == 2) {
-            $groupSurferRelation = clone $this->data()->groupSurferRelation();
-            $groupSurferRelation->assign(
-              array(
-                'id' => $ressource['id'],
-                'surfer_id' => $this->data()->currentSurferId(),
-                'surfer_status_pending' => 0
-              )
-            );
-            if ($groupSurferRelation->save()) {
-              $lastChangeTime = time();
-              $changeType = 'memberships';
-            }
-          }
+          break;
+        case 'decline_membership_invitation':
+          return $this->data()->groupSurferChanges()->declineInvitation(
+            $ressource['id'], $this->data()->currentSurferId()
+          );
           break;
       }
-      if ($lastChangeTime > 0) {
-        $lastChange = $this->data()->lastChange();
-        $lastChange->assign(
-          array(
-            'ressource' => 'group:'.$changeType.':'.'group_'.$ressource['id'],
-            'time' => $lastChangeTime
-          )
-        );
-        $lastChange->save();
-      }
     }
+    return NULL;
   }
 
   /**
@@ -137,7 +88,12 @@ class ACommunityGroup extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
-      $this->_performCommands();
+      $result = $this->_performCommands();
+      if ($result === FALSE) {
+        $parent->appendElement(
+          'message', array('type' => 'error'), $this->data()->messages['failed_to_execute_command']
+        );
+      }
 
       if (FALSE !== $this->data()->initialize()) {
         $parent->appendElement('title', array(), $this->data()->title);

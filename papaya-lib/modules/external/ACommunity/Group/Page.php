@@ -63,6 +63,9 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     'caption_link_accept_membership_invitation' => array(
       'Accept Membership Invitation', 'isNoHTML', TRUE, 'input', 200, '', 'Accept membership invitation'
     ),
+    'caption_link_decline_membership_invitation' => array(
+      'Decline Membership Invitation', 'isNoHTML', TRUE, 'input', 200, '', 'Decline membership invitation'
+    ),
     'caption_link_invite_surfers' => array(
       'Invite Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Invite surfers'
     ),
@@ -101,6 +104,9 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     'message_private_group' => array(
       'Private Group', 'isNoHTML', TRUE, 'input', 200, '', 'You do not have the permission to access this group.'
     ),
+    'message_failed_to_execute_command' => array(
+      'Failed To Execute Command', 'isNoHTML', TRUE, 'input', 200, '', 'Failed to execute command.'
+    )
   );
 
   /**
@@ -212,10 +218,12 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
       'caption_link_accept_membership_invitation', 'caption_link_invite_surfers',
       'caption_link_membership_request', 'caption_link_membership_requests',
       'caption_link_membership_invitation', 'caption_link_membership_invitations',
-      'caption_link_member', 'caption_link_members', 'caption_link_owner'
+      'caption_link_member', 'caption_link_members', 'caption_link_owner',
+      'caption_link_decline_membership_invitation'
     );
     $this->group()->data()->setPluginData(
-      $this->data, $captionNames, array('message_no_group', 'message_private_group')
+      $this->data, $captionNames,
+      array('message_no_group', 'message_private_group', 'message_failed_to_execute_command')
     );
     return $this->group()->getXml();
   }
