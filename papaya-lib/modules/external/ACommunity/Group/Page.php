@@ -129,12 +129,13 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
       $definitionValues = array('acommunity_group_page');
       $ressource = $this->setRessourceData();
       if (!empty($ressource)) {
-        $command = NULL;
+        $command = $this->group()->parameters()->get('command', NULL);
         if (empty($command)) {
           $currentSurferId = $this->group()->data()->currentSurferId();
           include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $currentSurferId;
+          $definitionValues[] = $ressource['type'];
           $definitionValues[] = $ressource['id'];
           $definitionValues[] = $values->lastChangeTime('group:group_'.$ressource['id']);
           $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource['id']);

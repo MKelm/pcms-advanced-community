@@ -54,11 +54,14 @@ class ACommunityGroup extends ACommunityUiContent {
     $command = $this->parameters()->get('command', NULL);
     $ressource = $this->data()->ressource();
     if (!empty($ressource)) {
-      $lastChange = 0;
+      $lastChangeTime = 0;
       $changeType = 'membership_requests';
       switch ($command) {
         case 'request_membership':
-          $surferGroupStatus = $this->data()->surferGroupStatus();
+          $groupSurferRelation = clone $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
+          );
           if (empty($surferGroupStatus)) {
             $groupSurferRelation = clone $this->data()->groupSurferRelation();
             $groupSurferRelation->assign(
@@ -69,13 +72,16 @@ class ACommunityGroup extends ACommunityUiContent {
               )
             );
             if ($groupSurferRelation->save()) {
-              $lastChange = time();
+              $lastChangeTime = time();
             }
           }
           break;
         case 'remove_membership_request':
-          $surferGroupStatus = $this->data()->surferGroupStatus();
-          if ($surferGroupStatus['is_pending'] == 1) {
+          $groupSurferRelation = clone $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
+          );
+          if ($groupSurferRelation['surfer_status_pending'] == 1) {
             $groupSurferRelation = $this->data()->groupSurferRelation();
             $groupSurferRelation->load(
               array(
@@ -85,13 +91,16 @@ class ACommunityGroup extends ACommunityUiContent {
               )
             );
             if ($groupSurferRelation->delete()) {
-              $lastChange = time();
+              $lastChangeTime = time();
             }
           }
           break;
         case 'accept_membership_invitation':
-          $surferGroupStatus = $this->data()->surferGroupStatus();
-          if ($surferGroupStatus['is_pending'] == 2) {
+          $groupSurferRelation = clone $this->data()->groupSurferRelation();
+          $groupSurferRelation->load(
+            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
+          );
+          if ($groupSurferRelation['surfer_status_pending'] == 2) {
             $groupSurferRelation = clone $this->data()->groupSurferRelation();
             $groupSurferRelation->assign(
               array(
@@ -101,18 +110,18 @@ class ACommunityGroup extends ACommunityUiContent {
               )
             );
             if ($groupSurferRelation->save()) {
-              $lastChange = time();
+              $lastChangeTime = time();
               $changeType = 'memberships';
             }
           }
           break;
       }
-      if ($lastChange > 0) {
+      if ($lastChangeTime > 0) {
         $lastChange = $this->data()->lastChange();
         $lastChange->assign(
           array(
             'ressource' => 'group:'.$changeType.':'.'group_'.$ressource['id'],
-            'time' => $lastChange
+            'time' => $lastChangeTime
           )
         );
         $lastChange->save();
