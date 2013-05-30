@@ -17,6 +17,7 @@ This package contains modules to extend your papaya CMS community.
 |  Ideas  |
 -----------
 
+- Cronjob to delete cache contents older than n days
 - Surfer network graphs with cytoscape http://goo.gl/vgiUs
 - Surfer pages with front end content editor
 -- support for "Topic with image" and "Category with image"
