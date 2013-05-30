@@ -55,13 +55,30 @@ class ACommunityUiContentDataLastChange extends PapayaObject {
    * @param string $ressource
    * @return boolean
    */
-  protected function _setLastChangeTime($ressource) {
+  protected function _setLastChangeTime($ressource, $time = NULL) {
+    if (is_null($time)) {
+      $time = time();
+    }
     $lastChange = clone $this->lastChange();
-    $lastChange->assign(array('ressource' => $ressource, 'time' => time()));
+    $lastChange->assign(array('ressource' => $ressource, 'time' => $time));
     if ($lastChange->save()) {
       return TRUE;
     }
     return FALSE;
+  }
+
+  /**
+   * Get last change time depending on ressource
+   *
+   * @param string $ressource
+   * @return integer
+   */
+  protected function _getLastChangeTime($ressource) {
+    $lastChange = clone $this->lastChange();
+    if ($lastChange->load(array('ressource' => $ressource))->load()) {
+      return $lastChange->time > 0 ? $lastChange->time : 0;
+    }
+    return 0;
   }
 
 }
