@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
+require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php');
 
 /**
  * Advanced community surfers data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurfersData extends ACommunityUiContentData {
+class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations {
 
   /**
    * Surfers data
@@ -84,18 +84,6 @@ class ACommunitySurfersData extends ACommunityUiContentData {
   protected $_contactChanges = NULL;
 
   /**
-   * Perform changes to group surfers
-   * @var ACommunityGroupSurferChanges
-   */
-  protected $_groupSurferChanges = NULL;
-
-  /**
-   * Group surfer relations database records
-   * @var object
-   */
-  protected $_groupSurferRelations = NULL;
-
-  /**
    * Set reference parameters expression on construct
    */
   public function __construct() {
@@ -126,25 +114,6 @@ class ACommunitySurfersData extends ACommunityUiContentData {
     $this->pagingItemsPerPage = (int)$data['limit'];
     $this->showPaging = !isset($data['show_paging']) ? TRUE : (bool)$data['show_paging'];
     parent::setPluginData($data, $captionNames, $messageNames);
-  }
-
-  /**
-  * Access to group surfer relations database records data
-  *
-  * @param ACommunityContentGroupSurferRelations $group
-  * @return ACommunityContentGroupSurferRelations
-  */
-  public function groupSurferRelations(
-           ACommunityContentGroupSurferRelations $groupSurferRelations = NULL
-         ) {
-    if (isset($groupSurferRelations)) {
-      $this->_groupSurferRelations = $groupSurferRelations;
-    } elseif (is_null($this->_groupSurferRelations)) {
-      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relations.php');
-      $this->_groupSurferRelations = new ACommunityContentGroupSurferRelations();
-      $this->_groupSurferRelations->papaya($this->papaya());
-    }
-    return $this->_groupSurferRelations;
   }
 
   /**
@@ -371,11 +340,12 @@ class ACommunitySurfersData extends ACommunityUiContentData {
         $this->pagingItemsAbsCount = $this->owner->communityConnector()->surferAdmin->surfersAbsCount;
         $surfers = $this->getSurfer(array_keys($surfers), NULL, $surfers);
         // action commands for group modes
-        if ($ressource['type'] == 'group') {
+        if ($ressource['type'] == 'group' && (bool)$surferGroupStatus['is_owner']) {
+          $surferGroupStatus = $this->surferGroupStatus();
           if ($mode == 'members') {
             // add remove member in members mode
             foreach ($surfers as $key => $surfer) {
-              if ($surfer['id'] == $this->currentSurferId()) {
+              if ($surfer['id'] != $this->currentSurferId()) {
                 $reference = clone $this->reference();
                 $reference->setParameters(
                   array('command' => 'remove_member', 'surfer_handle' => $surfer['handle']),
@@ -487,22 +457,5 @@ class ACommunitySurfersData extends ACommunityUiContentData {
       $this->_contactChanges->papaya($this->papaya());
     }
     return $this->_contactChanges;
-  }
-
-  /**
-  * Perform changes to group surfers
-  *
-  * @param ACommunityGroupSurferChanges $changes
-  * @return ACommunityGroupSurferChanges
-  */
-  public function groupSurferChanges(ACommunityGroupSurferChanges $changes = NULL) {
-    if (isset($changes)) {
-      $this->_groupSurferChanges = $changes;
-    } elseif (is_null($this->_groupSurferChanges)) {
-      include_once(dirname(__FILE__).'/../Group/Surfer/Changes.php');
-      $this->_groupSurferChanges = new ACommunityGroupSurferChanges();
-      $this->_groupSurferChanges->papaya($this->papaya());
-    }
-    return $this->_groupSurferChanges;
   }
 }
