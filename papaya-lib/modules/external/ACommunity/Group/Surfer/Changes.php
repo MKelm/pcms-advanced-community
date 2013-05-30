@@ -19,10 +19,9 @@
  */
 
 /**
- * Load base contacts object for constants
+ * Class for changeable content data
  */
-require_once(PAPAYA_INCLUDE_PATH.'modules/_base/community/base_contacts.php');
-
+require_once(dirname(__FILE__).'/../../Ui/Content/Data/Last/Change.php');
 
 /**
  * Advanced community group surfer changes
@@ -30,19 +29,13 @@ require_once(PAPAYA_INCLUDE_PATH.'modules/_base/community/base_contacts.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityGroupSurferChanges extends PapayaObject {
+class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
 
   /**
    * Group surfer relation database record
    * @var object
    */
   protected $_groupSurferRelation = NULL;
-
-  /**
-   * Last cahnge database record
-   * @var object
-   */
-  protected $_lastChange = NULL;
 
   /**
   * Access to group surfer relation database record data
@@ -61,57 +54,6 @@ class ACommunityGroupSurferChanges extends PapayaObject {
       $this->_groupSurferRelation->papaya($this->papaya());
     }
     return $this->_groupSurferRelation;
-  }
-
-  /**
-  * Access to group surfer relations database records data
-  *
-  * @param ACommunityContentGroupSurferRelations $group
-  * @return ACommunityContentGroupSurferRelations
-  */
-  public function groupSurferRelations(
-           ACommunityContentGroupSurferRelations $groupSurferRelations = NULL
-         ) {
-    if (isset($groupSurferRelations)) {
-      $this->_groupSurferRelations = $groupSurferRelations;
-    } elseif (is_null($this->_groupSurferRelations)) {
-      include_once(dirname(__FILE__).'/../../Content/Group/Surfer/Relations.php');
-      $this->_groupSurferRelations = new ACommunityContentGroupSurferRelations();
-      $this->_groupSurferRelations->papaya($this->papaya());
-    }
-    return $this->_groupSurferRelations;
-  }
-
-  /**
-  * Access to last change database record data
-  *
-  * @param ACommunityContentLastChange $lastChange
-  * @return ACommunityContentLastChange
-  */
-  public function lastChange(ACommunityContentLastChange $lastChange = NULL) {
-    if (isset($lastChange)) {
-      $this->_lastChange = $lastChange;
-    } elseif (is_null($this->_lastChange)) {
-      include_once(dirname(__FILE__).'/../../Content/Last/Change.php');
-      $this->_lastChange = new ACommunityContentLastChange();
-      $this->_lastChange->papaya($this->papaya());
-    }
-    return $this->_lastChange;
-  }
-
-  /**
-   * Set last change time depending on ressource
-   *
-   * @param string $ressource
-   * @return boolean
-   */
-  protected function _setLastChangeTime($ressource) {
-    $lastChange = clone $this->lastChange();
-    $lastChange->assign(array('ressource' => $ressource, 'time' => time()));
-    if ($lastChange->save()) {
-      return TRUE;
-    }
-    return FALSE;
   }
 
   /**
