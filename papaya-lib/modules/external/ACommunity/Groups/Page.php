@@ -62,6 +62,9 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
     'Error Messages',
     'message_no_groups' => array(
       'No Groups', 'isNoHTML', TRUE, 'input', 200, '', 'No groups.'
+    ),
+    'message_failed_to_execute_command' => array(
+      'Failed To Execute Command', 'isNoHTML', TRUE, 'input', 200, '', 'Failed to execute command.'
     )
   );
 
@@ -75,7 +78,7 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
    * Names of message data
    * @var array
    */
-  protected $_messageNames = array('message_no_groups');
+  protected $_messageNames = array('message_no_groups', 'message_failed_to_execute_command');
 
   /**
    * Groups object
@@ -114,8 +117,12 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
         $moderator = $this->groups()->data()->surferIsModerator();
         $ownGroups = $this->groups()->data()->showOwnGroups();
         if ($ownGroups) {
-          if ($this->groups()->parameters()->get('mode') == 'invitations') {
+          $mode = $this->groups()->parameters()->get('mode');
+          if ($mode == 'invitations') {
             $lastChangeRessource = 'groups:membership_invitations:surfer_'.
+              $this->groups()->data()->currentSurferId();
+          } elseif ($mode == 'requests') {
+            $lastChangeRessource = 'groups:membership_requests:surfer_'.
               $this->groups()->data()->currentSurferId();
           } else {
             $lastChangeRessource = 'groups:surfer_'.$this->groups()->data()->currentSurferId();

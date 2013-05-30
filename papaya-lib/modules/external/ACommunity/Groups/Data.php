@@ -60,16 +60,16 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   protected $_group = NULL;
 
   /**
-   * Group surfer relation database record
-   * @var object
-   */
-  protected $_groupSurferRelation = NULL;
-
-  /**
    * Group surfer relations database records
    * @var object
    */
   protected $_groupSurferRelations = NULL;
+
+  /**
+   * Perform changes to group surfers
+   * @var ACommunityGroupSurferChanges
+   */
+  protected $_groupSurferChanges = NULL;
 
   /**
    * A regular expression to filter reference parameters
@@ -164,25 +164,6 @@ class ACommunityGroupsData extends ACommunityUiContentData {
       return $this->_surferStatus[$groupId][$name] == $value;
     }
     return FALSE;
-  }
-
-  /**
-  * Access to group surfer relation database record data
-  *
-  * @param ACommunityContentGroupSurferRelation $group
-  * @return ACommunityContentGroupSurferRelation
-  */
-  public function groupSurferRelation(
-           ACommunityContentGroupSurferRelation $groupSurferRelation = NULL
-         ) {
-    if (isset($groupSurferRelation)) {
-      $this->_groupSurferRelation = $groupSurferRelation;
-    } elseif (is_null($this->_groupSurferRelation)) {
-      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relation.php');
-      $this->_groupSurferRelation = new ACommunityContentGroupSurferRelation();
-      $this->_groupSurferRelation->papaya($this->papaya());
-    }
-    return $this->_groupSurferRelation;
   }
 
   /**
@@ -399,5 +380,22 @@ class ACommunityGroupsData extends ACommunityUiContentData {
       $this->_mediaDBEdit = new base_mediadb_edit();
     }
     return $this->_mediaDBEdit;
+  }
+
+  /**
+  * Perform changes to group surfers
+  *
+  * @param ACommunityGroupSurferChanges $changes
+  * @return ACommunityGroupSurferChanges
+  */
+  public function groupSurferChanges(ACommunityGroupSurferChanges $changes = NULL) {
+    if (isset($changes)) {
+      $this->_groupSurferChanges = $changes;
+    } elseif (is_null($this->_groupSurferChanges)) {
+      include_once(dirname(__FILE__).'/../Group/Surfer/Changes.php');
+      $this->_groupSurferChanges = new ACommunityGroupSurferChanges();
+      $this->_groupSurferChanges->papaya($this->papaya());
+    }
+    return $this->_groupSurferChanges;
   }
 }
