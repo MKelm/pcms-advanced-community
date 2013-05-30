@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
+require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php');
 
 /**
  * Advanced community groups data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityGroupsData extends ACommunityUiContentData {
+class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
 
   /**
    * Data to display paging
@@ -58,18 +58,6 @@ class ACommunityGroupsData extends ACommunityUiContentData {
    * @var object
    */
   protected $_group = NULL;
-
-  /**
-   * Group surfer relations database records
-   * @var object
-   */
-  protected $_groupSurferRelations = NULL;
-
-  /**
-   * Perform changes to group surfers
-   * @var ACommunityGroupSurferChanges
-   */
-  protected $_groupSurferChanges = NULL;
 
   /**
    * A regular expression to filter reference parameters
@@ -108,12 +96,6 @@ class ACommunityGroupsData extends ACommunityUiContentData {
   protected $_mediaDBEdit = NULL;
 
   /**
-   * Contains surfer status by group id
-   * @var array
-   */
-  protected $_surferStatus = NULL;
-
-  /**
    * Set data by plugin object
    *
    * @param array $data
@@ -140,49 +122,6 @@ class ACommunityGroupsData extends ACommunityUiContentData {
       $this->_showOwnGroups = $showOwnGroups;
     }
     return $this->_showOwnGroups;
-  }
-
-  /**
-   * Detects if the current active surfer is the owner of the selected group
-   *
-   * @param integer $groupId
-   * @param string $name of status
-   * @param integer $value of status
-   * @return bolean
-   */
-  public function surferHasStatus($groupId, $name, $value) {
-    if (is_null($this->_surferStatus[$groupId])) {
-      $this->groupSurferRelations()->load(
-        array('id' => $groupId, 'surfer_id' => $this->currentSurferId())
-      );
-      $this->_surferStatus[$groupId] = reset($this->groupSurferRelations()->toArray());
-      if (empty($this->_surferStatus[$groupId])) {
-        $this->_surferStatus[$groupId] = FALSE;
-      }
-    }
-    if (!empty($this->_surferStatus[$groupId])) {
-      return $this->_surferStatus[$groupId][$name] == $value;
-    }
-    return FALSE;
-  }
-
-  /**
-  * Access to group surfer relations database records data
-  *
-  * @param ACommunityContentGroupSurferRelations $group
-  * @return ACommunityContentGroupSurferRelations
-  */
-  public function groupSurferRelations(
-           ACommunityContentGroupSurferRelations $groupSurferRelations = NULL
-         ) {
-    if (isset($groupSurferRelations)) {
-      $this->_groupSurferRelations = $groupSurferRelations;
-    } elseif (is_null($this->_groupSurferRelations)) {
-      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relations.php');
-      $this->_groupSurferRelations = new ACommunityContentGroupSurferRelations();
-      $this->_groupSurferRelations->papaya($this->papaya());
-    }
-    return $this->_groupSurferRelations;
   }
 
   /**
@@ -380,22 +319,5 @@ class ACommunityGroupsData extends ACommunityUiContentData {
       $this->_mediaDBEdit = new base_mediadb_edit();
     }
     return $this->_mediaDBEdit;
-  }
-
-  /**
-  * Perform changes to group surfers
-  *
-  * @param ACommunityGroupSurferChanges $changes
-  * @return ACommunityGroupSurferChanges
-  */
-  public function groupSurferChanges(ACommunityGroupSurferChanges $changes = NULL) {
-    if (isset($changes)) {
-      $this->_groupSurferChanges = $changes;
-    } elseif (is_null($this->_groupSurferChanges)) {
-      include_once(dirname(__FILE__).'/../Group/Surfer/Changes.php');
-      $this->_groupSurferChanges = new ACommunityGroupSurferChanges();
-      $this->_groupSurferChanges->papaya($this->papaya());
-    }
-    return $this->_groupSurferChanges;
   }
 }
