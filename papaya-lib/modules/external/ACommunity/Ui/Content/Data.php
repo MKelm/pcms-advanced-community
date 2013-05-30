@@ -17,12 +17,17 @@
  */
 
 /**
+ * Class for changeable content data
+ */
+require_once(dirname(__FILE__).'/Data/Last/Change.php');
+
+/**
  * Advanced community content data object to handle plugin data and more
  *
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityUiContentData extends PapayaObject {
+class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
 
   /**
    * Owner object
@@ -122,12 +127,6 @@ class ACommunityUiContentData extends PapayaObject {
    * @var array
    */
   protected $_surferGenderTitles = array();
-
-  /**
-   * Last cahnge database record
-   * @var object
-   */
-  protected $_lastChange = NULL;
 
   /**
    * Moderator status
@@ -492,23 +491,6 @@ class ACommunityUiContentData extends PapayaObject {
       }
     }
     return $this->_currentSurferId;
-  }
-
-  /**
-  * Access to last change database record data
-  *
-  * @param ACommunityContentLastChange $lastChange
-  * @return ACommunityContentLastChange
-  */
-  public function lastChange(ACommunityContentLastChange $lastChange = NULL) {
-    if (isset($lastChange)) {
-      $this->_lastChange = $lastChange;
-    } elseif (is_null($this->_lastChange)) {
-      include_once(dirname(__FILE__).'/../../Content/Last/Change.php');
-      $this->_lastChange = new ACommunityContentLastChange();
-      $this->_lastChange->papaya($this->papaya());
-    }
-    return $this->_lastChange;
   }
 
   /**
