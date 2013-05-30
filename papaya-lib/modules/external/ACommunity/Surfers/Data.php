@@ -269,6 +269,9 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
             );
             $groupSurferRelations = $this->groupSurferRelations()->toArray();
             $surferIds = array_keys($groupSurferRelations);
+            if (empty($surferIds)) {
+              return FALSE;
+            }
           } elseif ($mode == 'membership_invitations' || $mode == 'invite_surfers') {
             $this->groupSurferRelations()->load(
               array('id' => $ressource['id'], 'surfer_status_pending' => 2)
@@ -276,6 +279,9 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
             $groupSurferRelations = $this->groupSurferRelations()->toArray();
             if ($mode == 'membership_invitations') {
               $surferIds = array_keys($groupSurferRelations);
+              if (empty($surferIds)) {
+                return FALSE;
+              }
             }
           } elseif ($mode == 'membership_requests') {
             $this->groupSurferRelations()->load(
@@ -283,6 +289,9 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
             );
             $groupSurferRelations = $this->groupSurferRelations()->toArray();
             $surferIds = array_keys($groupSurferRelations);
+            if (empty($surferIds)) {
+              return FALSE;
+            }
           }
         }
         // get list limit / offset
