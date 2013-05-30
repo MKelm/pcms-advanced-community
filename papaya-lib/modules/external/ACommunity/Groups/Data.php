@@ -199,7 +199,7 @@ class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
           );
           $links[$id]['delete'] = $reference->getRelative();
         }
-        if ($this->showOwnGroups() && $mode != 'invitations' &&
+        if ($this->showOwnGroups() && $mode != 'invitations' && $mode != 'requests' &&
             isset($groupSurferRelations[$id]) && !empty($groupSurferRelations[$id]['is_owner'])) {
           $reference = clone $this->reference();
           $reference->setParameters(
@@ -221,6 +221,14 @@ class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
             $this->owner->parameterGroup()
           );
           $links[$id]['decline_invitation']= $reference->getRelative();
+
+        } elseif ($this->showOwnGroups() && $mode == 'requests') {
+          $reference = clone $this->reference();
+          $reference->setParameters(
+            array('command' => 'remove_request', 'group_handle' => $group['handle']),
+            $this->owner->parameterGroup()
+          );
+          $links[$id]['remove_request']= $reference->getRelative();
         }
       }
     }
@@ -255,6 +263,10 @@ class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
       if ($mode == 'invitations') {
         $filter = array(
           'surfer_id' => $this->currentSurferId(), 'surfer_status_pending' => 2
+        );
+      } elseif ($mode == 'requests') {
+        $filter = array(
+          'surfer_id' => $this->currentSurferId(), 'surfer_status_pending' => 1
         );
       } else {
         $filter = array(

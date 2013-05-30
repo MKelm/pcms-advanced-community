@@ -93,6 +93,10 @@ class ACommunityUiContentGroupsList extends PapayaUiControl {
           $group->declineInvitationLink = $commandLinks[$id]['decline_invitation'];
           $group->declineInvitationLinkCaption = $this->data()->captions['command_decline_invitation'];
         }
+        if (isset($commandLinks[$id]) && isset($commandLinks[$id]['remove_request'])) {
+          $group->removeRequestLink = $commandLinks[$id]['remove_request'];
+          $group->removeRequestLinkCaption = $this->data()->captions['command_remove_request'];
+        }
         $this->groups[] = $group;
       }
     }
@@ -107,11 +111,17 @@ class ACommunityUiContentGroupsList extends PapayaUiControl {
     $this->fill();
     if (count($this->groups()->toArray()) == 0) {
       $mode = $this->data()->owner->parameters()->get('mode', NULL);
-      $parent->appendElement(
-        'message', array('type' => 'error'),
-        $mode == 'invitations' ?
-          $this->data()->messages['no_invitations'] : $this->data()->messages['no_groups']
-      );
+      switch ($mode) {
+        case 'invitations':
+          $message = $this->data()->messages['no_invitations'];
+          break;
+        case 'requests':
+          $message = $this->data()->messages['no_requests'];
+          break;
+        default:
+          $message = $this->data()->messages['no_groups'];
+      }
+      $parent->appendElement('message', array('type' => 'error'), $message);
     } else {
       $this->groups()->appendTo($parent);
     }

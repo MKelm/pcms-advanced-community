@@ -108,6 +108,18 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   protected $_declineInvitationLinkCaption = NULL;
 
   /**
+   * Remove request link
+   * @var string
+   */
+  protected $_removeRequestLink = NULL;
+
+  /**
+   * Remove request link caption
+   * @var string
+   */
+  protected $_removeRequestLinkCaption = NULL;
+
+  /**
    * Group page link
    * @var string
    */
@@ -132,6 +144,8 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
     'acceptInvitationLinkCaption' => array('_acceptInvitationLinkCaption', '_acceptInvitationLinkCaption'),
     'declineInvitationLink' => array('_declineInvitationLink', '_declineInvitationLink'),
     'declineInvitationLinkCaption' => array('_declineInvitationLinkCaption', '_declineInvitationLinkCaption'),
+    'removeRequestLink' => array('_removeRequestLink', '_removeRequestLink'),
+    'removeRequestLinkCaption' => array('_removeRequestLinkCaption', '_removeRequestLinkCaption'),
     'pageLink' => array('_pageLink', '_pageLink')
   );
 
@@ -191,7 +205,8 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
     }
     $message = $parent->appendElement('group', $attributes);
     if (isset($this->_deleteLink) || isset($this->_editLink) ||
-        isset($this->_acceptInvitationLink) || isset($this->_declineInvitationLink)) {
+        isset($this->_acceptInvitationLink) || isset($this->_declineInvitationLink) ||
+        isset($this->_removeRequestLink)) {
       $commands = $message->appendElement('commands');
       if (isset($this->_editLink)) {
         $commands->appendElement(
@@ -219,6 +234,13 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
           'decline-invitation',
           array('caption' => PapayaUtilStringXml::escapeAttribute($this->declineInvitationLinkCaption)),
           PapayaUtilStringXml::escape($this->declineInvitationLink)
+        );
+      }
+      if (isset($this->_removeRequestLink)) {
+        $commands->appendElement(
+          'remove-request',
+          array('caption' => PapayaUtilStringXml::escapeAttribute($this->removeRequestLinkCaption)),
+          PapayaUtilStringXml::escape($this->removeRequestLink)
         );
       }
     }

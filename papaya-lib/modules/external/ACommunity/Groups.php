@@ -115,6 +115,15 @@ class ACommunityGroups extends ACommunityUiContent {
               );
             }
             break;
+          case 'remove_request':
+            $requestedSurferAction = $this->data()->showOwnGroups() &&
+              $this->data()->surferHasStatus($groupId, 'is_pending', 1);
+            if ($requestedSurferAction) {
+              return $this->data()->groupSurferChanges()->removeRequest(
+                $groupId, $this->data()->currentSurferId()
+              );
+            }
+            break;
         }
       }
       return FALSE;
@@ -135,7 +144,8 @@ class ACommunityGroups extends ACommunityUiContent {
     $removeDialog = 0;
     if ($this->data()->surferIsModerator() || $this->data()->showOwnGroups()) {
       $result = $this->performCommands();
-      if ($result === FALSE) {
+      $command = $this->parameters()->get('command', '');
+      if ($result === FALSE && $command != 'add_group' && $command != 'edit_group') {
         $groups->appendElement(
           'message',
           array('type' => 'error'),
@@ -144,7 +154,6 @@ class ACommunityGroups extends ACommunityUiContent {
       }
 
       if ($this->data()->showOwnGroups()) {
-        $command = $this->parameters()->get('command', '');
         if ($command == 'add_group' || $command == 'edit_group') {
 
           $dom = new PapayaXmlDocument();
@@ -193,6 +202,18 @@ class ACommunityGroups extends ACommunityUiContent {
         array(
           'caption' => $this->data()->captions['mode_invitations'],
           'active' => $this->parameters()->get('mode') == 'invitations' ? 1 : 0
+        ),
+        $reference->getRelative()
+      );
+      $reference = clone $this->data()->reference();
+      $reference->setParameters(
+        array('mode' => 'requests'), $this->parameterGroup()
+      );
+      $modes->appendElement(
+        'requests',
+        array(
+          'caption' => $this->data()->captions['mode_requests'],
+          'active' => $this->parameters()->get('mode') == 'requests' ? 1 : 0
         ),
         $reference->getRelative()
       );

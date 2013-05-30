@@ -65,6 +65,9 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'caption_mode_invitations' => array(
       'Invitations', 'isNoHTML', TRUE, 'input', 200, '', 'Invitations'
     ),
+    'caption_mode_requests' => array(
+      'Invitations', 'isNoHTML', TRUE, 'input', 200, '', 'Requests'
+    ),
     'Command Captions',
     'caption_command_accept_invitation' => array(
       'Accept Invitation', 'isNoHTML', TRUE, 'input', 200, '', 'Accept'
@@ -83,6 +86,9 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     ),
     'caption_command_delete' => array(
       'Delete Group', 'isNoHTML', TRUE, 'input', 200, '', 'Delete'
+    ),
+    'caption_command_remove_request' => array(
+      'Remove remquest', 'isNoHTML', TRUE, 'input', 200, '', 'Remove'
     ),
     'Dialog Captions',
     'caption_dialog_is_public' => array(
@@ -118,6 +124,9 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     ),
     'message_no_invitations' => array(
       'No Invitations', 'isNoHTML', TRUE, 'input', 200, '', 'No invitations.'
+    ),
+    'message_no_requests' => array(
+      'No Requests', 'isNoHTML', TRUE, 'input', 200, '', 'No requests.'
     ),
     'message_failed_to_execute_command' => array(
       'Failed To Execute Command', 'isNoHTML', TRUE, 'input', 200, '', 'Failed to execute command.'
@@ -162,7 +171,8 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'caption_dialog_button_add', 'caption_command_delete', 'caption_command_add',
     'caption_dialog_button_edit', 'caption_dialog_handle', 'caption_command_edit',
     'caption_mode_groups', 'caption_mode_invitations', 'caption_command_edit_group',
-    'caption_command_accept_invitation', 'caption_command_decline_invitation'
+    'caption_command_accept_invitation', 'caption_command_decline_invitation',
+    'caption_command_remove_request', 'caption_mode_requests'
   );
 
   /**
@@ -174,6 +184,6 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'message_dialog_error_upload', 'message_no_invitations',
     'message_dialog_error_file_extension', 'message_dialog_error_file_type',
     'message_dialog_error_media_db', 'message_dialog_error_handle_duplicate',
-    'message_failed_to_execute_command'
+    'message_failed_to_execute_command', 'message_no_requests'
   );
 }
