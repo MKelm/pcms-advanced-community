@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
+require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php');
 
 /**
  * Advanced community group data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityGroupData extends ACommunityUiContentData {
+class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
 
   /**
    * Group title
@@ -72,24 +72,6 @@ class ACommunityGroupData extends ACommunityUiContentData {
   protected $_group = NULL;
 
   /**
-   * Group surfer relations database records
-   * @var object
-   */
-  protected $_groupSurferRelations = NULL;
-
-  /**
-   * Boolean status of surfer in relation to the current group
-   * @var array
-   */
-  protected $_surferGroupStatus = NULL;
-
-  /**
-   * Perform changes to group surfers
-   * @var ACommunityGroupSurferChanges
-   */
-  protected $_groupSurferChanges = NULL;
-
-  /**
    * A regular expression to filter reference parameters by name
    * @var string
    */
@@ -126,58 +108,14 @@ class ACommunityGroupData extends ACommunityUiContentData {
   }
 
   /**
-  * Access to group surfer relations database records data
-  *
-  * @param ACommunityContentGroupSurferRelations $group
-  * @return ACommunityContentGroupSurferRelations
-  */
-  public function groupSurferRelations(
-           ACommunityContentGroupSurferRelations $groupSurferRelations = NULL
-         ) {
-    if (isset($groupSurferRelations)) {
-      $this->_groupSurferRelations = $groupSurferRelations;
-    } elseif (is_null($this->_groupSurferRelations)) {
-      include_once(dirname(__FILE__).'/../Content/Group/Surfer/Relations.php');
-      $this->_groupSurferRelations = new ACommunityContentGroupSurferRelations();
-      $this->_groupSurferRelations->papaya($this->papaya());
-    }
-    return $this->_groupSurferRelations;
-  }
-
-  /**
-   * Status of the current surfer in relation to the selected group
-   *
-   * @return string
-   */
-  public function surferGroupStatus() {
-    if (is_null($this->_surferGroupStatus)) {
-      $this->_surferGroupStatus = array();
-      $ressource = $this->ressource();
-      if (!empty($ressource)) {
-        $this->groupSurferRelations()->load(
-          array('id' => $ressource['id'], 'surfer_id' => $this->currentSurferId())
-        );
-        $groupSurferRelation = reset($this->groupSurferRelations()->toArray());
-        if (isset($groupSurferRelation)) {
-          $this->_surferGroupStatus = $groupSurferRelation;
-        } else {
-          $this->_surferGroupStatus = FALSE;
-        }
-      }
-    }
-    return $this->_surferGroupStatus;
-  }
-
-  /**
    * Intitialize surfer data
    */
   public function initialize() {
     $ressource = $this->ressource();
     if (!empty($ressource)) {
       $this->group()->load($ressource['id']);
-      $surferGroupStatus = $this->surferGroupStatus();
-      if ($this->group()->public == 0 &&
-          (empty($surferGroupStatus['is_owner']) && empty($surferGroupStatus['is_member']))) {
+      if ($this->group()->public == 0 && !$this->surferHasStatus(NULL, 'is_owner', 1) &&
+          !$this->surferHasStatus(NULL, 'is_member', 1)) {
         $this->owner->module->params['group_handle'] = '';
         return FALSE;
       }
@@ -326,20 +264,4 @@ class ACommunityGroupData extends ACommunityUiContentData {
     }
   }
 
-  /**
-  * Perform changes to group surfers
-  *
-  * @param ACommunityGroupSurferChanges $changes
-  * @return ACommunityGroupSurferChanges
-  */
-  public function groupSurferChanges(ACommunityGroupSurferChanges $changes = NULL) {
-    if (isset($changes)) {
-      $this->_groupSurferChanges = $changes;
-    } elseif (is_null($this->_groupSurferChanges)) {
-      include_once(dirname(__FILE__).'/../Group/Surfer/Changes.php');
-      $this->_groupSurferChanges = new ACommunityGroupSurferChanges();
-      $this->_groupSurferChanges->papaya($this->papaya());
-    }
-    return $this->_groupSurferChanges;
-  }
 }
