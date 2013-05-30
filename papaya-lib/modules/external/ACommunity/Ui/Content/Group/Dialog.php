@@ -100,7 +100,7 @@ class ACommunityUiContentGroupDialog
         $record->description = $xml;
         $buttonCaption = $this->data()->captions['dialog_button_edit'];
         $handle = $this->parameters()->get('handle');
-        if (!empty($handle) && $record->handle != $handle) {
+        if (!empty($handle) && strtolower($record->handle) != strtolower($handle)) {
           $this->_handleChange = TRUE;
         } else {
           $this->_handleChange = FALSE;
@@ -266,11 +266,9 @@ class ACommunityUiContentGroupDialog
           );
           return TRUE;
         } else {
-          $record->assign(
-            array(
-              'image' => isset($mediaId) ? $mediaId : NULL
-            )
-          );
+          if (!empty($mediaId)) {
+            $record->assign(array('image' => $mediaId));
+          }
           return TRUE;
         }
       }
