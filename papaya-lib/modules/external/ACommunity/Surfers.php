@@ -100,7 +100,6 @@ class ACommunitySurfers extends ACommunityUiContent {
           if (!empty($groupSurferRelation['is_owner']) && !empty($surferId)) {
             switch ($command) {
               case 'remove_member':
-              var_dump(1);
                 return $this->data()->groupSurferChanges()->removeMember(
                   $ressource['id'], $surferId, $this->data()->currentSurferId()
                 );
