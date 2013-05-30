@@ -133,7 +133,7 @@ class ACommunitySurfers extends ACommunityUiContent {
                     $lastChange = $this->data()->lastChange();
                     $lastChange->assign(
                       array(
-                        'ressource' => 'group:membership_invitations:'.'group_'.$ressource['id'],
+                        'ressource' => 'group:membership_invitations:group_'.$ressource['id'],
                         'time' => time()
                       )
                     );
@@ -153,7 +153,7 @@ class ACommunitySurfers extends ACommunityUiContent {
                     $lastChange = $this->data()->lastChange();
                     $lastChange->assign(
                       array(
-                        'ressource' => 'group:membership_invitations:'.'group_'.$ressource['id'],
+                        'ressource' => 'group:membership_invitations:group_'.$ressource['id'],
                         'time' => time()
                       )
                     );

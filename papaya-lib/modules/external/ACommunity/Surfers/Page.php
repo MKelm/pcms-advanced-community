@@ -171,6 +171,10 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
             $definitionValues = $values->lastChangeTime(
               'group:membership_requests:group_'.$ressource['id']
             );
+          } elseif ($mode == 'members') {
+            $definitionValues = $values->lastChangeTime(
+              'group:memberships:group_'.$ressource['id']
+            );
           }
         }
         $definitionParameters = array(
