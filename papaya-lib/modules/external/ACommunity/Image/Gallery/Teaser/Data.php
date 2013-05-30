@@ -52,6 +52,12 @@ class ACommunityImageGalleryTeaserData extends ACommunityImageGalleryData {
   public $thumbnailResizeMode = 'mincrop';
 
   /**
+   * Flag of surfer group access for group ressources
+   * @var boolean
+   */
+  public $surferHasGroupAccess = FALSE;
+
+  /**
    * Set data by plugin object
    *
    * @param array $data
