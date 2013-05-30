@@ -128,7 +128,9 @@ class ACommunityComments extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
+    $ressource = $this->data()->ressource();
+    if (!empty($ressource) &&
+        ($ressource['type'] != 'group' || $this->data()->surferHasGroupAccess)) {
       $this->performCommands();
       $comments = $parent->appendElement('acommunity-comments');
       if ($this->data()->mode == 'list') {

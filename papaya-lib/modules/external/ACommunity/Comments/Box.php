@@ -107,30 +107,51 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
     if (isset($definition)) {
       $this->_cacheDefiniton = $definition;
     } elseif (NULL == $this->_cacheDefiniton) {
-      $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
-        $this->papaya()->surfer->surfer['surfer_id'] : NULL;
-      if (!empty($currentSurferId)) {
-        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-      } else {
-        $ressource = $this->setRessourceData();
-        $referenceParameters = $this->comments()->data()->referenceParameters();
-        $parameterNames = array_merge(
-          array('command', 'comment_id'), array_keys($referenceParameters)
-        );
-        unset($referenceParameters);
-        include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
-        $values = new ACommunityCacheIdentifierValues();
-        $definitionValues = array('acommunity_comments_box');
-        if (!empty($ressource)) {
+      $definitionValues = array('acommunity_comments_box');
+      $ressource = $this->setRessourceData();
+      if (!empty($ressource)) {
+        $access = TRUE;
+        if ($ressource['type'] == 'group') {
           $definitionValues[] = $ressource['type'];
           $definitionValues[] = $ressource['id'];
-          $definitionValues[] = $values->lastChangeTime(
-            'comments:'.$ressource['type'].'_'.$ressource['id']
-          );
+          if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
+            $this->comments()->data()->surferHasGroupAccess = TRUE;
+          } else {
+            $access = FALSE;
+          }
         }
+        $definitionValues[] = (int)$access;
+        if ($access) {
+          $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
+            $this->papaya()->surfer->surfer['surfer_id'] : NULL;
+          if (!empty($currentSurferId)) {
+            $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+          } else {
+            $definitionValues[] = $ressource['type'];
+            $definitionValues[] = $ressource['id'];
+            $referenceParameters = $this->comments()->data()->referenceParameters();
+            $parameterNames = array_merge(
+              array('command', 'comment_id'), array_keys($referenceParameters)
+            );
+            unset($referenceParameters);
+            include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+            $values = new ACommunityCacheIdentifierValues();
+            $definitionValues[] = $values->lastChangeTime(
+              'comments:'.$ressource['type'].'_'.$ressource['id']
+            );
+            $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+              new PapayaCacheIdentifierDefinitionValues($definitionValues),
+              new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
+            );
+          }
+        } else {
+          $definitionValues[] = $ressource['type'];
+          $definitionValues[] = $ressource['id'];
+        }
+      }
+      if (is_null($this->_cacheDefiniton)) {
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-          new PapayaCacheIdentifierDefinitionValues($definitionValues),
-          new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
+          new PapayaCacheIdentifierDefinitionValues($definitionValues)
         );
       }
     }

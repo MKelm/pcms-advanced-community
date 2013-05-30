@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
+require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php');
 
 /**
  * Advanced community comments data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityCommentsData extends ACommunityUiContentData {
+class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations {
 
   /**
    * Data to display paging
@@ -84,6 +84,12 @@ class ACommunityCommentsData extends ACommunityUiContentData {
   protected $_referenceParametersExpression = 'comments_page|comment_([0-9]+)_page';
 
   /**
+   * Flag of surfer group access for group ressources
+   * @var boolean
+   */
+  public $surferHasGroupAccess = FALSE;
+
+  /**
    * Check if the current active surfer is the owner of the current ressource
    *
    * @return boolean
@@ -94,12 +100,23 @@ class ACommunityCommentsData extends ACommunityUiContentData {
       return TRUE;
     } elseif ($ressource['type'] == 'image') {
       $ressourceParameters = reset($this->ressourceParameters());
-      if (!empty($ressourceParameters) && !empty($ressourceParameters['surfer_handle'])) {
-        $ownerHandle = $this->owner->communityConnector()->getHandleById($this->currentSurferId());
-        if ($ownerHandle == $ressourceParameters['surfer_handle']) {
-          return TRUE;
+      if (!empty($ressourceParameters)) {
+        if (!empty($ressourceParameters['surfer_handle'])) {
+          $ownerHandle = $this->owner->communityConnector()->getHandleById($this->currentSurferId());
+          if ($ownerHandle == $ressourceParameters['surfer_handle']) {
+            return TRUE;
+          }
+        } elseif (!empty($ressourceParameters['group_handle'])) {
+          $groupId = $this->owner->acommunityConnector()->getGroupIdByHandle(
+            $ressourceParameters['group_handle']
+          );
+          if ($groupId > 0 && $this->surferHasStatus($groupId, 'is_owner', 1)) {
+            return TRUE;
+          }
         }
       }
+    } elseif ($ressource['type'] == 'group' && $this->surferHasStatus(NULL, 'is_owner', 1)) {
+      return TRUE;
     }
     return FALSE;
   }
