@@ -170,6 +170,12 @@ class ACommunityConnector extends base_connector {
   protected $_group = NULL;
 
   /**
+   * Ressource of page module
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
   * Get form xml to select a surfer group by callback.
   *
   * @param string $name Field name
@@ -195,6 +201,21 @@ class ACommunityConnector extends base_connector {
     }
     $result .= '</select>';
     return $result;
+  }
+
+  /**
+   * Get / set ressource of current request.
+   *
+   * Use this method in box modules to get the ressource of the current page module.
+   *
+   * @param ACommunityUiContentRessource $ressource
+   * @return ACommunityUiContentRessource
+   */
+  public function ressource(ACommunityUiContentRessource $ressource = NULL) {
+    if (isset($ressource)) {
+      $this->_ressource = $ressource;
+    }
+    return $this->_ressource;
   }
 
   /**
