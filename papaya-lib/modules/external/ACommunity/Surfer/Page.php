@@ -194,7 +194,13 @@ class ACommunitySurferPage extends base_content implements PapayaPluginCacheable
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    return $this->surfer()->data()->ressource('surfer', $this, array('surfer' => 'surfer_handle'));
+    $ressource = $this->surfer()->data()->ressource(
+      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_page')
+    );
+    $this->surfer()->acommunityConnector()->ressource(
+      $this->surfer()->data()->ressource(NULL, NULL, NULL, NULL, NULL, 'object')
+    );
+    return $ressource;
   }
 
   /**
