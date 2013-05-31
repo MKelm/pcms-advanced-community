@@ -110,11 +110,13 @@ class ACommunitySurferEditorPage extends content_profile implements PapayaPlugin
    * @return boolean
    */
   function saveProfileData() {
-    $surferNameChange = $this->_detectSurferNameChange();
     $result = parent::saveProfileData();
     $surferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
       $this->papaya()->surfer->surfer['surfer_id'] : NULL;
     if ($result == TRUE && !is_null($surferId)) {
+      if ($this->_detectSurferNameChange()) {
+        $this->surfer()->data()->setLastChangeTime('surfer_names');
+      }
       $this->surfer()->data()->setLastChangeTime('surfer:surfer_'.$surferId);
     }
     return $result;
