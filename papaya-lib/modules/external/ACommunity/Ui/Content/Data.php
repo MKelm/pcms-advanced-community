@@ -54,30 +54,6 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
   public $messages = array();
 
   /**
-   * Current ressource by type and id
-   * @var array
-   */
-  protected $_ressource = NULL;
-
-  /**
-   * Parameters of owner box module's parent page module
-   * @var array
-   */
-  protected $_ressourceParameters = array();
-
-  /**
-   * Ressource is active surfer
-   * @var boolean
-   */
-  public $ressourceIsActiveSurfer = FALSE;
-
-  /**
-   * Ressource needs active surfer
-   * @var boolean
-   */
-  protected $_ressourceNeedsActiveSurfer = FALSE;
-
-  /**
    * Parameters of owner module for use in sub-objects
    * @var array
    */
@@ -127,6 +103,17 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
    * @var boolean
    */
   protected $_surferIsModerator = NULL;
+
+  /**
+   * Ressource object
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /** RESSOURCE PROPERTIES DEPRECATED **/
+  public $ressourceIsActiveSurfer = FALSE;
+  protected $_ressourceNeedsActiveSurfer = FALSE;
+  /** RESSOURCE PROPERTIES DEPRECATED **/
 
   /**
    * Get surfer data by id depending on some module options
@@ -279,144 +266,41 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
    * @param array $parameterNames A list of parameter names by ressource type to get ressource id
    * @param array $filterParameterNames A list of parameter names by ressource type to filter for ressource parameters
    * @param array $storpParameterNames A list of parameter names by ressource type to stop ressource detection
-   * @param array
+   * @param string $returnType array or object
+   * @param array|ACommunityUiContentRessource
    */
   public function ressource(
           $type = NULL,
           $module = NULL,
           $parameterNames = NULL,
           $filterParameterNames = NULL,
-          $stopParameterNames = NULL
+          $stopParameterNames = NULL,
+          $returnType = 'array'
          ) {
-    if ($this->_ressource === NULL && isset($type)) {
-      $isBoxModule = is_a($module, 'base_actionbox');
-      $parameterValue = NULL;
 
-      if ($type != 'page') {
-        // determine parameters to get ressource data from
-        $parameterGroup = $isBoxModule ?
-          (isset($module->parentObj->moduleObj->paramName) ? $module->parentObj->moduleObj->paramName : NULL)
-          : $module->paramName;
-        $parameters = $isBoxModule ?
-          (isset($module->parentObj->moduleObj->params) ? $module->parentObj->moduleObj->params : NULL)
-          : $module->params;
-        // detect stop parameter to make ressource invalid
-        $stopParameterNames = isset($stopParameterNames[$type]) ? $stopParameterNames[$type] : array();
-        if (!empty($stopParameterNames) && !is_array($stopParameterNames)) {
-          $stopParameterNames = array($stopParameterNames);
-        }
-        foreach ($stopParameterNames as $parameterName) {
-          if (isset($parameters[$parameterName])) {
-            $this->_ressource = FALSE;
-            return $this->_ressource;
-          }
-        }
-        // determine ressource source parameter value by parameter names to get a ressource id
-        $parameterNames = isset($parameterNames[$type]) ? $parameterNames[$type] : array();
-        if (!empty($parameterNames) && !is_array($parameterNames)) {
-          $parameterNames = array($parameterNames);
-        }
-        $parameterValue = NULL;
-        foreach ($parameterNames as $parameterName) {
-          $value = isset($parameters[$parameterName]) ? trim($parameters[$parameterName]) : NULL;
-          if (!empty($value)) {
-            $parameterValue = $value;
-            break;
-          }
-        }
-        // filter parameters to use in reference later
-        $filterParameterNames = isset($filterParameterNames[$type]) ? $filterParameterNames[$type] : NULL;
-        if (isset($filterParameterNames) && !is_array($filterParameterNames)) {
-          $filterParameterNames = array($filterParameterNames);
-        }
-        if (isset($filterParameterNames)) {
-          $oldParameters = $parameters;
-          $parameters = array();
-          foreach ($filterParameterNames as $parameterName) {
-            if (isset($oldParameters[$parameterName])) {
-              $parameters[$parameterName] = $oldParameters[$parameterName];
-            }
-          }
-          unset($oldParameters);
-        }
+    if (is_null($this->_ressource)) {
+      include_once(dirname(__FILE__).'/Ressource.php');
+      $this->_ressource = new ACommunityUiContentRessource();
+      $this->_ressource->papaya($this->papaya());
+      $this->_ressource->uiContent = $this->owner;
+      $this->_ressource->needsActiveSurfer = $this->_ressourceNeedsActiveSurfer; // backward compatibilty
+      if (isset($type)) {
+        $this->_ressource->set($type, $module, $parameterNames, $filterParameterNames, $stopParameterNames);
+        $this->ressourceIsActiveSurfer = $this->_ressource->isActiveSurfer; // backward compatibilty
       }
-
-      switch ($type) {
-        case 'surfer':
-          // parameter value must contain a valid surfer handle
-          $id = NULL;
-          if (!empty($parameterValue)) {
-            $parameterId = $this->owner->communityConnector()->getIdByHandle($parameterValue);
-            if ($this->_ressourceNeedsActiveSurfer == FALSE) {
-              $id = $parameterId;
-              $this->ressourceParameters($parameterGroup, $parameters);
-            }
-          } else {
-            $parameterId = NULL;
-          }
-          if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
-            $this->ressourceIsActiveSurfer = $parameterId == $this->papaya()->surfer->surfer['surfer_id'];
-            if ($this->_ressourceNeedsActiveSurfer == FALSE  || empty($parameterId) ||
-                ($this->_ressourceNeedsActiveSurfer == TRUE && $this->ressourceIsActiveSurfer == TRUE)) {
-              if (empty($id)) {
-                $id = $this->papaya()->surfer->surfer['surfer_id'];
-                $parameterValue = $this->papaya()->surfer->surfer['surfer_handle'];
-                $this->ressourceParameters($parameterGroup, $parameters);
-                $this->ressourceIsActiveSurfer = $id == $this->papaya()->surfer->surfer['surfer_id'];
-              }
-            }
-          }
-          break;
-        case 'image':
-          /**
-           * Get a image ressource in box modules by parent page module.
-           * Needs a callbackGetCurrentImageId method, see ACommunitySurferGalleryPage
-           */
-          if ($isBoxModule && isset($parameters['enlarge']) &&
-              method_exists($module->parentObj->moduleObj, 'callbackGetCurrentImageId')) {
-            $id = $module->parentObj->moduleObj->callbackGetCurrentImageId();
-            if (!empty($id)) {
-              $this->ressourceParameters($parameterGroup, $parameters);
-            }
-          }
-          break;
-        case 'page':
-          $id = $this->papaya()->request->pageId;
-          break;
-        case 'group':
-          if (!empty($parameterValue)) {
-            if (!empty($parameterValue)) {
-              $id = $this->owner->acommunityConnector()->getGroupIdByHandle($parameterValue);
-              if (!empty($id)) {
-                $this->ressourceParameters($parameterGroup, $parameters);
-              }
-            }
-          }
-          break;
-      }
-      if (!empty($id)) {
-        $this->_ressource = array('type' => $type, 'id' => $id, 'handle' => $parameterValue);
+    }
+    if (isset($this->_ressource)) {
+      if ($returnType = 'array') {
+        return array(
+          'type' => $this->_ressource->type,
+          'id' => $this->_ressource->id,
+          'handle' => $this->_ressource->handle
+        );
       } else {
-        $this->_ressource = FALSE;
+        return $this->_ressource;
       }
     }
-    return $this->_ressource;
-  }
-
-  /**
-   * Set ressource parameters for use in reference object
-   *
-   * Parameters of the owner box module's parent page module
-   *
-   * @param string $parameterGroup
-   * @param array $parameters
-   * @return array
-   */
-  public function ressourceParameters($parameterGroup = NULL, $parameters = NULL) {
-    if (isset($parameterGroup) && isset($parameters)) {
-      $this->_ressourceParameters[$parameterGroup] = $parameters;
-    }
-    return $this->_ressourceParameters;
+    return NULL;
   }
 
   /**
@@ -461,7 +345,7 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
           $referenceParameters, $this->owner->parameterGroup()
         );
       }
-      foreach ($this->ressourceParameters() as $parameterGroup => $parameters) {
+      foreach ($this->_ressource->parameters() as $parameterGroup => $parameters) {
         $this->_reference->setParameters(
           $parameters, $parameterGroup
         );
