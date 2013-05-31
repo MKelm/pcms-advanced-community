@@ -30,12 +30,6 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Data/Group/Surfer/Relations.ph
 class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelations {
 
   /**
-   * Ressource needs active surfer
-   * @var boolean
-   */
-  protected $_ressourceNeedsActiveSurfer = FALSE;
-
-  /**
    * Gallery database record
    *
    * @var ACommunityContentSurferGallery
@@ -53,12 +47,6 @@ class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelat
    * @var object
    */
   protected $_mediaDBEdit = NULL;
-
-  /**
-   * Status of group owner
-   * @var boolean
-   */
-  protected $_surferIsGroupOwner = NULL;
 
   /**
    * Group database record
@@ -97,7 +85,7 @@ class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelat
   public function surferHasGroupAccess() {
     if (is_null($this->_surferHasGroupAccess)) {
       $ressource = $this->ressource('ressource');
-      if (isset($ressource)) {
+      if (isset($ressource->id)) {
         $this->group()->load($ressource->id);
         if ($this->group()->public == 0) {
           if ($this->surferHasStatus(NULL, 'is_owner', 1) ||

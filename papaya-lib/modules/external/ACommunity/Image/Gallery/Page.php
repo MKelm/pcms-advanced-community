@@ -66,22 +66,22 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
     } elseif (is_null($this->_cacheDefinition)) {
       $ressource = $this->setRessourceData();
       $definitionValues = array('acommunity_image_gallery');
-      if (!empty($ressource)) {
-        $definitionValues[] = $ressource['type'];
-        $definitionValues[] = $ressource['id'];
+      if (isset($ressource->id)) {
+        $definitionValues[] = $ressource->type;
+        $definitionValues[] = $ressource->id;
         $access = TRUE;
-        if ($ressource['type'] == 'group') {
+        if ($ressource->type== 'group') {
           $access = $this->gallery()->data()->surferHasGroupAccess();
           $this->surferHasGroupAccess = $access;
           if ($this->surferHasGroupAccess) {
             // set status for delete image actions
             $definitionValues[] = (int)$this->gallery()->data()->surferHasStatus(
-              $ressource['id'], 'is_owner', 1
+              $ressource->id, 'is_owner', 1
             ) || $this->gallery()->data()->surferIsModerator();
           }
         } else {
           // set status for delete image actions
-          $definitionValues[] = (int)$this->gallery()->data()->ressourceIsActiveSurfer ||
+          $definitionValues[] = (int)$ressource->isActiveSurfer ||
             $this->gallery()->data()->surferIsModerator();
         }
         $definitionValues[] = (int)$access;
@@ -93,10 +93,10 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
           if ($folderId == 0) {
             $folderId = 'base';
           }
-          if ($ressource['type'] == 'group') {
-            $lastChangeRessource = 'group_gallery_images:folder_'.$folderId.':group_'.$ressource['id'];
+          if ($ressource->type == 'group') {
+            $lastChangeRessource = 'group_gallery_images:folder_'.$folderId.':group_'.$ressource->id;
           } else {
-            $lastChangeRessource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
+            $lastChangeRessource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource->id;
           }
           $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
         }
@@ -129,11 +129,16 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
    */
   public function setRessourceData() {
     $groupHandle = $this->gallery()->parameters()->get('group_handle', NULL);
-    return $this->gallery()->data()->ressource(
+    $ressource = $this->gallery()->data()->ressource(
       isset($groupHandle) ? 'group' : 'surfer',
       $this,
-      array('surfer' => 'surfer_handle', 'group' => 'group_handle')
+      array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
+      array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
+      NULL,
+      'object'
     );
+    $this->gallery()->acommunityConnector()->ressource($ressource);
+    return $ressource;
   }
 
   /**

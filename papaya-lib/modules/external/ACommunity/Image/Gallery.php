@@ -80,23 +80,23 @@ class ACommunityImageGallery extends MediaImageGallery {
     if ($command == 'delete_image') {
       $fileId = $this->parameters()->get('id', NULL);
       if (!empty($fileId)) {
-        $ressource = $this->data()->ressource();
-        if (($ressource['type'] == 'surfer' &&
-             ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) ||
-            ($ressource['type'] == 'group' &&
+        $ressource = $this->data()->ressource('ressource');
+        if (($ressource->type == 'surfer' &&
+             ($ressource->isActiveSurfer || $this->data()->surferIsModerator())) ||
+            ($ressource->type == 'group' &&
              ($this->data()->surferHasStatus(NULL, 'is_owner', 1) || $this->data()->surferIsModerator()))) {
 
           if ($this->data()->mediaDBEdit()->deleteFile($fileId)) {
 
             $folderId = $this->parameters()->get('folder_id', 0);
             if (!($folderId > 0)) {
-              $ressource = $ressource['type'].'_gallery_images:folder_base:'.
-                $ressource['type'].'_'.$ressource['id'];
+              $lastChangeRessource = $ressource->type.'_gallery_images:folder_base:'.
+                $ressource->type.'_'.$ressource->id;
             } else {
-              $ressource = $ressource['type'].'_gallery_images:folder_'.$folderId.':'.
-                $ressource['type'].'_'.$ressource['id'];
+              $lastChangeRessource = $ressource->type.'_gallery_images:folder_'.$folderId.':'.
+                $ressource->type.'_'.$ressource->id;
             }
-            return $this->data()->setLastChangeTime($ressource);
+            return $this->data()->setLastChangeTime($lastChangeRessource);
           }
         }
       }
@@ -121,8 +121,8 @@ class ACommunityImageGallery extends MediaImageGallery {
    * @param PapayaXmlElement $parent
    */
   public function appendTo(PapayaXmlElement $parent) {
-    $ressource = $this->data()->ressource();
-    if ($ressource['type'] != 'group' || $this->data()->surferHasGroupAccess()) {
+    $ressource = $this->data()->ressource('ressource');
+    if ($ressource->type != 'group' || $this->data()->surferHasGroupAccess()) {
       parent::appendTo($parent);
     } else {
       $parent->appendElement(
@@ -145,11 +145,11 @@ class ACommunityImageGallery extends MediaImageGallery {
               PapayaXmlElement $parent, $fileId, $fileOffset = 0, $thumbnail = FALSE
             ) {
     parent::_appendImageTo($parent, $fileId, $fileOffset, $thumbnail);
-    $ressource = $this->data()->ressource();
+    $ressource = $this->data()->ressource('ressource');
     if ($thumbnail == TRUE &&
-        (($ressource['type'] == 'surfer' &&
-          ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) ||
-         ($ressource['type'] == 'group' &&
+        (($ressource->type == 'surfer' &&
+          ($ressource->isActiveSurfer || $this->data()->surferIsModerator())) ||
+         ($ressource->type == 'group' &&
           ($this->data()->surferHasStatus(NULL, 'is_owner', 1) || $this->data()->surferIsModerator())))) {
       $reference = clone $this->reference();
       $reference->setParameters(
