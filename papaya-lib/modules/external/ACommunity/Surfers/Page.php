@@ -151,7 +151,6 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
     if (isset($definition)) {
       $this->_cacheDefiniton = $definition;
     } elseif (NULL == $this->_cacheDefiniton) {
-      $ressource = $this->setRessourceData();
       $command = $this->surfers()->parameters()->get('command', NULL);
       if (empty($command)) {
         include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
@@ -162,21 +161,22 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
           $values->surferLastRegistrationTime(),
           $values->lastChangeTime('surfer_names')
         );
-        if (isset($ressource['type']) && $ressource['type'] == 'group') {
-          $definitionValues[] = $ressource['type'];
-          $definitionValues[] = $ressource['id'];
+        $ressource = $this->setRessourceData();
+        if (isset($ressource->type) && $ressource->type == 'group') {
+          $definitionValues[] = $ressource->type;
+          $definitionValues[] = $ressource->id;
           $mode = $this->surfers()->parameters()->get('mode', NULL);
           if ($mode == 'invite_surfers' || $mode = 'membership_invitations') {
             $definitionValues[] = $values->lastChangeTime(
-              'group:membership_invitations:group_'.$ressource['id']
+              'group:membership_invitations:group_'.$ressource->id
             );
           } elseif ($mode == 'membership_requests') {
             $definitionValues[] = $values->lastChangeTime(
-              'group:membership_requests:group_'.$ressource['id']
+              'group:membership_requests:group_'.$ressource->id
             );
           } elseif ($mode == 'members') {
             $definitionValues[] = $values->lastChangeTime(
-              'group:memberships:group_'.$ressource['id']
+              'group:memberships:group_'.$ressource->id
             );
           }
         }
@@ -217,9 +217,11 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    */
   public function setRessourceData() {
     if (!empty($this->parentObj->moduleObj->params['group_handle'])) {
-      return $this->surfers()->data()->ressource(
-        'group', $this, array('group' => 'group_handle'), array('group' => array())
+      $ressource = $this->surfers()->data()->ressource(
+        'group', $this, array('group' => 'group_handle'), array('group' => array()), NULL, 'object'
       );
+      $this->surfers()->acommunityConnector()->ressource($ressource);
+      return $ressource;
     }
     return NULL;
   }
