@@ -56,7 +56,7 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
   public function appendTo(PapayaXmlElement $parent) {
     $galleryTeaser = $parent->appendElement('acommunity-image-gallery-teaser');
     $ressource = $this->data()->ressource('ressource');
-    if (isset($ressource) && ($ressource->type != 'group' || $this->data()->surferHasGroupAccess)) {
+    if (isset($ressource->id) && ($ressource->type != 'group' || $this->data()->surferHasGroupAccess)) {
       $this->data()->galleries()->load(
         array(
           'ressource_type' => $ressource->type,

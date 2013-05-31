@@ -87,7 +87,7 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
     } elseif (NULL == $this->_cacheDefinition) {
       $ressource = $this->setRessourceData();
       $definitionValues = array('acommunity_image_gallery_teaser');
-      if (isset($ressource)) {
+      if (isset($ressource->id)) {
         include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
         $values = new ACommunityCacheIdentifierValues();
         $definitionValues[] = $ressource->type;
