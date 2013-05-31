@@ -199,9 +199,13 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
    * Set group ressource data to load corresponding group
    */
   public function setRessourceData() {
-    return $this->group()->data()->ressource(
-      'group', $this, array('group' => 'group_handle')
+    $ressource = $this->group()->data()->ressource(
+      'group', $this, array('group' => 'group_handle'), array('group' => 'group_handle')
     );
+    $this->group()->acommunityConnector()->ressource(
+      $this->group()->data()->ressource(NULL, NULL, NULL, NULL, NULL, 'object')
+    );
+    return $ressource;
   }
 
   /**
