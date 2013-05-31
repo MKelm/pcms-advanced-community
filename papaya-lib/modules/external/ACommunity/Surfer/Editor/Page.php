@@ -115,17 +115,7 @@ class ACommunitySurferEditorPage extends content_profile implements PapayaPlugin
     $surferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
       $this->papaya()->surfer->surfer['surfer_id'] : NULL;
     if ($result == TRUE && !is_null($surferId)) {
-      $surferId = $this->papaya()->surfer->surfer['surfer_id'];
-      $lastChange = clone $this->surfer()->data()->lastChange();
-      $lastChange->assign(
-        array('ressource' => 'surfer:surfer_'.$surferId, 'time' => time())
-      );
-      $lastChange->save();
-      if ($surferNameChange) {
-        $lastChange = clone $this->surfer()->data()->lastChange();
-        $lastChange->assign(array('ressource' => 'surfer_names', 'time' => time()));
-        $lastChange->save();
-      }
+      $this->surfer()->data()->setLastChangeTime('surfer:surfer_'.$surferId);
     }
     return $result;
   }

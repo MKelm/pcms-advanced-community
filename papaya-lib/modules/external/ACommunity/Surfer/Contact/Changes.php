@@ -88,7 +88,7 @@ class ACommunitySurferContactChanges extends ACommunityUiContentDataLastChange {
     foreach ($ressources as $ressource) {
       foreach ($ressource as $ressourceName => $ressourceIds) {
         foreach ($ressourceIds as $ressourceId) {
-          $result = $result && $this->_setLastChangeTime($ressourceName.':surfer_'.$ressourceId);
+          $result = $result && $this->setLastChangeTime($ressourceName.':surfer_'.$ressourceId);
         }
       }
     }

@@ -27,6 +27,12 @@
 class ACommunityUiContentDataLastChange extends PapayaObject {
 
   /**
+   * Owner object
+   * @var ACommunityUiContent
+   */
+  public $owner = NULL;
+
+  /**
    * Last cahnge database record
    * @var object
    */
@@ -38,7 +44,7 @@ class ACommunityUiContentDataLastChange extends PapayaObject {
   * @param ACommunityContentLastChange $lastChange
   * @return ACommunityContentLastChange
   */
-  public function lastChange(ACommunityContentLastChange $lastChange = NULL) {
+  private function _lastChange(ACommunityContentLastChange $lastChange = NULL) {
     if (isset($lastChange)) {
       $this->_lastChange = $lastChange;
     } elseif (is_null($this->_lastChange)) {
@@ -55,16 +61,24 @@ class ACommunityUiContentDataLastChange extends PapayaObject {
    * @param string $ressource
    * @return boolean
    */
-  protected function _setLastChangeTime($ressource, $time = NULL) {
-    if (is_null($time)) {
-      $time = time();
+  public function setLastChangeTime($ressource, $time = NULL) {
+    if (method_exists($this->owner, 'acommunityConnector')) {
+      if ($this->owner->acommunityConnector()->cacheSupport()) {
+        if (is_null($time)) {
+          $time = time();
+        }
+        $lastChange = clone $this->_lastChange();
+        $lastChange->assign(array('ressource' => $ressource, 'time' => $time));
+        if ($lastChange->save()) {
+          return TRUE;
+        }
+        $this->owner->acommunityConnector()->dispatchMessage(
+          sprintf('Cache Support : Could not set ressource: '.$ressource)
+        );
+        return FALSE;
+      }
     }
-    $lastChange = clone $this->lastChange();
-    $lastChange->assign(array('ressource' => $ressource, 'time' => $time));
-    if ($lastChange->save()) {
-      return TRUE;
-    }
-    return FALSE;
+    return TRUE;
   }
 
   /**
@@ -73,10 +87,14 @@ class ACommunityUiContentDataLastChange extends PapayaObject {
    * @param string $ressource
    * @return integer
    */
-  protected function _getLastChangeTime($ressource) {
-    $lastChange = clone $this->lastChange();
-    if ($lastChange->load(array('ressource' => $ressource))->load()) {
-      return $lastChange->time > 0 ? $lastChange->time : 0;
+  public function getLastChangeTime($ressource) {
+    if (method_exists($this->owner, 'acommunityConnector')) {
+      if ($this->owner->acommunityConnector()->cacheSupport()) {
+        $lastChange = clone $this->_lastChange();
+        if ($lastChange->load(array('ressource' => $ressource))->load()) {
+          return $lastChange->time > 0 ? $lastChange->time : 0;
+        }
+      }
     }
     return 0;
   }

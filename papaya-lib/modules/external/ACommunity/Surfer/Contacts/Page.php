@@ -118,7 +118,7 @@ class ACommunitySurferContactsPage extends ACommunitySurfersPage {
     } elseif (NULL == $this->_cacheDefiniton) {
       $definitionValues = array('acommunity_surfers_page', $this->_displayMode);
       $definitionParameters = array();
-      include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+      include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
       $values = new ACommunityCacheIdentifierValues();
       $ressource = $this->setRessourceData();
       if (!empty($ressource)) {

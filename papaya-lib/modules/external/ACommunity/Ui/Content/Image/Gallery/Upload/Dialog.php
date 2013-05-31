@@ -156,7 +156,6 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
                 if (empty($added)) {
                   $error = 'dialog_error_media_db';
                 } else {
-
                   $ressource = $this->data()->ressource();
                   if ($gallery['parent_folder_id'] == 0) {
                     $ressource = $ressource['type'].'_gallery_images:folder_base:'.
@@ -165,11 +164,7 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
                     $ressource = $ressource['type'].'_gallery_images:folder_'.$folderId.':'.
                       $ressource['type'].'_'.$ressource['id'];
                   }
-                  $this->data()->lastChange()->assign(
-                    array('ressource' => $ressource, 'time' => time())
-                  );
-                  $this->data()->lastChange()->save();
-
+                  $this->data()->setLastChangeTime($ressource);
                   $href = $this->data()->reference()->get();
                   $GLOBALS['PAPAYA_PAGE']->sendHTTPStatus(301);
                   @header("Location: ".$href);

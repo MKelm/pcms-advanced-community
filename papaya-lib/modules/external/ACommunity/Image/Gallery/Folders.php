@@ -60,6 +60,50 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
   }
 
   /**
+   * Perform commands for gallery owners only
+   */
+  protected function _performCommands() {
+    $command = $this->parameters()->get('command', NULL);
+    switch ($command) {
+      case 'add_folder':
+        $dom = new PapayaXmlDocument();
+        $dom->appendElement('dialog');
+        $this->uiContentFolderDialog()->appendTo($dom->documentElement);
+        $removeDialog = $this->parameters()->get('remove_dialog', 0);
+        if (empty($removeDialog)) {
+          $xml = '';
+          foreach ($dom->documentElement->childNodes as $node) {
+            $xml .= $node->ownerDocument->saveXml($node);
+          }
+          $galleryFolders->appendXml($xml);
+          $errorMessage = $this->uiContentFolderDialog()->errorMessage();
+          if (!empty($errorMessage)) {
+            $galleryFolders->appendElement(
+              'dialog-message', array('type' => 'error'), $errorMessage
+            );
+          }
+        }
+        break;
+      case 'delete_folder':
+        $folderId = $this->parameters()->get('folder_id', NULL);
+        if (!empty($folderId)) {
+          if ($this->galleryDeletion()->deleteGalleryByFolderId($folderId)) {
+            return $this->data()->setLastChangeTime(
+              'ressource' => $ressource['type'].'_gallery_folders:'.
+                $ressourceType.'_'.$ressource['id'],
+            );
+          }
+        }
+        break;
+      default:
+        if (!empty($command)) {
+          return FALSE;
+        }
+        break;
+    }
+  }
+
+  /**
   * Create dom node structure of the given object and append it to the given xml
   * element node.
   *
@@ -72,44 +116,7 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
 
       if (($ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) ||
           ($ressource['type'] == 'group' && $this->data()->surferIsGroupOwner())) {
-        $command = $this->parameters()->get('command', NULL);
-        switch ($command) {
-          case 'add_folder':
-
-            $dom = new PapayaXmlDocument();
-            $dom->appendElement('dialog');
-            $this->uiContentFolderDialog()->appendTo($dom->documentElement);
-            $removeDialog = $this->parameters()->get('remove_dialog', 0);
-            if (empty($removeDialog)) {
-              $xml = '';
-              foreach ($dom->documentElement->childNodes as $node) {
-                $xml .= $node->ownerDocument->saveXml($node);
-              }
-              $galleryFolders->appendXml($xml);
-              $errorMessage = $this->uiContentFolderDialog()->errorMessage();
-              if (!empty($errorMessage)) {
-                $galleryFolders->appendElement(
-                  'dialog-message', array('type' => 'error'), $errorMessage
-                );
-              }
-            }
-            break;
-          case 'delete_folder':
-            $folderId = $this->parameters()->get('folder_id', NULL);
-            if (!empty($folderId)) {
-              if ($this->galleryDeletion()->deleteGalleryByFolderId($folderId)) {
-                $this->data()->lastChange()->assign(
-                  array(
-                    'ressource' => $ressource['type'].'_gallery_folders:'.
-                      $ressourceType.'_'.$ressource['id'],
-                    'time' => time()
-                  )
-                );
-                $this->data()->lastChange()->save();
-              }
-            }
-            break;
-        }
+        $this->_performCommands();
       }
 
       $this->data()->loadFolders();

@@ -176,16 +176,8 @@ class ACommunityUiContentCommentDialog
       }
     }
     // set last change of comment ressource
-    $lastChange = clone $this->data()->lastChange();
-    $lastChange->assign(
-      array(
-        'ressource' => 'comments:'.$ressource['type'].'_'.$ressource['id'], 'time' => time()
-      )
-    );
-    $lastChange->save();
-    $this->data()->lastChange()->assign(array('ressource' => 'comments', 'time' => time()));
-    $this->data()->lastChange()->save();
-
+    $this->data()->setLastChangeTime('comments:'.$ressource['type'].'_'.$ressource['id']);
+    $this->data()->setLastChangeTime('comments');
   }
 
   /**

@@ -162,10 +162,7 @@ class ACommunityUiContentImageGalleryFolderDialog
     } else {
       $lastChangeRessource = 'surfer_gallery_folders:surfer_'.$ressource['id'];
     }
-    $this->data()->lastChange()->assign(
-      array('ressource' => $lastChangeRessource, 'time' => time())
-    );
-    $this->data()->lastChange()->save();
+    $this->data()->setLastChangeTime($lastChangeRessource);
     $this->data()->owner->parameters()->set('remove_dialog', 1);
   }
 

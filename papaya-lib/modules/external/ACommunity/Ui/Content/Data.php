@@ -30,12 +30,6 @@ require_once(dirname(__FILE__).'/Data/Last/Change.php');
 class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
 
   /**
-   * Owner object
-   * @var ACommunityUiContent
-   */
-  public $owner = NULL;
-
-  /**
    * Current language id
    * @var integer
    */

@@ -34,6 +34,10 @@ class ACommunityConnector extends base_connector {
   * @var array
   */
   public $pluginOptionFields = array(
+    'cache_support' => array(
+      'Cache Support', 'isNum', TRUE, 'yesno', NULL,
+      'Use last changes status for modules\' cache identification.', 1
+    ),
     'Display Modes',
     'display_mode_surfer_name' => array(
       'Surfer Name', 'isAlpha',
@@ -191,6 +195,32 @@ class ACommunityConnector extends base_connector {
     }
     $result .= '</select>';
     return $result;
+  }
+
+  /**
+   * Dispatch log message
+   *
+   * @param string $message
+   * @param integer $messageType
+   */
+  public function dispatchMessage($message, $messageType = PapayaMessage::TYPE_ERROR) {
+    $this
+      ->papaya()
+      ->messages
+      ->dispatch(
+        new PapayaMessageLog(
+          PapayaMessageLogable::GROUP_MODULES, $messageType, $message
+        )
+      );
+  }
+
+  /**
+   * Get cache support status
+   *
+   * @return integer
+   */
+  public function cacheSupport() {
+    return papaya_module_options::readOption($this->_guid, 'cache_support', 1) > 0;
   }
 
   /**

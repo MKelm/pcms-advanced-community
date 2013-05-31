@@ -285,23 +285,11 @@ class ACommunityUiContentGroupDialog
   * @param PapayaUiDialog $dialog
   */
   public function callbackExecuteSuccessful($context, $dialog) {
-    $ressource = $this->data()->ressource();
-
     $lastChangeTime = time();
     if ($this->data()->showOwnGroups()) {
-      $lastChangeRessource = 'groups:surfer_'.$this->data()->currentSurferId();
-      $lastChange = clone $this->data()->lastChange();
-      $lastChange->assign(
-        array('ressource' => $lastChangeRessource, 'time' => $lastChangeTime)
-      );
-      $res = $lastChange->save();
+      $this->data()->setLastChangeTime('groups:surfer_'.$this->data()->currentSurferId());
     }
-    $lastChangeRessource = 'groups';
-    $lastChange = $this->data()->lastChange();
-    $lastChange->assign(
-      array('ressource' => $lastChangeRessource, 'time' => $lastChangeTime)
-    );
-    $res = $lastChange->save();
+    $this->data()->setLastChangeTime('groups');
     $this->data()->owner->parameters()->set('remove_dialog', 1);
   }
 

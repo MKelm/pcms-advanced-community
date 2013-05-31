@@ -80,19 +80,11 @@ class ACommunityGroups extends ACommunityUiContent {
               if ($group->delete()) {
                 $result1 = TRUE;
                 if ($ownerAction) {
-                  $lastChange = clone $this->data()->lastChange();
-                  $lastChange->assign(
-                    array(
-                      'ressource' => 'groups:'.$ressource['type'].'_'.$ressource['id'],
-                      'time' => time()
-                    )
+                  $result1 = $this->data()->setLastChangeTime(
+                    'groups:'.$ressource['type'].'_'.$ressource['id']
                   );
-                  $result1 = $lastChange->save();
                 }
-                $this->data()->lastChange()->assign(
-                  array('ressource' => 'groups', 'time' => time())
-                );
-                $result2 = $this->data()->lastChange()->save();
+                $result2 = $this->data()->setLastChangeTime('groups');
                 return $result1 && $result2;
               }
             }

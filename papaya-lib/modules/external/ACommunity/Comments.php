@@ -64,60 +64,54 @@ class ACommunityComments extends ACommunityUiContent {
    */
   public function performCommands() {
     $command = $this->parameters()->get('command', '');
-    $commentId = $this->parameters()->get('comment_id', 0);
-    if (!empty($command) && $commentId > 0) {
-      $lastChange = 0;
-      if ($command == 'vote_up' || $command == 'vote_down') {
-        $votingCookieData = $this->data()->votingCookie();
-        if (empty($votingCookieData[$commentId])) {
+    if (!empty($command)) {
+      $commentId = $this->parameters()->get('comment_id', 0);
+      if ($commentId > 0) {
+        $lastChangeTime = 0;
+        if ($command == 'vote_up' || $command == 'vote_down') {
+          $votingCookieData = $this->data()->votingCookie();
+          if (empty($votingCookieData[$commentId])) {
+            $comment = clone $this->data()->comment();
+            $comment->load($commentId);
+            $vote = 0;
+            switch ($command) {
+              case 'vote_up':
+                $comment->assign(array('votes_score' => $comment['votes_score'] + 1));
+                if ($comment->save()) {
+                  $vote = 1;
+                }
+                break;
+              case 'vote_down':
+                $comment->assign(array('votes_score' => $comment['votes_score'] - 1));
+                if ($comment->save()) {
+                  $vote = -1;
+                }
+                break;
+            }
+            if ($vote != 0) {
+              $votingCookieData[$commentId] = $vote;
+              $this->data()->votingCookie($votingCookieData);
+              $lastChangeTime = time();
+            }
+          }
+        } elseif ($command == 'delete' &&
+                  ($this->data()->surferIsModerator() || $this->data()->surferIsRessourceOwner())) {
           $comment = clone $this->data()->comment();
           $comment->load($commentId);
-          $vote = 0;
-          switch ($command) {
-            case 'vote_up':
-              $comment->assign(array('votes_score' => $comment['votes_score'] + 1));
-              if ($comment->save()) {
-                $vote = 1;
-              }
-              break;
-            case 'vote_down':
-              $comment->assign(array('votes_score' => $comment['votes_score'] - 1));
-              if ($comment->save()) {
-                $vote = -1;
-              }
-              break;
-          }
-          if ($vote != 0) {
-            $votingCookieData[$commentId] = $vote;
-            $this->data()->votingCookie($votingCookieData);
-            $lastChange = time();
+          if ($comment->delete()) {
+            $lastChangeTime = time();
           }
         }
-      } elseif ($command == 'delete' &&
-                ($this->data()->surferIsModerator() || $this->data()->surferIsRessourceOwner())) {
-        $comment = clone $this->data()->comment();
-        $comment->load($commentId);
-        if ($comment->delete()) {
-          $lastChange = time();
+        if ($lastChangeTime > 0) {
+          $ressource = $this->data()->ressource();
+          $result1 = $this->data()->setLastChangeTime('comments:'.$ressource['type'].'_'.$ressource['id']);
+          $result2 = $this->data()->setLastChangeTime('comments');
+          $this->parameters()->set('command', 'reply');
+          $this->parameters()->set('comment_id', 0);
+          return $result1 && $result2;
         }
       }
-      if ($lastChange > 0) {
-        $ressource = $this->data()->ressource();
-        $lastChange = clone $this->data()->lastChange();
-        $lastChange->assign(
-          array(
-            'ressource' => 'comments:'.$ressource['type'].'_'.$ressource['id'],
-            'time' => $lastChange
-          )
-        );
-        $lastChange->save();
-        $this->data()->lastChange()->assign(
-          array('ressource' => 'comments', 'time' => $lastChange)
-        );
-        $this->data()->lastChange()->save();
-        $this->parameters()->set('command', 'reply');
-        $this->parameters()->set('comment_id', 0);
-      }
+      return FALSE;
     }
   }
 
