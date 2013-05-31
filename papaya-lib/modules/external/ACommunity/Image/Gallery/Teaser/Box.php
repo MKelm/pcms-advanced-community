@@ -104,11 +104,13 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
           }
           $definitionValues[] = (int)$access;
           if ($access) {
-            $definitionValues[] = (int)$this->teaser()->data()->ressourceIsActiveSurfer;
-            $definitionValues[] = (int)$this->teaser()->data()->surferIsGroupOwner();
             if ($ressource['type'] == 'surfer') {
+              $definitionValues[] = (int)$this->teaser()->data()->ressourceIsActiveSurfer;
               $lastChangeRessource = 'surfer_gallery_images:folder_base:surfer_'.$ressource['id'];
             } elseif ($ressource['type'] == 'group') {
+              $definitionValues[] = (int)$this->teaser()->data()->surferHasStatus(
+                $ressource['id'], 'is_owner', 1
+              );
               $lastChangeRessource = 'group_gallery_images:folder_base:group_'.$ressource['id'];
             }
             if (isset($lastChangeRessource)) {

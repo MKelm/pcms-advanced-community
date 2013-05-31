@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../../Ui/Content/Data.php');
+require_once(dirname(__FILE__).'/../../Ui/Content/Data/Group/Surfer/Relations.php');
 
 /**
  * Advanced community surfer gallery data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Data.php');
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityImageGalleryData extends ACommunityUiContentData {
+class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelations {
 
   /**
    * Ressource needs active surfer
@@ -49,12 +49,6 @@ class ACommunityImageGalleryData extends ACommunityUiContentData {
   protected $_galleries = NULL;
 
   /**
-   * Group surfer relations database records
-   * @var object
-   */
-  protected $_groupSurferRelations = NULL;
-
-  /**
    * Media db edit object
    * @var object
    */
@@ -67,42 +61,59 @@ class ACommunityImageGalleryData extends ACommunityUiContentData {
   protected $_surferIsGroupOwner = NULL;
 
   /**
-   * Detects if the current active surfer is the owner of the selected group
-   *
-   * @return bolean
+   * Group database record
+   * @var object
    */
-  public function surferIsGroupOwner() {
-    if (is_null($this->_surferIsGroupOwner)) {
-      $ressource = $this->ressource();
-      if ($ressource['type'] == 'group' && !empty($ressource['id'])) {
-        $this->groupSurferRelations()->load(
-          array('group_id' => $ressource['id'], 'surfer_id' => $this->currentSurferId())
-        );
-        $groupSurferRelations = $this->groupSurferRelations();
-        $this->_surferIsGroupOwner = isset($groupSurferRelations[$ressource['id']]) &&
-          !empty($groupSurferRelations[$ressource['id']]['is_owner']);
-      }
+  protected $_group = NULL;
+
+  /**
+   * Flag of surfer group access status
+   * @var boolean
+   */
+  protected $_surferHasGroupAccess = NULL;
+
+  /**
+  * Access to group database record data
+  *
+  * @param ACommunityContentGroup $group
+  * @return ACommunityContentGroup
+  */
+  public function group(ACommunityContentGroup $group = NULL) {
+    if (isset($group)) {
+      $this->_group = $group;
+    } elseif (is_null($this->_group)) {
+      include_once(dirname(__FILE__).'/../../Content/Group.php');
+      $this->_group = new ACommunityContentGroup();
+      $this->_group->papaya($this->papaya());
     }
-    return $this->_surferIsGroupOwner;
+    return $this->_group;
   }
 
   /**
-  * Access to group surfer relations database records data
-  *
-  * @param ACommunityContentGroupSurferRelations $group
-  * @return ACommunityContentGroupSurferRelations
-  */
-  public function groupSurferRelations(
-           ACommunityContentGroupSurferRelations $groupSurferRelations = NULL
-         ) {
-    if (isset($groupSurferRelations)) {
-      $this->_groupSurferRelations = $groupSurferRelations;
-    } elseif (is_null($this->_groupSurferRelations)) {
-      include_once(dirname(__FILE__).'/../../Content/Group/Surfer/Relations.php');
-      $this->_groupSurferRelations = new ACommunityContentGroupSurferRelations();
-      $this->_groupSurferRelations->papaya($this->papaya());
+   * Detects group access by surfer
+   *
+   * @return boolean
+   */
+  public function surferHasGroupAccess() {
+    if (is_null($this->_surferHasGroupAccess)) {
+      $ressource = $this->ressource();
+      if (!empty($ressource)) {
+        $this->group()->load($ressource['id']);
+        if ($this->group()->public == 0) {
+          if ($this->surferHasStatus(NULL, 'is_owner', 1) ||
+              $this->surferHasStatus(NULL, 'is_member', 1)) {
+            $this->owner->module->surferHasGroupAccess = TRUE;
+            $this->_surferHasGroupAccess = TRUE;
+          } else {
+            $this->_surferHasGroupAccess = FALSE;
+          }
+        } else {
+          $this->owner->module->surferHasGroupAccess = TRUE;
+          $this->_surferHasGroupAccess = TRUE;
+        }
+      }
     }
-    return $this->_groupSurferRelations;
+    return $this->_surferHasGroupAccess;
   }
 
   /**

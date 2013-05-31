@@ -89,8 +89,7 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
         if (!empty($folderId)) {
           if ($this->galleryDeletion()->deleteGalleryByFolderId($folderId)) {
             return $this->data()->setLastChangeTime(
-              'ressource' => $ressource['type'].'_gallery_folders:'.
-                $ressourceType.'_'.$ressource['id'],
+              $ressource['type'].'_gallery_folders:'.$ressourceType.'_'.$ressource['id']
             );
           }
         }
@@ -112,10 +111,12 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
   public function appendTo(PapayaXmlElement $parent) {
     $galleryFolders = $parent->appendElement('acommunity-image-gallery-folders');
     $ressource = $this->data()->ressource();
-    if (!empty($ressource)) {
+    if (!empty($ressource) &&
+      ($ressource['type'] != 'group' || $this->data()->surferHasGroupAccess())) {
 
       if (($ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) ||
-          ($ressource['type'] == 'group' && $this->data()->surferIsGroupOwner())) {
+          ($ressource['type'] == 'group' &&
+           $this->data()->surferHasStatus($ressource['id'], 'is_owner', 1))) {
         $this->_performCommands();
       }
 
@@ -134,7 +135,8 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
       }
 
       if (($ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) ||
-          ($ressource['type'] == 'group' && $this->data()->surferIsGroupOwner())) {
+          ($ressource['type'] == 'group' &&
+           $this->data()->surferHasStatus($ressource['id'], 'is_owner', 1))) {
         $this->data()->loadCommandLinks();
         $commandLinks = $galleryFolders->appendElement('command-links');
         foreach ($this->data()->commandLinks as $command => $link) {

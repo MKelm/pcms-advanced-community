@@ -48,6 +48,12 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
   protected $_cacheDefinition = NULL;
 
   /**
+   * Access flag for box modules, set by gallery()->data()->surferHasGroupAccess()
+   * @var boolean
+   */
+  public $surferHasGroupAccess = FALSE;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -61,29 +67,46 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
       $ressource = $this->setRessourceData();
       $definitionValues = array('acommunity_image_gallery');
       if (!empty($ressource)) {
-        include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
-        $values = new ACommunityCacheIdentifierValues();
         $definitionValues[] = $ressource['type'];
         $definitionValues[] = $ressource['id'];
-        $definitionValues[] = (int)$this->gallery()->data()->ressourceIsActiveSurfer;
-        $definitionValues[] = (int)$this->gallery()->data()->surferIsGroupOwner();
-        $definitionValues[] = (int)$this->gallery()->data()->surferIsModerator();
-        $folderId = $this->gallery()->parameters()->get('folder_id', 0);
-        if ($folderId == 0) {
-          $folderId = 'base';
-        }
+        $access = TRUE;
         if ($ressource['type'] == 'group') {
-          $lastChangeRessource = 'group_gallery_images:folder_'.$folderId.':group_'.$ressource['id'];
+          $access = $this->gallery()->data()->surferHasGroupAccess();
+          if ($access) {
+            // set status for delete image actions
+            $definitionValues[] = (int)$this->gallery()->data()->surferHasStatus(
+              $ressource['id'], 'is_owner', 1
+            ) || $this->gallery()->data()->surferIsModerator();
+          }
         } else {
-          $lastChangeRessource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
+          // set status for delete image actions
+          $definitionValues[] = (int)$this->gallery()->data()->ressourceIsActiveSurfer ||
+            $this->gallery()->data()->surferIsModerator();
         }
-        $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
+        $definitionValues[] = (int)$access;
+        // further settings for valid access
+        if ($access) {
+          include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $folderId = $this->gallery()->parameters()->get('folder_id', 0);
+          if ($folderId == 0) {
+            $folderId = 'base';
+          }
+          if ($ressource['type'] == 'group') {
+            $lastChangeRessource = 'group_gallery_images:folder_'.$folderId.':group_'.$ressource['id'];
+          } else {
+            $lastChangeRessource = 'surfer_gallery_images:folder_'.$folderId.':surfer_'.$ressource['id'];
+          }
+          $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
+        }
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
           new PapayaCacheIdentifierDefinitionValues($definitionValues),
           new PapayaCacheIdentifierDefinitionParameters(
             array('enlarge', 'index', 'offset', 'command', 'folder_id', 'id'), $this->paramName
           )
         );
+      } else {
+        $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues($definitionValues);
       }
     }
     return $this->_cacheDefinition;
@@ -127,6 +150,7 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
       $this->_gallery->parameterGroup($this->paramName);
       $this->_gallery->languageId = $this->papaya()->request->languageId;
       $this->_gallery->data()->languageId = $this->papaya()->request->languageId;
+      $this->_gallery->module = $this;
     }
     return $this->_gallery;
   }

@@ -87,7 +87,8 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
           array('href' => $this->acommunityConnector()->getGalleryPageLink('surfer', $ressource['id'])),
           $this->data()->captions['add_new_images_link']
         );
-      } elseif (empty($images) && $ressource['type'] == 'group' && $this->data()->surferIsGroupOwner()) {
+      } elseif (empty($images) && $ressource['type'] == 'group' &&
+                $this->data()->surferHasStatus(NULL, 'is_owner', 1)) {
         $galleryTeaser->appendElement(
           'add-new-images-link',
           array('href' => $this->acommunityConnector()->getGalleryPageLink('group', $ressource['id'])),

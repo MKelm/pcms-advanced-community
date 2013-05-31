@@ -48,6 +48,12 @@ class ACommunityImageGallery extends MediaImageGallery {
   protected $_uiContent = NULL;
 
   /**
+   * Module object
+   * @var object
+   */
+  public $module = NULL;
+
+  /**
    * Check url file name in for page modules and return new url if the current file name is invalid
    *
    * @param base_content $pageModule
@@ -78,7 +84,7 @@ class ACommunityImageGallery extends MediaImageGallery {
         if (($ressource['type'] == 'surfer' &&
              ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) ||
             ($ressource['type'] == 'group' &&
-             ($this->data()->surferIsGroupOwner() || $this->data()->surferIsModerator()))) {
+             ($this->data()->surferHasStatus(NULL, 'is_owner', 1) || $this->data()->surferIsModerator()))) {
 
           if ($this->data()->mediaDBEdit()->deleteFile($fileId)) {
 
@@ -109,6 +115,25 @@ class ACommunityImageGallery extends MediaImageGallery {
   }
 
   /**
+   * Create dom node structure of the given object and append it to the given xml
+   * element node.
+   *
+   * @param PapayaXmlElement $parent
+   */
+  public function appendTo(PapayaXmlElement $parent) {
+    $ressource = $this->data()->ressource();
+    if ($ressource['type'] != 'group' || $this->data()->surferHasGroupAccess()) {
+      parent::appendTo($parent);
+    } else {
+      $parent->appendElement(
+        'message',
+        array('type' => 'error', 'use-language-text' => 'yes'),
+       'GROUP_GALLERY_ACCESS_DENIED'
+      );
+    }
+  }
+
+  /**
    * Append image or image thumbnail by current file id to parent element
    *
    * @param PapayaXmlElement $parent
@@ -120,8 +145,12 @@ class ACommunityImageGallery extends MediaImageGallery {
               PapayaXmlElement $parent, $fileId, $fileOffset = 0, $thumbnail = FALSE
             ) {
     parent::_appendImageTo($parent, $fileId, $fileOffset, $thumbnail);
+    $ressource = $this->data()->ressource();
     if ($thumbnail == TRUE &&
-        ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) {
+        (($ressource['type'] == 'surfer' &&
+          ($this->data()->ressourceIsActiveSurfer || $this->data()->surferIsModerator())) ||
+         ($ressource['type'] == 'group' &&
+          ($this->data()->surferHasStatus(NULL, 'is_owner', 1) || $this->data()->surferIsModerator())))) {
       $reference = clone $this->reference();
       $reference->setParameters(
         array(
