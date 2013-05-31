@@ -81,7 +81,7 @@ class ACommunityUiContentDataGroupSurferRelations extends ACommunityUiContentDat
         $groupId = $ressource['id'];
       }
     }
-    if (is_null($this->_surferGroupStatus[$groupId])) {
+    if (is_null($this->_surferGroupStatus[$groupId]) && !is_null($this->currentSurferId())) {
       $this->groupSurferRelations()->load(
         array('id' => $groupId, 'surfer_id' => $this->currentSurferId())
       );
