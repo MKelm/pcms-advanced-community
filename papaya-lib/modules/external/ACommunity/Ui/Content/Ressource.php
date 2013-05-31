@@ -67,14 +67,30 @@ class ACommunityUiContentRessource extends PapayaObject {
   protected $_parameters = array();
 
   /**
-   * Set/get data of current ressource by type and id
+   * Singleton instance
+   * @var object
+   */
+  static private $instance = NULL;
+
+  /**
+   * Get singleton instance
+   * @return ACommunityUiContentRessource
+   */
+  static public function getInstance() {
+    if (NULL === self::$instance) {
+      self::$instance = new self;
+    }
+    return self::$instance;
+  }
+
+  /**
+   * Set data of current ressource by type and id
    *
    * @param string $type
    * @param object $module Modul object to get parameters from
    * @param array $parameterNames A list of parameter names by ressource type to get ressource id
    * @param array $filterParameterNames A list of parameter names by ressource type to filter for ressource parameters
    * @param array $storpParameterNames A list of parameter names by ressource type to stop ressource detection
-   * @param array
    */
   public function set(
           $type = NULL,
@@ -209,8 +225,8 @@ class ACommunityUiContentRessource extends PapayaObject {
    */
   public function parameters($parameterGroup = NULL, $parameters = NULL) {
     if (isset($parameterGroup) && isset($parameters)) {
-      $this->_ressourceParameters[$parameterGroup] = $parameters;
+      $this->_parameters[$parameterGroup] = $parameters;
     }
-    return $this->_ressourceParameters;
+    return $this->_parameters;
   }
 }

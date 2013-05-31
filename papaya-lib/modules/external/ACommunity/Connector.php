@@ -212,8 +212,12 @@ class ACommunityConnector extends base_connector {
    * @return ACommunityUiContentRessource
    */
   public function ressource(ACommunityUiContentRessource $ressource = NULL) {
-    if (isset($ressource)) {
-      $this->_ressource = $ressource;
+    if (!isset($ressource)) {
+      include_once(dirname(__FILE__).'/Ui/Content/Ressource.php');
+      $this->_ressource = ACommunityUiContentRessource::getInstance();
+      if (empty($this->_ressource)) {
+        $this->_ressource = FALSE;
+      }
     }
     return $this->_ressource;
   }
