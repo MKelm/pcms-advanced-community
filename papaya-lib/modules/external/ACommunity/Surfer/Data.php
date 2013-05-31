@@ -59,7 +59,17 @@ class ACommunitySurferData extends ACommunityUiContentData {
    */
   public $sendMessageLink = NULL;
 
+  /**
+   * Dynamic data categories to load
+   * @var array
+   */
   protected $_dynamicDataCategories = NULL;
+
+  /**
+   * Mode status to get different outputs, surfer-details and surfer-bar
+   * @var string
+   */
+  public $mode = 'surfer-details';
 
   /**
    * Set data by plugin object
@@ -75,7 +85,8 @@ class ACommunitySurferData extends ACommunityUiContentData {
     );
     $this->_surferAvatarSize = (int)$data['avatar_size'];
     $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
-    $this->_dynamicDataCategories = $data['dynamic_data_categories'];
+    $this->_dynamicDataCategories = isset($data['dynamic_data_categories']) ?
+      $data['dynamic_data_categories'] : NULL;
     parent::setPluginData($data, $captionNames, $messageNames);
   }
 
@@ -85,76 +96,79 @@ class ACommunitySurferData extends ACommunityUiContentData {
   public function initialize() {
     $ressource = $this->ressource();
     $this->surferBaseDetails = $this->getSurfer($ressource['id'], NULL, NULL, TRUE);
-    if ($this->ressourceIsActiveSurfer == FALSE) {
-      $this->sendMessageLink = $this->owner->acommunityConnector()->getMessagesPageLink(
-        $ressource['id']
-      );
-    }
 
-    $this->surferDetails = array();
-    $details = $this->owner->communityConnector()->getProfileData($ressource['id']);
-    if (!empty($details)) {
-      $groupIds = $this->owner->communityConnector()->getProfileDataClasses();
-      foreach ($groupIds as $groupId) {
-        if (in_array($groupId, $this->_dynamicDataCategories)) {
-          $groupCaptions = $this->owner->communityConnector()->getProfileDataClassTitles($groupId);
-          if (!empty($groupCaptions[$this->languageId])) {
-            $this->surferDetails[$groupId] = array(
-              'caption' => $groupCaptions[$this->languageId],
-              'details' => array()
-            );
-            $detailNames = $this->owner->communityConnector()->getProfileFieldNames($groupId);
-            foreach ($detailNames as $detailName) {
-              $this->surferDetails[$groupId]['details'][$detailName] = NULL;
-              $detailCaptions = $this->owner->communityConnector()->getProfileFieldTitles($detailName);
-              if (!empty($detailCaptions[$this->languageId])) {
-                $this->surferDetails[$groupId]['details'][$detailName] = array(
-                  'caption' => $detailCaptions[$this->languageId],
-                  'value' => isset($details[$detailName]) ? $details[$detailName] : NULL
-                );
+    if ($this->mode == 'surfer-details') {
+      if ($this->ressourceIsActiveSurfer == FALSE) {
+        $this->sendMessageLink = $this->owner->acommunityConnector()->getMessagesPageLink(
+          $ressource['id']
+        );
+      }
+
+      $this->surferDetails = array();
+      $details = $this->owner->communityConnector()->getProfileData($ressource['id']);
+      if (!empty($details)) {
+        $groupIds = $this->owner->communityConnector()->getProfileDataClasses();
+        foreach ($groupIds as $groupId) {
+          if (in_array($groupId, $this->_dynamicDataCategories)) {
+            $groupCaptions = $this->owner->communityConnector()->getProfileDataClassTitles($groupId);
+            if (!empty($groupCaptions[$this->languageId])) {
+              $this->surferDetails[$groupId] = array(
+                'caption' => $groupCaptions[$this->languageId],
+                'details' => array()
+              );
+              $detailNames = $this->owner->communityConnector()->getProfileFieldNames($groupId);
+              foreach ($detailNames as $detailName) {
+                $this->surferDetails[$groupId]['details'][$detailName] = NULL;
+                $detailCaptions = $this->owner->communityConnector()->getProfileFieldTitles($detailName);
+                if (!empty($detailCaptions[$this->languageId])) {
+                  $this->surferDetails[$groupId]['details'][$detailName] = array(
+                    'caption' => $detailCaptions[$this->languageId],
+                    'value' => isset($details[$detailName]) ? $details[$detailName] : NULL
+                  );
+                }
               }
             }
           }
         }
       }
-    }
 
-    if ($this->ressourceIsActiveSurfer == FALSE) {
-      $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
-      $currentSurferId = $currentSurfer->surfer['surfer_id'];
-      unset($currentSurfer);
-      if (!empty($currentSurferId)) {
-        $contactStatus = 'none';
-        $commandNames = array('request_contact');
-        $isContact = $this->owner->communityConnector()->isContact(
-          $currentSurferId, $ressource['id'], FALSE, TRUE
-        );
-        switch ($isContact) {
-          case SURFERCONTACT_PENDING + SURFERCONTACT_OWNREQUEST:
-            $contactStatus = 'own_pending';
-            $commandNames = array('remove_contact_request');
-            break;
-          case SURFERCONTACT_PENDING:
-            $contactStatus = 'pending';
-            $commandNames = array('accept_contact_request', 'decline_contact_request');
-            break;
-          case SURFERCONTACT_DIRECT:
-            $contactStatus = 'direct';
-            $commandNames = array('remove_contact');
-            break;
-          default:
-        }
-
-        $this->contact = array(
-          'status' => $contactStatus,
-          'commands' => array()
-        );
-        foreach ($commandNames as $commandName) {
-          $reference = clone $this->reference();
-          $reference->setParameters(
-            array('command' => $commandName), $this->owner->parameterGroup()
+      if ($this->ressourceIsActiveSurfer == FALSE) {
+        $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
+        $currentSurferId = $currentSurfer->surfer['surfer_id'];
+        unset($currentSurfer);
+        if (!empty($currentSurferId)) {
+          $contactStatus = 'none';
+          $commandNames = array('request_contact');
+          $isContact = $this->owner->communityConnector()->isContact(
+            $currentSurferId, $ressource['id'], FALSE, TRUE
           );
-          $this->contact['commands'][$commandName] = $reference->getRelative();
+          switch ($isContact) {
+            case SURFERCONTACT_PENDING + SURFERCONTACT_OWNREQUEST:
+              $contactStatus = 'own_pending';
+              $commandNames = array('remove_contact_request');
+              break;
+            case SURFERCONTACT_PENDING:
+              $contactStatus = 'pending';
+              $commandNames = array('accept_contact_request', 'decline_contact_request');
+              break;
+            case SURFERCONTACT_DIRECT:
+              $contactStatus = 'direct';
+              $commandNames = array('remove_contact');
+              break;
+            default:
+          }
+
+          $this->contact = array(
+            'status' => $contactStatus,
+            'commands' => array()
+          );
+          foreach ($commandNames as $commandName) {
+            $reference = clone $this->reference();
+            $reference->setParameters(
+              array('command' => $commandName), $this->owner->parameterGroup()
+            );
+            $this->contact['commands'][$commandName] = $reference->getRelative();
+          }
         }
       }
     }

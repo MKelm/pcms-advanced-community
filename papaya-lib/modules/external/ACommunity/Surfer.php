@@ -109,65 +109,81 @@ class ACommunitySurfer extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $page = $parent->appendElement('surfer-page');
     if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
+      $surfer = $parent->appendElement('surfer', array('mode' => $this->data()->mode));
       $this->_performCommands();
       $this->data()->initialize();
       $currentSurferId = $this->data()->currentSurferId();
       if (!empty($currentSurferId) && !empty($this->data()->sendMessageLink)) {
-        $page->appendElement(
+        $surfer->appendElement(
           'send-message-link',
           array('caption' => $this->data()->captions['send_message']),
           $this->data()->sendMessageLink
         );
       }
-      $details = $page->appendElement('details');
+      $details = $surfer->appendElement('details');
       $baseDetails = $details->appendElement(
-        'group', array('id' => 0, 'caption' => $this->data()->captions['base_details'])
+        'group', array(
+          'id' => 0,
+          'caption' => isset($this->data()->captions['base_details']) ?
+            $this->data()->captions['base_details'] : NULL
+        )
       );
       foreach ($this->data()->surferBaseDetails as $name => $value) {
         $ignoreDetails = array('id', 'page_link', 'handle', 'givenname', 'surname');
         if (!in_array($name, $ignoreDetails)) {
-          $baseDetails->appendElement(
-            'detail',
-            array('name' => $name, 'caption' => $this->data()->captions['surfer_'.$name]),
-            PapayaUtilStringXml::escape($value)
-          );
+          if (isset($this->data()->captions['surfer_'.$name])) {
+            $baseDetails->appendElement(
+              'detail',
+              array('name' => $name, 'caption' => $this->data()->captions['surfer_'.$name]),
+              PapayaUtilStringXml::escape($value)
+            );
+          }
         }
       }
-      foreach ($this->data()->surferDetails as $groupId => $group) {
-        $detailsGroup = $details->appendElement(
-          'group', array('id' => $groupId, 'caption' => $group['caption'])
+      if ($this->data()->mode == 'surfer-bar') {
+        $baseDetails->appendElement(
+          'detail',
+          array('name' => 'page-link', 'caption' => ''),
+          PapayaUtilStringXml::escape($this->data()->surferBaseDetails['page_link'])
         );
-        foreach ($group['details'] as $detailName => $detail) {
-          $detailsGroup->appendElement(
-            'detail', array('name' => $detailName, 'caption' => $detail['caption']),
-            PapayaUtilStringXml::escape($detail['value'])
-          );
-        }
       }
-      if (!empty($this->data()->contact)) {
-        $contactStatus = $this->data()->contact['status'];
-        $contact = $page->appendElement(
-          'contact',
-          array(
-            'status' => $contactStatus,
-            'status-caption' => $this->data()->captions['contact_status_'.$contactStatus],
-          )
-        );
-        foreach ($this->data()->contact['commands'] as $commandName => $commandLink) {
-          $contact->appendElement(
-            'command',
+
+      if ($this->data()->mode == 'surfer-details') {
+        foreach ($this->data()->surferDetails as $groupId => $group) {
+          $detailsGroup = $details->appendElement(
+            'group', array('id' => $groupId, 'caption' => $group['caption'])
+          );
+          foreach ($group['details'] as $detailName => $detail) {
+            $detailsGroup->appendElement(
+              'detail', array('name' => $detailName, 'caption' => $detail['caption']),
+              PapayaUtilStringXml::escape($detail['value'])
+            );
+          }
+        }
+        if (!empty($this->data()->contact)) {
+          $contactStatus = $this->data()->contact['status'];
+          $contact = $surfer->appendElement(
+            'contact',
             array(
-              'name' => $commandName,
-              'caption' => $this->data()->captions['command_'.$commandName]
-            ),
-            PapayaUtilStringXml::escape($commandLink)
+              'status' => $contactStatus,
+              'status-caption' => $this->data()->captions['contact_status_'.$contactStatus],
+            )
           );
+          foreach ($this->data()->contact['commands'] as $commandName => $commandLink) {
+            $contact->appendElement(
+              'command',
+              array(
+                'name' => $commandName,
+                'caption' => $this->data()->captions['command_'.$commandName]
+              ),
+              PapayaUtilStringXml::escape($commandLink)
+            );
+          }
         }
       }
     } else {
-      $page->appendElement('message', array('type' => 'no-surfer'), $this->data()->messages['no_surfer']);
+      $parent->appendElement('message', array('type' => 'no-surfer'), $this->data()->messages['no_surfer']);
     }
   }
 
