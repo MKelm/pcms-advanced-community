@@ -103,17 +103,14 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
       } else {
         $ressource = $this->setRessourceData();
         $definitionValues = array('acommunity_image_gallery_folders', $currentSurferId);
-        if (!empty($ressource)) {
+        if (isset($ressource->id)) {
           include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
-          $definitionValues[] = $ressource['type'];
-          $definitionValues[] = $ressource['id'];
-          if ($ressource['type'] == 'group') {
-            $lastChangeRessource = 'group_gallery_folders:group_'.$ressource['id'];
-          } else {
-            $lastChangeRessource = 'surfer_gallery_folders:surfer_'.$ressource['id'];
-          }
-          $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
+          $definitionValues[] = $ressource->type;
+          $definitionValues[] = $ressource->id;
+          $definitionValues[] = $values->lastChangeTime(
+            $ressource->type.'_gallery_folders:group_'.$ressource->id
+          );
         }
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
           new PapayaCacheIdentifierDefinitionValues($definitionValues),
@@ -130,13 +127,14 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $ressourceType = isset($this->parentObj->moduleObj->params['group_handle']) ? 'group' : 'surfer';
-    return $this->folders()->data()->ressource(
-      $ressourceType,
-      $this,
+    $this->folders()->data()->ressource($this->folders()->acommunityConnector()->ressource());
+    $ressource = $this->folders()->data()->ressource('ressource');
+    $ressource->filterSourceParameters(
       array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
-      array('surfer' => 'surfer_handle', 'group' => 'group_handle')
+      $ressource->type,
+      TRUE
     );
+    return $this->folders()->data()->ressource('ressource');
   }
 
   /**

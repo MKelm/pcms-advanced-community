@@ -28,12 +28,6 @@ require_once(dirname(__FILE__).'/../Data.php');
 class ACommunityImageGalleryFoldersData extends ACommunityImageGalleryData {
 
   /**
-   * Ressource needs active surfer
-   * @var boolean
-   */
-  protected $_ressourceNeedsActiveSurfer = FALSE;
-
-  /**
    * Loaded folders
    * @var array
    */
@@ -58,11 +52,11 @@ class ACommunityImageGalleryFoldersData extends ACommunityImageGalleryData {
    */
   public function getBaseFolderId() {
     if (is_null($this->_baseFolderId)) {
-      $ressource = $this->ressource();
+      $ressource = $this->ressource('ressource');
       $this->galleries()->load(
         array(
-          'ressource_type' => $ressource['type'],
-          'ressource_id' => $ressource['id'],
+          'ressource_type' => $ressource->type,
+          'ressource_id' => $ressource->id,
           'parent_folder_id' => 0
         ), 1
       );
@@ -77,9 +71,9 @@ class ACommunityImageGalleryFoldersData extends ACommunityImageGalleryData {
    */
   public function loadFolders() {
     $this->folders = array();
-    $ressource = $this->ressource();
+    $ressource = $this->ressource('ressource');
     $this->galleries()->load(
-      array('ressource_type' => $ressource['type'], 'ressource_id' => $ressource['id'])
+      array('ressource_type' => $ressource->type, 'ressource_id' => $ressource->id)
     );
     $galleries = $this->galleries()->toArray();
     foreach ($galleries as $gallery) {
@@ -99,7 +93,7 @@ class ACommunityImageGalleryFoldersData extends ACommunityImageGalleryData {
       foreach ($folders as $folder) {
         $reference = clone $this->reference();
         $selected = 0;
-        if ($folder['folder_name'] == $ressource['type'].'_'.$ressource['id']) {
+        if ($folder['folder_name'] == $ressource->type.'_'.$ressource->id) {
           $name = $this->captions['base_folder'];
           $href = $reference->getRelative();
           if ($selectedFolderId == 0) {

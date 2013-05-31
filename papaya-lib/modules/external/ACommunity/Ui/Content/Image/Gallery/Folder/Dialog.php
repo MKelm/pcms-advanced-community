@@ -8,7 +8,7 @@
  *
  * You can redistribute and/or modify this script under the terms of the GNU General Public
  * License (GPL) version 2, provided that the copyright and license notes, including these
- * lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
+ * lines, remain unmodified. papaya irs distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.
  *
@@ -115,7 +115,7 @@ class ACommunityUiContentImageGalleryFolderDialog
   * @param object $record
   */
   public function callbackBeforeSaveRecord($context, $record) {
-    $ressource = $this->data()->ressource();
+    $ressource = $this->data()->ressource('ressource');
     $parentFolderId = $this->data()->getBaseFolderId();
     $languageId = $this->data()->languageId;
     $parentFolder = $this->data()->mediaDBEdit()->getFolder($parentFolderId);
@@ -133,8 +133,8 @@ class ACommunityUiContentImageGalleryFolderDialog
         $this->_newFolderId = $newFolderId;
         $record->assign(
           array(
-            'ressource_type' => $ressource['type'],
-            'ressource_id' => $ressource['id'],
+            'ressource_type' => $ressource->type,
+            'ressource_id' => $ressource->id,
             'parent_folder_id' => $parentFolderId,
             'folder_id' => $newFolderId
           )
@@ -156,11 +156,11 @@ class ACommunityUiContentImageGalleryFolderDialog
   * @param PapayaUiDialog $dialog
   */
   public function callbackExecuteSuccessful($context, $dialog) {
-    $ressource = $this->data()->ressource();
+    $ressource = $this->data()->ressource('ressource');
     if ($ressource['type'] == 'group') {
-      $lastChangeRessource = 'group_gallery_folders:group_'.$ressource['id'];
+      $lastChangeRessource = 'group_gallery_folders:group_'.$ressource->id;
     } else {
-      $lastChangeRessource = 'surfer_gallery_folders:surfer_'.$ressource['id'];
+      $lastChangeRessource = 'surfer_gallery_folders:surfer_'.$ressource->id;
     }
     $this->data()->setLastChangeTime($lastChangeRessource);
     $this->data()->owner->parameters()->set('remove_dialog', 1);

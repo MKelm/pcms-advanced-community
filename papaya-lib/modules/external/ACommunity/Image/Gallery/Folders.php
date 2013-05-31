@@ -88,8 +88,9 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
         $folderId = $this->parameters()->get('folder_id', NULL);
         if (!empty($folderId)) {
           if ($this->galleryDeletion()->deleteGalleryByFolderId($folderId)) {
+            $ressource = $this->data()->ressource('ressource');
             return $this->data()->setLastChangeTime(
-              $ressource['type'].'_gallery_folders:'.$ressourceType.'_'.$ressource['id']
+              $ressource->type.'_gallery_folders:'.$ressource->type.'_'.$ressource->id
             );
           }
         }
@@ -110,13 +111,13 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     $galleryFolders = $parent->appendElement('acommunity-image-gallery-folders');
-    $ressource = $this->data()->ressource();
-    if (!empty($ressource) &&
-      ($ressource['type'] != 'group' || $this->data()->surferHasGroupAccess())) {
+    $ressource = $this->data()->ressource('ressource');
+    if (isset($ressource->id) &&
+      ($ressource->type != 'group' || $this->data()->surferHasGroupAccess())) {
 
-      if (($ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) ||
-          ($ressource['type'] == 'group' &&
-           $this->data()->surferHasStatus($ressource['id'], 'is_owner', 1))) {
+      if (($ressource->type == 'surfer' && $ressource->isActiveSurfer) ||
+          ($ressource->type == 'group' &&
+           $this->data()->surferHasStatus($ressource->id, 'is_owner', 1))) {
         $this->_performCommands();
       }
 
@@ -134,9 +135,9 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
         );
       }
 
-      if (($ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) ||
-          ($ressource['type'] == 'group' &&
-           $this->data()->surferHasStatus($ressource['id'], 'is_owner', 1))) {
+      if (($ressource->type == 'surfer' && $ressource->isActiveSurfer) ||
+          ($ressource->type == 'group' &&
+           $this->data()->surferHasStatus($ressource->id, 'is_owner', 1))) {
         $this->data()->loadCommandLinks();
         $commandLinks = $galleryFolders->appendElement('command-links');
         foreach ($this->data()->commandLinks as $command => $link) {
