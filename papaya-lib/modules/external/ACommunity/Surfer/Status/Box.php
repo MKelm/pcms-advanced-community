@@ -133,9 +133,9 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
       $values = new ACommunityCacheIdentifierValues();
       $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues(
         'acommunity_surfer_status_box',
-        !empty($ressource['id']) ? $ressource['id'] : NULL,
-        !empty($ressource['id']) ? $values->lastChangeTime('surfer:surfer_'.$ressource['id']) : 0,
-        !empty($ressource['id']) ? $values->lastChangeTime('contacts:surfer_'.$ressource['id']) : 0
+        isset($ressource->id) ? $ressource->id : '',
+        isset($ressource->id) ? $values->lastChangeTime('surfer:surfer_'.$ressource->id) : 0,
+        isset($ressource->id) ? $values->lastChangeTime('contacts:surfer_'.$ressource->id) : 0
       );
     }
     return $this->_cacheDefinition;
@@ -146,7 +146,7 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    return $this->status()->data()->ressource('surfer', $this);
+    return $this->status()->data()->ressource('surfer', $this, NULL, NULL, NULL, 'object');
   }
 
   /**
