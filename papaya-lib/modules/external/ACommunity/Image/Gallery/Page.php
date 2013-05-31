@@ -72,7 +72,8 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
         $access = TRUE;
         if ($ressource['type'] == 'group') {
           $access = $this->gallery()->data()->surferHasGroupAccess();
-          if ($access) {
+          $this->surferHasGroupAccess = $access;
+          if ($this->surferHasGroupAccess) {
             // set status for delete image actions
             $definitionValues[] = (int)$this->gallery()->data()->surferHasStatus(
               $ressource['id'], 'is_owner', 1
