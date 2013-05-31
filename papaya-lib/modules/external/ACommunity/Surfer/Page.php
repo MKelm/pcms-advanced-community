@@ -150,20 +150,20 @@ class ACommunitySurferPage extends base_content implements PapayaPluginCacheable
     } elseif (NULL == $this->_cacheDefiniton) {
       $definitionValues = array('acommunity_surfer_page');
       $ressource = $this->setRessourceData();
-      if (!empty($ressource)) {
+      if (isset($ressource->id)) {
         $command = NULL;
         $currentSurferId = $this->surfer()->data()->currentSurferId();
-        if (!empty($currentSurferId) && $currentSurferId != $ressource['id']) {
+        if (!empty($currentSurferId) && $currentSurferId != $ressource->id) {
           $command = $this->surfer()->parameters()->get('command', NULL);
         }
         if (empty($command)) {
           include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $currentSurferId;
-          $definitionValues[] = $ressource['id'];
-          $definitionValues[] = $values->lastChangeTime('surfer:surfer_'.$ressource['id']);
+          $definitionValues[] = $ressource->id;
+          $definitionValues[] = $values->lastChangeTime('surfer:surfer_'.$ressource->id);
           $definitionValues[] = $values->lastChangeTime(
-            'contact:surfer_'.$currentSurferId.':surfer_'.$ressource['id']
+            'contact:surfer_'.$currentSurferId.':surfer_'.$ressource->id
           );
         } else {
           $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
@@ -195,11 +195,9 @@ class ACommunitySurferPage extends base_content implements PapayaPluginCacheable
    */
   public function setRessourceData() {
     $ressource = $this->surfer()->data()->ressource(
-      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_page')
+      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_page'), NULL, 'object'
     );
-    $this->surfer()->acommunityConnector()->ressource(
-      $this->surfer()->data()->ressource(NULL, NULL, NULL, NULL, NULL, 'object')
-    );
+    $this->surfer()->acommunityConnector()->ressource($ressource);
     return $ressource;
   }
 
