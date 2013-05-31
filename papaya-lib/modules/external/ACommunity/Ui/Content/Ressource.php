@@ -84,95 +84,183 @@ class ACommunityUiContentRessource extends PapayaObject {
   }
 
   /**
-   * Set data of current ressource by type and id
+  * Source parammeter group by page module
+  * @var string
+  */
+  protected $_sourceParameterGroup = NULL;
+
+  /**
+   * Source parameters by page module
+   * @var array
+   */
+  protected $_sourceParameters = NULL;
+
+  /**
+   * Initialize source parameters by page module
    *
-   * @param string $type
+   * @param base_content|base_actionbox $module
+   */
+  protected function _initializeSourceParameters($module) {
+    $isBoxModule = is_a($module, 'base_actionbox');
+    $this->_sourceParameterGroup = $isBoxModule ?
+      (isset($module->parentObj->moduleObj->paramName) ? $module->parentObj->moduleObj->paramName : NULL)
+      : $module->paramName;
+    $this->_sourceParameters = $isBoxModule ?
+      (isset($module->parentObj->moduleObj->params) ? $module->parentObj->moduleObj->params : NULL)
+      : $module->params;
+  }
+
+  /**
+   * Detect a stop parameter to make the current ressource invalid. You can use this in box modules
+   * e.g. to make them invisible. You can set multiple parameter names to detect and multiple types
+   * with a type selection. Use $overwriteProperties to reset id, type and handle.
+   *
+   * @param array|string $stopParameterNames array('type' => 'parameterNames') or 'parameterName(s)'
+   * @param string $type a type to select if $stopParameterNames contains multiple types
+   * @param boolean $overwriteProperties reset id, type and handle
+   * @return boolean
+   */
+  public function detectStopParameter($stopParameterNames, $type = NULL, $overwriteProperties = FALSE) {
+    if (empty($stopParameterNames)) {
+      return FALSE;
+    }
+    if (isset($type)) {
+      $stopParameterNames = isset($stopParameterNames[$type]) ? $stopParameterNames[$type] : array();
+    }
+    if (!empty($stopParameterNames) && !is_array($stopParameterNames)) {
+      $stopParameterNames = array($stopParameterNames);
+    }
+    foreach ($stopParameterNames as $parameterName) {
+      if (isset($this->_sourceParameters[$parameterName])) {
+        if ($overwriteProperties) {
+          $this->id = NULL;
+          $this->type = NULL;
+          $this->handle = NULL;
+        }
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Detect a parameter value in source parameters by given parameter names. You can use a type
+   * selection if you have multiple types in $sourceParameterNames. Use this method in box modules
+   * to get another ressource value than the page module, if needed and if the box uses a ressource
+   * singleton by the connector.
+   *
+   * @param array|string $sourceParameterNames array('type' => 'parameterName(s)') or 'parameterName(s)'
+   * @param string $type a type to select if $sourceParameterNames contains multiple types
+   * @return string $parameterValue
+   */
+  public function detectSourceParameterValue($sourceParameterNames, $type = NULL) {
+    if (empty($sourceParameterNames)) {
+      return NULL;
+    }
+    // determine ressource source parameter value by parameter names to get a ressource id
+    if (isset($type)) {
+      $sourceParameterNames = isset($sourceParameterNames[$type]) ? $sourceParameterNames[$type] : array();
+    }
+    if (!empty($sourceParameterNames) && !is_array($sourceParameterNames)) {
+      $sourceParameterNames = array($sourceParameterNames);
+    }
+    $parameterValue = NULL;
+    foreach ($sourceParameterNames as $parameterName) {
+      $value = isset($this->_sourceParameters[$parameterName]) ?
+        trim($this->_sourceParameters[$parameterName]) : NULL;
+      if (!empty($value)) {
+        $parameterValue = $value;
+        break;
+      }
+    }
+    return $parameterValue;
+  }
+
+  /**
+   * Filter source parameters by paramter names and optional ressource type selection.
+   * You can overwrite the current ressource parameters by setting overwriteParameters to TRUE.
+   * Use this method in box modules to set another parameter set than in page module
+   * if this box module uses a ressource singleton by the connector.
+   *
+   * @param array|string $filterParameterNames array('type' => 'parameterName(s)') or 'parameterName(s)'
+   * @param string $type a type to select if $filterParameterNames contains multiple types
+   * @param boolean $overwriteParamters set new ressource parameters at the method end
+   * @return array $filteredParameters
+   */
+  public function filterSourceParameters($filterParameterNames, $type = NULL, $overwriteParameters = FALSE) {
+    $filteredParameters = $this->_sourceParameters;
+    if (empty($filterParameterNames)) {
+      return $filteredParameters;
+    }
+    if (isset($type)) {
+      $filterParameterNames = isset($filterParameterNames[$type]) ? $filterParameterNames[$type] : array();
+    }
+    if (isset($filterParameterNames) && !is_array($filterParameterNames)) {
+      $filterParameterNames = array($filterParameterNames);
+    }
+    if (isset($filterParameterNames)) {
+      $oldParameters = $parameters;
+      $filteredParameters = array();
+      foreach ($filterParameterNames as $parameterName) {
+        if (isset($oldParameters[$parameterName])) {
+          $filteredParameters[$parameterName] = $oldParameters[$parameterName];
+        }
+      }
+      if ($overwriteParameters) {
+        $this->parameters($this->_sourceParameterGroup, $filteredParameters);
+      }
+    }
+    return $filteredParameters;
+  }
+
+  /**
+   * Set data by module to initialize ressource.
+   * Use this method if you want a standalone ressource only.
+   * If you have dependend modules use a ressource singelton with the connector instead.
+   * You can use detectStopParameter(), detectSourceParameterValue() and filterSourceParameters()
+   * alone if you need customizations of the ressource in dependend modules.
+   *
+   * @param string $type page, surfer, group or image
    * @param object $module Modul object to get parameters from
-   * @param array $parameterNames A list of parameter names by ressource type to get ressource id
+   * @param array $sourceParameterNames A list of parameter names by ressource type to get ressource id
    * @param array $filterParameterNames A list of parameter names by ressource type to filter for ressource parameters
    * @param array $storpParameterNames A list of parameter names by ressource type to stop ressource detection
    */
   public function set(
           $type = NULL,
           $module = NULL,
-          $parameterNames = NULL,
+          $sourceParameterNames = NULL,
           $filterParameterNames = NULL,
           $stopParameterNames = NULL
          ) {
     if ($this->_ressource === NULL && isset($type)) {
-      $isBoxModule = is_a($module, 'base_actionbox');
-      $parameterValue = NULL;
-
-      if ($type != 'page') {
-        // determine parameters to get ressource data from
-        $parameterGroup = $isBoxModule ?
-          (isset($module->parentObj->moduleObj->paramName) ? $module->parentObj->moduleObj->paramName : NULL)
-          : $module->paramName;
-        $parameters = $isBoxModule ?
-          (isset($module->parentObj->moduleObj->params) ? $module->parentObj->moduleObj->params : NULL)
-          : $module->params;
-        // detect stop parameter to make ressource invalid
-        $stopParameterNames = isset($stopParameterNames[$type]) ? $stopParameterNames[$type] : array();
-        if (!empty($stopParameterNames) && !is_array($stopParameterNames)) {
-          $stopParameterNames = array($stopParameterNames);
-        }
-        foreach ($stopParameterNames as $parameterName) {
-          if (isset($parameters[$parameterName])) {
-            return FALSE;
-          }
-        }
-        // determine ressource source parameter value by parameter names to get a ressource id
-        $parameterNames = isset($parameterNames[$type]) ? $parameterNames[$type] : array();
-        if (!empty($parameterNames) && !is_array($parameterNames)) {
-          $parameterNames = array($parameterNames);
-        }
-        $parameterValue = NULL;
-        foreach ($parameterNames as $parameterName) {
-          $value = isset($parameters[$parameterName]) ? trim($parameters[$parameterName]) : NULL;
-          if (!empty($value)) {
-            $parameterValue = $value;
-            break;
-          }
-        }
-        // filter parameters to use in reference later
-        $filterParameterNames = isset($filterParameterNames[$type]) ? $filterParameterNames[$type] : NULL;
-        if (isset($filterParameterNames) && !is_array($filterParameterNames)) {
-          $filterParameterNames = array($filterParameterNames);
-        }
-        if (isset($filterParameterNames)) {
-          $oldParameters = $parameters;
-          $parameters = array();
-          foreach ($filterParameterNames as $parameterName) {
-            if (isset($oldParameters[$parameterName])) {
-              $parameters[$parameterName] = $oldParameters[$parameterName];
-            }
-          }
-          unset($oldParameters);
-        }
+      $this->_initializeSourceParameters($module);
+      if ($this->detectStopParameter($stopParameterNames, $type, TRUE)) {
+        return FALSE;
       }
-
+      $sourceParameterValue = $this->detectSourceParameterValue($sourceParameterNames, $type);
+      $filteredParameters = $this->filterSourceParameters($filterParameterNames, $type);
       switch ($type) {
         case 'surfer':
           // parameter value must contain a valid surfer handle
-          $id = NULL;
-          if (!empty($parameterValue)) {
-            $parameterId = $this->uiContent->communityConnector()->getIdByHandle($parameterValue);
+          if (!empty($sourceParameterValue)) {
+            $surferId = $this->uiContent->communityConnector()->getIdByHandle($sourceParameterValue);
             if ($this->needsActiveSurfer == FALSE) {
-              $id = $parameterId;
-              $this->parameters($parameterGroup, $parameters);
+              $this->id = $surferId;
+              $this->parameters($this->_moduelParameterGroup, $filteredParameters);
             }
           } else {
-            $parameterId = NULL;
+            $surferId = NULL;
           }
           if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
-            $this->isActiveSurfer = $parameterId == $this->papaya()->surfer->surfer['surfer_id'];
-            if ($this->needsActiveSurfer == FALSE  || empty($parameterId) ||
+            $this->isActiveSurfer = $surferId == $this->papaya()->surfer->surfer['surfer_id'];
+            if ($this->needsActiveSurfer == FALSE  || empty($surferId) ||
                 ($this->needsActiveSurfer == TRUE && $this->isActiveSurfer == TRUE)) {
-              if (empty($id)) {
-                $id = $this->papaya()->surfer->surfer['surfer_id'];
-                $parameterValue = $this->papaya()->surfer->surfer['surfer_handle'];
-                $this->parameters($parameterGroup, $parameters);
-                $this->isActiveSurfer = $id == $this->papaya()->surfer->surfer['surfer_id'];
+              if (empty($this->id)) {
+                $this->id = $this->papaya()->surfer->surfer['surfer_id'];
+                $sourceParameterValue = $this->papaya()->surfer->surfer['surfer_handle'];
+                $this->parameters($this->_moduelParameterGroup, $filteredParameters);
+                $this->isActiveSurfer = $this->id == $this->papaya()->surfer->surfer['surfer_id'];
               }
             }
           }
@@ -182,32 +270,31 @@ class ACommunityUiContentRessource extends PapayaObject {
            * Get a image ressource in box modules by parent page module.
            * Needs a callbackGetCurrentImageId method, see ACommunitySurferGalleryPage
            */
-          if ($isBoxModule && isset($parameters['enlarge']) &&
+          if (is_a($module, 'base_actionbox') && isset($this->_sourceParameters['enlarge']) &&
               method_exists($module->parentObj->moduleObj, 'callbackGetCurrentImageId')) {
-            $id = $module->parentObj->moduleObj->callbackGetCurrentImageId();
-            if (!empty($id)) {
-              $this->parameters($parameterGroup, $parameters);
+            $this->id = $module->parentObj->moduleObj->callbackGetCurrentImageId();
+            if (!empty($this->id)) {
+              $this->parameters($this->_moduelParameterGroup, $filteredParameters);
             }
           }
           break;
         case 'page':
-          $id = $this->papaya()->request->pageId;
+          $this->id = $this->papaya()->request->pageId;
           break;
         case 'group':
-          if (!empty($parameterValue)) {
-            if (!empty($parameterValue)) {
-              $id = $this->uiContent->acommunityConnector()->getGroupIdByHandle($parameterValue);
-              if (!empty($id)) {
-                $this->parameters($parameterGroup, $parameters);
-              }
+          if (!empty($sourceParameterValue)) {
+            $this->id = $this->uiContent->acommunityConnector()->getGroupIdByHandle($sourceParameterValue);
+            if (!empty($this->id)) {
+              $this->parameters($this->_moduelParameterGroup, $filteredParameters);
             }
           }
           break;
       }
-      if (!empty($id)) {
+      if (!empty($this->id)) {
         $this->type = $type;
-        $this->id = $id;
-        $this->handle = $parameterValue;
+        if ($type != 'page' && $type != 'image') {
+          $this->handle = $sourceParameterValue;
+        }
         return TRUE;
       }
     }
