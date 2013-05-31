@@ -278,9 +278,20 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
           $returnType = 'array'
          ) {
 
-    if (is_null($this->_ressource)) {
+    if ($type == 'ressource') {
+      return $this->_ressource;
+    } elseif (is_a($type, 'ACommunityUiContentRessource')) {
+      $this->_ressource = $type; // set ressource in box modules by page module ressource
+    } elseif (is_null($this->_ressource) && !empty($type)) {
       include_once(dirname(__FILE__).'/Ressource.php');
-      $this->_ressource = new ACommunityUiContentRessource();
+      if (is_a($module, 'base_content')) {
+        // use a singleton for page modules to get the same in connector for box modules
+        $this->_ressource = ACommunityUiContentRessource::getInstance();
+      } else {
+        // compatibility for box modules with a different ressource handling
+        // future plans: add support for nested ressources in ressource class
+        $this->_ressource = new ACommunityUiContentRessource();
+      }
       $this->_ressource->papaya($this->papaya());
       $this->_ressource->uiContent = $this->owner;
       $this->_ressource->needsActiveSurfer = $this->_ressourceNeedsActiveSurfer; // backward compatibilty
@@ -290,7 +301,7 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
       }
     }
     if (isset($this->_ressource)) {
-      if ($returnType = 'array') {
+      if ($returnType == 'array') {
         return array(
           'type' => $this->_ressource->type,
           'id' => $this->_ressource->id,
