@@ -27,10 +27,4 @@ require_once(dirname(__FILE__).'/../Data.php');
  */
 class ACommunityImageGalleryUploadData extends ACommunityImageGalleryData {
 
-  /**
-   * Ressource needs active surfer
-   * @var boolean
-   */
-  protected $_ressourceNeedsActiveSurfer = TRUE;
-
 }

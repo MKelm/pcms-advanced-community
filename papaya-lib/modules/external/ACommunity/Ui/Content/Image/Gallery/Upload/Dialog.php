@@ -112,9 +112,9 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
   * @param PapayaUiDialog $dialog
   */
   public function callbackUploadImage($context, $dialog) {
-    $ressource = $this->data()->ressource();
-    $filter = array('ressource_type' => $ressource['type'], 'ressource_id' => $ressource['id']);
-    $ressourceParameters = reset($this->data()->ressourceParameters());
+    $ressource = $this->data()->ressource('ressource');
+    $filter = array('ressource_type' => $ressource->type, 'ressource_id' => $ressource->id);
+    $ressourceParameters = reset($ressource->parameters());
     if (!empty($ressourceParameters['folder_id'])) {
       $filter['folder_id'] = $ressourceParameters['folder_id'];
     } else {
@@ -156,15 +156,15 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
                 if (empty($added)) {
                   $error = 'dialog_error_media_db';
                 } else {
-                  $ressource = $this->data()->ressource();
+                  $ressource = $this->data()->ressource('ressource');
                   if ($gallery['parent_folder_id'] == 0) {
-                    $ressource = $ressource['type'].'_gallery_images:folder_base:'.
-                      $ressource['type'].'_'.$ressource['id'];
+                    $lastChangeRessource = $ressource->type.'_gallery_images:folder_base:'.
+                      $ressource->type.'_'.$ressource->id;
                   } else {
-                    $ressource = $ressource['type'].'_gallery_images:folder_'.$folderId.':'.
-                      $ressource['type'].'_'.$ressource['id'];
+                    $lastChangeRessource = $ressource->type.'_gallery_images:folder_'.$folderId.':'.
+                      $ressource->type.'_'.$ressource->id;
                   }
-                  $this->data()->setLastChangeTime($ressource);
+                  $this->data()->setLastChangeTime($lastChangeRessource);
                   $href = $this->data()->reference()->get();
                   $GLOBALS['PAPAYA_PAGE']->sendHTTPStatus(301);
                   @header("Location: ".$href);
