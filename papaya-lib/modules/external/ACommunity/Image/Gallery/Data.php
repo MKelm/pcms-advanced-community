@@ -96,9 +96,9 @@ class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelat
    */
   public function surferHasGroupAccess() {
     if (is_null($this->_surferHasGroupAccess)) {
-      $ressource = $this->ressource();
-      if (!empty($ressource)) {
-        $this->group()->load($ressource['id']);
+      $ressource = $this->ressource('ressource');
+      if (isset($ressource)) {
+        $this->group()->load($ressource->id);
         if ($this->group()->public == 0) {
           if ($this->surferHasStatus(NULL, 'is_owner', 1) ||
               $this->surferHasStatus(NULL, 'is_member', 1)) {

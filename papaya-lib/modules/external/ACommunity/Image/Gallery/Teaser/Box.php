@@ -87,35 +87,32 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
     } elseif (NULL == $this->_cacheDefinition) {
       $ressource = $this->setRessourceData();
       $definitionValues = array('acommunity_image_gallery_teaser');
-      if (!empty($ressource)) {
-        $ressource = $this->setRessourceData();
-        if (!empty($ressource)) {
-          include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
-          $values = new ACommunityCacheIdentifierValues();
-          $definitionValues[] = $ressource['type'];
-          $definitionValues[] = $ressource['id'];
-          $access = TRUE;
-          if ($ressource['type'] == 'group') {
-            if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
-              $this->teaser()->data()->surferHasGroupAccess = TRUE;
-            } else {
-              $access = FALSE;
-            }
+      if (isset($ressource)) {
+        include_once(dirname(__FILE__).'/../../../Cache/Identifier/Values.php');
+        $values = new ACommunityCacheIdentifierValues();
+        $definitionValues[] = $ressource->type;
+        $definitionValues[] = $ressource->id;
+        $access = TRUE;
+        if ($ressource->type == 'group') {
+          if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
+            $this->teaser()->data()->surferHasGroupAccess = TRUE;
+          } else {
+            $access = FALSE;
           }
-          $definitionValues[] = (int)$access;
-          if ($access) {
-            if ($ressource['type'] == 'surfer') {
-              $definitionValues[] = (int)$this->teaser()->data()->ressourceIsActiveSurfer;
-              $lastChangeRessource = 'surfer_gallery_images:folder_base:surfer_'.$ressource['id'];
-            } elseif ($ressource['type'] == 'group') {
-              $definitionValues[] = (int)$this->teaser()->data()->surferHasStatus(
-                $ressource['id'], 'is_owner', 1
-              );
-              $lastChangeRessource = 'group_gallery_images:folder_base:group_'.$ressource['id'];
-            }
-            if (isset($lastChangeRessource)) {
-              $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
-            }
+        }
+        $definitionValues[] = (int)$access;
+        if ($access) {
+          if ($ressource->type == 'surfer') {
+            $definitionValues[] = (int)$ressource->isActiveSurfer;
+            $lastChangeRessource = 'surfer_gallery_images:folder_base:surfer_'.$ressource->id;
+          } elseif ($ressource['type'] == 'group') {
+            $definitionValues[] = (int)$this->teaser()->data()->surferHasStatus(
+              $ressource->id, 'is_owner', 1
+            );
+            $lastChangeRessource = 'group_gallery_images:folder_base:group_'.$ressource->id;
+          }
+          if (isset($lastChangeRessource)) {
+            $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
           }
         }
       }
@@ -125,27 +122,12 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
   }
 
   /**
-   * Set ressource data to get surfer
+   * Set ressource by page module with connector to get surfer or group
    */
   public function setRessourceData() {
-    if (!empty($this->parentObj->moduleObj)) {
-      switch (get_class($this->parentObj->moduleObj)) {
-        case 'ACommunitySurferPage':
-        case 'content_showuser':
-          $ressourceType = 'surfer';
-          break;
-        case 'ACommunityGroupPage':
-          $ressourceType = 'group';
-          break;
-      }
-      return $this->teaser()->data()->ressource(
-        $ressourceType,
-        $this,
-        array('surfer' => array('user_name', 'user_handle', 'surfer_handle'), 'group' => 'group_handle'),
-        array('surfer' => array('user_name', 'user_handle', 'surfer_handle'), 'group' => 'group_handle')
-      );
-    }
-    return NULL;
+    return $this->teaser()->data()->ressource(
+      $this->teaser()->acommunityConnector()->ressource(), NULL, NULL, NULL, NULL, 'object'
+    );
   }
 
   /**

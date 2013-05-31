@@ -55,21 +55,21 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     $galleryTeaser = $parent->appendElement('acommunity-image-gallery-teaser');
-    $ressource = $this->data()->ressource();
-    if (!empty($ressource) &&
-        ($ressource['type'] != 'group' || $this->data()->surferHasGroupAccess)) {
+    $ressource = $this->data()->ressource('ressource');
+    if (isset($ressource) && ($ressource->type != 'group' || $this->data()->surferHasGroupAccess)) {
       $this->data()->galleries()->load(
         array(
-          'ressource_type' => $ressource['type'],
-          'ressource_id' => $ressource['id'],
+          'ressource_type' => $ressource->type,
+          'ressource_id' => $ressource->id,
           'parent_folder_id' => 0
         )
       );
       $gallery = reset($this->data()->galleries()->toArray());
       $images = NULL;
       if (!empty($gallery)) {
-        $files = $this->data()->mediaDBEdit()
-          ->getFiles($gallery['folder_id'], $this->data()->thumbnailAmount);
+        $files = $this->data()->mediaDBEdit()->getFiles(
+          $gallery['folder_id'], $this->data()->thumbnailAmount
+        );
         if (!empty($files)) {
           include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
           $thumbnail = new base_thumbnail;
@@ -81,17 +81,17 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
           }
         }
       }
-      if (empty($images) && $ressource['type'] == 'surfer' && $this->data()->ressourceIsActiveSurfer) {
+      if (empty($images) && $ressource->type == 'surfer' && $ressource->isActiveSurfer) {
         $galleryTeaser->appendElement(
           'add-new-images-link',
-          array('href' => $this->acommunityConnector()->getGalleryPageLink('surfer', $ressource['id'])),
+          array('href' => $this->acommunityConnector()->getGalleryPageLink('surfer', $ressource->id)),
           $this->data()->captions['add_new_images_link']
         );
-      } elseif (empty($images) && $ressource['type'] == 'group' &&
+      } elseif (empty($images) && $ressource->type == 'group' &&
                 $this->data()->surferHasStatus(NULL, 'is_owner', 1)) {
         $galleryTeaser->appendElement(
           'add-new-images-link',
-          array('href' => $this->acommunityConnector()->getGalleryPageLink('group', $ressource['id'])),
+          array('href' => $this->acommunityConnector()->getGalleryPageLink('group', $ressource->id)),
           $this->data()->captions['add_new_images_link']
         );
       } elseif (!empty($images)) {
@@ -102,7 +102,7 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
         $galleryTeaser->appendElement(
           'more-images-link',
           array(
-            'href' => $this->acommunityConnector()->getGalleryPageLink($ressource['type'], $ressource['id'])
+            'href' => $this->acommunityConnector()->getGalleryPageLink($ressource->type, $ressource->id)
           ),
           $this->data()->captions['more_images_link']
         );
