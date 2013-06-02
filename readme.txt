@@ -12,13 +12,11 @@ This package contains modules to extend your papaya CMS community.
 
 - Some improvements
 - Fix cache status of group invitations and requests on visibilty change
-- Cronjob to delete cache contents and last change timestamps older than n days
 
 -----------
 |  Ideas  |
 -----------
 
-- Cronjob to delete cache contents older than n days
 - Surfer network graphs with cytoscape http://goo.gl/vgiUs
 - Surfer pages with front end content editor
 -- support for "Topic with image" and "Category with image"

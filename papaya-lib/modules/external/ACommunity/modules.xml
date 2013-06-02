@@ -113,6 +113,11 @@
             name="Connector"
             class="ACommunityConnector"
             file="Connector.php">Connector methods for other papaya CMS packages</module>
+    <module type="cronjob"
+            guid="610d22d2849d4d41a37058c6949aa4b3"
+            name="Cache Cleanup Cronjob"
+            class="ACommunityCacheCleanupCronjob"
+            file="Cache/Cleanup/Cronjob.php">Deletes cache files and last change timestamps older than n days</module>
   </modules>
   <tables>
     <table name="acommunity_comments"/>
