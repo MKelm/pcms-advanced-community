@@ -68,6 +68,7 @@ class ACommunitySurfer extends ACommunityUiContent {
                 );
               $this->data()->owner->notificationHandler()->notify(
                 'new-contact-request',
+                $this->data()->languageId,
                 $ressource['id'],
                 array(
                   'recipient_surfer' => $ressource['id'],
