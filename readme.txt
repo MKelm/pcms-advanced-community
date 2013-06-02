@@ -12,7 +12,6 @@ This package contains modules to extend your papaya CMS community.
 
 - Some improvements
 - Fix cache status of group invitations and requests on visibilty change
-- Add visbility checks for group galleries
 
 -----------
 |  Ideas  |
