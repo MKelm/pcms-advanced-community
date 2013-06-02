@@ -38,6 +38,12 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
   protected $_groupSurferRelation = NULL;
 
   /**
+   * Ui content data object with group surfer relations
+   * @var ACommunityUiContentDataGroupSurferRelations
+   */
+  public $data = NULL;
+
+  /**
   * Access to group surfer relation database record data
   *
   * @param ACommunityContentGroupSurferRelation $group
@@ -107,6 +113,21 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
           )
         );
         if ($groupSurferRelation->save()) {
+          // notifiy invited surfer
+          $this->data->group()->load($groupId);
+          $this->data->owner->notificationHandler()->notify(
+            'new-group-membership-invitation',
+            $this->data->languageId,
+            $surferId,
+            array(
+              'recipient_surfer' => $surferId,
+              'context_surfer' => $currentSurferId,
+              'group_title' => $this->data->group()->title,
+              'page_url' => $this->data->owner->acommunityConnector()->getSurferGroupsPageLink(
+                $this->data->languageId, 'invitations'
+              )
+            )
+          );
           // change affects the amount of group's membership invitations
           $result1 = $this->setLastChangeTime('group:membership_invitations:group_'.$groupId);
           // change affects the group to surfer invitation relation
@@ -240,6 +261,21 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
           )
         );
         if ($groupSurferRelation->save()) {
+          // notifiy group owner
+          $this->data->group()->load($groupId);
+          $this->data->owner->notificationHandler()->notify(
+            'new-group-membership-request',
+            $this->data->languageId,
+            $this->data->group()->owner,
+            array(
+              'recipient_surfer' => $this->data->group()->owner,
+              'context_surfer' => $currentSurferId,
+              'group_title' => $this->data->group()->title,
+              'page_url' => $this->data->owner->acommunityConnector()->getSurfersPageLink(
+                $this->data->languageId, 'membership_requests', $this->data->group()->handle
+              )
+            )
+          );
           // change affects the amount of group's membership requests
           $result1 = $this->setLastChangeTime('group:membership_requests:group_'.$groupId);
           // change affects the surfer to group request relation

@@ -134,6 +134,8 @@ class ACommunityUiContentDataGroupSurferRelations extends ACommunityUiContentDat
       include_once(dirname(__FILE__).'/../../../../../Group/Surfer/Changes.php');
       $this->_groupSurferChanges = new ACommunityGroupSurferChanges();
       $this->_groupSurferChanges->papaya($this->papaya());
+      $this->_groupSurferChanges->data = $this;
+      $this->_groupSurferChanges->owner = $this->owner;
     }
     return $this->_groupSurferChanges;
   }
