@@ -166,7 +166,11 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
           $definitionValues[] = $ressource->type;
           $definitionValues[] = $ressource->id;
           $mode = $this->surfers()->parameters()->get('mode', NULL);
-          if ($mode == 'invite_surfers' || $mode = 'membership_invitations') {
+          if ($mode == 'invite_surfers') {
+            $definitionValues[] = $values->lastChangeTime(
+              'group:non_memberships:group_'.$ressource->id
+            );
+          } elseif ($mode == 'membership_invitations') {
             $definitionValues[] = $values->lastChangeTime(
               'group:membership_invitations:group_'.$ressource->id
             );

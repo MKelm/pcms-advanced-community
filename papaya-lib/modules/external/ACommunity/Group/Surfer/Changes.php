@@ -80,9 +80,11 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
         if ($groupSurferRelation->delete()) {
           // change affects the amount of group's memberships
           $result1 = $this->setLastChangeTime('group:memberships:group_'.$groupId);
+          // change affects the amount of group's non-memberships
+          $result2 = $this->setLastChangeTime('group:non_memberships:group_'.$groupId);
           // change affects the amount of groups by the selected surfer
-          $result2 = $this->setLastChangeTime('groups:surfer_'.$surferId);
-          return $result1 && $result2;
+          $result3 = $this->setLastChangeTime('groups:surfer_'.$surferId);
+          return $result1 && $result2 && $result3;
         }
       }
     }
@@ -130,11 +132,13 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
           );
           // change affects the amount of group's membership invitations
           $result1 = $this->setLastChangeTime('group:membership_invitations:group_'.$groupId);
+          // change affects the amount of group's non-memberships
+          $result2 = $this->setLastChangeTime('group:non_memberships:group_'.$groupId);
           // change affects the group to surfer invitation relation
-          $result2 = $this->setLastChangeTime('invitation:group_'.$groupId.':surfer_'.$surferId);
+          $result3 = $this->setLastChangeTime('invitation:group_'.$groupId.':surfer_'.$surferId);
           // change affects the amount of groups invitations by the invited surfer
-          $result3 = $this->setLastChangeTime('groups:membership_invitations:surfer_'.$surferId);
-          return $result1 && $result2;
+          $result4 = $this->setLastChangeTime('groups:membership_invitations:surfer_'.$surferId);
+          return $result1 && $result2 && $result3 && $result4;
         }
       }
     }
@@ -159,11 +163,13 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
         if ($groupSurferRelation->delete()) {
           // change affects the amount of group's membership invitations
           $result1 = $this->setLastChangeTime('group:membership_invitations:group_'.$groupId);
+          // change affects the amount of group's non-memberships
+          $result2 = $this->setLastChangeTime('group:non_memberships:group_'.$groupId);
           // change affects the group to surfer invitation relation
-          $result2 = $this->setLastChangeTime('invitation:group_'.$groupId.':surfer_'.$surferId);
+          $result3 = $this->setLastChangeTime('invitation:group_'.$groupId.':surfer_'.$surferId);
           // change affects the amount of groups invitations by the invited surfer
-          $result3 = $this->setLastChangeTime('groups:membership_invitations:surfer_'.$surferId);
-          return $result1 && $result2 && $result3;
+          $result4 = $this->setLastChangeTime('groups:membership_invitations:surfer_'.$surferId);
+          return $result1 && $result2 && $result3 && $result4;
         }
       }
     }
@@ -227,11 +233,13 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
         if ($groupSurferRelation->delete()) {
           // change affects the amount of group's membership requests
           $result1 = $this->setLastChangeTime('group:membership_requests:group_'.$groupId);
+          // change affects the amount of group's non-memberships
+          $result2 = $this->setLastChangeTime('group:non_memberships:group_'.$groupId);
           // change affects the surfer to group request relation
-          $result2 = $this->setLastChangeTime('request:surfer_'.$surferId.':group_'.$groupId);
+          $result3 = $this->setLastChangeTime('request:surfer_'.$surferId.':group_'.$groupId);
           // change affects the amount of requested groups by the selected surfer
-          $result3 = $this->setLastChangeTime('groups:membership_requests:surfer_'.$surferId);
-          return $result1 && $result2 && $result3;
+          $result4 = $this->setLastChangeTime('groups:membership_requests:surfer_'.$surferId);
+          return $result1 && $result2 && $result3 && $result4;
         }
       }
     }
@@ -278,11 +286,13 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
           );
           // change affects the amount of group's membership requests
           $result1 = $this->setLastChangeTime('group:membership_requests:group_'.$groupId);
+          // change affects the amount of group's non-memberships
+          $result2 = $this->setLastChangeTime('group:non_memberships:group_'.$groupId);
           // change affects the surfer to group request relation
-          $result2 = $this->setLastChangeTime('request:surfer_'.$currentSurferId.':group_'.$groupId);
+          $result3 = $this->setLastChangeTime('request:surfer_'.$currentSurferId.':group_'.$groupId);
           // change affects the amount of requested groups by the selected surfer
-          $result3 = $this->setLastChangeTime('groups:membership_requests:surfer_'.$currentSurferId);
-          return $result1 && $result2 && $result3;
+          $result4 = $this->setLastChangeTime('groups:membership_requests:surfer_'.$currentSurferId);
+          return $result1 && $result2 && $result3 && $result4;
         }
       }
     }
@@ -306,11 +316,13 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
         if ($groupSurferRelation->delete()) {
           // change affects the amount of group's membership requests
           $result1 = $this->setLastChangeTime('group:membership_requests:group_'.$groupId);
+          // change affects the amount of group's non-memberships
+          $result2 = $this->setLastChangeTime('group:non_memberships:group_'.$groupId);
           // change affects the surfer to group request relation
-          $result2 = $this->setLastChangeTime('request:surfer_'.$currentSurferId.':group_'.$groupId);
+          $result3 = $this->setLastChangeTime('request:surfer_'.$currentSurferId.':group_'.$groupId);
           // change affects the amount of requested groups by the selected surfer
-          $result3 = $this->setLastChangeTime('groups:membership_requests:surfer_'.$currentSurferId);
-          return $result1 && $result2 && $result3;
+          $result4 = $this->setLastChangeTime('groups:membership_requests:surfer_'.$currentSurferId);
+          return $result1 && $result2 && $result3 && $result4;
         }
       }
     }
@@ -372,11 +384,13 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
         if ($groupSurferRelation->delete()) {
           // change affects the amount of group's membership requests
           $result1 = $this->setLastChangeTime('group:membership_invitations:group_'.$groupId);
+          // change affects the amount of group's non-memberships
+          $result2 = $this->setLastChangeTime('group:non_memberships:group_'.$groupId);
           // change affects the group to surfer invitation relation
-          $result2 = $this->setLastChangeTime('invitation:group_'.$groupId.':surfer_'.$currentSurferId);
+          $result3 = $this->setLastChangeTime('invitation:group_'.$groupId.':surfer_'.$currentSurferId);
           // change affects the amount of group invitations by the current surfer
-          $result3 = $this->setLastChangeTime('groups:membership_invitations:surfer_'.$currentSurferId);
-          return $result1 && $result2 && $result3;
+          $result4 = $this->setLastChangeTime('groups:membership_invitations:surfer_'.$currentSurferId);
+          return $result1 && $result2 && $result3 && $result4;
         }
       }
     }
