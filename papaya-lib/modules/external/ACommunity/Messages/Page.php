@@ -108,17 +108,20 @@ class ACommunityMessagesPage extends base_content implements PapayaPluginCacheab
       $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
           $this->papaya()->surfer->surfer['surfer_id'] : NULL;
       $notifications = $this->messages()->parameters()->get('notifications', NULL);
+      $definitionValues = array('acommunity_messages_page');
+      $access = FALSE;
       if (!empty($currentSurferId) && !isset($notifications)) {
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       } else {
-        $definitionValues = array('acommunity_messages_page');
-        if (!empty($ressource) && isset($currentSurferId)) {
+        if (isset($notifications) && isset($currentSurferId)) {
           include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $currentSurferId;
           $definitionValues[] = 'system';
           $definitionValues[] = $values->lastMessageTime($currentSurferId, 'system');
+          $access = TRUE;
         }
+        $definitionValues[] = (int)$access;
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
           new PapayaCacheIdentifierDefinitionValues($definitionValues),
           new PapayaCacheIdentifierDefinitionParameters(
