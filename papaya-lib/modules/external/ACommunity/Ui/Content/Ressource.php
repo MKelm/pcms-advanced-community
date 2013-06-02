@@ -49,6 +49,12 @@ class ACommunityUiContentRessource extends PapayaObject {
   public $handle = NULL;
 
   /**
+   * Flag on invalid initialization
+   * @var boolean
+   */
+  public $isInvalid = FALSE;
+
+  /**
    * Ressource is active surfer
    * @var boolean
    */
@@ -198,8 +204,8 @@ class ACommunityUiContentRessource extends PapayaObject {
     if (isset($filterParameterNames) && !is_array($filterParameterNames)) {
       $filterParameterNames = array($filterParameterNames);
     }
-    if (isset($filterParameterNames)) {
-      $oldParameters = $parameters;
+    if (!empty($filterParameterNames)) {
+      $oldParameters = $this->_sourceParameters;
       $filteredParameters = array();
       foreach ($filterParameterNames as $parameterName) {
         if (isset($oldParameters[$parameterName])) {
@@ -233,7 +239,7 @@ class ACommunityUiContentRessource extends PapayaObject {
           $filterParameterNames = NULL,
           $stopParameterNames = NULL
          ) {
-    if ($this->_ressource === NULL && isset($type)) {
+    if ($this->id === NULL && isset($type)) {
       $this->_initializeSourceParameters($module);
       if ($this->detectStopParameter($stopParameterNames, $type, TRUE)) {
         return FALSE;
@@ -247,7 +253,7 @@ class ACommunityUiContentRessource extends PapayaObject {
             $surferId = $this->uiContent->communityConnector()->getIdByHandle($sourceParameterValue);
             if ($this->needsActiveSurfer == FALSE) {
               $this->id = $surferId;
-              $this->parameters($this->_moduelParameterGroup, $filteredParameters);
+              $this->parameters($this->_sourceParameterGroup, $filteredParameters);
             }
           } else {
             $surferId = NULL;
@@ -259,7 +265,7 @@ class ACommunityUiContentRessource extends PapayaObject {
               if (empty($this->id)) {
                 $this->id = $this->papaya()->surfer->surfer['surfer_id'];
                 $sourceParameterValue = $this->papaya()->surfer->surfer['surfer_handle'];
-                $this->parameters($this->_moduelParameterGroup, $filteredParameters);
+                $this->parameters($this->_sourceParameterGroup, $filteredParameters);
                 $this->isActiveSurfer = $this->id == $this->papaya()->surfer->surfer['surfer_id'];
               }
             }
@@ -274,7 +280,7 @@ class ACommunityUiContentRessource extends PapayaObject {
               method_exists($module->parentObj->moduleObj, 'callbackGetCurrentImageId')) {
             $this->id = $module->parentObj->moduleObj->callbackGetCurrentImageId();
             if (!empty($this->id)) {
-              $this->parameters($this->_moduelParameterGroup, $filteredParameters);
+              $this->parameters($this->_sourceParameterGroup, $filteredParameters);
             }
           }
           break;
@@ -285,7 +291,7 @@ class ACommunityUiContentRessource extends PapayaObject {
           if (!empty($sourceParameterValue)) {
             $this->id = $this->uiContent->acommunityConnector()->getGroupIdByHandle($sourceParameterValue);
             if (!empty($this->id)) {
-              $this->parameters($this->_moduelParameterGroup, $filteredParameters);
+              $this->parameters($this->_sourceParameterGroup, $filteredParameters);
             }
           }
           break;
@@ -296,6 +302,8 @@ class ACommunityUiContentRessource extends PapayaObject {
           $this->handle = $sourceParameterValue;
         }
         return TRUE;
+      } else {
+        $this->isInvalid = TRUE;
       }
     }
     return FALSE;
