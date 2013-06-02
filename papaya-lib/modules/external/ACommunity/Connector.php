@@ -636,11 +636,12 @@ class ACommunityConnector extends base_connector {
    * Use additional parameters to set more data in simple template placeholders.
    *
    * @param string $notificationName
+   * @param integer $languageId
    * @param string $recipientId Surfer ID of recipient surfer
    * @param array $parameters
    */
-  public function notify($notificationName, $recipientId, $parameters = array()) {
-    $this->notificationHandler()->notify($notificationName, $recipientId, $parameters);
+  public function notify($notificationName, $languageId, $recipientId, $parameters = array()) {
+    $this->notificationHandler()->notify($notificationName, $languageId, $recipientId, $parameters);
   }
 
   /**

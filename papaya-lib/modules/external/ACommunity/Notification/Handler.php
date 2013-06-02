@@ -72,16 +72,16 @@ class ACommunityNotificationHandler extends PapayaObject {
    * Use additional parameters to set more data in simple template placeholders.
    *
    * @param string $notificationName
+   * @param integer $languageId
    * @param string $recipientId Surfer ID of recipient surfer
    * @param array $parameters
    */
-  public function notify($notificationName, $recipientId, $parameters = array()) {
+  public function notify($notificationName, $languageId, $recipientId, $parameters = array()) {
     $simpleTemplate = new base_simpletemplate();
 
     $translation = clone $this->translation();
-    $translation->load(array('name' => $notificationName));
+    $translation->load(array('name' => $notificationName, 'language_id' => $languageId));
     if ($translation['notification_id'] > 0) {
-
       $setting = clone $this->setting();
       $setting->load(array('surfer_id' => $recipientId, 'notification_id' => $translation['notification_id']));
       if (!($setting['notification_id'] > 0)) {
@@ -133,8 +133,7 @@ class ACommunityNotificationHandler extends PapayaObject {
       PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
       'surfer_'.$surferId
     );
-    $text = $filter->filter($text);
-    $text = $title.': '.$text;
+    $text = '<notification-title>'.$title.'</notification-title>'.$filter->filter($text);
     // assign / save message data
     $message = $this->message();
     $message->assign(
