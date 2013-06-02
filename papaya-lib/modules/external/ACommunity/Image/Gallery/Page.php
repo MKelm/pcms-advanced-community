@@ -167,7 +167,14 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
    * @return string
    */
   public function callbackGetCurrentImageId() {
-    return $this->gallery()->currentFileId;
+    $currentFileId = $this->gallery()->currentFileId;
+    if (empty($currentFileId) && !empty($this->params['enlarge'])) {
+      $this->data['directory'] = $this->_galleryFolderId();
+      $this->gallery()->initialize($this, $this->data);
+      $this->gallery()->load();
+      $currentFileId = $this->gallery()->currentFileId;
+    }
+    return $currentFileId;
   }
 
   /**
