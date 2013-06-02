@@ -109,11 +109,9 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
     } elseif (NULL == $this->_cacheDefiniton) {
       $definitionValues = array('acommunity_comments_box');
       $ressource = $this->setRessourceData();
-      if (!empty($ressource)) {
+      if (isset($ressource->id)) {
         $access = TRUE;
-        if ($ressource['type'] == 'group') {
-          $definitionValues[] = $ressource['type'];
-          $definitionValues[] = $ressource['id'];
+        if ($ressource->type == 'group') {
           if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
             $this->comments()->data()->surferHasGroupAccess = TRUE;
           } else {
@@ -127,8 +125,8 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
           if (!empty($currentSurferId)) {
             $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
           } else {
-            $definitionValues[] = $ressource['type'];
-            $definitionValues[] = $ressource['id'];
+            $definitionValues[] = $ressource->type;
+            $definitionValues[] = $ressource->id;
             $referenceParameters = $this->comments()->data()->referenceParameters();
             $parameterNames = array_merge(
               array('command', 'comment_id'), array_keys($referenceParameters)
@@ -137,7 +135,7 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
             include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
             $values = new ACommunityCacheIdentifierValues();
             $definitionValues[] = $values->lastChangeTime(
-              'comments:'.$ressource['type'].'_'.$ressource['id']
+              'comments:'.$ressource->type.'_'.$ressource->id
             );
             $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
               new PapayaCacheIdentifierDefinitionValues($definitionValues),
@@ -145,8 +143,8 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
             );
           }
         } else {
-          $definitionValues[] = $ressource['type'];
-          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = $ressource->type;
+          $definitionValues[] = $ressource->id;
         }
       }
       if (is_null($this->_cacheDefiniton)) {
@@ -189,7 +187,9 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
         array(
           'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
           'group' => 'group_handle'
-        )
+        ),
+        NULL,
+        'object'
       );
     }
     return NULL;
