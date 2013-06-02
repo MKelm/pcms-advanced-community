@@ -38,6 +38,12 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Data/Last/Change.php');
 class ACommunitySurferContactChanges extends ACommunityUiContentDataLastChange {
 
   /**
+   * Ui content data object
+   * @var ACommunityUiContentData
+   */
+  public $data = NULL;
+
+  /**
   * Stored database access object
   * @var PapayaDatabaseAccess
   */
@@ -112,6 +118,19 @@ class ACommunitySurferContactChanges extends ACommunityUiContentDataLastChange {
       )
     );
     if ($result == TRUE) {
+      // notify reuested surfer
+      $this->data->owner->notificationHandler()->notify(
+        'new-contact-request',
+        $this->data->languageId,
+        $contactId,
+        array(
+          'recipient_surfer' => $contactId,
+          'context_surfer' => $surferId,
+          'page_url' => $this->data->owner->acommunityConnector()->getSurferContactsPageLink(
+            $contactId, 'contact_requests'
+          )
+        )
+      );
       return $this->_setLastChange($surferId, $contactId, SURFERCONTACT_STATUS_PENDING);
     }
     return FALSE;

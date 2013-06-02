@@ -187,6 +187,8 @@ class ACommunitySurferData extends ACommunityUiContentData {
       include_once(dirname(__FILE__).'/Contact/Changes.php');
       $this->_changes = new ACommunitySurferContactChanges();
       $this->_changes->papaya($this->papaya());
+      $this->_changes->owner = $this->owner;
+      $this->_changes->data = $this;
     }
     return $this->_changes;
   }
