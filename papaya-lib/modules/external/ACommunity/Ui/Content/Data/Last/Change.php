@@ -64,7 +64,7 @@ class ACommunityUiContentDataLastChange extends PapayaObject {
   public function setLastChangeTime($ressource, $time = NULL) {
     if (method_exists($this->owner, 'acommunityConnector')) {
       if ($this->owner->acommunityConnector()->cacheSupport()) {
-        if (is_null($time)) {
+        if (empty($time)) {
           $time = time();
         }
         $lastChange = clone $this->_lastChange();
@@ -77,8 +77,9 @@ class ACommunityUiContentDataLastChange extends PapayaObject {
         );
         return FALSE;
       }
+      return TRUE;
     }
-    return TRUE;
+    return FALSE;
   }
 
   /**
