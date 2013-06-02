@@ -513,9 +513,14 @@ class ACommunityConnector extends base_connector {
    * @param integer $languageId
    * @return string|NULL
    */
-  public function getSurferGroupsPageLink($languageId) {
+  public function getSurferGroupsPageLink($languageId, $mode = NULL) {
+    if (!empty($mode)) {
+      $parameters = array('mode' => $mode);
+    } else {
+      $parameters = FALSE;
+    }
     return $this->_getPageLink(
-      'surfer_groups_page_id', NULL, FALSE, 'acgs', NULL
+      'surfer_groups_page_id', NULL, $parameters, 'acgs', NULL
     );
   }
 
@@ -615,7 +620,9 @@ class ACommunityConnector extends base_connector {
               $pageName = base_object::escapeForFilename($titles[$pageId]);
             }
           }
-          $result = base_object::getWebLink($pageId, NULL, NULL, $parameters, $parameterGroup, $pageName);
+          $result = base_object::getAbsoluteURL(
+            base_object::getWebLink($pageId, NULL, NULL, $parameters, $parameterGroup, $pageName)
+          );
           if (!empty($anchor)) {
             return $result.'#'.$anchor;
           }
