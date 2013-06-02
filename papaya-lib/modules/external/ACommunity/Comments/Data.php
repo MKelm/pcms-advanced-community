@@ -90,35 +90,44 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
   public $surferHasGroupAccess = FALSE;
 
   /**
+   * Surfer is ressource owner status
+   * @var boolean
+   */
+  protected $_surferIsRessourceOwner = NULL;
+
+  /**
    * Check if the current active surfer is the owner of the current ressource
    *
    * @return boolean
    */
   public function surferIsRessourceOwner() {
-    $ressource = $this->ressource('ressource');
-    if ($ressource->type == 'surfer' && $this->ressourceIsActiveSurfer) {
-      return TRUE;
-    } elseif ($ressource->type == 'image') {
-      $ressourceParameters = reset($ressource->parameters());
-      if (!empty($ressourceParameters)) {
-        if (!empty($ressourceParameters['surfer_handle'])) {
-          $ownerHandle = $this->owner->communityConnector()->getHandleById($this->currentSurferId());
-          if ($ownerHandle == $ressourceParameters['surfer_handle']) {
-            return TRUE;
-          }
-        } elseif (!empty($ressourceParameters['group_handle'])) {
-          $groupId = $this->owner->acommunityConnector()->getGroupIdByHandle(
-            $ressourceParameters['group_handle']
-          );
-          if ($groupId > 0 && $this->surferHasStatus($groupId, 'is_owner', 1)) {
-            return TRUE;
+    if (is_null($this->_surferIsRessourceOwner)) {
+      $this->_surferIsRessourceOwner = FALSE;
+      $ressource = $this->ressource('ressource');
+      if ($ressource->type == 'surfer' && $this->ressourceIsActiveSurfer) {
+        $this->_surferIsRessourceOwner = TRUE;
+      } elseif ($ressource->type == 'image') {
+        $ressourceParameters = reset($ressource->parameters());
+        if (!empty($ressourceParameters)) {
+          if (!empty($ressourceParameters['surfer_handle'])) {
+            $ownerHandle = $this->owner->communityConnector()->getHandleById($this->currentSurferId());
+            if ($ownerHandle == $ressourceParameters['surfer_handle']) {
+              $this->_surferIsRessourceOwner = TRUE;
+            }
+          } elseif (!empty($ressourceParameters['group_handle'])) {
+            $groupId = $this->owner->acommunityConnector()->getGroupIdByHandle(
+              $ressourceParameters['group_handle']
+            );
+            if ($groupId > 0 && $this->surferHasStatus($groupId, 'is_owner', 1)) {
+              $this->_surferIsRessourceOwner = TRUE;
+            }
           }
         }
+      } elseif ($ressource->type == 'group' && $this->surferHasStatus(NULL, 'is_owner', 1)) {
+        $this->_surferIsRessourceOwner = TRUE;
       }
-    } elseif ($ressource->type == 'group' && $this->surferHasStatus(NULL, 'is_owner', 1)) {
-      return TRUE;
     }
-    return FALSE;
+    return $this->_surferIsRessourceOwner;
   }
 
 
