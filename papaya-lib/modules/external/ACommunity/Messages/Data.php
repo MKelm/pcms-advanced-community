@@ -290,9 +290,7 @@ class ACommunityMessagesData extends ACommunityUiContentData {
         }
         $message['surfer'] = $this->getSurfer($contactSurferId);
       } else {
-        preg_match_all('~([A-Za-z ]+)\: (.+)~is', $message['text'], $parts);
-        $message['surfer'] = array('name' => $parts[1][0]);
-        $message['text'] = $parts[2][0];
+        $message['surfer'] = NULL;
       }
       $data[$id] = $message;
     }
