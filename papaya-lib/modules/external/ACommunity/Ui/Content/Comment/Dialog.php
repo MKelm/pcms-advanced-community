@@ -150,10 +150,27 @@ class ACommunityUiContentCommentDialog
       if ($ressource->id != $this->data()->currentSurferId()) {
         $this->data()->owner->notificationHandler()->notify(
           'new-surfer-comment',
+          $this->data()->languageId,
           $ressource->id,
           array(
             'recipient_surfer' => $ressource->id,
             'context_surfer' => $this->data()->currentSurferId(),
+            'page_url' => $this->data()->reference()->url()->getUrl()
+          )
+        );
+      }
+    } elseif ($ressource->type == 'group') {
+      $this->data()->group()->load($ressource->id);
+      $groupOwnerId = $this->data()->group()->owner;
+      if ($groupOwnerId != $this->data()->currentSurferId()) {
+        $this->data()->owner->notificationHandler()->notify(
+          'new-group-comment',
+          $this->data()->languageId,
+          $groupOwnerId,
+          array(
+            'recipient_surfer' => $groupOwnerId,
+            'context_surfer' => $this->data()->currentSurferId(),
+            'group_title' => $this->data()->group()->title,
             'page_url' => $this->data()->reference()->url()->getUrl()
           )
         );
@@ -167,6 +184,7 @@ class ACommunityUiContentCommentDialog
         if ($imageOwnerId != $this->data()->currentSurferId()) {
           $this->data()->owner->notificationHandler()->notify(
             'new-surfer-image-comment',
+            $this->data()->languageId,
             $imageOwnerId,
             array(
               'recipient_surfer' => $imageOwnerId,
@@ -184,10 +202,12 @@ class ACommunityUiContentCommentDialog
         if ($groupOwnerId != $this->data()->currentSurferId()) {
           $this->data()->owner->notificationHandler()->notify(
             'new-group-image-comment',
+            $this->data()->languageId,
             $groupOwnerId,
             array(
               'recipient_surfer' => $groupOwnerId,
               'context_surfer' => $this->data()->currentSurferId(),
+              'group_title' => $this->data()->group()->title,
               'page_url' => $this->data()->reference()->url()->getUrl()
             )
           );
