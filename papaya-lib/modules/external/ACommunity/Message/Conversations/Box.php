@@ -89,14 +89,13 @@ class ACommunityMessageConversationsBox extends base_actionbox implements Papaya
     } elseif (NULL == $this->_cacheDefiniton) {
       $ressource = $this->setRessourceData();
       $definitionValues = array('acommunity_message_conversations_box');
-      if (!empty($ressource)) {
+      if (isset($ressource->id)) {
         include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
         $values = new ACommunityCacheIdentifierValues();
-        $definitionValues[] = $ressource['type'];
-        $definitionValues[] = $ressource['id'];
-        $definitionValues[] = $values->lastMessageConversationTime($ressource['id']);
+        $definitionValues[] = $ressource->type;
+        $definitionValues[] = $ressource->id;
+        $definitionValues[] = $values->lastMessageConversationTime($ressource->id);
       }
-      $surferId = !empty($ressource['id']) ? $ressource['id'] : 'null';
       $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
         new PapayaCacheIdentifierDefinitionValues($definitionValues),
         new PapayaCacheIdentifierDefinitionParameters(
@@ -112,9 +111,9 @@ class ACommunityMessageConversationsBox extends base_actionbox implements Papaya
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    $this->messages()->data()->ressource(
-      'surfer', $this, array('surfer' => array('surfer_handle'))
-    );
+    $ressource = $this->messages()->acommunityConnector()->ressource();
+    $this->messages()->data()->ressource($ressource);
+    return $ressource;
   }
 
   /**
