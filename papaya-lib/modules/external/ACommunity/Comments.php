@@ -103,8 +103,8 @@ class ACommunityComments extends ACommunityUiContent {
           }
         }
         if ($lastChangeTime > 0) {
-          $ressource = $this->data()->ressource();
-          $result1 = $this->data()->setLastChangeTime('comments:'.$ressource['type'].'_'.$ressource['id']);
+          $ressource = $this->data()->ressource('ressource');
+          $result1 = $this->data()->setLastChangeTime('comments:'.$ressource->type.'_'.$ressource->id);
           $result2 = $this->data()->setLastChangeTime('comments');
           $this->parameters()->set('command', 'reply');
           $this->parameters()->set('comment_id', 0);
@@ -122,9 +122,9 @@ class ACommunityComments extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $ressource = $this->data()->ressource();
-    if (!empty($ressource) &&
-        ($ressource['type'] != 'group' || $this->data()->surferHasGroupAccess)) {
+    $ressource = $this->data()->ressource('ressource');
+    if (isset($ressource->id) &&
+        ($ressource->type != 'group' || $this->data()->surferHasGroupAccess)) {
       $this->performCommands();
       $comments = $parent->appendElement('acommunity-comments');
       if ($this->data()->mode == 'list') {
