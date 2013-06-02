@@ -50,10 +50,10 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
     /imx';
 
   /**
-   * Url replacement
-   * @var string
+   * Length of url to show
+   * @var integer
    */
-  protected $_urlReplace = '<a href="$1">$1</a>';
+  protected $_urlLength = 80;
 
   /**
    * Media db edit object
@@ -79,6 +79,10 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    */
   protected $_ressource = NULL;
 
+  /**
+   * List with thumbnail links
+   * @var array
+   */
   protected $_thumbnailLinks = array();
 
   /**
@@ -100,7 +104,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
   public function filter($value) {
     $value = parent::filter($value);
     $this->_textOptions = $this->acommunityConnector()->getTextOptions();
-    $result = sprintf('<text-raw>%s</text-raw>', $value);
+    $result = sprintf('<text-raw>%s</text-raw>', PapayaUtilStringXml::escape($value));
     $result .= sprintf(
       '<text>%s</text>',
       preg_replace_callback(
@@ -158,7 +162,11 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         }
       }
     }
-    return preg_replace($this->_urlPattern, $this->_urlReplace, $match[0]);
+    $urlToShow = $match[1];
+    if (strlen($urlToShow) > $this->_urlLength) {
+      $urlToShow = substr($match[1], 0, $this->_urlLength - 3).'...';
+    }
+    return sprintf('<a href="%s">%s</a>', $match[1], $urlToShow);
   }
 
   /**
