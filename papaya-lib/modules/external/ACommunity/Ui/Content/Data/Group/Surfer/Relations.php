@@ -30,6 +30,12 @@ require_once(dirname(__FILE__).'/../../../Data.php');
 class ACommunityUiContentDataGroupSurferRelations extends ACommunityUiContentData {
 
   /**
+   * Group database record
+   * @var object
+   */
+  protected $_group = NULL;
+
+  /**
    * Group surfer relations database records
    * @var object
    */
@@ -46,6 +52,23 @@ class ACommunityUiContentDataGroupSurferRelations extends ACommunityUiContentDat
    * @var ACommunityGroupSurferChanges
    */
   protected $_groupSurferChanges = NULL;
+
+  /**
+  * Access to group database record data
+  *
+  * @param ACommunityContentGroup $group
+  * @return ACommunityContentGroup
+  */
+  public function group(ACommunityContentGroup $group = NULL) {
+    if (isset($group)) {
+      $this->_group = $group;
+    } elseif (is_null($this->_group)) {
+      include_once(dirname(__FILE__).'/../../../../../Content/Group.php');
+      $this->_group = new ACommunityContentGroup();
+      $this->_group->papaya($this->papaya());
+    }
+    return $this->_group;
+  }
 
   /**
   * Access to group surfer relations database records data

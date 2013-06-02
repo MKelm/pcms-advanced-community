@@ -66,12 +66,6 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
   protected $_imageThumbnailResizeMode = NULL;
 
   /**
-   * Group database record
-   * @var object
-   */
-  protected $_group = NULL;
-
-  /**
    * A regular expression to filter reference parameters by name
    * @var string
    */
@@ -94,23 +88,6 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
     $this->_imageThumbnailSize = (int)$data['image_size'];
     $this->_imageThumbnailResizeMode = $data['image_resize_mode'];
     parent::setPluginData($data, $captionNames, $messageNames);
-  }
-
-  /**
-  * Access to group database record data
-  *
-  * @param ACommunityContentGroup $group
-  * @return ACommunityContentGroup
-  */
-  public function group(ACommunityContentGroup $group = NULL) {
-    if (isset($group)) {
-      $this->_group = $group;
-    } elseif (is_null($this->_group)) {
-      include_once(dirname(__FILE__).'/../Content/Group.php');
-      $this->_group = new ACommunityContentGroup();
-      $this->_group->papaya($this->papaya());
-    }
-    return $this->_group;
   }
 
   /**
