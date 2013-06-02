@@ -95,11 +95,11 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
    * @return boolean
    */
   public function surferIsRessourceOwner() {
-    $ressource = $this->ressource();
-    if ($ressource['type'] == 'surfer' && $this->ressourceIsActiveSurfer) {
+    $ressource = $this->ressource('ressource');
+    if ($ressource->type == 'surfer' && $this->ressourceIsActiveSurfer) {
       return TRUE;
-    } elseif ($ressource['type'] == 'image') {
-      $ressourceParameters = reset($this->ressourceParameters());
+    } elseif ($ressource->type == 'image') {
+      $ressourceParameters = reset($ressource->parameters());
       if (!empty($ressourceParameters)) {
         if (!empty($ressourceParameters['surfer_handle'])) {
           $ownerHandle = $this->owner->communityConnector()->getHandleById($this->currentSurferId());
@@ -115,7 +115,7 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
           }
         }
       }
-    } elseif ($ressource['type'] == 'group' && $this->surferHasStatus(NULL, 'is_owner', 1)) {
+    } elseif ($ressource->type == 'group' && $this->surferHasStatus(NULL, 'is_owner', 1)) {
       return TRUE;
     }
     return FALSE;
@@ -316,10 +316,10 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
       'parent_id' => $parentId,
       'language_id' => $this->languageId
     );
-    $ressourceData = $this->ressource();
-    if (!empty($ressourceData)) {
-      $commentsFilter['ressource_type'] = $ressourceData['type'];
-      $commentsFilter['ressource_id'] = $ressourceData['id'];
+    $ressource = $this->ressource('ressource');
+    if (isset($ressource->id)) {
+      $commentsFilter['ressource_type'] = $ressource->type;
+      $commentsFilter['ressource_id'] = $ressource->id;
     }
 
     if ($parentId == 0) {
