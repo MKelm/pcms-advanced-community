@@ -1,0 +1,41 @@
+"notification_id","language_id","notification_title","notification_text"
+"1","1","New surfer comment","{%CONTEXT_SURFER%} wrote a new comment for you
+Link to your user page: 
+{%PAGE_URL%}"
+"1","2","Neues Benutzerkommentar","{%CONTEXT_SURFER%} hat dir ein neues Kommentar geschrieben.
+Link zu deiner Benutzerseite: 
+{%PAGE_URL%}"
+"2","1","New image comment in your gallery","{%CONTEXT_SURFER%} wrote a new image comment for you.
+Link to the image in your gallery: {%PAGE_URL%}"
+"2","2","Neues Bildkommentar in deiner Gallerie","{%CONTEXT_SURFER%} hat dir ein neues Bildkommentar geschrieben.
+Link zum Bild in deiner Gallerie: {%PAGE_URL%}"
+"3","1","New contact request","{%CONTEXT_SURFER%} asked for a contact to you. 
+To contacts page: 
+{%PAGE_URL%}"
+"3","2","Neue Kontaktanfrage","{%CONTEXT_SURFER%} hat einen Kontakt zu dir angefragt. 
+Zur Kontakteseite: 
+{%PAGE_URL%}"
+"4","1","New group comment","{%CONTEXT_SURFER%} wrote a new comment in your group {%GROUP_TITLE%}.
+Linkt to your group page: 
+{%PAGE_URL%}"
+"4","2","Neues Gruppenkommentar","{%CONTEXT_SURFER%} hat in deiner Gruppe {%GROUP_TITLE%} ein neues Kommentar geschrieben.
+Link zu deiner Gruppenseite: 
+{%PAGE_URL%}"
+"5","1","New image comment in a group gallery","{%CONTEXT_SURFER%} wrote a new comment in the gallery of group {%GROUP_TITLE%}.
+Link to the image in your group gallery: 
+{%PAGE_URL%}"
+"5","2","Neues Bildkommentar in einer Gruppengallerie","{%CONTEXT_SURFER%} hat in der Gallerie deiner Gruppe {%GROUP_TITLE%} ein neues Kommentar geschrieben.
+Link zum Bild in der Gruppengallerie: 
+{%PAGE_URL%}"
+"6","1","New request in a group","{%CONTEXT_SURFER%} requested a membership for your group {%GROUP_TITLE%}.
+Link to membership requests: 
+{%PAGE_URL%}"
+"6","2","Neue Anfrage in einer Gruppe","{%CONTEXT_SURFER%} hat für Gruppe {%GROUP_TITLE%} eine Mitgliedschaft angefragt.
+Link zu den Mitgliedschaftsanfragen: 
+{%PAGE_URL%}"
+"7","1","New invitation of a group","{%CONTEXT_SURFER%} invited you to the group {%GROUP_TITLE%}.
+Link to your group invitations:
+{%PAGE_URL%}"
+"7","2","Neue Einladung einer Gruppe","{%CONTEXT_SURFER%} hat dich zu der Gruppe {%GROUP_TITLE%} eingeladen.
+Link zu deinen Gruppeneinladungen:
+{%PAGE_URL%}"
