@@ -282,7 +282,8 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
       return $this->_ressource;
     } elseif (is_a($type, 'ACommunityUiContentRessource')) {
       $this->_ressource = $type; // set ressource in box modules by page module ressource
-    } elseif (is_null($this->_ressource) && !empty($type)) {
+    } elseif (!empty($type) && !isset($this->_ressource->id) &&
+              (!isset($this->_ressource->isInvalid) || $this->_ressource->isInvalid != TRUE)) {
       include_once(dirname(__FILE__).'/Ressource.php');
       if (is_a($module, 'base_content')) {
         // use a singleton for page modules to get the same in connector for box modules
@@ -356,10 +357,12 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
           $referenceParameters, $this->owner->parameterGroup()
         );
       }
-      foreach ($this->_ressource->parameters() as $parameterGroup => $parameters) {
-        $this->_reference->setParameters(
-          $parameters, $parameterGroup
-        );
+      if (method_exists($this->_ressource, 'parameters')) {
+        foreach ($this->_ressource->parameters() as $parameterGroup => $parameters) {
+          $this->_reference->setParameters(
+            $parameters, $parameterGroup
+          );
+        }
       }
     }
     return $this->_reference;
