@@ -127,14 +127,16 @@ class ACommunityUiContentMessage extends PapayaUiControlCollectionItem {
       'system/sys_base_object.php'
     );
     $message->appendXml($this->text);
-    $message->appendElement(
-      'surfer',
-      array(
-        'name' => $this->surferName,
-        'avatar' => PapayaUtilStringXml::escapeAttribute($this->surferAvatar),
-        'page-link' => $this->surferPageLink
-      )
-    );
+    if (isset($this->_surferName)) {
+      $message->appendElement(
+        'surfer',
+        array(
+          'name' => $this->surferName,
+          'avatar' => PapayaUtilStringXml::escapeAttribute($this->surferAvatar),
+          'page-link' => $this->surferPageLink
+        )
+      );
+    }
   }
 
 }
