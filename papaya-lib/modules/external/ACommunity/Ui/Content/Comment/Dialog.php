@@ -85,7 +85,7 @@ class ACommunityUiContentCommentDialog
     );
     $dialog->caption = NULL;
 
-    $ressource = $this->data()->ressource();
+    $ressource = $this->data()->ressource('ressource');
     include_once(dirname(__FILE__).'/../../../Filter/Text/Extended.php');
     $dialog->fields[] = $field = new PapayaUiDialogFieldTextarea(
       $this->data()->captions['dialog_text'],
@@ -94,7 +94,7 @@ class ACommunityUiContentCommentDialog
       '',
       new ACommunityFilterTextExtended(
         PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
-        $ressource['type'].'_'.$ressource['id']
+        $ressource->type.'_'.$ressource->id
       )
     );
     $field->setMandatory(TRUE);
@@ -114,14 +114,14 @@ class ACommunityUiContentCommentDialog
   */
   public function callbackBeforeSaveRecord($context, $record) {
     $commentId = (int)$this->parameters()->get('comment_id', 0);
-    $ressource = $this->data()->ressource();
+    $ressource = $this->data()->ressource('ressource');
     $record->assign(
       array(
         'language_id' => $this->data()->languageId,
         'parent_id' => $commentId,
         'surfer_id' => $this->data()->currentSurferId(),
-        'ressource_id' => $ressource['id'],
-        'ressource_type' => $ressource['type'],
+        'ressource_id' => $ressource->id,
+        'ressource_type' => $ressource->type,
         'time' => time(),
         'votes_score' => 0,
         'deleted_surfer' => 0
@@ -145,24 +145,26 @@ class ACommunityUiContentCommentDialog
       $this->parameters()->set('reset_dialog', 1);
     }
     // send notification on surfer or image comment
-    $ressource = $this->data()->ressource();
-    if ($ressource['id'] != $this->data()->currentSurferId()) {
-      if ($ressource['type'] == 'surfer') {
+    $ressource = $this->data()->ressource('ressource');
+    if ($ressource->type == 'surfer') {
+      if ($ressource->id != $this->data()->currentSurferId()) {
         $this->data()->owner->notificationHandler()->notify(
           'new-surfer-comment',
-          $ressource['id'],
+          $ressource->id,
           array(
-            'recipient_surfer' => $ressource['id'],
+            'recipient_surfer' => $ressource->id,
             'context_surfer' => $this->data()->currentSurferId(),
             'page_url' => $this->data()->reference()->url()->getUrl()
           )
         );
-      } elseif ($ressource['type'] == 'image') {
-        $ressourceParameters = $this->data()->ressourceParameters();
-        if (isset($ressourceParameters['acg']['surfer_handle'])) {
-          $imageOwnerId = $this->data()->owner->communityConnector()->getIdByHandle(
-            $ressourceParameters['acg']['surfer_handle']
-          );
+      }
+    } elseif ($ressource->type == 'image') {
+      $ressourceParameters = reset($ressource->parameters());
+      if (!empty($ressourceParameters['surfer_handle'])) {
+        $imageOwnerId = $this->data()->owner->communityConnector()->getIdByHandle(
+          $ressourceParameters['surfer_handle']
+        );
+        if ($imageOwnerId != $this->data()->currentSurferId()) {
           $this->data()->owner->notificationHandler()->notify(
             'new-surfer-image-comment',
             $imageOwnerId,
@@ -173,10 +175,27 @@ class ACommunityUiContentCommentDialog
             )
           );
         }
+      } elseif (!empty($ressourceParameters['group_handle'])) {
+        $groupId = $this->data()->owner->acommunityConnector()->getGroupIdByHandle(
+          $ressourceParameters['group_handle']
+        );
+        $this->data()->group()->load($groupId);
+        $groupOwnerId = $this->data()->group()->owner;
+        if ($groupOwnerId != $this->data()->currentSurferId()) {
+          $this->data()->owner->notificationHandler()->notify(
+            'new-group-image-comment',
+            $groupOwnerId,
+            array(
+              'recipient_surfer' => $groupOwnerId,
+              'context_surfer' => $this->data()->currentSurferId(),
+              'page_url' => $this->data()->reference()->url()->getUrl()
+            )
+          );
+        }
       }
     }
     // set last change of comment ressource
-    $this->data()->setLastChangeTime('comments:'.$ressource['type'].'_'.$ressource['id']);
+    $this->data()->setLastChangeTime('comments:'.$ressource->type.'_'.$ressource->id);
     $this->data()->setLastChangeTime('comments');
   }
 
