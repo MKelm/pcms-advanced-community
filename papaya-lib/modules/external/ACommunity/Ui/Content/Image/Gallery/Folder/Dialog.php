@@ -157,7 +157,7 @@ class ACommunityUiContentImageGalleryFolderDialog
   */
   public function callbackExecuteSuccessful($context, $dialog) {
     $ressource = $this->data()->ressource('ressource');
-    if ($ressource['type'] == 'group') {
+    if ($ressource->type == 'group') {
       $lastChangeRessource = 'group_gallery_folders:group_'.$ressource->id;
     } else {
       $lastChangeRessource = 'surfer_gallery_folders:surfer_'.$ressource->id;

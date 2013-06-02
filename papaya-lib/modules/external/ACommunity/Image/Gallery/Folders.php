@@ -61,8 +61,11 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
 
   /**
    * Perform commands for gallery owners only
+   *
+   * @param PapayaXmlElement $galleryFolders
+   * @return boolean
    */
-  protected function _performCommands() {
+  protected function _performCommands(PapayaXmlElement $galleryFolders) {
     $command = $this->parameters()->get('command', NULL);
     switch ($command) {
       case 'add_folder':
@@ -83,6 +86,7 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
             );
           }
         }
+        return TRUE;
         break;
       case 'delete_folder':
         $folderId = $this->parameters()->get('folder_id', NULL);
@@ -118,7 +122,7 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
       if (($ressource->type == 'surfer' && $ressource->isActiveSurfer) ||
           ($ressource->type == 'group' &&
            $this->data()->surferHasStatus($ressource->id, 'is_owner', 1))) {
-        $this->_performCommands();
+        $this->_performCommands($galleryFolders);
       }
 
       $this->data()->loadFolders();
