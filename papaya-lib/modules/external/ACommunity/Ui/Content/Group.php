@@ -72,6 +72,18 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
   protected $_deleteLinkCaption = NULL;
 
   /**
+   * Remove membership link
+   * @var string
+   */
+  protected $_removeMembershipLink = NULL;
+
+  /**
+   * Remove membership link caption
+   * @var string
+   */
+  protected $_removeMembershipLinkCaption = NULL;
+
+  /**
    * Edit link
    * @var string
    */
@@ -138,6 +150,8 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
     'isPublic' => array('_isPublic', '_isPublic'),
     'deleteLink' => array('_deleteLink', '_deleteLink'),
     'deleteLinkCaption' => array('_deleteLinkCaption', '_deleteLinkCaption'),
+    'removeMembershipLink' => array('_removeMembershipLink', '_removeMembershipLink'),
+    'removeMembershipLinkCaption' => array('_removeMembershipLinkCaption', '_removeMembershipLinkCaption'),
     'editLink' => array('_editLink', '_editLink'),
     'editLinkCaption' => array('_editLinkCaption', '_editLinkCaption'),
     'acceptInvitationLink' => array('_acceptInvitationLink', '_acceptInvitationLink'),
@@ -206,7 +220,7 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
     $message = $parent->appendElement('group', $attributes);
     if (isset($this->_deleteLink) || isset($this->_editLink) ||
         isset($this->_acceptInvitationLink) || isset($this->_declineInvitationLink) ||
-        isset($this->_removeRequestLink)) {
+        isset($this->_removeRequestLink) || isset($this->_removeMembershipLink)) {
       $commands = $message->appendElement('commands');
       if (isset($this->_editLink)) {
         $commands->appendElement(
@@ -220,6 +234,13 @@ class ACommunityUiContentGroup extends PapayaUiControlCollectionItem {
           'delete',
           array('caption' => PapayaUtilStringXml::escapeAttribute($this->deleteLinkCaption)),
           PapayaUtilStringXml::escape($this->deleteLink)
+        );
+      }
+      if (isset($this->_removeMembershipLink)) {
+        $commands->appendElement(
+          'remove-membership',
+          array('caption' => PapayaUtilStringXml::escapeAttribute($this->removeMembershipLinkCaption)),
+          PapayaUtilStringXml::escape($this->removeMembershipLink)
         );
       }
       if (isset($this->_acceptInvitationLink)) {

@@ -102,7 +102,7 @@ class ACommunityGroups extends ACommunityUiContent {
             $invitedSurferAction = $this->data()->showOwnGroups() &&
               $this->data()->surferHasStatus($groupId, 'is_pending', 2);
             if ($invitedSurferAction) {
-              return $this->data()->groupSurferChanges()->acceptInvitation(
+              return $this->data()->groupSurferChanges()->declineInvitation(
                 $groupId, $this->data()->currentSurferId()
               );
             }
@@ -113,6 +113,15 @@ class ACommunityGroups extends ACommunityUiContent {
             if ($requestedSurferAction) {
               return $this->data()->groupSurferChanges()->removeRequest(
                 $groupId, $this->data()->currentSurferId()
+              );
+            }
+            break;
+          case 'remove_membership':
+            $requestedSurferAction = $this->data()->showOwnGroups() &&
+              $this->data()->surferHasStatus($groupId, 'is_member', 1);
+            if ($requestedSurferAction) {
+              return $this->data()->groupSurferChanges()->removeMember(
+                $groupId, $this->data()->currentSurferId(), 'own-membership'
               );
             }
             break;

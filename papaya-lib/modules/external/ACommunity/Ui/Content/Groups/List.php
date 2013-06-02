@@ -81,6 +81,10 @@ class ACommunityUiContentGroupsList extends PapayaUiControl {
           $group->deleteLink = $commandLinks[$id]['delete'];
           $group->deleteLinkCaption = $this->data()->captions['command_delete'];
         }
+        if (isset($commandLinks[$id]) && isset($commandLinks[$id]['remove_membership'])) {
+          $group->removeMembershipLink = $commandLinks[$id]['remove_membership'];
+          $group->removeMembershipLinkCaption = $this->data()->captions['command_remove_membership'];
+        }
         if (isset($commandLinks[$id]) && isset($commandLinks[$id]['edit'])) {
           $group->editLink = $commandLinks[$id]['edit'];
           $group->editLinkCaption = $this->data()->captions['command_edit'];

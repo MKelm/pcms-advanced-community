@@ -184,10 +184,10 @@ class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
   protected function _getCommandLinks(&$links, $groupsList) {
     if (!empty($groupsList['data'])) {
       $groupSurferRelations = $this->groupSurferRelations();
-      $mode = $this->owner->parameters()->get('mode', NULL);
+      $mode = $this->owner->parameters()->get('mode', 'groups');
       foreach ($groupsList['data'] as $id => $group) {
         if ((!$this->showOwnGroups() && $this->surferIsModerator()) ||
-            ($this->showOwnGroups() && $mode != 'invitations' &&
+            ($this->showOwnGroups() && $mode == 'groups' &&
              isset($groupSurferRelations[$id]) && !empty($groupSurferRelations[$id]['is_owner']))) {
           $reference = clone $this->reference();
           $reference->setParameters(
@@ -199,7 +199,19 @@ class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
           );
           $links[$id]['delete'] = $reference->getRelative();
         }
-        if ($this->showOwnGroups() && $mode != 'invitations' && $mode != 'requests' &&
+        if ($this->showOwnGroups() && $mode == 'groups' &&
+            isset($groupSurferRelations[$id]) && !empty($groupSurferRelations[$id]['is_member'])) {
+          $reference = clone $this->reference();
+          $reference->setParameters(
+            array(
+              'command' => 'remove_membership',
+              'group_handle' => $group['handle']
+            ),
+            $this->owner->parameterGroup()
+          );
+          $links[$id]['remove_membership'] = $reference->getRelative();
+        }
+        if ($this->showOwnGroups() && $mode == 'groups' &&
             isset($groupSurferRelations[$id]) && !empty($groupSurferRelations[$id]['is_owner'])) {
           $reference = clone $this->reference();
           $reference->setParameters(
