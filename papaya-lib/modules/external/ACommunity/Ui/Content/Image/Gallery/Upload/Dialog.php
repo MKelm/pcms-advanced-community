@@ -204,7 +204,8 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
   * @param PapayaUiDialog $dialog
   */
   public function callbackShowError($context, $dialog) {
-    if (empty($this->errorMessage())) {
+    $errorMessage = $this->errorMessage();
+    if (empty($errorMessage)) {
       $this->errorMessage(
         sprintf(
           $this->data()->messages['dialog_input_error'],
