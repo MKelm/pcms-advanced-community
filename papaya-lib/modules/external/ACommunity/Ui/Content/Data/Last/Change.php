@@ -68,7 +68,7 @@ class ACommunityUiContentDataLastChange extends PapayaObject {
           $time = time();
         }
         $lastChange = clone $this->_lastChange();
-        $lastChange->assign(array('ressource' => $ressource, 'time' => $time));
+        $lastChange->assign(array('ressource' => md5($ressource), 'time' => $time));
         if ($lastChange->save()) {
           return TRUE;
         }
@@ -92,7 +92,7 @@ class ACommunityUiContentDataLastChange extends PapayaObject {
     if (method_exists($this->owner, 'acommunityConnector')) {
       if ($this->owner->acommunityConnector()->cacheSupport()) {
         $lastChange = clone $this->_lastChange();
-        if ($lastChange->load(array('ressource' => $ressource))->load()) {
+        if ($lastChange->load(array('ressource' => md5($ressource)))->load()) {
           return $lastChange->time > 0 ? $lastChange->time : 0;
         }
       }

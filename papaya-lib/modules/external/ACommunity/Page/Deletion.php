@@ -39,12 +39,6 @@ class ACommunityPageDeletion extends PapayaObject {
   protected $_tableNameComments = 'acommunity_comments';
 
   /**
-   * Table name of last changes
-   * @var string
-   */
-  protected $_tableNameLastChanges = 'acommunity_last_changes';
-
-  /**
   * Set/get database access object
   *
   * @return PapayaDatabaseAccess
@@ -68,19 +62,5 @@ class ACommunityPageDeletion extends PapayaObject {
       $this->databaseAccess()->getTableName($this->_tableNameComments),
       array('comment_ressource_id' => $pageIds, 'comment_ressource_type' => 'page')
     );
-  }
-
-  /**
-   * Delete all page comments last changes by page ids
-   *
-   * @param array $pageIds
-   */
-  public function deletePageCommentsLastChanges($pageIds) {
-    foreach ($pageIds as $pageId) {
-      $this->databaseAccess()->deleteRecord(
-        $this->databaseAccess()->getTableName($this->_tableNameLastChanges),
-        array('ressource' => 'comments:page_'.$pageId)
-      );
-    }
   }
 }

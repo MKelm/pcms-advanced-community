@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <table name="acommunity_last_changes" prefix="yes">
   <fields>
-    <field name="change_ressource" type="string" size="100" null="no"/>
+    <field name="change_ressource" type="string" size="32" null="no"/>
     <field name="change_time" type="integer" size="4" null="no"/>
   </fields>
   <keys>
     <primary-key>
       <field>change_ressource</field>
     </primary-key>
+    <key name="change_time">
+      <field>change_time</field>
+    </key>
   </keys>
 </table>

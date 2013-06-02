@@ -114,7 +114,7 @@ class ACommunityCacheIdentifierValues extends PapayaObject {
     $sql = "SELECT change_time FROM %s WHERE change_ressource = '%s'";
     $values = array(
       $this->databaseAccess()->getTableName($this->_tableNameLastChanges),
-      $ressource
+      md5($ressource)
     );
     if ($result = $this->databaseAccess()->queryFmt($sql, $values)) {
       $field = $result->fetchField();

@@ -324,7 +324,6 @@ class ACommunityConnector extends base_connector {
     $this->surferDeletion()->deleteSurferComments($surferId);
     $this->surferDeletion()->deleteSurferGalleries($surferId);
     $this->surferDeletion()->deleteMessages($surferId);
-    $this->surferDeletion()->deleteSurferLastChanges($surferId);
   }
 
   /**
@@ -338,7 +337,6 @@ class ACommunityConnector extends base_connector {
    */
   public function onDeletePages($pageIds) {
     $this->pageDeletion()->deletePageComments($pageIds);
-    $this->pageDeletion()->deletePageCommentsLastChanges($pageIds);
   }
 
   /**

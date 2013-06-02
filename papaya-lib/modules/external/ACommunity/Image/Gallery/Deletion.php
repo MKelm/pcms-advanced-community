@@ -45,12 +45,6 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
   protected $_tableNameGalleries = 'acommunity_galleries';
 
   /**
-   * Table name of last changes
-   * @var string
-   */
-  protected $_tableNameLastChanges = 'acommunity_last_changes';
-
-  /**
    * Media db edit object
    * @var object
    */
@@ -131,7 +125,6 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
     if (!empty($files)) {
       foreach ($files as $file) {
         $this->mediaDBEdit()->deleteFile($file['file_id']);
-        $this->_deleteImageCommentsLastChanges($file['file_id']);
         $this->_deleteImageComments($file['file_id']);
       }
     }
@@ -150,18 +143,6 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
         'comment_ressource_type' => 'image',
         'comment_ressource_id' => $file['file_id']
       )
-    );
-  }
-
-  /**
-   * Delete image comments last changes timestamp by image id
-   *
-   * @param string $imageId
-   */
-  protected function _deleteImageCommentsLastChanges($imageId) {
-    $this->databaseAccess()->deleteRecord(
-      $this->databaseAccess()->getTableName($this->_tableNameLastChanges),
-      array('ressource' => 'comments:image_'.$imageId)
     );
   }
 

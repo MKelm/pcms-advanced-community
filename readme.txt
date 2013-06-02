@@ -12,6 +12,7 @@ This package contains modules to extend your papaya CMS community.
 
 - Some improvements
 - Fix cache status of group invitations and requests on visibilty change
+- Cronjob to delete cache contents and last change timestamps older than n days
 
 -----------
 |  Ideas  |
