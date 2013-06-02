@@ -105,7 +105,7 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
           if ($ressource->type == 'surfer') {
             $definitionValues[] = (int)$ressource->isActiveSurfer;
             $lastChangeRessource = 'surfer_gallery_images:folder_base:surfer_'.$ressource->id;
-          } elseif ($ressource['type'] == 'group') {
+          } elseif ($ressource->type == 'group') {
             $definitionValues[] = (int)$this->teaser()->data()->surferHasStatus(
               $ressource->id, 'is_owner', 1
             );
