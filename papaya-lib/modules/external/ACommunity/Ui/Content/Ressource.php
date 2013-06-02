@@ -195,16 +195,16 @@ class ACommunityUiContentRessource extends PapayaObject {
    */
   public function filterSourceParameters($filterParameterNames, $type = NULL, $overwriteParameters = FALSE) {
     $filteredParameters = $this->_sourceParameters;
-    if (empty($filterParameterNames)) {
+    if (!isset($filterParameterNames)) {
       return $filteredParameters;
     }
     if (isset($type)) {
-      $filterParameterNames = isset($filterParameterNames[$type]) ? $filterParameterNames[$type] : array();
+      $filterParameterNames = isset($filterParameterNames[$type]) ? $filterParameterNames[$type] : NULL;
     }
     if (isset($filterParameterNames) && !is_array($filterParameterNames)) {
       $filterParameterNames = array($filterParameterNames);
     }
-    if (!empty($filterParameterNames)) {
+    if (isset($filterParameterNames)) {
       $oldParameters = $this->_sourceParameters;
       $filteredParameters = array();
       foreach ($filterParameterNames as $parameterName) {
