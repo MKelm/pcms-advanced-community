@@ -112,11 +112,7 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
       if (isset($ressource->id)) {
         $access = TRUE;
         if ($ressource->type == 'group') {
-          if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
-            $this->comments()->data()->surferHasGroupAccess = TRUE;
-          } else {
-            $access = FALSE;
-          }
+          $access = $this->comments()->data()->surferHasGroupAccess;
         }
         $definitionValues[] = (int)$access;
         if ($access) {
@@ -171,6 +167,9 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
           $ressourceType = 'image';
           break;
         case 'ACommunityGroupPage':
+          if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
+            $this->comments()->data()->surferHasGroupAccess = TRUE;
+          }
           $ressourceType = 'group';
           break;
         default:
