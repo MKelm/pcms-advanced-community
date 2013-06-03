@@ -137,33 +137,32 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
     } elseif (NULL == $this->_cacheDefiniton) {
       $definitionValues = array('acommunity_group_page');
       $ressource = $this->setRessourceData();
-      if (!empty($ressource)) {
+      if (isset($ressource->id)) {
         $command = $this->group()->parameters()->get('command', NULL);
-        $this->surferHasGroupAccess = $this->group()->data()->surferHasGroupAccess();
         if (empty($command)) {
           include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
-          $definitionValues[] = $ressource['type'];
-          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = $ressource->type;
+          $definitionValues[] = $ressource->id;
           $definitionValues[] = (int)$this->surferHasGroupAccess;
           if ($this->surferHasGroupAccess) {
-            $definitionValues[] = $values->lastChangeTime('group:group_'.$ressource['id']);
-            $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource['id']);
+            $definitionValues[] = $values->lastChangeTime('group:group_'.$ressource->id);
+            $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource->id);
             if ($this->papaya()->surfer->isValid) {
               if ($this->group()->data()->surferHasStatus(NULL, 'is_owner', 1)) {
                 $definitionValues[] = $values->lastChangeTime(
-                  'group:membership_requests:group_'.$ressource['id']
+                  'group:membership_requests:group_'.$ressource->id
                 );
                 $definitionValues[] = $values->lastChangeTime(
-                  'group:membership_invitations:group_'.$ressource['id']
+                  'group:membership_invitations:group_'.$ressource->id
                 );
               } elseif (!$this->group()->data()->surferHasStatus(NULL, 'is_member', 1)) {
                 $currentSurferId = $this->group()->data()->currentSurferId();
                 $definitionValues[] = $values->lastChangeTime(
-                  'request:surfer_'.$currentSurferId.':group_'.$ressource['id']
+                  'request:surfer_'.$currentSurferId.':group_'.$ressource->id
                 );
                 $definitionValues[] = $values->lastChangeTime(
-                  'invitation:group_'.$ressource['id'].':surfer_'.$currentSurferId
+                  'invitation:group_'.$ressource->id.':surfer_'.$currentSurferId
                 );
               }
             }
@@ -200,11 +199,13 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
    */
   public function setRessourceData() {
     $ressource = $this->group()->data()->ressource(
-      'group', $this, array('group' => 'group_handle'), array('group' => 'group_handle')
+      'group', $this, array('group' => 'group_handle'), array('group' => 'group_handle'),
+      NULL, 'object'
     );
-    $this->group()->acommunityConnector()->ressource(
-      $this->group()->data()->ressource(NULL, NULL, NULL, NULL, NULL, 'object')
-    );
+    $this->group()->acommunityConnector()->ressource($ressource);
+    if (isset($ressource->id)) {
+      $this->surferHasGroupAccess = $this->group()->data()->surferHasGroupAccess();
+    }
     return $ressource;
   }
 
