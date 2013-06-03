@@ -67,6 +67,12 @@ class ACommunityUiContentRessource extends PapayaObject {
   public $needsActiveSurfer = FALSE;
 
   /**
+   * A display mode of the ressource, e.g. to get different behaviours in box modules
+   * @var string
+   */
+  public $displayMode = NULL;
+
+  /**
    * Parameters of owner box module's parent page module
    * @var array
    */
@@ -107,13 +113,65 @@ class ACommunityUiContentRessource extends PapayaObject {
    * @param base_content|base_actionbox $module
    */
   protected function _initializeSourceParameters($module) {
+    if (is_null($this->_sourceParameters) && is_null($this->_sourceParameterGroup)) {
+      $isBoxModule = is_a($module, 'base_actionbox');
+      $this->_sourceParameterGroup = $isBoxModule ?
+        (isset($module->parentObj->moduleObj->paramName) ? $module->parentObj->moduleObj->paramName : NULL)
+        : $module->paramName;
+      $this->_sourceParameters = $isBoxModule ?
+        (isset($module->parentObj->moduleObj->params) ? $module->parentObj->moduleObj->params : NULL)
+        : $module->params;
+    }
+  }
+
+  /**
+   * Checks if a source has a specific parameter set
+   *
+   * @param base_content|base_actionbox $module
+   * @param string $parameterName
+   * @param boolean $notEmpty
+   * @return boolean
+   */
+  public function sourceHasParameter($module, $parameterName, $notEmpty = TRUE) {
+    $this->_initializeSourceParameters($module);
+    if (($notEmpty == TRUE && !empty($this->_sourceParameters[$parameterName])) ||
+        ($notEmpty == FALSE && isset($this->_sourceParameters[$parameterName]))) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Checks if a source has a specific class name or returns class name on empty check
+   *
+   * @param base_content|base_actionbox $module
+   * @param string $className leave empty to get source class
+   * @return boolean|string
+   */
+  public function sourceHasClass($module, $classNameToCheck = NULL) {
     $isBoxModule = is_a($module, 'base_actionbox');
-    $this->_sourceParameterGroup = $isBoxModule ?
-      (isset($module->parentObj->moduleObj->paramName) ? $module->parentObj->moduleObj->paramName : NULL)
-      : $module->paramName;
-    $this->_sourceParameters = $isBoxModule ?
-      (isset($module->parentObj->moduleObj->params) ? $module->parentObj->moduleObj->params : NULL)
-      : $module->params;
+    $className = $isBoxModule ? get_class($module->parentObj->moduleObj) : get_class($module);
+    if (isset($classNameToCheck)) {
+      return $className == $classNameToCheck;
+    } else {
+      return $className;
+    }
+  }
+
+  /**
+   * Loads the display mode by source into $this->displayMode
+   *
+   * @param base_content|base_actionbox $module
+   * @param string $parameterName
+   * @return boolean
+   */
+  public function loadSourceDisplayMode($module, $parameterName) {
+    $this->_initializeSourceParameters($module);
+    if (!empty($this->_sourceParameters[$parameterName])) {
+      $this->displayMode = $this->_sourceParameters[$parameterName];
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
