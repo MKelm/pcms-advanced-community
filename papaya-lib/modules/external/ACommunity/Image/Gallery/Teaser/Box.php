@@ -94,11 +94,7 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
         $definitionValues[] = $ressource->id;
         $access = TRUE;
         if ($ressource->type == 'group') {
-          if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
-            $this->teaser()->data()->surferHasGroupAccess = TRUE;
-          } else {
-            $access = FALSE;
-          }
+          $access = $this->teaser()->data()->surferHasGroupAccess;
         }
         $definitionValues[] = (int)$access;
         if ($access) {
@@ -125,9 +121,14 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
    * Set ressource by page module with connector to get surfer or group
    */
   public function setRessourceData() {
-    return $this->teaser()->data()->ressource(
-      $this->teaser()->acommunityConnector()->ressource(), NULL, NULL, NULL, NULL, 'object'
-    );
+    $ressource = $this->teaser()->acommunityConnector()->ressource();
+    $this->teaser()->data()->ressource($this->teaser()->acommunityConnector()->ressource());
+    if (isset($ressource->id) && $ressource->type == 'group') {
+      if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
+        $this->teaser()->data()->surferHasGroupAccess = TRUE;
+      }
+    }
+    return $ressource;
   }
 
   /**
