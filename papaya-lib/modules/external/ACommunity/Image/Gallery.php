@@ -146,6 +146,16 @@ class ACommunityImageGallery extends MediaImageGallery {
             ) {
     parent::_appendImageTo($parent, $fileId, $fileOffset, $thumbnail);
     $ressource = $this->data()->ressource('ressource');
+    // file description for lighbox extension
+    if ($thumbnail == TRUE && isset($ressource->id)) {
+      $fileDescription = !empty($this->_folder['translations'][$fileId]['file_description']) ?
+        $this->_folder['translations'][$fileId]['file_description'] : NULL;
+      $parent->appendElement(
+        'image-description',
+        array(),
+        strip_tags(str_replace(array("\r\n", "\r", "\n"), " ", $fileDescription))
+      );
+    }
     if ($thumbnail == TRUE &&
         (($ressource->type == 'surfer' &&
           ($ressource->isActiveSurfer || $this->data()->surferIsModerator())) ||
