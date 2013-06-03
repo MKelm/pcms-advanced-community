@@ -220,10 +220,12 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    if (!empty($this->parentObj->moduleObj->params['group_handle'])) {
-      $ressource = $this->surfers()->data()->ressource(
-        'group', $this, array('group' => 'group_handle'), array('group' => array()), NULL, 'object'
+    $ressource = $this->surfers()->data()->ressource('ressource', $this);
+    if ($ressource->sourceHasParameter($this, 'group_handle')) {
+      $ressource->set(
+        'group', $this, array('group' => 'group_handle'), array('group' => array()), NULL
       );
+      $ressource->loadSourceDisplayMode($this, 'mode');
       $this->surfers()->acommunityConnector()->ressource($ressource);
       return $ressource;
     }
