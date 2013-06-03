@@ -125,7 +125,38 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
    * @return PapayaCacheIdentifierDefinition
    */
   public function cacheable(PapayaCacheIdentifierDefinition $definition = NULL) {
-    return $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+    if (isset($definition)) {
+      $this->_cacheDefiniton = $definition;
+    } elseif (NULL == $this->_cacheDefiniton) {
+      $definitionValues = array('acommunity_ressource_context_box');
+      $ressource = $this->setRessourceData();
+      if (isset($ressource->id)) {
+        $definitionValues[] = $ressource->type;
+        $definitionValues[] = $ressource->id;
+        $definitionValues[] = $ressource->displayMode;
+        if ($ressource->type == 'group') {
+          $surferHasGroupAccess = $this->group()->data()->surferHasGroupAccess;
+          $definitionValues[] = (int)$surferHasGroupAccess;
+          if ($surferHasGroupAccess) {
+            include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+            $values = new ACommunityCacheIdentifierValues();
+            $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource->id);
+            $surferIsOwner = $this->group()->data()->surferHasStatus(NULL, 'is_owner', 1);
+            $definitionValues[] = (int)$surferIsOwner;
+            if ($surferIsOwner) {
+              $definitionValues[] = $values->lastChangeTime(
+                'group:membership_requests:group_'.$ressource->id
+              );
+              $definitionValues[] = $values->lastChangeTime(
+                'group:membership_invitations:group_'.$ressource->id
+              );
+            }
+          }
+        }
+      }
+      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionValues($definitionValues);
+    }
+    return $this->_cacheDefiniton;
   }
 
   /**
