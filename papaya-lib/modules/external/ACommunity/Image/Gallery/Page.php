@@ -71,9 +71,8 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
         $definitionValues[] = $ressource->id;
         $access = TRUE;
         if ($ressource->type== 'group') {
-          $access = $this->gallery()->data()->surferHasGroupAccess();
-          $this->surferHasGroupAccess = $access;
-          if ($this->surferHasGroupAccess) {
+          $access = $this->surferHasGroupAccess;
+          if ($access) {
             // set status for delete image actions
             $definitionValues[] = (int)$this->gallery()->data()->surferHasStatus(
               $ressource->id, 'is_owner', 1
@@ -138,6 +137,9 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
       'object'
     );
     $this->gallery()->acommunityConnector()->ressource($ressource);
+    if (isset($ressource->id) && $ressource->type == 'group') {
+      $this->surferHasGroupAccess = $this->gallery()->data()->surferHasGroupAccess();
+    }
     return $ressource;
   }
 
