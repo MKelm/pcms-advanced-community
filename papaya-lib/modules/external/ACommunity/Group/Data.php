@@ -148,10 +148,8 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
           $this->_imageThumbnailResizeMode
         );
 
+        $this->commands = array();
         if ($this->mode == 'group-details') {
-          $this->commands = array();
-          $referenceParameters = $this->referenceParameters();
-
           // load member command links
           if (!$this->surferHasStatus(NULL, 'is_owner', 1)) {
             // link to group owner
@@ -205,57 +203,71 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
               'caption' => $this->captions['link_decline_membership_invitation']
             );
           }
+        }
 
-          if ($this->surferHasStatus(NULL, 'is_owner', 1)) {
-            // invite surfers
-            $this->commands['invite_surfers'] = array(
+        $referenceParameters = $this->referenceParameters();
+        if ($this->mode == 'group-bar' && !empty($ressource->displayMode)) {
+          $ressourceParameters = reset($ressource->parameters());
+          if (isset($ressourceParameters['group_handle'])) {
+            $referenceParameters['group_handle'] = $ressourceParameters['group_handle'];
+          }
+        }
+        if ((($this->mode == 'group-bar' && !empty($ressource->displayMode)) ||
+             $this->mode == 'group-details') && $this->surferHasStatus(NULL, 'is_owner', 1)) {
+          // invite surfers
+          $this->commands['invite_surfers'] = array(
+            'href' => $this->owner->acommunityConnector()
+              ->getSurfersPageLink(
+                $this->languageId, 'invite_surfers', $referenceParameters['group_handle']
+              ),
+            'caption' => $this->captions['link_invite_surfers'],
+            'active' => (int)($ressource->displayMode == 'invite_surfers')
+          );
+          // n requests pending
+          $this->groupSurferRelations()->load(
+            array('id' => $ressource->id, 'count' => 1, 'surfer_status_pending' => 1)
+          );
+          $groupSurferRelations = reset($this->groupSurferRelations()->toArray());
+          if (!empty($groupSurferRelations['count'])) {
+            $this->commands['membership_requests'] = array(
               'href' => $this->owner->acommunityConnector()
                 ->getSurfersPageLink(
-                  $this->languageId, 'invite_surfers', $referenceParameters['group_handle']
+                  $this->languageId, 'membership_requests', $referenceParameters['group_handle']
                 ),
-              'caption' => $this->captions['link_invite_surfers']
+              'caption' => sprintf(
+                $groupSurferRelations['count'] > 1 ?
+                  $this->captions['link_membership_requests'] :
+                  $this->captions['link_membership_request'],
+                $groupSurferRelations['count']
+              ),
+              'active' => (int)($ressource->displayMode == 'membership_requests')
             );
-            // n requests pending
-            $this->groupSurferRelations()->load(
-              array('id' => $ressource->id, 'count' => 1, 'surfer_status_pending' => 1)
-            );
-            $groupSurferRelations = reset($this->groupSurferRelations()->toArray());
-            if (!empty($groupSurferRelations['count'])) {
-              $this->commands['membership_requests'] = array(
-                'href' => $this->owner->acommunityConnector()
-                  ->getSurfersPageLink(
-                    $this->languageId, 'membership_requests', $referenceParameters['group_handle']
-                  ),
-                'caption' => sprintf(
-                  $groupSurferRelations['count'] > 1 ?
-                    $this->captions['link_membership_requests'] :
-                    $this->captions['link_membership_request'],
-                  $groupSurferRelations['count']
-                )
-              );
-            }
-            // n invites pending
-            $this->groupSurferRelations()->load(
-              array('id' => $ressource->id, 'count' => 1, 'surfer_status_pending' => 2)
-            );
-            $groupSurferRelations = reset($this->groupSurferRelations()->toArray());
-            if (!empty($groupSurferRelations['count'])) {
-              $this->commands['membership_invitations'] = array(
-                'href' => $this->owner->acommunityConnector()
-                  ->getSurfersPageLink(
-                    $this->languageId, 'membership_invitations', $referenceParameters['group_handle']
-                  ),
-                'caption' => sprintf(
-                  $groupSurferRelations['count'] > 1 ?
-                    $this->captions['link_membership_invitations'] :
-                    $this->captions['link_membership_invitation'],
-                  $groupSurferRelations['count']
-                )
-              );
-            }
           }
+          // n invites pending
+          $this->groupSurferRelations()->load(
+            array('id' => $ressource->id, 'count' => 1, 'surfer_status_pending' => 2)
+          );
+          $groupSurferRelations = reset($this->groupSurferRelations()->toArray());
+          if (!empty($groupSurferRelations['count'])) {
+            $this->commands['membership_invitations'] = array(
+              'href' => $this->owner->acommunityConnector()
+                ->getSurfersPageLink(
+                  $this->languageId, 'membership_invitations', $referenceParameters['group_handle']
+                ),
+              'caption' => sprintf(
+                $groupSurferRelations['count'] > 1 ?
+                  $this->captions['link_membership_invitations'] :
+                  $this->captions['link_membership_invitation'],
+                $groupSurferRelations['count']
+              ),
+              'active' => (int)($ressource->displayMode == 'membership_invitations')
+            );
+          }
+        }
 
-          // all members with owner
+        if (($this->mode == 'group-bar' && !empty($ressource->displayMode)) ||
+             $this->mode == 'group-details') {
+          // all members without owner
           $this->groupSurferRelations()->load(
             array('id' => $ressource->id, 'count' => 1, 'surfer_status_pending' => 0)
           );
@@ -270,7 +282,8 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
                 $groupSurferRelations['count'] > 1 ?
                   $this->captions['link_members'] : $this->captions['link_member'],
                 $groupSurferRelations['count']
-              )
+              ),
+              'active' => (int)($ressource->displayMode == 'members')
             );
           }
         }

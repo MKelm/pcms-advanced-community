@@ -122,7 +122,8 @@ class ACommunityGroup extends ACommunityUiContent {
               str_replace('_', '-', $name),
               array(
                 'href' => PapayaUtilStringXml::escapeAttribute($command['href']),
-                'caption' => PapayaUtilStringXml::escapeAttribute($command['caption'])
+                'caption' => PapayaUtilStringXml::escapeAttribute($command['caption']),
+                'active' => isset($command['active']) ? $command['active'] : 0
               )
             );
           }

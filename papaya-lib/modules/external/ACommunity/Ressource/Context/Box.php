@@ -38,7 +38,7 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
   public $editFields = array(
     'General Ressouce Settings',
     'image_size' => array(
-      'Image Size', 'isNum', TRUE, 'input', 30, '', 22
+      'Image Size', 'isNum', TRUE, 'input', 30, '', 20
     ),
     'image_resize_mode' => array(
       'Image Resize Mode', 'isAlpha', TRUE, 'translatedcombo',
@@ -62,6 +62,33 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
     'Captions',
     'caption_time' => array(
       'Time', 'isNoHTML', TRUE, 'input', 200, '', 'Time'
+    ),
+    'caption_link_invite_surfers' => array(
+      'Link Invite Surfers', 'isNoHTML', TRUE, 'input', 200, '', 'Invite surfers'
+    ),
+    'caption_link_member' => array(
+      'Link Member', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with members mode.', '%d member'
+    ),
+    'caption_link_members' => array(
+      'Link Members', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with members mode.', '%d members'
+    ),
+    'caption_link_membership_request' => array(
+      'Link Membership Request', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with membership requests mode.', '%d membership request'
+    ),
+    'caption_link_membership_requests' => array(
+      'Link Membership Requests', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with membership requests mode.', '%d membership requests'
+    ),
+    'caption_link_membership_invitation' => array(
+      'Link Membership Invitation', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with membership invitations mode.', '%d membership invitation'
+    ),
+    'caption_link_membership_invitations' => array(
+      'Link Membership Invitations', 'isNoHTML', TRUE, 'input', 200,
+      'Link to own groups page, with membership requests mode.', '%d membership invitations'
     ),
     'Messages',
     'message_access_denied' => array(
@@ -110,6 +137,8 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
           return $ressource;
           break;
         case 'group':
+          $ressource = clone $ressource;
+          $ressource->filterSourceParameters('group_handle', NULL, TRUE);
           $this->group()->data()->ressource($ressource);
           if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
             $this->group()->data()->surferHasGroupAccess(
@@ -196,7 +225,11 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
         $this->surfer()->data()->setPluginData($this->data, $captionNames, $messageNames);
         return $this->surfer()->getXml();
       } elseif ($ressource->type == 'group') {
-        $captionNames = array('caption_time');
+        $captionNames = array(
+          'caption_time', 'caption_link_invite_surfers', 'caption_link_member', 'caption_link_members',
+          'caption_link_membership_request', 'caption_link_membership_requests',
+          'caption_link_membership_invitation', 'caption_link_membership_invitations'
+        );
         $messageNames = array('message_access_denied');
         $this->group()->data()->setPluginData($this->data, $captionNames, $messageNames);
         return $this->group()->getXml();
