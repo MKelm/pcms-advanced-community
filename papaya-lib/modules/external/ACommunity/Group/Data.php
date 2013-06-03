@@ -205,21 +205,12 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
           }
         }
 
-        $referenceParameters = $this->referenceParameters();
-        if ($this->mode == 'group-bar' && !empty($ressource->displayMode)) {
-          $ressourceParameters = reset($ressource->parameters());
-          if (isset($ressourceParameters['group_handle'])) {
-            $referenceParameters['group_handle'] = $ressourceParameters['group_handle'];
-          }
-        }
         if ((($this->mode == 'group-bar' && !empty($ressource->displayMode)) ||
              $this->mode == 'group-details') && $this->surferHasStatus(NULL, 'is_owner', 1)) {
           // invite surfers
           $this->commands['invite_surfers'] = array(
             'href' => $this->owner->acommunityConnector()
-              ->getSurfersPageLink(
-                $this->languageId, 'invite_surfers', $referenceParameters['group_handle']
-              ),
+              ->getSurfersPageLink($this->languageId, 'invite_surfers', $ressource->handle),
             'caption' => $this->captions['link_invite_surfers'],
             'active' => (int)($ressource->displayMode == 'invite_surfers')
           );
@@ -231,9 +222,7 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
           if (!empty($groupSurferRelations['count'])) {
             $this->commands['membership_requests'] = array(
               'href' => $this->owner->acommunityConnector()
-                ->getSurfersPageLink(
-                  $this->languageId, 'membership_requests', $referenceParameters['group_handle']
-                ),
+                ->getSurfersPageLink($this->languageId, 'membership_requests', $ressource->handle),
               'caption' => sprintf(
                 $groupSurferRelations['count'] > 1 ?
                   $this->captions['link_membership_requests'] :
@@ -251,9 +240,7 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
           if (!empty($groupSurferRelations['count'])) {
             $this->commands['membership_invitations'] = array(
               'href' => $this->owner->acommunityConnector()
-                ->getSurfersPageLink(
-                  $this->languageId, 'membership_invitations', $referenceParameters['group_handle']
-                ),
+                ->getSurfersPageLink($this->languageId, 'membership_invitations', $ressource->handle),
               'caption' => sprintf(
                 $groupSurferRelations['count'] > 1 ?
                   $this->captions['link_membership_invitations'] :
@@ -275,9 +262,7 @@ class ACommunityGroupData extends ACommunityUiContentDataGroupSurferRelations {
           if (!empty($groupSurferRelations['count'])) {
             $this->commands['memberships'] = array(
               'href' => $this->owner->acommunityConnector()
-                ->getSurfersPageLink(
-                  $this->languageId, 'members', $referenceParameters['group_handle']
-                ),
+                ->getSurfersPageLink($this->languageId, 'members', $ressource->handle),
               'caption' => sprintf(
                 $groupSurferRelations['count'] > 1 ?
                   $this->captions['link_members'] : $this->captions['link_member'],

@@ -137,8 +137,6 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
           return $ressource;
           break;
         case 'group':
-          $ressource = clone $ressource;
-          $ressource->filterSourceParameters('group_handle', NULL, TRUE);
           $this->group()->data()->ressource($ressource);
           if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
             $this->group()->data()->surferHasGroupAccess(
