@@ -94,7 +94,7 @@ class ACommunitySurfer extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    if (!is_null($this->data()->ressource()) && $this->data()->ressource() != FALSE) {
+    if (isset($this->data()->ressource('ressource')->id)) {
       $surfer = $parent->appendElement('surfer', array('mode' => $this->data()->mode));
       $this->_performCommands();
       $this->data()->initialize();

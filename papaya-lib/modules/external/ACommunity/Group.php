@@ -88,20 +88,33 @@ class ACommunityGroup extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     if ($this->data()->surferHasGroupAccess()) {
-      $result = $this->_performCommands();
-      if ($result === FALSE) {
-        $parent->appendElement(
-          'message', array('type' => 'error'), $this->data()->messages['failed_to_execute_command']
-        );
+      if ($this->data()->mode == 'group-details') {
+        $result = $this->_performCommands();
+        if ($result === FALSE) {
+          $parent->appendElement(
+            'message', array('type' => 'error'), $this->data()->messages['failed_to_execute_command']
+          );
+        }
+      } else {
+        $parent = $parent->appendElement('group', array('mode' => 'group-bar'));
       }
       if (FALSE !== $this->data()->initialize()) {
-        $parent->appendElement('title', array(), $this->data()->title);
-        $parent->appendElement(
-          'time', array('caption' => $this->data()->captions['time']), $this->data()->time
-        );
-        $parent->appendXml($this->data()->text);
         $parent->appendElement('image', array(), PapayaUtilStringXml::escape($this->data()->image));
-
+        $parent->appendElement('title', array(), $this->data()->title);
+        if ($this->data()->mode == 'group-details') {
+          $parent->appendElement(
+            'time', array('caption' => $this->data()->captions['time']), $this->data()->time
+          );
+          $parent->appendXml($this->data()->text);
+        } else {
+          $parent->appendElement(
+            'page-link',
+            array(),
+            $this->acommunityConnector()->getGroupPageLink(
+              $this->data()->ressource('ressource')->handle
+            )
+          );
+        }
         if (!empty($this->data()->commands)) {
           $commands = $parent->appendElement('commands');
           foreach ($this->data()->commands as $name => $command) {

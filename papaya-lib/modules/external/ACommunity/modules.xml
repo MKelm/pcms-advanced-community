@@ -4,6 +4,11 @@
   <description>Modules to extend your community</description>
   <modules>
     <module type="box"
+            guid="0c060d3e7ddd464c851bff0fa9cd5d6c"
+            name="Ressource Context Box"
+            class="ACommunityRessourceContextBox"
+            file="Ressource/Context/Box.php">Shows context information in surfer / group pages</module>
+    <module type="box"
             guid="9736efe1a26742e1bce447ae99abdf6a"
             name="Comments Box"
             class="ACommunityCommentsBox"
