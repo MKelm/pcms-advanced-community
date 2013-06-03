@@ -118,6 +118,12 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
   protected $_group = NULL;
 
   /**
+   * Cache definition
+   * @var PapayaCacheIdentifierDefinition
+   */
+  protected $_cacheDefiniton = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
