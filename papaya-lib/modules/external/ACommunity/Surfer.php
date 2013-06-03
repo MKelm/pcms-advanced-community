@@ -94,7 +94,8 @@ class ACommunitySurfer extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    if (isset($this->data()->ressource('ressource')->id)) {
+    $ressource = $this->data()->ressource('ressource');
+    if (isset($ressource->id)) {
       $surfer = $parent->appendElement('surfer', array('mode' => $this->data()->mode));
       $this->_performCommands();
       $this->data()->initialize();
@@ -131,6 +132,16 @@ class ACommunitySurfer extends ACommunityUiContent {
           'detail',
           array('name' => 'page-link', 'caption' => ''),
           PapayaUtilStringXml::escape($this->data()->surferBaseDetails['page_link'])
+        );
+        $baseDetails->appendElement(
+          'detail',
+          array(
+            'name' => 'gallery-link', 'caption' => $this->data()->captions['link_gallery'],
+            'active' => (int)($ressource->displayMode == 'gallery')
+          ),
+          PapayaUtilStringXml::escape(
+            $this->acommunityConnector()->getGalleryPageLink($ressource->type, $ressource->id)
+          )
         );
       }
 

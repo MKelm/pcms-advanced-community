@@ -136,6 +136,7 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
       NULL,
       'object'
     );
+    $ressource->displayMode = 'gallery';
     $this->gallery()->acommunityConnector()->ressource($ressource);
     if (isset($ressource->id) && $ressource->type == 'group') {
       $this->surferHasGroupAccess = $this->gallery()->data()->surferHasGroupAccess();

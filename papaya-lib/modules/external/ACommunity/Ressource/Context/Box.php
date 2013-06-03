@@ -46,6 +46,9 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
          'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
        ), '', 'mincrop'
     ),
+    'caption_link_gallery' => array(
+      'Caption Gallery', 'isNoHTML', TRUE, 'input', 200, '', 'Gallery'
+    ),
     'Surfer Ressource Settings',
     'Captions',
     'caption_surfer_name' => array(
@@ -216,7 +219,7 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
     $this->setDefaultData();
     if (isset($ressource->type)) {
       if ($ressource->type == 'surfer') {
-        $captionNames = array('caption_surfer_name', 'caption_surfer_avatar');
+        $captionNames = array('caption_surfer_name', 'caption_surfer_avatar', 'caption_link_gallery');
         $messageNames = array('message_no_surfer');
         $this->data['avatar_size'] = $this->data['image_size'];
         $this->data['avatar_resize_mode'] = $this->data['image_resize_mode'];
@@ -226,7 +229,8 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
         $captionNames = array(
           'caption_time', 'caption_link_invite_surfers', 'caption_link_member', 'caption_link_members',
           'caption_link_membership_request', 'caption_link_membership_requests',
-          'caption_link_membership_invitation', 'caption_link_membership_invitations'
+          'caption_link_membership_invitation', 'caption_link_membership_invitations',
+          'caption_link_gallery'
         );
         $messageNames = array('message_access_denied');
         $this->group()->data()->setPluginData($this->data, $captionNames, $messageNames);
