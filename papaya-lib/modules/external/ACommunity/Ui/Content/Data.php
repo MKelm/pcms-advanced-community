@@ -279,6 +279,19 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
          ) {
 
     if ($type == 'ressource') {
+      if (is_null($this->_ressource)) {
+        include_once(dirname(__FILE__).'/Ressource.php');
+        if (is_a($module, 'base_content')) {
+          // use a singleton for page modules to get the same in connector for box modules
+          $this->_ressource = ACommunityUiContentRessource::getInstance();
+        } else {
+          // compatibility for box modules with a different ressource handling
+          // future plans: add support for nested ressources in ressource class
+          $this->_ressource = new ACommunityUiContentRessource();
+        }
+        $this->_ressource->papaya($this->papaya());
+        $this->_ressource->uiContent = $this->owner;
+      }
       return $this->_ressource;
     } elseif (is_a($type, 'ACommunityUiContentRessource')) {
       $this->_ressource = $type; // set ressource in box modules by page module ressource
