@@ -134,18 +134,50 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
 
           if (!($_FILES[$parameterGroup]['error'][$this->_imageFieldName] > 0)) {
 
-            $allowedExtensions = array('gif', 'jpeg', 'jpg', 'png');
+            $allowedExtensions = array('gif', 'jpeg', 'jpg', 'png', 'zip');
             $extension = strtolower(
               end(explode('.', $_FILES[$parameterGroup]['name'][$this->_imageFieldName]))
             );
             if (in_array($extension, $allowedExtensions)) {
 
-              $allowedTypes = array(
+              $allowedImageTypes = array(
                 "image/gif", "image/jpeg", "image/jpg", "image/pjpeg", "image/x-png", "image/png"
               );
               $type = $_FILES[$parameterGroup]['type'][$this->_imageFieldName];
 
-              if (in_array($type, $allowedTypes)) {
+              $allowedPackageTypes = array(
+                "application/zip"
+              );
+
+              if (in_array($type, $allowedPackageTypes)) {
+                $zip = new ZipArchive;
+                if ($zip->open($_FILES[$parameterGroup]['tmp_name'][$this->_imageFieldName]) == TRUE) {
+                  $tmpName = tempnam(PAPAYA_PATH_MEDIADB_IMPORT, 'acommunity-images-upload-');
+                  unlink($tmpName);
+                  mkdir($tmpName);
+                  $extracted = $zip->extractTo($tmpName);
+                  $zip->close();
+                  if ($extracted) {
+                    $folder = end(explode('/', $tmpName));
+                    include_once(PAPAYA_INCLUDE_PATH.'system/papaya_mediadb.php');
+                    $papayaMediaDB = new papaya_mediadb();
+                    $result = $papayaMediaDB->importLocalFolder(
+                      $folder, $folderId, $this->data()->currentSurferId()
+                    );
+                    if ($result) {
+                      $added = TRUE;
+                    } else {
+                      $error = 'dialog_error_media_db';
+                    }
+                  }
+                  unlink($tmpName);
+                  rmdir($tmpName);
+                }
+              } elseif (!in_array($type, $allowedImageTypes)) {
+                $error = 'dialog_error_file_type';
+              }
+
+              if (in_array($type, $allowedImageTypes)) {
                 $mediaDBEdit = $this->data()->mediaDBEdit();
                 $added = $mediaDBEdit->addFile(
                   $_FILES[$parameterGroup]['tmp_name'][$this->_imageFieldName],
@@ -153,29 +185,30 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
                   $folderId,
                   $this->data()->currentSurferId()
                 );
-                if (empty($added)) {
-                  $error = 'dialog_error_media_db';
-                } else {
-                  $ressource = $this->data()->ressource('ressource');
-                  if ($gallery['parent_folder_id'] == 0) {
-                    $lastChangeRessource = $ressource->type.'_gallery_images:folder_base:'.
-                      $ressource->type.'_'.$ressource->id;
-                  } else {
-                    $lastChangeRessource = $ressource->type.'_gallery_images:folder_'.$folderId.':'.
-                      $ressource->type.'_'.$ressource->id;
-                  }
-                  $this->data()->setLastChangeTime($lastChangeRessource);
-                  $href = $this->data()->reference()->get();
-                  $GLOBALS['PAPAYA_PAGE']->sendHTTPStatus(301);
-                  @header("Location: ".$href);
-                  printf(
-                    '<html><head><meta http-equiv="refresh" content="0; URL=%s"></head></html>',
-                    papaya_strings::escapeHTMLChars($href)
-                  );
-                  exit;
-                }
-              } else {
+              } elseif (!in_array($type, $allowedPackageTypes)) {
                 $error = 'dialog_error_file_type';
+              }
+
+              if (empty($added)) {
+                $error = 'dialog_error_media_db';
+              } else {
+                $ressource = $this->data()->ressource('ressource');
+                if ($gallery['parent_folder_id'] == 0) {
+                  $lastChangeRessource = $ressource->type.'_gallery_images:folder_base:'.
+                    $ressource->type.'_'.$ressource->id;
+                } else {
+                  $lastChangeRessource = $ressource->type.'_gallery_images:folder_'.$folderId.':'.
+                    $ressource->type.'_'.$ressource->id;
+                }
+                $this->data()->setLastChangeTime($lastChangeRessource);
+                $href = $this->data()->reference()->get();
+                $GLOBALS['PAPAYA_PAGE']->sendHTTPStatus(301);
+                @header("Location: ".$href);
+                printf(
+                  '<html><head><meta http-equiv="refresh" content="0; URL=%s"></head></html>',
+                  papaya_strings::escapeHTMLChars($href)
+                );
+                exit;
               }
             } else {
               $error = 'dialog_error_file_extension';
