@@ -134,8 +134,8 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
           'acommunity_groups_page', (int)$moderator, $values->lastChangeTime($lastChangeRessource)
         );
         if (!empty($ressource)) {
-          $definitionValues[] = $ressource['type'];
-          $definitionValues[] = $ressource['id'];
+          $definitionValues[] = $ressource->type;
+          $definitionValues[] = $ressource->id;
         }
         $definitionParameters = array('groups_page', 'mode');
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
