@@ -42,7 +42,7 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
   public $editFields = array(
     'Captions',
     'caption_dialog_image' => array(
-      'Dialog Image', 'isNoHTML', TRUE, 'input', 200, '', 'Image'
+      'Dialog Image/ZIP', 'isNoHTML', TRUE, 'input', 200, '', 'Image or ZIP'
     ),
     'caption_dialog_button' => array(
       'Dialog Button', 'isNoHTML', TRUE, 'input', 200, '', 'Add'
@@ -119,16 +119,21 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $ressource = clone $this->upload()->acommunityConnector()->ressource();
+    $ressource = $this->upload()->data()->ressource('ressource', $this);
     if (!$ressource->detectStopParameter('enlarge', NULL, TRUE)) {
       $ressource->needsActiveSurfer = TRUE;
+      list($ressourceType, $ressourceParameterValue) = $ressource->detectSourceParameterValue(
+        array('surfer' => array('surfer_handle'), 'group' => array('group_handle'))
+      );
       $ressource->set(
-        $ressource->type,
-        array('surfer' => array('surfer_handle'), 'group' => array('group_handle')),
+        $ressourceType,
+        NULL,
         array(
           'surfer' => array('surfer_handle', 'folder_id', 'offset'),
           'group' => array('group_handle', 'folder_id', 'offset')
-        )
+        ),
+        NULL,
+        $ressourceParameterValue
       );
     }
     $this->upload()->data()->ressource($ressource);
