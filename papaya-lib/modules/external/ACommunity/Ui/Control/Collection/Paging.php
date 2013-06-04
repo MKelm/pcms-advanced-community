@@ -50,6 +50,12 @@ class ACommunityUiControlCollectionPaging extends PapayaUiControlCollection {
   public $pagingItemsPerPage = NULL;
 
   /**
+   * Get relative paging urls
+   * @var boolean
+   */
+  public $pagingGetRelativeUrls = TRUE;
+
+  /**
    * Absolute count of items
    * @var integer
    */
@@ -102,6 +108,7 @@ class ACommunityUiControlCollectionPaging extends PapayaUiControlCollection {
       );
       $this->_paging->papaya($this->papaya());
       $this->_paging->itemsPerPage = $this->pagingItemsPerPage;
+      $this->_paging->relativeUrls = $this->pagingGetRelativeUrls;
       $this->_paging->reference($this->reference());
     }
     return $this->_paging;
