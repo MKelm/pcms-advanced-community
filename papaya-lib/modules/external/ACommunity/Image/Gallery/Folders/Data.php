@@ -82,7 +82,7 @@ class ACommunityImageGalleryFoldersData extends ACommunityImageGalleryData {
 
     $command = $this->owner->parameters()->get('command', NULL);
     $folderId = $this->owner->parameters()->get('folder_id', NULL);
-    if (!isset($command) && isset($folderId)) {
+    if ($command != 'delete_folder' && isset($folderId)) {
       $selectedFolderId = (int)$folderId;
     } else {
       $selectedFolderId = 0;
