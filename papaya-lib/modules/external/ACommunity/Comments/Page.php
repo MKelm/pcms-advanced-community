@@ -196,6 +196,7 @@ class ACommunityCommentsPage extends base_content implements PapayaPluginCacheab
       $this->_comments = new ACommunityComments();
       $this->_comments->parameterGroup($this->paramName);
       $this->_comments->data()->languageId = $this->papaya()->request->languageId;
+      $this->_comments->data()->absoluteReferenceUrl = TRUE;
     }
     return $this->_comments;
   }

@@ -106,6 +106,7 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
             $subComments->pagingParameterName = sprintf(
               'comment_%d_page', $commentData['id']
             );
+            $subComments->pagingGetRelativeUrls = !$this->data()->absoluteReferenceUrl;
             $subComments->reference($this->data()->reference());
             $subComments->absCount = $commentData['childs']['abs_count'];
 
@@ -169,6 +170,7 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
       $this->_comments->papaya($this->papaya());
       $this->_comments->pagingParameterGroup = $this->data()->owner->parameterGroup();
       $this->_comments->pagingItemsPerPage = (int)$this->data()->paging['comments_per_page'];
+      $this->_comments->pagingGetRelativeUrls = !$this->data()->absoluteReferenceUrl;
       $this->_comments->reference($this->data()->reference());
     }
     return $this->_comments;

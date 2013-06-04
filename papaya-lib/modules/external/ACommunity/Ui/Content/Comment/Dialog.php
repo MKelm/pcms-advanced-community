@@ -76,7 +76,10 @@ class ACommunityUiContentCommentDialog
     $dialog->papaya($this->papaya());
     $dialog->parameterGroup($this->parameterGroup());
     $dialog->parameters($this->parameters());
-    $dialog->action($this->data()->reference()->getRelative());
+    $dialog->action(
+      $this->data()->absoluteReferenceUrl ? $this->data()->reference()->get() :
+        $this->data()->reference()->getRelative()
+    );
     $dialog->hiddenFields()->merge(
       array(
         'command' => 'reply',

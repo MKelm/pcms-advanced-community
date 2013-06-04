@@ -251,7 +251,11 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
               ),
               $this->owner->parameterGroup()
             );
-            $links[$id]['reply'] = $reference->getRelative();
+            if (!$this->absoluteReferenceUrl) {
+              $links[$id]['reply'] = $reference->getRelative();
+            } else {
+              $links[$id]['reply'] = $reference->get();
+            }
           }
         }
         if ($surferIsModerator || $surferIsRessourceOwner) {
@@ -263,7 +267,11 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
             ),
             $this->owner->parameterGroup()
           );
-          $links[$id]['delete'] = $reference->getRelative();
+          if (!$this->absoluteReferenceUrl) {
+            $links[$id]['delete'] = $reference->getRelative();
+          } else {
+            $links[$id]['delete'] = $reference->get();
+          }
         }
 
         if (empty($votingCookieData[$id])) {
@@ -275,7 +283,11 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
             ),
             $this->owner->parameterGroup()
           );
-          $links[$id]['vote_up'] = $reference->getRelative();
+          if (!$this->absoluteReferenceUrl) {
+            $links[$id]['vote_up'] = $reference->getRelative();
+          } else {
+            $links[$id]['vote_up'] = $reference->get();
+          }
 
           $reference = clone $this->reference();
           $reference->setParameters(
@@ -285,7 +297,11 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
             ),
             $this->owner->parameterGroup()
           );
-          $links[$id]['vote_down'] = $reference->getRelative();
+          if (!$this->absoluteReferenceUrl) {
+            $links[$id]['vote_down'] = $reference->getRelative();
+          } else {
+            $links[$id]['vote_down'] = $reference->get();
+          }
         } else {
           $links[$id]['vote_up'] = NULL;
           $links[$id]['vote_down'] = NULL;
