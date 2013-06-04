@@ -109,7 +109,7 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
           $definitionValues[] = $ressource->type;
           $definitionValues[] = $ressource->id;
           $definitionValues[] = $values->lastChangeTime(
-            $ressource->type.'_gallery_folders:group_'.$ressource->id
+            $ressource->type.'_gallery_folders:'.$ressource->type.'_'.$ressource->id
           );
         }
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionGroup(
@@ -127,14 +127,14 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $this->folders()->data()->ressource($this->folders()->acommunityConnector()->ressource());
-    $ressource = $this->folders()->data()->ressource('ressource');
+    $ressource = $this->folders()->acommunityConnector()->ressource();
     $ressource->filterSourceParameters(
       array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
       $ressource->type,
       TRUE
     );
-    return $this->folders()->data()->ressource('ressource');
+    $this->folders()->data()->ressource($ressource);
+    return $ressource;
   }
 
   /**
