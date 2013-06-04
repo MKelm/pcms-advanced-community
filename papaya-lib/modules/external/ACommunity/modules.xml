@@ -13,6 +13,12 @@
             name="Comments Box"
             class="ACommunityCommentsBox"
             file="Comments/Box.php">Get and set comments for pages, surfers, images and groups</module>
+    <module type="page"
+            guid="58f2b14260e649b1b3eb097e886bc5eb"
+            name="Comments Page"
+            class="ACommunityCommentsPage"
+            file="Comments/Page.php">Get and set comments for pages, surfers, images and groups.
+            The page module is designed for ajax requests.</module>
     <module type="box"
             guid="46bfe809a7724c85b649bc9225e3fed7"
             name="Comments Ranking Box"

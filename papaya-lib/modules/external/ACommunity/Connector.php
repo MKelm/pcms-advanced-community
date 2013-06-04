@@ -53,6 +53,9 @@ class ACommunityConnector extends base_connector {
       'How to display names in outputs',
       'names'
     ),
+    'display_mode_ajax_requests' => array(
+      'Ajax Requests', 'isAlpha', FALSE, 'input', 50, 'Enter a view mode for ajax requests.', 'ajax'
+    ),
     'Groups',
     'groups_default_image_id' => array(
       'Default Image', 'isGUID', TRUE, 'mediaimage', 32, NULL, NULL
@@ -75,6 +78,9 @@ class ACommunityConnector extends base_connector {
       'Surfer Group', 'isNum', TRUE, 'function', 'callbackSurferGroupsList'
     ),
     'Page IDs',
+    'comments_page_id' => array(
+      'Comments', 'isNum', TRUE, 'pageid', 30, 'The page module is designed for ajax requests.', NULL
+    ),
     'surfer_registration_page_id' => array(
       'Surfer Registration', 'isNum', TRUE, 'pageid', 30,
       'Use a community registration page module', NULL
@@ -373,6 +379,41 @@ class ACommunityConnector extends base_connector {
   }
 
   /**
+   * Get link to comments page
+   *
+   * @return string
+   */
+  public function getCommentsPageLink($languageId, $ressourceType, $ressourceId) {
+    $ressourceParameterName = NULL;
+    switch ($ressourceType) {
+      case 'page':
+        $ressourceParameterName = 'page_id';
+        break;
+      case 'image':
+        $ressourceParameterName = 'image_id';
+        break;
+      case 'surfer':
+        $parameters = TRUE;
+        $surferId = $ressourceId;
+        break;
+      case 'group':
+        $ressourceParameterName = 'group_id';
+        if (is_numeric($ressourceId)) {
+          $ressourceId = $this->getGroupIdByHandle($ressourceId);
+        }
+        break;
+    }
+    if (!isset($parameters)) {
+      $parameters = array($ressourceParameterName => $ressourceId);
+      $surferId = NULL;
+    }
+    $mode = papaya_module_options::readOption($this->_guid, 'display_mode_ajax_requests', 'ajax');
+    return $this->_getPageLink(
+      'comments_page_id', $surferId, $parameters, 'accs', NULL, NULL, NULL, $languageId, $mode
+    );
+  }
+
+  /**
    * Get link to surfer registration page
    *
    * @return string
@@ -522,8 +563,6 @@ class ACommunityConnector extends base_connector {
     );
   }
 
-
-
   /**
    * Get link to notification settings page
    *
@@ -581,7 +620,8 @@ class ACommunityConnector extends base_connector {
    */
   protected function _getPageLink(
               $optionName, $surferId = NULL, $parameters = FALSE, $parameterGroup = NULL,
-              $pageNamePostfix = 'page', $anchor = NULL, $handle = NULL, $languageId = NULL
+              $pageNamePostfix = 'page', $anchor = NULL, $handle = NULL, $languageId = NULL,
+              $mode = 'page'
             ) {
     if (!empty($optionName)) {
       $proceed = FALSE;
@@ -619,7 +659,7 @@ class ACommunityConnector extends base_connector {
             }
           }
           $result = base_object::getAbsoluteURL(
-            base_object::getWebLink($pageId, NULL, NULL, $parameters, $parameterGroup, $pageName)
+            base_object::getWebLink($pageId, NULL, $mode, $parameters, $parameterGroup, $pageName)
           );
           if (!empty($anchor)) {
             return $result.'#'.$anchor;
