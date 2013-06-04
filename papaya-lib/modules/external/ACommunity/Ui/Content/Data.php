@@ -54,6 +54,12 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
   public $messages = array();
 
   /**
+   * Get absolute reference url(s)
+   * @var boolean
+   */
+  public $absoluteReferenceUrl = FALSE;
+
+  /**
    * Parameters of owner module for use in sub-objects
    * @var array
    */
@@ -361,18 +367,18 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
     } elseif (is_null($this->_reference)) {
       $this->_reference = new PapayaUiReference();
       $this->_reference->papaya($this->papaya());
-      $referenceParameters = $this->referenceParameters();
-      if (!empty($referenceParameters)) {
-        $this->_reference->setParameters(
-          $referenceParameters, $this->owner->parameterGroup()
-        );
-      }
       if (method_exists($this->_ressource, 'parameters')) {
         foreach ($this->_ressource->parameters() as $parameterGroup => $parameters) {
           $this->_reference->setParameters(
             $parameters, $parameterGroup
           );
         }
+      }
+      $referenceParameters = $this->referenceParameters();
+      if (!empty($referenceParameters)) {
+        $this->_reference->setParameters(
+          $referenceParameters, $this->owner->parameterGroup()
+        );
       }
     }
     return $this->_reference;
