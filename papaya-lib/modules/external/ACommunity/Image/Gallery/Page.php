@@ -127,14 +127,12 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $groupHandle = $this->gallery()->parameters()->get('group_handle', NULL);
-    $ressource = $this->gallery()->data()->ressource(
+    $ressource = $this->gallery()->data()->ressource('ressource', $this);
+    $groupHandle = $ressource->getSourceParameter('group_handle');
+    $ressource->set(
       isset($groupHandle) ? 'group' : 'surfer',
-      $this,
       array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
-      array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
-      NULL,
-      'object'
+      array('surfer' => 'surfer_handle', 'group' => 'group_handle')
     );
     $ressource->displayMode = 'gallery';
     $this->gallery()->acommunityConnector()->ressource($ressource);

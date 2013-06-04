@@ -108,7 +108,9 @@ class ACommunityNotificationSettingsPage extends base_content implements PapayaP
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    return $this->settings()->data()->ressource('surfer', $this, NULL, array('surfer' => array()));
+    return $this->settings()->data()->ressource(
+      'surfer', $this, NULL, array('surfer' => array()), NULL, 'object'
+    );
   }
 
   /**

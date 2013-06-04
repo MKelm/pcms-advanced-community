@@ -146,14 +146,21 @@ class ACommunityImageGallery extends MediaImageGallery {
             ) {
     parent::_appendImageTo($parent, $fileId, $fileOffset, $thumbnail);
     $ressource = $this->data()->ressource('ressource');
-    // file description for lighbox extension
-    if ($thumbnail == TRUE && isset($ressource->id)) {
+    if ($thumbnail == TRUE && $this->_options['lightbox'] == 1 && isset($ressource->id)) {
+      // file description for lighbox extension
       $fileDescription = !empty($this->_folder['translations'][$fileId]['file_description']) ?
         $this->_folder['translations'][$fileId]['file_description'] : NULL;
       $parent->appendElement(
         'image-description',
         array(),
         strip_tags(str_replace(array("\r\n", "\r", "\n"), " ", $fileDescription))
+      );
+      // image extras link to get comments in lightbox extension
+      $link = $this->acommunityConnector()->getCommentsPageLink(
+        $this->data()->languageId, 'image', $fileId
+      );
+      $parent->appendElement(
+        'image-extras-link', array(), PapayaUtilStringXml::escape($link)
       );
     }
     if ($thumbnail == TRUE &&

@@ -124,7 +124,6 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
       $ressource->needsActiveSurfer = TRUE;
       $ressource->set(
         $ressource->type,
-        $this,
         array('surfer' => array('surfer_handle'), 'group' => array('group_handle')),
         array(
           'surfer' => array('surfer_handle', 'folder_id', 'offset'),

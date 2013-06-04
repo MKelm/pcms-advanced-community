@@ -172,7 +172,9 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
   public function setRessourceData() {
     $this->groups()->data()->showOwnGroups($this->_showOwnGroups);
     if ($this->_showOwnGroups) {
-      $ressource = $this->groups()->data()->ressource('surfer', $this, NULL, array('surfer' => array()));
+      $ressource = $this->groups()->data()->ressource(
+        'surfer', $this, NULL, array('surfer' => array()), NULL, 'object'
+      );
       $this->groups()->acommunityConnector()->ressource($ressource);
       return $ressource;
     }

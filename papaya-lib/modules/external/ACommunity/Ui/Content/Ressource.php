@@ -52,7 +52,7 @@ class ACommunityUiContentRessource extends PapayaObject {
    * Flag on invalid initialization
    * @var boolean
    */
-  public $isInvalid = FALSE;
+  public $isInvalid = NULL;
 
   /**
    * Ressource is active surfer
@@ -86,11 +86,13 @@ class ACommunityUiContentRessource extends PapayaObject {
 
   /**
    * Get singleton instance
+   *
+   * @param base_actionbox|base_content $module
    * @return ACommunityUiContentRessource
    */
-  static public function getInstance() {
+  static public function getInstance($module = NULL) {
     if (NULL === self::$instance) {
-      self::$instance = new self;
+      self::$instance = new self($module);
     }
     return self::$instance;
   }
@@ -108,32 +110,65 @@ class ACommunityUiContentRessource extends PapayaObject {
   protected $_sourceParameters = NULL;
 
   /**
+   * Module
+   * @var base_actionbox|base_content
+   */
+  protected $_module = NULL;
+
+  /**
+   * Type of module
+   * @var bolean
+   */
+  protected $_moduleIsPage = FALSE;
+
+  /**
+   * Set important source properties in connector
+   *
+   * @param base_actionbox|base_content $module
+   */
+  public function __construct($module) {
+    $this->_module = $module;
+    $this->_moduleIsPage = is_a($this->_module, 'base_content');
+    $this->_initializeSourceParameters();
+  }
+
+  /**
    * Initialize source parameters by page module
    *
    * @param base_content|base_actionbox $module
    */
-  protected function _initializeSourceParameters($module) {
+  protected function _initializeSourceParameters() {
     if (is_null($this->_sourceParameters) && is_null($this->_sourceParameterGroup)) {
-      $isBoxModule = is_a($module, 'base_actionbox');
-      $this->_sourceParameterGroup = $isBoxModule ?
-        (isset($module->parentObj->moduleObj->paramName) ? $module->parentObj->moduleObj->paramName : NULL)
-        : $module->paramName;
-      $this->_sourceParameters = $isBoxModule ?
-        (isset($module->parentObj->moduleObj->params) ? $module->parentObj->moduleObj->params : NULL)
-        : $module->params;
+      $this->_sourceParameterGroup = !$this->_moduleIsPage ?
+        (isset($this->_module->parentObj->moduleObj->paramName) ?
+          $this->_module->parentObj->moduleObj->paramName : NULL) : $this->_module->paramName;
+      $this->_sourceParameters = !$this->_moduleIsPage ?
+        (isset($this->_module->parentObj->moduleObj->params) ?
+          $this->_module->parentObj->moduleObj->params : NULL) : $this->_module->params;
     }
+  }
+
+  /**
+   * Gets a source parameter by name
+   *
+   * @param string $parameterName
+   * @return string|NULL
+   */
+  public function getSourceParameter($parameterName) {
+    if (isset($this->_sourceParameters[$parameterName])) {
+      return $this->_sourceParameters[$parameterName];
+    }
+    return NULL;
   }
 
   /**
    * Checks if a source has a specific parameter set
    *
-   * @param base_content|base_actionbox $module
    * @param string $parameterName
    * @param boolean $notEmpty
    * @return boolean
    */
-  public function sourceHasParameter($module, $parameterName, $notEmpty = TRUE) {
-    $this->_initializeSourceParameters($module);
+  public function sourceHasParameter($parameterName, $notEmpty = TRUE) {
     if (($notEmpty == TRUE && !empty($this->_sourceParameters[$parameterName])) ||
         ($notEmpty == FALSE && isset($this->_sourceParameters[$parameterName]))) {
       return TRUE;
@@ -144,13 +179,12 @@ class ACommunityUiContentRessource extends PapayaObject {
   /**
    * Checks if a source has a specific class name or returns class name on empty check
    *
-   * @param base_content|base_actionbox $module
    * @param string $className leave empty to get source class
    * @return boolean|string
    */
-  public function sourceHasClass($module, $classNameToCheck = NULL) {
-    $isBoxModule = is_a($module, 'base_actionbox');
-    $className = $isBoxModule ? get_class($module->parentObj->moduleObj) : get_class($module);
+  public function sourceHasClass($classNameToCheck = NULL) {
+    $className = !$this->_sourceIsPage ?
+      get_class($this->_module->parentObj->moduleObj) : get_class($this->_module);
     if (isset($classNameToCheck)) {
       return $className == $classNameToCheck;
     } else {
@@ -161,14 +195,12 @@ class ACommunityUiContentRessource extends PapayaObject {
   /**
    * Loads the display mode by source into $this->displayMode
    *
-   * @param base_content|base_actionbox $module
    * @param string $parameterName
    * @return boolean
    */
-  public function loadSourceDisplayMode($module, $parameterName) {
-    $this->_initializeSourceParameters($module);
-    if (!empty($this->_sourceParameters[$parameterName])) {
-      $this->displayMode = $this->_sourceParameters[$parameterName];
+  public function loadSourceDisplayMode($parameterName) {
+    $this->displayMode = $this->getSourceParameter($parameterName);
+    if (!empty($this->displayMode)) {
       return TRUE;
     }
     return FALSE;
@@ -228,16 +260,29 @@ class ACommunityUiContentRessource extends PapayaObject {
     if (!empty($sourceParameterNames) && !is_array($sourceParameterNames)) {
       $sourceParameterNames = array($sourceParameterNames);
     }
-    $parameterValue = NULL;
-    foreach ($sourceParameterNames as $parameterName) {
-      $value = isset($this->_sourceParameters[$parameterName]) ?
-        trim($this->_sourceParameters[$parameterName]) : NULL;
-      if (!empty($value)) {
-        $parameterValue = $value;
-        break;
+    foreach ($sourceParameterNames as $type => $parameterName) {
+      if (!is_numeric($type)) {
+        // detect sub parameter name without predefined type
+        if (!empty($parameterName) && !is_array($parameterName)) {
+          $parameterName = array($parameterName);
+        }
+        foreach ($parameterName as $subParameterName) {
+          $value = isset($this->_sourceParameters[$subParameterName]) ?
+            trim($this->_sourceParameters[$subParameterName]) : NULL;
+          if (!empty($value)) {
+            return array($type, $value);
+          }
+        }
+      } else {
+        // detect parameter name predefined type or if no multiple types have been set
+        $value = isset($this->_sourceParameters[$parameterName]) ?
+          trim($this->_sourceParameters[$parameterName]) : NULL;
+        if (!empty($value)) {
+          return $value;
+        }
       }
     }
-    return $parameterValue;
+    return NULL;
   }
 
   /**
@@ -285,69 +330,83 @@ class ACommunityUiContentRessource extends PapayaObject {
    * alone if you need customizations of the ressource in dependend modules.
    *
    * @param string $type page, surfer, group or image
-   * @param object $module Modul object to get parameters from
    * @param array $sourceParameterNames A list of parameter names by ressource type to get ressource id
    * @param array $filterParameterNames A list of parameter names by ressource type to filter for ressource parameters
    * @param array $storpParameterNames A list of parameter names by ressource type to stop ressource detection
    */
   public function set(
           $type = NULL,
-          $module = NULL,
           $sourceParameterNames = NULL,
           $filterParameterNames = NULL,
-          $stopParameterNames = NULL
+          $stopParameterNames = NULL,
+          $sourceParameterValue = NULL
          ) {
     if ($this->id === NULL && isset($type)) {
-      $this->_initializeSourceParameters($module);
       if ($this->detectStopParameter($stopParameterNames, $type, TRUE)) {
         return FALSE;
       }
-      $sourceParameterValue = $this->detectSourceParameterValue($sourceParameterNames, $type);
+      if (empty($sourceParameterValue)) {
+        $sourceParameterValue = $this->detectSourceParameterValue($sourceParameterNames, $type);
+      }
       $filteredParameters = $this->filterSourceParameters($filterParameterNames, $type);
       switch ($type) {
         case 'surfer':
-          // parameter value must contain a valid surfer handle
+          // detect surfe rid by source parameter value if it has been set
+          $surferId = NULL;
           if (!empty($sourceParameterValue)) {
             $surferId = $this->uiContent->communityConnector()->getIdByHandle($sourceParameterValue);
-            if ($this->needsActiveSurfer == FALSE) {
+            if (!$this->needsActiveSurfer) {
               $this->id = $surferId;
               $this->parameters($this->_sourceParameterGroup, $filteredParameters);
             }
-          } else {
-            $surferId = NULL;
           }
-          if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
-            $this->isActiveSurfer = $surferId == $this->papaya()->surfer->surfer['surfer_id'];
-            if ($this->needsActiveSurfer == FALSE  || empty($surferId) ||
-                ($this->needsActiveSurfer == TRUE && $this->isActiveSurfer == TRUE)) {
-              if (empty($this->id)) {
-                $this->id = $this->papaya()->surfer->surfer['surfer_id'];
-                $sourceParameterValue = $this->papaya()->surfer->surfer['surfer_handle'];
+          // detect surfer id by papaya surfer if no surfer id has been detected or the ressource
+          // needs an active surfer
+          if (empty($surferId) || $this->needsActiveSurfer) {
+            if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
+              $this->id = $this->papaya()->surfer->surfer['surfer_id'];
+              $this->isActiveSurfer = $this->id == $surferId;
+              if ($this->needsActiveSurfer && !$this->isActiveSurfer) {
+                $this->id = NULL;
+              } else {
                 $this->parameters($this->_sourceParameterGroup, $filteredParameters);
-                $this->isActiveSurfer = $this->id == $this->papaya()->surfer->surfer['surfer_id'];
               }
             }
           }
           break;
         case 'image':
-          /**
-           * Get a image ressource in box modules by parent page module.
-           * Needs a callbackGetCurrentImageId method, see ACommunitySurferGalleryPage
-           */
-          if (is_a($module, 'base_actionbox') && isset($this->_sourceParameters['enlarge']) &&
-              method_exists($module->parentObj->moduleObj, 'callbackGetCurrentImageId')) {
-            $this->id = $module->parentObj->moduleObj->callbackGetCurrentImageId();
-            if (!empty($this->id)) {
-              $this->parameters($this->_sourceParameterGroup, $filteredParameters);
-            }
+          if (!empty($sourceParameterValue)) {
+            /**
+             * Get the id if we have a predefined source parameter value, e.g. on a ajax request page.
+             */
+            $this->id = $sourceParameterValue;
+          } elseif (!$this->_moduleIsPage && isset($this->_sourceParameters['enlarge']) &&
+              method_exists($this->_module->parentObj->moduleObj, 'callbackGetCurrentImageId')) {
+            /**
+             * Get a image ressource in box modules by parent page module.
+             * Needs a callbackGetCurrentImageId method, see ACommunitySurferGalleryPage
+             */
+            $this->id = $this->_module->parentObj->moduleObj->callbackGetCurrentImageId();
+          }
+          if (!empty($this->id)) {
+            $this->parameters($this->_sourceParameterGroup, $filteredParameters);
           }
           break;
         case 'page':
-          $this->id = $this->papaya()->request->pageId;
+          if (!empty($sourceParameterValue)) {
+            /**
+             * Get the id if we have a predefined source parameter value, e.g. on a ajax request page.
+             */
+            $this->id = (int)$sourceParameterValue;
+          } else {
+            $this->id = (int)$this->papaya()->request->pageId;
+          }
           break;
         case 'group':
           if (!empty($sourceParameterValue)) {
-            $this->id = $this->uiContent->acommunityConnector()->getGroupIdByHandle($sourceParameterValue);
+            $this->id = (int)$this->uiContent->acommunityConnector()->getGroupIdByHandle(
+              $sourceParameterValue
+            );
             if (!empty($this->id)) {
               $this->parameters($this->_sourceParameterGroup, $filteredParameters);
             }
@@ -356,9 +415,10 @@ class ACommunityUiContentRessource extends PapayaObject {
       }
       if (!empty($this->id)) {
         $this->type = $type;
-        if ($type != 'page' && $type != 'image') {
+        if ($type == 'surfer' || $type == 'group') {
           $this->handle = $sourceParameterValue;
         }
+        $this->isInvalid = FALSE;
         return TRUE;
       } else {
         $this->isInvalid = TRUE;

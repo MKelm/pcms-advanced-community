@@ -52,27 +52,27 @@ class ACommunityGroup extends ACommunityUiContent {
    */
   protected function _performCommands() {
     $command = $this->parameters()->get('command', NULL);
-    $ressource = $this->data()->ressource();
-    if (!empty($ressource)) {
+    $ressource = $this->data()->ressource('ressource');
+    if (isset($ressource->id)) {
       switch ($command) {
         case 'request_membership':
           return $this->data()->groupSurferChanges()->requestMembership(
-            $ressource['id'], $this->data()->currentSurferId()
+            $ressource->id, $this->data()->currentSurferId()
           );
           break;
         case 'remove_membership_request':
           return $this->data()->groupSurferChanges()->removeRequest(
-            $ressource['id'], $this->data()->currentSurferId()
+            $ressource->id, $this->data()->currentSurferId()
           );
           break;
         case 'accept_membership_invitation':
           return $this->data()->groupSurferChanges()->acceptInvitation(
-            $ressource['id'], $this->data()->currentSurferId()
+            $ressource->id, $this->data()->currentSurferId()
           );
           break;
         case 'decline_membership_invitation':
           return $this->data()->groupSurferChanges()->declineInvitation(
-            $ressource['id'], $this->data()->currentSurferId()
+            $ressource->id, $this->data()->currentSurferId()
           );
           break;
       }

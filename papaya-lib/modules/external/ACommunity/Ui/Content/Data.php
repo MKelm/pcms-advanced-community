@@ -283,11 +283,11 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
         include_once(dirname(__FILE__).'/Ressource.php');
         if (is_a($module, 'base_content')) {
           // use a singleton for page modules to get the same in connector for box modules
-          $this->_ressource = ACommunityUiContentRessource::getInstance();
+          $this->_ressource = ACommunityUiContentRessource::getInstance($module);
         } else {
           // compatibility for box modules with a different ressource handling
           // future plans: add support for nested ressources in ressource class
-          $this->_ressource = new ACommunityUiContentRessource();
+          $this->_ressource = new ACommunityUiContentRessource($module);
         }
         $this->_ressource->papaya($this->papaya());
         $this->_ressource->uiContent = $this->owner;
@@ -295,24 +295,21 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
       return $this->_ressource;
     } elseif (is_a($type, 'ACommunityUiContentRessource')) {
       $this->_ressource = $type; // set ressource in box modules by page module ressource
-    } elseif (!empty($type) && !isset($this->_ressource->id) &&
-              (!isset($this->_ressource->isInvalid) || $this->_ressource->isInvalid != TRUE)) {
+    } elseif (!empty($type) && !isset($this->_ressource->isInvalid)) {
       include_once(dirname(__FILE__).'/Ressource.php');
       if (is_a($module, 'base_content')) {
         // use a singleton for page modules to get the same in connector for box modules
-        $this->_ressource = ACommunityUiContentRessource::getInstance();
+        $this->_ressource = ACommunityUiContentRessource::getInstance($module);
       } else {
         // compatibility for box modules with a different ressource handling
         // future plans: add support for nested ressources in ressource class
-        $this->_ressource = new ACommunityUiContentRessource();
+        $this->_ressource = new ACommunityUiContentRessource($module);
       }
       $this->_ressource->papaya($this->papaya());
       $this->_ressource->uiContent = $this->owner;
       $this->_ressource->needsActiveSurfer = $this->_ressourceNeedsActiveSurfer; // backward compatibilty
-      if (isset($type)) {
-        $this->_ressource->set($type, $module, $parameterNames, $filterParameterNames, $stopParameterNames);
-        $this->ressourceIsActiveSurfer = $this->_ressource->isActiveSurfer; // backward compatibilty
-      }
+      $this->_ressource->set($type, $parameterNames, $filterParameterNames, $stopParameterNames);
+      $this->ressourceIsActiveSurfer = $this->_ressource->isActiveSurfer; // backward compatibilty
     }
     if (isset($this->_ressource)) {
       if ($returnType == 'array') {
