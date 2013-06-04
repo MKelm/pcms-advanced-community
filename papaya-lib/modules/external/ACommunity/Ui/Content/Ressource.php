@@ -351,27 +351,26 @@ class ACommunityUiContentRessource extends PapayaObject {
       $filteredParameters = $this->filterSourceParameters($filterParameterNames, $type);
       switch ($type) {
         case 'surfer':
-          // detect surfe rid by source parameter value if it has been set
-          $surferId = NULL;
+          if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
+            $currentSurferId = $this->papaya()->surfer->surfer['surfer_id'];
+          } else {
+            $currentSurferId = NULL;
+          }
           if (!empty($sourceParameterValue)) {
             $surferId = $this->uiContent->communityConnector()->getIdByHandle($sourceParameterValue);
-            if (!$this->needsActiveSurfer) {
-              $this->id = $surferId;
-              $this->parameters($this->_sourceParameterGroup, $filteredParameters);
-            }
+          } else {
+            $surferId = NULL;
           }
-          // detect surfer id by papaya surfer if no surfer id has been detected or the ressource
-          // needs an active surfer
-          if (empty($surferId) || $this->needsActiveSurfer) {
-            if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
-              $this->id = $this->papaya()->surfer->surfer['surfer_id'];
-              $this->isActiveSurfer = $this->id == $surferId;
-              if ($this->needsActiveSurfer && !$this->isActiveSurfer) {
-                $this->id = NULL;
-              } else {
-                $this->parameters($this->_sourceParameterGroup, $filteredParameters);
-              }
-            }
+          if (!empty($surferId)) {
+            $this->isActiveSurfer = $surferId == $currentSurferId;
+          }
+          if ($this->isActiveSurfer) {
+            $this->id = $currentSurferId;
+          } else {
+            $this->id = $surferId;
+          }
+          if (!empty($this->id)) {
+            $this->parameters($this->_sourceParameterGroup, $filteredParameters);
           }
           break;
         case 'image':
