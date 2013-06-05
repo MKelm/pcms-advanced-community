@@ -87,16 +87,21 @@ class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelat
       $ressource = $this->ressource('ressource');
       if (isset($ressource->id)) {
         $this->group()->load($ressource->id);
+        $surferIsOwner = $this->surferHasStatus(NULL, 'is_owner', 1);
+        $surferIsMember = $this->surferHasStatus(NULL, 'is_member', 1);
         if ($this->group()->public == 0) {
-          if ($this->surferHasStatus(NULL, 'is_owner', 1) ||
-              $this->surferHasStatus(NULL, 'is_member', 1)) {
+          if ($surferIsOwner || $surferIsMember) {
             $this->owner->module->surferHasGroupAccess = TRUE;
+            $this->owner->module->groupSurferStatus =
+              array('is_owner' => $surferIsOwner, 'is_member' => $surferIsMember);
             $this->_surferHasGroupAccess = TRUE;
           } else {
             $this->_surferHasGroupAccess = FALSE;
           }
         } else {
           $this->owner->module->surferHasGroupAccess = TRUE;
+          $this->owner->module->groupSurferStatus =
+            array('is_owner' => $surferIsOwner, 'is_member' => $surferIsMember);
           $this->_surferHasGroupAccess = TRUE;
         }
       }
