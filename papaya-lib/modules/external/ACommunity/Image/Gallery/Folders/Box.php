@@ -127,11 +127,10 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $ressource = $this->folders()->acommunityConnector()->ressource();
+    $ressource = $this->folders()->ressource();
+    $ressource->pointer = 0;
     $ressource->filterSourceParameters(
-      array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
-      $ressource->type,
-      TRUE
+      array('surfer' => 'surfer_handle', 'group' => 'group_handle'), $ressource->type, TRUE
     );
     $this->folders()->data()->ressource($ressource);
     return $ressource;
