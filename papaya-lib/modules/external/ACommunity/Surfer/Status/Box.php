@@ -146,7 +146,10 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    return $this->status()->data()->ressource('surfer', $this, NULL, NULL, NULL, 'object');
+    $ressource = $this->status()->ressource();
+    $ressource->set('surfer', NULL, array('surfer' => array()));
+    $this->status()->data()->ressource($ressource);
+    return $ressource;
   }
 
   /**
