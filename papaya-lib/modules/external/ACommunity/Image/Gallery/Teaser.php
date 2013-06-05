@@ -81,7 +81,7 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
           }
         }
       }
-      if (empty($images) && $ressource->type == 'surfer' && $ressource->isActiveSurfer) {
+      if (empty($images) && $ressource->type == 'surfer' && $ressource->validSurfer) {
         $galleryTeaser->appendElement(
           'add-new-images-link',
           array('href' => $this->acommunityConnector()->getGalleryPageLink('surfer', $ressource->id)),
