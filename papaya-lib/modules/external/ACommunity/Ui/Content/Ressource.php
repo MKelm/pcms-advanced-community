@@ -30,72 +30,32 @@ class ACommunityUiContentRessource extends PapayaObject {
    */
   public $uiContent = NULL;
 
-  /**
-   * Ressource type
-   * @var string
+   /**
+   * An internal pointer to get multiple ressource data
+   * Use resetPointer to get page module ressource data
    */
-  public $type = NULL;
+  protected $_pointer = -1;
 
   /**
-   * Ressource id
-   * @var string|integer
+   * Contains data by pointer for
+   * type, id, handle, isInvalid,
    */
-  public $id = NULL;
+  protected $_pointerData = array(
+    'type' => array(),
+    'id' => array(),
+    'handle' => array(),
+    'isInvalid' => array(),
+    'isValidSurfer' => array(),
+    'needsValidSurfer' => array()
+  );
 
-  /**
-   * Ressource handle (optional if supported)
-   * @var string
-   */
-  public $handle = NULL;
-
-  /**
-   * Flag on invalid initialization
-   * @var boolean
-   */
-  public $isInvalid = NULL;
-
-  /**
-   * Ressource is active surfer
-   * @var boolean
-   */
-  public $isActiveSurfer = FALSE;
-
-  /**
-   * Ressource needs active surfer
-   * @var boolean
-   */
-  public $needsActiveSurfer = FALSE;
+  protected $_parameters = array();
 
   /**
    * A display mode of the ressource, e.g. to get different behaviours in box modules
    * @var string
    */
   public $displayMode = NULL;
-
-  /**
-   * Parameters of owner box module's parent page module
-   * @var array
-   */
-  protected $_parameters = array();
-
-  /**
-   * Singleton instance
-   * @var object
-   */
-  static private $instance = NULL;
-
-  /**
-   * Get singleton instance
-   *
-   * @param base_actionbox|base_content $module
-   * @return ACommunityUiContentRessource
-   */
-  static public function getInstance($module = NULL) {
-    if (NULL === self::$instance) {
-      self::$instance = new self($module);
-    }
-    return self::$instance;
-  }
 
   /**
   * Source parammeter group by page module
@@ -122,6 +82,29 @@ class ACommunityUiContentRessource extends PapayaObject {
   protected $_moduleIsPage = FALSE;
 
   /**
+   * Singleton instance
+   * @var object
+   */
+  static private $instance = NULL;
+
+  /**
+   * Get singleton instance
+   *
+   * @param base_actionbox|base_content $module
+   * @param boolean $reset
+   * @return ACommunityUiContentRessource
+   */
+  static public function getInstance($module = NULL, $reset = FALSE) {
+    if (NULL !== self::$instance && $reset === TRUE) {
+      self::$instance = NULL;
+    }
+    if (NULL === self::$instance) {
+      self::$instance = new self($module);
+    }
+    return self::$instance;
+  }
+
+  /**
    * Set important source properties in connector
    *
    * @param base_actionbox|base_content $module
@@ -130,6 +113,55 @@ class ACommunityUiContentRessource extends PapayaObject {
     $this->_module = $module;
     $this->_moduleIsPage = is_a($this->_module, 'base_content');
     $this->_initializeSourceParameters();
+  }
+
+  /**
+   * Isset check for dynamic properties id, handle, type, needsActiveSurfer
+   *
+   * @param string $name
+   * @return mixed
+   */
+  public function __isset($name) {
+    if (array_key_exists($name, $this->_pointerData)) {
+      return isset($this->_pointerData[$name][$this->_pointer]);
+    } elseif ($name == 'pointer') {
+      return isset($this->_pointer);
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get dynamic properties id, handle, type, needsActiveSurfer
+   *
+   * @param string $name
+   * @return mixed
+   */
+  public function __get($name) {
+    if (array_key_exists($name, $this->_pointerData)) {
+      if (isset($this->_pointerData[$name][$this->_pointer])) {
+        return $this->_pointerData[$name][$this->_pointer];
+      }
+      return NULL;
+    } elseif ($name == 'pointer') {
+      return $this->_pointer;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Set dynamic properties id, handle, type, needsActiveSurfer
+   *
+   * @param string $name
+   * @return mixed
+   */
+  public function __set($name, $value) {
+    if (array_key_exists($name, $this->_pointerData)) {
+      $this->_pointerData[$name][$this->_pointer] = $value;
+      return TRUE;
+    } elseif ($name == 'pointer') {
+      $this->_pointer = $value;
+    }
+    return FALSE;
   }
 
   /**
@@ -183,7 +215,7 @@ class ACommunityUiContentRessource extends PapayaObject {
    * @return boolean|string
    */
   public function sourceHasClass($classNameToCheck = NULL) {
-    $className = !$this->_sourceIsPage ?
+    $className = !$this->_moduleIsPage ?
       get_class($this->_module->parentObj->moduleObj) : get_class($this->_module);
     if (isset($classNameToCheck)) {
       return $className == $classNameToCheck;
@@ -268,7 +300,7 @@ class ACommunityUiContentRessource extends PapayaObject {
         }
         foreach ($parameterName as $subParameterName) {
           $value = isset($this->_sourceParameters[$subParameterName]) ?
-            trim($this->_sourceParameters[$subParameterName]) : NULL;
+            $this->_sourceParameters[$subParameterName] : NULL;
           if (!empty($value)) {
             return array($type, $value);
           }
@@ -276,7 +308,7 @@ class ACommunityUiContentRessource extends PapayaObject {
       } else {
         // detect parameter name predefined type or if no multiple types have been set
         $value = isset($this->_sourceParameters[$parameterName]) ?
-          trim($this->_sourceParameters[$parameterName]) : NULL;
+          $this->_sourceParameters[$parameterName] : NULL;
         if (!empty($value)) {
           return $value;
         }
@@ -332,16 +364,21 @@ class ACommunityUiContentRessource extends PapayaObject {
    * @param string $type page, surfer, group or image
    * @param array $sourceParameterNames A list of parameter names by ressource type to get ressource id
    * @param array $filterParameterNames A list of parameter names by ressource type to filter for ressource parameters
-   * @param array $storpParameterNames A list of parameter names by ressource type to stop ressource detection
+   * @param array $stopParameterNames A list of parameter names by ressource type to stop ressource detection
+   * @param mixed $sourceParameterValue predefined parameter value
+   * @param boolean $needsValidSurfer set this flag to enable valid surfer check for surfer / group type
    */
   public function set(
           $type = NULL,
           $sourceParameterNames = NULL,
           $filterParameterNames = NULL,
           $stopParameterNames = NULL,
-          $sourceParameterValue = NULL
+          $sourceParameterValue = NULL,
+          $needsValidSurfer = FALSE
          ) {
-    if ($this->id === NULL && isset($type)) {
+    $this->_pointer = count($this->_pointerData['isInvalid']);
+    $this->needsValidSurfer = $needsValidSurfer;
+    if (!isset($this->id) && isset($type)) {
       if ($this->detectStopParameter($stopParameterNames, $type, TRUE)) {
         return FALSE;
       }
@@ -353,24 +390,22 @@ class ACommunityUiContentRessource extends PapayaObject {
         case 'surfer':
           if ($this->papaya()->surfer->isValid && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
             $currentSurferId = $this->papaya()->surfer->surfer['surfer_id'];
+            $currentSurferHandle = $this->papaya()->surfer->surfer['surfer_handle'];
           } else {
             $currentSurferId = NULL;
+            $currentSurferHandle = NULL;
           }
           if (!empty($sourceParameterValue)) {
             $surferId = $this->uiContent->communityConnector()->getIdByHandle($sourceParameterValue);
           } else {
-            $surferId = NULL;
+            $surferId = $currentSurferId;
+            $sourceParameterValue = $currentSurferHandle;
           }
           if (!empty($surferId)) {
-            $this->isActiveSurfer = $surferId == $currentSurferId;
-          }
-          if ($this->isActiveSurfer) {
-            $this->id = $currentSurferId;
-          } else {
-            $this->id = $surferId;
-          }
-          if (!empty($this->id)) {
-            $this->parameters($this->_sourceParameterGroup, $filteredParameters);
+            $this->isValidSurfer = $surferId == $currentSurferId;
+            if (!$this->needsValidSurfer || ($this->needsValidSurfer && $this->isValidSurfer)) {
+              $this->id = $surferId;
+            }
           }
           break;
         case 'image':
@@ -387,9 +422,6 @@ class ACommunityUiContentRessource extends PapayaObject {
              */
             $this->id = $this->_module->parentObj->moduleObj->callbackGetCurrentImageId();
           }
-          if (!empty($this->id)) {
-            $this->parameters($this->_sourceParameterGroup, $filteredParameters);
-          }
           break;
         case 'page':
           if (!empty($sourceParameterValue)) {
@@ -403,16 +435,23 @@ class ACommunityUiContentRessource extends PapayaObject {
           break;
         case 'group':
           if (!empty($sourceParameterValue)) {
-            $this->id = (int)$this->uiContent->acommunityConnector()->getGroupIdByHandle(
-              $sourceParameterValue
-            );
-            if (!empty($this->id)) {
-              $this->parameters($this->_sourceParameterGroup, $filteredParameters);
+            if ($this->needsValidSurfer == TRUE) {
+              if (!empty($this->_module->surferHasGroupAccess)) {
+                $this->isValidSurfer = TRUE;
+              } else {
+                $this->isValidSurfer = FALSE;
+              }
+            }
+            if (!$this->needsValidSurfer || ($this->needsValidSurfer && $this->isValidSurfer)) {
+              $this->id = (int)$this->uiContent->acommunityConnector()->getGroupIdByHandle(
+                $sourceParameterValue
+              );
             }
           }
           break;
       }
       if (!empty($this->id)) {
+        $this->parameters($this->_sourceParameterGroup, $filteredParameters, TRUE);
         $this->type = $type;
         if ($type == 'surfer' || $type == 'group') {
           $this->handle = $sourceParameterValue;
@@ -422,6 +461,8 @@ class ACommunityUiContentRessource extends PapayaObject {
       } else {
         $this->isInvalid = TRUE;
       }
+    } else {
+      $this->isInvalid = TRUE;
     }
     return FALSE;
   }
@@ -435,10 +476,13 @@ class ACommunityUiContentRessource extends PapayaObject {
    * @param array $parameters
    * @return array
    */
-  public function parameters($parameterGroup = NULL, $parameters = NULL) {
-    if (isset($parameterGroup) && isset($parameters)) {
-      $this->_parameters[$parameterGroup] = $parameters;
+  public function parameters($parameterGroup = NULL, $parameters = NULL, $reset = FALSE) {
+    if ($reset == TRUE) {
+      $this->_parameters[$this->_pointer] = array();
     }
-    return $this->_parameters;
+    if (isset($parameterGroup) && isset($parameters)) {
+      $this->_parameters[$this->_pointer][$parameterGroup] = $parameters;
+    }
+    return isset($this->_parameters[$this->_pointer]) ? $this->_parameters[$this->_pointer] : array();
   }
 }
