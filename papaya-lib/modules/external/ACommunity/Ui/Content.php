@@ -55,6 +55,12 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
   public $module = NULL;
 
   /**
+   * Ressource object
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Get/set content data
    *
    * @param ACommunityUiContentData $data
@@ -169,5 +175,30 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
     return $pageModule->getWebLink(
       $pageModule->parentObj->topic['topic_id'], NULL, $outputMode, NULL, NULL, $pageFileName
     );
+  }
+
+  /**
+   * Get / set ressource of current request.
+   *
+   * Use this method in all modules to get a valid ressource. You can set $ressource->pointer = 0
+   * if you want to use the ressource data of the page module. Use $ressource->set to initialize
+   * new ressource data. You can use previous ressource properties with set, to
+   * get an abreviation of the previouse ressource. See ACommunityUiContentRessourceTests
+   * ->testScenarioImageGalleryPageWithBoxDependencies for an example of using ressources with
+   * dependencies.
+   *
+   * @param ACommunityUiContentRessource $ressource
+   * @return ACommunityUiContentRessource
+   */
+  public function ressource(ACommunityUiContentRessource $ressource = NULL) {
+    if (isset($ressource)) {
+      $this->_ressource = $ressource;
+    } elseif (is_null($this->_ressource)) {
+      include_once(dirname(__FILE__).'/Content/Ressource.php');
+      $this->_ressource = ACommunityUiContentRessource::getInstance();
+      $this->_ressource->papaya($this->papaya());
+      $this->_ressource->uiContent = $this;
+    }
+    return $this->_ressource;
   }
 }

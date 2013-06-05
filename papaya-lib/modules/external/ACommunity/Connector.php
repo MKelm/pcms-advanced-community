@@ -212,13 +212,18 @@ class ACommunityConnector extends base_connector {
   /**
    * Get / set ressource of current request.
    *
+   * DEPRECATED: Use ACommunityUiContent->ressource(..) instead, because the ressource object,
+   * needs a (parent) instance of uiContent!
+   *
    * Use this method in box modules to get the ressource of the current page module.
    *
    * @param ACommunityUiContentRessource $ressource
    * @return ACommunityUiContentRessource
    */
   public function ressource(ACommunityUiContentRessource $ressource = NULL) {
-    if (!isset($ressource)) {
+    if (isset($ressource)) {
+      $this->_ressource = $ressource;
+    } elseif (is_null($this->_ressource)) {
       include_once(dirname(__FILE__).'/Ui/Content/Ressource.php');
       $this->_ressource = ACommunityUiContentRessource::getInstance();
       if (empty($this->_ressource)) {

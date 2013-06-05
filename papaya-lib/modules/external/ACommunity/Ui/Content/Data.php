@@ -267,6 +267,9 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
   /**
    * Set/get data of current ressource by type and id
    *
+   * DEPRECATED: Use ACommunityUiContent->ressource(..) instead, because the ressource object,
+   * needs a (parent) instance of uiContent!
+   *
    * @param string $type
    * @param object $module Modul object to get parameters from
    * @param array $parameterNames A list of parameter names by ressource type to get ressource id
