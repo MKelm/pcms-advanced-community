@@ -119,7 +119,7 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
     if (isset($ressource->id) &&
       ($ressource->type != 'group' || $this->data()->surferHasGroupAccess())) {
 
-      if (($ressource->type == 'surfer' && $ressource->isActiveSurfer) ||
+      if (($ressource->type == 'surfer' && $ressource->validSurfer) ||
           ($ressource->type == 'group' &&
            $this->data()->surferHasStatus($ressource->id, 'is_owner', 1))) {
         $this->_performCommands($galleryFolders);
@@ -139,7 +139,7 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
         );
       }
 
-      if (($ressource->type == 'surfer' && $ressource->isActiveSurfer) ||
+      if (($ressource->type == 'surfer' && $ressource->validSurfer) ||
           ($ressource->type == 'group' &&
            $this->data()->surferHasStatus($ressource->id, 'is_owner', 1))) {
         $this->data()->loadCommandLinks();
