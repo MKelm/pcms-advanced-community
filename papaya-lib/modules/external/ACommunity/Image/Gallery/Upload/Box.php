@@ -119,23 +119,27 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $ressource = $this->upload()->data()->ressource('ressource', $this);
-    if (!$ressource->detectStopParameter('enlarge', NULL, TRUE)) {
-      $ressource->needsActiveSurfer = TRUE;
-      list($ressourceType, $ressourceParameterValue) = $ressource->detectSourceParameterValue(
-        array('surfer' => array('surfer_handle'), 'group' => array('group_handle'))
+    $ressource = $this->upload()->ressource();
+    $ressource->pointer = 0;
+    $command = $ressource->getSourceParameter('command');
+    if ($command != 'delete_folder') {
+      $filterParameterNames = array(
+        'surfer' => array('surfer_handle', 'folder_id', 'offset'),
+        'group' => array('group_handle', 'folder_id', 'offset')
       );
-      $ressource->set(
-        $ressourceType,
-        NULL,
-        array(
-          'surfer' => array('surfer_handle', 'folder_id', 'offset'),
-          'group' => array('group_handle', 'folder_id', 'offset')
-        ),
-        NULL,
-        $ressourceParameterValue
+    } else {
+      $filterParameterNames = array(
+        'surfer' => array('surfer_handle'), 'group' => array('group_handle')
       );
     }
+    $ressource->set(
+      $ressource->type,
+      NULL,
+      $filterParameterNames,
+      array('surfer' => 'enlarge', 'group' => 'enlarge'),
+      $ressource->handle,
+      TRUE
+    );
     $this->upload()->data()->ressource($ressource);
     return $ressource;
   }
