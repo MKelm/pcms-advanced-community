@@ -45,7 +45,7 @@ class ACommunityUiContentRessource extends PapayaObject {
     'id' => array(),
     'handle' => array(),
     'isInvalid' => array(),
-    'isValidSurfer' => array(),
+    'validSurfer' => array(),
     'needsValidSurfer' => array()
   );
 
@@ -402,8 +402,8 @@ class ACommunityUiContentRessource extends PapayaObject {
             $sourceParameterValue = $currentSurferHandle;
           }
           if (!empty($surferId)) {
-            $this->isValidSurfer = $surferId == $currentSurferId;
-            if (!$this->needsValidSurfer || ($this->needsValidSurfer && $this->isValidSurfer)) {
+            $this->validSurfer = $surferId == $currentSurferId;
+            if (!$this->needsValidSurfer || ($this->needsValidSurfer && $this->validSurfer)) {
               $this->id = $surferId;
             }
           }
@@ -437,12 +437,12 @@ class ACommunityUiContentRessource extends PapayaObject {
           if (!empty($sourceParameterValue)) {
             if ($this->needsValidSurfer == TRUE) {
               if (!empty($this->_module->surferHasGroupAccess)) {
-                $this->isValidSurfer = TRUE;
+                $this->validSurfer = TRUE;
               } else {
-                $this->isValidSurfer = FALSE;
+                $this->validSurfer = FALSE;
               }
             }
-            if (!$this->needsValidSurfer || ($this->needsValidSurfer && $this->isValidSurfer)) {
+            if (!$this->needsValidSurfer || ($this->needsValidSurfer && $this->validSurfer)) {
               $this->id = (int)$this->uiContent->acommunityConnector()->getGroupIdByHandle(
                 $sourceParameterValue
               );

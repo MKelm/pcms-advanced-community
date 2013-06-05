@@ -812,7 +812,7 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
     $ressource->set('surfer', NULL, NULL, NULL, $selectedSurferHandle);
     $this->assertEquals($currentSurferId, $ressource->id);
     $this->assertEquals($currentSurferHandle, $ressource->handle);
-    $this->assertEquals(TRUE, $ressource->isValidSurfer);
+    $this->assertEquals(TRUE, $ressource->validSurfer);
   }
 
   /**
