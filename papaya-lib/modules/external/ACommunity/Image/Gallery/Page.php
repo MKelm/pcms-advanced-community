@@ -54,6 +54,12 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
   public $surferHasGroupAccess = FALSE;
 
   /**
+   * Group surfer status
+   * @var array
+   */
+  public $groupSurferStatus = array('is_member' => FALSE, 'is_owner' => FALSE);
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -80,7 +86,7 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
           }
         } else {
           // set status for delete image actions
-          $definitionValues[] = (int)$ressource->isActiveSurfer ||
+          $definitionValues[] = (int)$ressource->validSurfer ||
             $this->gallery()->data()->surferIsModerator();
         }
         $definitionValues[] = (int)$access;
@@ -127,14 +133,24 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $ressource = $this->gallery()->data()->ressource('ressource', $this);
+    $ressource = $this->gallery()->ressource();
+    $ressource->displayMode = 'gallery';
+    $command = $ressource->getSourceParameter('command');
+    if ($command != 'delete_folder') {
+      $filterParameterNames = array(
+        'surfer' => array('surfer_handle', 'folder_id'),
+        'group' => array('group_handle', 'folder_id')
+      );
+    } else {
+      $filterParameterNames = array('surfer' => 'surfer_handle', 'group' => 'group_handle');
+    }
     $groupHandle = $ressource->getSourceParameter('group_handle');
     $ressource->set(
       isset($groupHandle) ? 'group' : 'surfer',
       array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
-      array('surfer' => 'surfer_handle', 'group' => 'group_handle')
+      $filterParameterNames
     );
-    $ressource->displayMode = 'gallery';
+    $this->gallery()->data()->ressource($ressource);
     $this->gallery()->acommunityConnector()->ressource($ressource);
     if (isset($ressource->id) && $ressource->type == 'group') {
       $this->surferHasGroupAccess = $this->gallery()->data()->surferHasGroupAccess();
@@ -186,16 +202,16 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
   protected function _galleryFolderId() {
     if (is_null($this->_galleryFolderId)) {
       $ressource = $this->gallery()->data()->ressource();
-      if (!empty($ressource)) {
-        $filter = array('ressource_type' => $ressource['type'], 'ressource_id' => $ressource['id']);
-        $command = isset($this->params['command']) ? $this->params['command'] : NULL;
-        if ($command != 'delete_folder' && !empty($this->params['folder_id'])) {
-          $filter['folder_id'] = $this->params['folder_id'];
+      if (isset($ressource->id)) {
+        $filter = array('ressource_type' => $ressource->type, 'ressource_id' => $ressource->id);
+        $ressourceParameters = reset($ressource->parameters());
+        if (!empty($ressourceParameters['folder_id'])) {
+          $filter['folder_id'] = $ressourceParameters['folder_id'];
         } else {
           $filter['parent_folder_id'] = 0;
         }
         $this->gallery()->data()->galleries()->load($filter, 1);
-        if (empty($this->params['folder_id']) &&
+        if (empty($ressourceParameters['folder_id']) &&
             count($this->gallery()->data()->galleries()) == 0) {
           $languageId = $this->papaya()->request->languageId;
           $parentFolder = $this->gallery()->data()->mediaDBEdit()->getFolder(
@@ -209,11 +225,11 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
             );
             if (!empty($newFolderId)) {
               $this->gallery()->data()->mediaDBEdit()->addFolderTranslation(
-                $newFolderId, $languageId, $ressource['type'].'_'.$ressource['id']
+                $newFolderId, $languageId, $ressource->type.'_'.$ressource->id
               );
               $gallery = $this->gallery()->data()->gallery();
-              $gallery['ressource_type'] = $ressource['type'];
-              $gallery['ressource_id'] = $ressource['id'];
+              $gallery['ressource_type'] = $ressource->type;
+              $gallery['ressource_id'] = $ressource->id;
               $gallery['folder_id'] = $newFolderId;
               $gallery['parent_folder_id'] = 0;
               $gallery->save();
@@ -241,21 +257,11 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
   public function getParsedData() {
     $this->setDefaultData();
     $this->initializeParams();
-    $this->setRessourceData();
+    $reference = $this->setRessourceData();
     $this->data['directory'] = $this->_galleryFolderId();
-    $additionalParameters = array();
-    if (isset($this->params['surfer_handle'])) {
-      $additionalParameters['surfer_handle'] = $this->params['surfer_handle'];
-    } elseif (isset($this->params['group_handle'])) {
-      $additionalParameters['group_handle'] = $this->params['group_handle'];
+    foreach ($reference->parameters() as $paramName => $parameters) {
+      $this->gallery()->reference()->setParameters($parameters, $paramName);
     }
-    $command = isset($this->params['command']) ? $this->params['command'] : NULL;
-    if ($command != 'delete_folder' && isset($this->params['folder_id'])) {
-      $additionalParameters['folder_id'] = $this->params['folder_id'];
-    }
-    $this->gallery()->reference()->setParameters(
-      $additionalParameters, $this->paramName
-    );
     $this->gallery()->initialize($this, $this->data);
     $this->gallery()->load();
     return $this->gallery()->getXml();
