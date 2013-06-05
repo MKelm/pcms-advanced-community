@@ -82,7 +82,7 @@ class ACommunityImageGallery extends MediaImageGallery {
       if (!empty($fileId)) {
         $ressource = $this->data()->ressource('ressource');
         if (($ressource->type == 'surfer' &&
-             ($ressource->isActiveSurfer || $this->data()->surferIsModerator())) ||
+             ($ressource->validSurfer || $this->data()->surferIsModerator())) ||
             ($ressource->type == 'group' &&
              ($this->data()->surferHasStatus(NULL, 'is_owner', 1) || $this->data()->surferIsModerator()))) {
 
@@ -165,7 +165,7 @@ class ACommunityImageGallery extends MediaImageGallery {
     }
     if ($thumbnail == TRUE &&
         (($ressource->type == 'surfer' &&
-          ($ressource->isActiveSurfer || $this->data()->surferIsModerator())) ||
+          ($ressource->validSurfer || $this->data()->surferIsModerator())) ||
          ($ressource->type == 'group' &&
           ($this->data()->surferHasStatus(NULL, 'is_owner', 1) || $this->data()->surferIsModerator())))) {
       $reference = clone $this->reference();
@@ -236,5 +236,15 @@ class ACommunityImageGallery extends MediaImageGallery {
    */
   public function acommunityConnector(ACommunityConnector $connector = NULL) {
     return $this->uiContent()->acommunityConnector($connector);
+  }
+
+  /**
+   * Get / set ressource of current request.
+   *
+   * @param ACommunityUiContentRessource $ressource
+   * @return ACommunityUiContentRessource
+   */
+  public function ressource(ACommunityUiContentRessource $ressource = NULL) {
+    return $this->uiContent()->ressource($ressource);
   }
 }
