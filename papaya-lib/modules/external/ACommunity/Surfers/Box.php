@@ -116,6 +116,12 @@ abstract class ACommunitySurfersBox extends base_actionbox implements PapayaPlug
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -145,10 +151,10 @@ abstract class ACommunitySurfersBox extends base_actionbox implements PapayaPlug
           break;
         case 'contacts':
           $ressource = $this->setRessourceData();
-          $definitionValues[] = !empty($ressource['id']) ? $ressource['id'] : NULL;
+          $definitionValues[] = isset($ressource->id) ? $ressource->id : NULL;
           if (PAPAYA_ACOMMUNITY_CACHE_CONTACTS_BOX_USE_LAST_CHANGE_TIME == 1) {
-            $definitionValues[] = !empty($ressource['id']) ?
-              $values->lastChangeTime('contacts_accepted:surfer_'.$ressource['id']) : 0;
+            $definitionValues[] = isset($ressource->id) ?
+              $values->lastChangeTime('contacts_accepted:surfer_'.$ressource->id) : 0;
           }
           $definitionParameters[] = 'contacts_list_page';
           break;
@@ -165,9 +171,10 @@ abstract class ACommunitySurfersBox extends base_actionbox implements PapayaPlug
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    return $this->surfers()->data()->ressource(
-      'surfer', $this, array('surfer' => array('surfer_handle'))
-    );
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->surfers()->ressource();
+    }
+    return $this->_ressource;
   }
 
   /**
@@ -184,6 +191,7 @@ abstract class ACommunitySurfersBox extends base_actionbox implements PapayaPlug
       $this->_surfers->parameterGroup($this->paramName);
       $this->_surfers->data()->languageId = $this->papaya()->request->languageId;
       $this->_surfers->data()->displayMode = $this->_displayMode;
+      $this->_surfers->module = $this;
     }
     return $this->_surfers;
   }

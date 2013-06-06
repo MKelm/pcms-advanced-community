@@ -141,6 +141,12 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -162,23 +168,22 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
           $values->lastChangeTime('surfer_names')
         );
         $ressource = $this->setRessourceData();
-        if (isset($ressource->type) && $ressource->type == 'group') {
+        if ($ressource->type == 'group') {
           $definitionValues[] = $ressource->type;
           $definitionValues[] = $ressource->id;
-          $mode = $this->surfers()->parameters()->get('mode', NULL);
-          if ($mode == 'invite_surfers') {
+          if ($ressource->displayMode == 'invite_surfers') {
             $definitionValues[] = $values->lastChangeTime(
               'group:non_memberships:group_'.$ressource->id
             );
-          } elseif ($mode == 'membership_invitations') {
+          } elseif ($ressource->displayMode == 'membership_invitations') {
             $definitionValues[] = $values->lastChangeTime(
               'group:membership_invitations:group_'.$ressource->id
             );
-          } elseif ($mode == 'membership_requests') {
+          } elseif ($ressource->displayMode == 'membership_requests') {
             $definitionValues[] = $values->lastChangeTime(
               'group:membership_requests:group_'.$ressource->id
             );
-          } elseif ($mode == 'members') {
+          } elseif ($ressource->displayMode == 'members') {
             $definitionValues[] = $values->lastChangeTime(
               'group:memberships:group_'.$ressource->id
             );
@@ -212,6 +217,7 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
       $this->_surfers->parameterGroup($this->paramName);
       $this->_surfers->data()->languageId = $this->papaya()->request->languageId;
       $this->_surfers->data()->displayMode = $this->_displayMode;
+      $this->_surfers->module = $this;
     }
     return $this->_surfers;
   }
@@ -220,16 +226,17 @@ class ACommunitySurfersPage extends base_content implements PapayaPluginCacheabl
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $ressource = $this->surfers()->data()->ressource('ressource', $this);
-    if ($ressource->sourceHasParameter($this, 'group_handle')) {
-      $ressource->set(
-        'group', $this, array('group' => 'group_handle'), array('group' => array()), NULL
-      );
-      $ressource->loadSourceDisplayMode($this, 'mode');
-      $this->surfers()->acommunityConnector()->ressource($ressource);
-      return $ressource;
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->surfers()->ressource();
+      if ($this->_ressource->sourceHasParameter('group_handle')) {
+        $this->_ressource->set(
+          'group', array('group' => 'group_handle'), array('group' => array())
+        );
+        $this->_ressource->loadSourceDisplayMode('mode');
+
+      }
     }
-    return NULL;
+    return $this->_ressource;
   }
 
   /**
