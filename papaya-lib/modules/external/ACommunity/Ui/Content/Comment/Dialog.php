@@ -88,7 +88,6 @@ class ACommunityUiContentCommentDialog
     );
     $dialog->caption = NULL;
 
-    $ressource = $this->data()->ressource('ressource');
     include_once(dirname(__FILE__).'/../../../Filter/Text/Extended.php');
     $dialog->fields[] = $field = new PapayaUiDialogFieldTextarea(
       $this->data()->captions['dialog_text'],
@@ -97,7 +96,7 @@ class ACommunityUiContentCommentDialog
       '',
       new ACommunityFilterTextExtended(
         PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
-        $ressource->type.'_'.$ressource->id
+        $this->data()->owner->ressource()->type.'_'.$this->data()->owner->ressource()->id
       )
     );
     $field->setMandatory(TRUE);
@@ -117,7 +116,7 @@ class ACommunityUiContentCommentDialog
   */
   public function callbackBeforeSaveRecord($context, $record) {
     $commentId = (int)$this->parameters()->get('comment_id', 0);
-    $ressource = $this->data()->ressource('ressource');
+    $ressource = $this->data()->owner->ressource();
     $record->assign(
       array(
         'language_id' => $this->data()->languageId,
@@ -148,9 +147,9 @@ class ACommunityUiContentCommentDialog
       $this->parameters()->set('reset_dialog', 1);
     }
     // send notification on surfer or image comment
-    $ressource = $this->data()->ressource('ressource');
+    $ressource = $this->data()->owner->ressource();
     if ($ressource->type == 'surfer') {
-      if ($ressource->id != $this->data()->currentSurferId()) {
+      if ($ressource->validSurfer !== 'is_selected') {
         $this->data()->owner->notificationHandler()->notify(
           'new-surfer-comment',
           $this->data()->languageId,
@@ -163,9 +162,10 @@ class ACommunityUiContentCommentDialog
         );
       }
     } elseif ($ressource->type == 'group') {
-      $this->data()->group()->load($ressource->id);
-      $groupOwnerId = $this->data()->group()->owner;
-      if ($groupOwnerId != $this->data()->currentSurferId()) {
+      if ($ressource->validSurfer !== 'is_owner') {
+        // use owner id from group data previously loaded by ressource object
+        $groupOwnerId = $this->data()->owner->acommunityConnector()->groupSurferRelations()
+          ->group()->owner;
         $this->data()->owner->notificationHandler()->notify(
           'new-group-comment',
           $this->data()->languageId,
@@ -179,42 +179,38 @@ class ACommunityUiContentCommentDialog
         );
       }
     } elseif ($ressource->type == 'image') {
-      $ressourceParameters = reset($ressource->parameters());
-      if (!empty($ressourceParameters['surfer_handle'])) {
-        $imageOwnerId = $this->data()->owner->communityConnector()->getIdByHandle(
-          $ressourceParameters['surfer_handle']
+      $pointer = $ressource->pointer;
+      $ressource->pointer = 0;
+      $pageRessourceType = $ressource->type;
+      $pageRessourceId = $ressource->id;
+      $pageRessourceValidSurfer = $ressource->validSurfer;
+      $ressource->pointer = $pointer;
+      if ($pageRessourceType == 'surfer' && $pageRessourceValidSurfer !== 'is_selected') {
+        $this->data()->owner->notificationHandler()->notify(
+          'new-surfer-image-comment',
+          $this->data()->languageId,
+          $pageRessourceId,
+          array(
+            'recipient_surfer' => $pageRessourceId,
+            'context_surfer' => $this->data()->currentSurferId(),
+            'page_url' => $this->data()->reference()->url()->getUrl()
+          )
         );
-        if ($imageOwnerId != $this->data()->currentSurferId()) {
-          $this->data()->owner->notificationHandler()->notify(
-            'new-surfer-image-comment',
-            $this->data()->languageId,
-            $imageOwnerId,
-            array(
-              'recipient_surfer' => $imageOwnerId,
-              'context_surfer' => $this->data()->currentSurferId(),
-              'page_url' => $this->data()->reference()->url()->getUrl()
-            )
-          );
-        }
-      } elseif (!empty($ressourceParameters['group_handle'])) {
-        $groupId = $this->data()->owner->acommunityConnector()->getGroupIdByHandle(
-          $ressourceParameters['group_handle']
+      } elseif ($pageRessourceType == 'group' && $pageRessourceValidSurfer !== 'is_owner') {
+        // use owner id from group data previously loaded by ressource object
+        $groupOwnerId = $this->data()->owner->acommunityConnector()->groupSurferRelations()
+          ->group()->owner;
+        $this->data()->owner->notificationHandler()->notify(
+          'new-group-image-comment',
+          $this->data()->languageId,
+          $groupOwnerId,
+          array(
+            'recipient_surfer' => $groupOwnerId,
+            'context_surfer' => $this->data()->currentSurferId(),
+            'group_title' => $this->data()->group()->title,
+            'page_url' => $this->data()->reference()->url()->getUrl()
+          )
         );
-        $this->data()->group()->load($groupId);
-        $groupOwnerId = $this->data()->group()->owner;
-        if ($groupOwnerId != $this->data()->currentSurferId()) {
-          $this->data()->owner->notificationHandler()->notify(
-            'new-group-image-comment',
-            $this->data()->languageId,
-            $groupOwnerId,
-            array(
-              'recipient_surfer' => $groupOwnerId,
-              'context_surfer' => $this->data()->currentSurferId(),
-              'group_title' => $this->data()->group()->title,
-              'page_url' => $this->data()->reference()->url()->getUrl()
-            )
-          );
-        }
       }
     }
     // set last change of comment ressource
