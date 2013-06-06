@@ -119,7 +119,7 @@ class ACommunityMessagesPage extends base_content implements PapayaPluginCacheab
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       } elseif ($ressource->validSurfer === 'is_selected') {
         $notifications = $this->messages()->parameters()->get('notifications', NULL);
-        if (isset($notifications) {
+        if (isset($notifications)) {
           include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $currentSurferId;
@@ -166,7 +166,7 @@ class ACommunityMessagesPage extends base_content implements PapayaPluginCacheab
       $this->_ressource->set(
         'surfer',
         array('surfer' => 'surfer_handle'),
-        array('surfer' => array('surfer_handle', 'notifications'),
+        array('surfer' => array('surfer_handle', 'notifications')),
         NULL,
         NULL,
         'is_another'
@@ -188,6 +188,7 @@ class ACommunityMessagesPage extends base_content implements PapayaPluginCacheab
       $this->_messages = new ACommunityMessages();
       $this->_messages->parameterGroup($this->paramName);
       $this->_messages->data()->languageId = $this->papaya()->request->languageId;
+      $this->_messages->module = $this;
     }
     return $this->_messages;
   }
