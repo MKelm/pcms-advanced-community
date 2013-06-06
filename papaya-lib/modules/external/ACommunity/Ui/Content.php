@@ -117,7 +117,7 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
     } elseif (is_null($this->_acommunityConnector)) {
       include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
       $this->_acommunityConnector = base_pluginloader::getPluginInstance(
-        '0badeb14ea2d41d5bcfd289e9d190534', $this
+        '0badeb14ea2d41d5bcfd289e9d190534', $this, NULL, NULL, NULL, TRUE
       );
     }
     return $this->_acommunityConnector;
@@ -153,16 +153,16 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
   public function checkURLFileName(
            $pageModule, $currentFileName, $outputMode, $pageNamePostfix, $handle = NULL
          ) {
-    $ressource = $this->data()->ressource();
-    if (!empty($handle) || !empty($ressource['handle'])) {
-      $handle = empty($handle) ? $ressource['handle'] : $handle;
+    $ressource = $this->ressource();
+    if (!empty($handle) || !empty($ressource->handle)) {
+      $handle = empty($handle) ? $ressource->handle : $handle;
       $ressourcePageName = $pageModule->parentObj->escapeForFilename($handle.$pageNamePostfix);
       if ($currentFileName == $ressourcePageName) {
         return FALSE;
       } else {
         return $pageModule->getWebLink(
           $pageModule->parentObj->topic['topic_id'], NULL, $outputMode,
-          array($ressource['type'].'_handle' => $ressource['handle']),
+          array($ressource->type.'_handle' => $ressource->handle),
           $pageModule->paramName, $ressourcePageName
         );
       }
@@ -195,7 +195,7 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
       $this->_ressource = $ressource;
     } elseif (is_null($this->_ressource)) {
       include_once(dirname(__FILE__).'/Content/Ressource.php');
-      $this->_ressource = ACommunityUiContentRessource::getInstance($module);
+      $this->_ressource = ACommunityUiContentRessource::getInstance($this->module);
       $this->_ressource->papaya($this->papaya());
       $this->_ressource->uiContent = $this;
     }
