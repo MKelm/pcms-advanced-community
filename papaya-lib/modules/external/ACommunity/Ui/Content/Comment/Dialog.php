@@ -173,7 +173,8 @@ class ACommunityUiContentCommentDialog
           array(
             'recipient_surfer' => $groupOwnerId,
             'context_surfer' => $this->data()->currentSurferId(),
-            'group_title' => $this->data()->group()->title,
+            'group_title' => $this->data()->owner->acommunityConnector()->groupSurferRelations()
+              ->group()->title,
             'page_url' => $this->data()->reference()->url()->getUrl()
           )
         );
@@ -207,7 +208,8 @@ class ACommunityUiContentCommentDialog
           array(
             'recipient_surfer' => $groupOwnerId,
             'context_surfer' => $this->data()->currentSurferId(),
-            'group_title' => $this->data()->group()->title,
+            'group_title' => $this->data()->owner->acommunityConnector()->groupSurferRelations()
+              ->group()->title,
             'page_url' => $this->data()->reference()->url()->getUrl()
           )
         );
