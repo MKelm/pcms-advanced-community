@@ -95,7 +95,9 @@ class ACommunityComments extends ACommunityUiContent {
             }
           }
         } elseif ($command == 'delete' &&
-                  ($this->data()->surferIsModerator() || $this->data()->surferIsRessourceOwner())) {
+                  ($this->data()->surferIsModerator() ||
+                   $this->ressource()->validSurfer === 'is_selected' ||
+                   $this->ressource()->validSurfer === 'is_owner')) {
           $comment = clone $this->data()->comment();
           $comment->load($commentId);
           if ($comment->delete()) {
@@ -103,8 +105,9 @@ class ACommunityComments extends ACommunityUiContent {
           }
         }
         if ($lastChangeTime > 0) {
-          $ressource = $this->data()->ressource('ressource');
-          $result1 = $this->data()->setLastChangeTime('comments:'.$ressource->type.'_'.$ressource->id);
+          $result1 = $this->data()->setLastChangeTime(
+            'comments:'.$this->ressource()->type.'_'.$this->ressource()->id
+          );
           $result2 = $this->data()->setLastChangeTime('comments');
           $this->parameters()->set('command', 'reply');
           $this->parameters()->set('comment_id', 0);
@@ -122,9 +125,7 @@ class ACommunityComments extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $ressource = $this->data()->ressource('ressource');
-    if (isset($ressource->id) &&
-        ($ressource->type != 'group' || $this->data()->surferHasGroupAccess)) {
+    if (isset($this->ressource()->id)) {
       $this->performCommands();
       $comments = $parent->appendElement('acommunity-comments');
       if ($this->data()->mode == 'list') {

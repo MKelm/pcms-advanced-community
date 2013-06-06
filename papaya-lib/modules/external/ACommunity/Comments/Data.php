@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php');
+require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
 
 /**
  * Advanced community comments data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php')
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations {
+class ACommunityCommentsData extends ACommunityUiContentData {
 
   /**
    * Data to display paging
@@ -82,54 +82,6 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
    * @var string
    */
   protected $_referenceParametersExpression = 'comments_page|comment_([0-9]+)_page';
-
-  /**
-   * Flag of surfer group access for group ressources
-   * @var boolean
-   */
-  public $surferHasGroupAccess = FALSE;
-
-  /**
-   * Surfer is ressource owner status
-   * @var boolean
-   */
-  protected $_surferIsRessourceOwner = NULL;
-
-  /**
-   * Check if the current active surfer is the owner of the current ressource
-   *
-   * @return boolean
-   */
-  public function surferIsRessourceOwner() {
-    if (is_null($this->_surferIsRessourceOwner)) {
-      $this->_surferIsRessourceOwner = FALSE;
-      $ressource = $this->ressource('ressource');
-      if ($ressource->type == 'surfer' && $this->ressourceIsActiveSurfer) {
-        $this->_surferIsRessourceOwner = TRUE;
-      } elseif ($ressource->type == 'image') {
-        $ressourceParameters = reset($ressource->parameters());
-        if (!empty($ressourceParameters)) {
-          if (!empty($ressourceParameters['surfer_handle'])) {
-            $ownerHandle = $this->owner->communityConnector()->getHandleById($this->currentSurferId());
-            if ($ownerHandle == $ressourceParameters['surfer_handle']) {
-              $this->_surferIsRessourceOwner = TRUE;
-            }
-          } elseif (!empty($ressourceParameters['group_handle'])) {
-            $groupId = $this->owner->acommunityConnector()->getGroupIdByHandle(
-              $ressourceParameters['group_handle']
-            );
-            if ($groupId > 0 && $this->surferHasStatus($groupId, 'is_owner', 1)) {
-              $this->_surferIsRessourceOwner = TRUE;
-            }
-          }
-        }
-      } elseif ($ressource->type == 'group' && $this->surferHasStatus(NULL, 'is_owner', 1)) {
-        $this->_surferIsRessourceOwner = TRUE;
-      }
-    }
-    return $this->_surferIsRessourceOwner;
-  }
-
 
   /**
    * Set data by plugin object
@@ -236,8 +188,9 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
    */
   protected function _getCommandLinks(&$links, $commentsList, $votingCookieData) {
     if (!empty($commentsList['data'])) {
-      $surferIsModerator = $this->surferIsModerator();
-      $surferIsRessourceOwner = $this->surferIsRessourceOwner();
+      $deletePermission = $this->surferIsModerator() ||
+        $this->owner->ressource()->validSurfer === 'is_selected' ||
+        $this->owner->ressource()->validSurfer === 'is_owner';
       foreach ($commentsList['data'] as $id => $comment) {
 
         $links[$id]['reply'] = NULL;
@@ -258,7 +211,7 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
             }
           }
         }
-        if ($surferIsModerator || $surferIsRessourceOwner) {
+        if ($deletePermission) {
           $reference = clone $this->reference();
           $reference->setParameters(
             array(
@@ -341,10 +294,9 @@ class ACommunityCommentsData extends ACommunityUiContentDataGroupSurferRelations
       'parent_id' => $parentId,
       'language_id' => $this->languageId
     );
-    $ressource = $this->ressource('ressource');
-    if (isset($ressource->id)) {
-      $commentsFilter['ressource_type'] = $ressource->type;
-      $commentsFilter['ressource_id'] = $ressource->id;
+    if (isset($this->owner->ressource()->id)) {
+      $commentsFilter['ressource_type'] = $this->owner->ressource()->type;
+      $commentsFilter['ressource_id'] = $this->owner->ressource()->id;
     }
 
     if ($parentId == 0) {

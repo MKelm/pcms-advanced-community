@@ -97,6 +97,12 @@ class ACommunityCommentsPage extends base_content implements PapayaPluginCacheab
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -110,34 +116,27 @@ class ACommunityCommentsPage extends base_content implements PapayaPluginCacheab
       $definitionValues = array('acommunity_comments_box');
       $ressource = $this->setRessourceData();
       if (isset($ressource->id)) {
-        $access = TRUE;
-        if ($ressource->type == 'group') {
-          $access = $this->comments()->data()->surferHasGroupAccess;
-        }
-        $definitionValues[] = (int)$access;
-        if ($access) {
-          $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
-            $this->papaya()->surfer->surfer['surfer_id'] : NULL;
-          if (!empty($currentSurferId)) {
-            $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-          } else {
-            $definitionValues[] = $ressource->type;
-            $definitionValues[] = $ressource->id;
-            $referenceParameters = $this->comments()->data()->referenceParameters();
-            $parameterNames = array_merge(
-              array('command', 'comment_id'), array_keys($referenceParameters)
-            );
-            unset($referenceParameters);
-            include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
-            $values = new ACommunityCacheIdentifierValues();
-            $definitionValues[] = $values->lastChangeTime(
-              'comments:'.$ressource->type.'_'.$ressource->id
-            );
-            $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-              new PapayaCacheIdentifierDefinitionValues($definitionValues),
-              new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
-            );
-          }
+        $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
+          $this->papaya()->surfer->surfer['surfer_id'] : NULL;
+        if (!empty($currentSurferId)) {
+          $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+        } else {
+          $definitionValues[] = $ressource->type;
+          $definitionValues[] = $ressource->id;
+          $referenceParameters = $this->comments()->data()->referenceParameters();
+          $parameterNames = array_merge(
+            array('command', 'comment_id'), array_keys($referenceParameters)
+          );
+          unset($referenceParameters);
+          include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $values->lastChangeTime(
+            'comments:'.$ressource->type.'_'.$ressource->id
+          );
+          $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+            new PapayaCacheIdentifierDefinitionValues($definitionValues),
+            new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
+          );
         } else {
           $definitionValues[] = $ressource->type;
           $definitionValues[] = $ressource->id;
@@ -166,21 +165,43 @@ class ACommunityCommentsPage extends base_content implements PapayaPluginCacheab
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $ressource = $this->comments()->data()->ressource('ressource', $this);
-    if (is_null($ressource->isInvalid)) {
+    if (is_null($this->_ressource)) {
+      $ressource = $this->comments()->ressource();
       $ressourceParameterNames = array(
+        'image' => array('image_id'), // detect image before surfer and group because it depends on them
         'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
         'group' => array('group_handle'),
-        'page' => array('page_id'),
-        'image' => array('image_id')
+        'page' => array('page_id')
       );
       list($ressourceType, $ressourceParameterValue) = $ressource->detectSourceParameterValue(
         $ressourceParameterNames
       );
-      $ressource->set($ressourceType, NULL, $ressourceParameterNames, NULL, $ressourceParameterValue);
-      $this->comments()->acommunityConnector()->ressource($ressource);
+      if ($ressourceType == 'image') {
+        // set a initial ressource by surfer / group because image depends on them
+        $initialRessourceParameterNames = array(
+          'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
+          'group' => array('group_handle')
+        );
+        list($initialRessourceType, $initialRessourceValue) = $ressource->detectSourceParameterValue(
+          $initialRessourceParameterNames
+        );
+        $ressource->set(
+          $initialRessourceType,
+          NULL,
+          array('surfer' => array(), 'group' => array()),
+          NULL,
+          $initialRessourceValue
+        );
+        if (isset($ressource->id)) {
+          // set dependend image ressource as second / active ressource
+          $ressource->set($ressourceType, NULL, $ressourceParameterNames, NULL, $ressourceParameterValue);
+        }
+      } else {
+        $ressource->set($ressourceType, NULL, $ressourceParameterNames, NULL, $ressourceParameterValue);
+      }
+      $this->_ressource = $ressource;
     }
-    return $ressource;
+    return $this->_ressource;
   }
 
   /**

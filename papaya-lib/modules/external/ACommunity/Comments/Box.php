@@ -97,6 +97,12 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -110,37 +116,27 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
       $definitionValues = array('acommunity_comments_box');
       $ressource = $this->setRessourceData();
       if (isset($ressource->id)) {
-        $access = TRUE;
-        if ($ressource->type == 'group') {
-          $access = $this->comments()->data()->surferHasGroupAccess;
-        }
-        $definitionValues[] = (int)$access;
-        if ($access) {
-          $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
-            $this->papaya()->surfer->surfer['surfer_id'] : NULL;
-          if (!empty($currentSurferId)) {
-            $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-          } else {
-            $definitionValues[] = $ressource->type;
-            $definitionValues[] = $ressource->id;
-            $referenceParameters = $this->comments()->data()->referenceParameters();
-            $parameterNames = array_merge(
-              array('command', 'comment_id'), array_keys($referenceParameters)
-            );
-            unset($referenceParameters);
-            include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
-            $values = new ACommunityCacheIdentifierValues();
-            $definitionValues[] = $values->lastChangeTime(
-              'comments:'.$ressource->type.'_'.$ressource->id
-            );
-            $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-              new PapayaCacheIdentifierDefinitionValues($definitionValues),
-              new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
-            );
-          }
+        $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
+          $this->papaya()->surfer->surfer['surfer_id'] : NULL;
+        if (!empty($currentSurferId)) {
+          $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
         } else {
           $definitionValues[] = $ressource->type;
           $definitionValues[] = $ressource->id;
+          $referenceParameters = $this->comments()->data()->referenceParameters();
+          $parameterNames = array_merge(
+            array('command', 'comment_id'), array_keys($referenceParameters)
+          );
+          unset($referenceParameters);
+          include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $values->lastChangeTime(
+            'comments:'.$ressource->type.'_'.$ressource->id
+          );
+          $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+            new PapayaCacheIdentifierDefinitionValues($definitionValues),
+            new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
+          );
         }
       }
       if (is_null($this->_cacheDefiniton)) {
@@ -157,9 +153,13 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    if (!empty($this->parentObj->moduleObj)) {
-      switch (get_class($this->parentObj->moduleObj)) {
+    if (is_null($this->_ressource)) {
+      $ressource = $this->comments()->ressource();
+      $sourceClass = $ressource->sourceHasClass();
+      switch ($sourceClass) {
         case 'ACommunitySurferPage':
+          $ressource->pointer = 0;
+          $ressourceHandle = $ressource->handle;
         case 'content_showuser':
           $ressourceType = 'surfer';
           break;
@@ -167,18 +167,16 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
           $ressourceType = 'image';
           break;
         case 'ACommunityGroupPage':
-          if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
-            $this->comments()->data()->surferHasGroupAccess = TRUE;
-          }
+          $ressource->pointer = 0;
+          $ressourceHandle = $ressource->handle;
           $ressourceType = 'group';
           break;
         default:
           $ressourceType = 'page';
           break;
       }
-      return $this->comments()->data()->ressource(
+      $ressource->set(
         $ressourceType,
-        $this,
         array(
           'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
           'group' => array('group_handle')
@@ -188,10 +186,11 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
           'group' => 'group_handle'
         ),
         NULL,
-        'object'
+        isset($ressourceHandle) ? $ressourceHandle : NULL
       );
+      $this->_ressource = $ressource;
     }
-    return NULL;
+    return $this->_ressource;
   }
 
   /**
