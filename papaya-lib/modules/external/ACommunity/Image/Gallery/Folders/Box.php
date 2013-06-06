@@ -156,6 +156,7 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
       $this->_folders = new ACommunityImageGalleryFolders();
       $this->_folders->parameterGroup($this->paramName);
       $this->_folders->data()->languageId = $this->papaya()->request->languageId;
+      $this->_folders->module = $this;
     }
     return $this->_folders;
   }
