@@ -52,27 +52,27 @@ class ACommunityGroup extends ACommunityUiContent {
    */
   protected function _performCommands() {
     $command = $this->parameters()->get('command', NULL);
-    $ressource = $this->data()->ressource('ressource');
-    if (isset($ressource->id)) {
+    if (!empty($command) && isset($this->ressource()->id)) {
+      $changes = $this->acommunityConnector()->groupSurferRelations()->changes();
       switch ($command) {
         case 'request_membership':
-          return $this->data()->groupSurferChanges()->requestMembership(
-            $ressource->id, $this->data()->currentSurferId()
+          return $changes->requestMembership(
+            $this->ressource()->id, $this->data()->currentSurferId()
           );
           break;
         case 'remove_membership_request':
-          return $this->data()->groupSurferChanges()->removeRequest(
-            $ressource->id, $this->data()->currentSurferId()
+          return $changes->removeRequest(
+            $this->ressource()->id, $this->data()->currentSurferId()
           );
           break;
         case 'accept_membership_invitation':
-          return $this->data()->groupSurferChanges()->acceptInvitation(
-            $ressource->id, $this->data()->currentSurferId()
+          return $changes->acceptInvitation(
+            $this->ressource()->id, $this->data()->currentSurferId()
           );
           break;
         case 'decline_membership_invitation':
-          return $this->data()->groupSurferChanges()->declineInvitation(
-            $ressource->id, $this->data()->currentSurferId()
+          return $changes->declineInvitation(
+            $this->ressource()->id, $this->data()->currentSurferId()
           );
           break;
       }
@@ -87,7 +87,7 @@ class ACommunityGroup extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    if ($this->data()->surferHasGroupAccess()) {
+    if (isset($this->ressource()->id)) {
       if ($this->data()->mode == 'group-details') {
         $result = $this->_performCommands();
         if ($result === FALSE) {
@@ -110,9 +110,7 @@ class ACommunityGroup extends ACommunityUiContent {
           $parent->appendElement(
             'page-link',
             array(),
-            $this->acommunityConnector()->getGroupPageLink(
-              $this->data()->ressource('ressource')->handle
-            )
+            $this->acommunityConnector()->getGroupPageLink($this->ressource()->handle)
           );
         }
         if (!empty($this->data()->commands)) {

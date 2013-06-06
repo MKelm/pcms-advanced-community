@@ -36,12 +36,6 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
   public $paramName = 'acg';
 
   /**
-   * Access flag for box modules, set by group()->data()->surferHasGroupAccess()
-   * @var boolean
-   */
-  public $surferHasGroupAccess = FALSE;
-
-  /**
   * Content edit fields
   * @var array $editFields
   */
@@ -125,6 +119,12 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -144,28 +144,23 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $ressource->type;
           $definitionValues[] = $ressource->id;
-          $definitionValues[] = (int)$this->surferHasGroupAccess;
-          if ($this->surferHasGroupAccess) {
-            $definitionValues[] = $values->lastChangeTime('group:group_'.$ressource->id);
-            $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource->id);
-            if ($this->papaya()->surfer->isValid) {
-              if ($this->group()->data()->surferHasStatus(NULL, 'is_owner', 1)) {
-                $definitionValues[] = $values->lastChangeTime(
-                  'group:membership_requests:group_'.$ressource->id
-                );
-                $definitionValues[] = $values->lastChangeTime(
-                  'group:membership_invitations:group_'.$ressource->id
-                );
-              } elseif (!$this->group()->data()->surferHasStatus(NULL, 'is_member', 1)) {
-                $currentSurferId = $this->group()->data()->currentSurferId();
-                $definitionValues[] = $values->lastChangeTime(
-                  'request:surfer_'.$currentSurferId.':group_'.$ressource->id
-                );
-                $definitionValues[] = $values->lastChangeTime(
-                  'invitation:group_'.$ressource->id.':surfer_'.$currentSurferId
-                );
-              }
-            }
+          $definitionValues[] = $values->lastChangeTime('group:group_'.$ressource->id);
+          $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource->id);
+          if ($ressource->validSurfer === 'is_owner') {
+            $definitionValues[] = $values->lastChangeTime(
+              'group:membership_requests:group_'.$ressource->id
+            );
+            $definitionValues[] = $values->lastChangeTime(
+              'group:membership_invitations:group_'.$ressource->id
+            );
+          } elseif ($ressource->validSurfer === 'is_member') {
+            $currentSurferId = $this->group()->data()->currentSurferId();
+            $definitionValues[] = $values->lastChangeTime(
+              'request:surfer_'.$currentSurferId.':group_'.$ressource->id
+            );
+            $definitionValues[] = $values->lastChangeTime(
+              'invitation:group_'.$ressource->id.':surfer_'.$currentSurferId
+            );
           }
         } else {
           $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
@@ -198,15 +193,12 @@ class ACommunityGroupPage extends base_content implements PapayaPluginCacheable 
    * Set group ressource data to load corresponding group
    */
   public function setRessourceData() {
-    $ressource = $this->group()->data()->ressource(
-      'group', $this, array('group' => 'group_handle'), array('group' => 'group_handle'),
-      NULL, 'object'
-    );
-    $this->group()->acommunityConnector()->ressource($ressource);
-    if (isset($ressource->id)) {
-      $this->surferHasGroupAccess = $this->group()->data()->surferHasGroupAccess();
+    if (is_null($this->_ressource)) {
+      $ressource = $this->group()->ressource();
+      $ressource->set('group', array('group' => 'group_handle'), array('group' => 'group_handle'));
+      $this->_ressource = $ressource;
     }
-    return $ressource;
+    return $this->_ressource;
   }
 
   /**
