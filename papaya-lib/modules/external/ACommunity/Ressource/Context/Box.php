@@ -29,6 +29,10 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_actionbox.php');
  */
 class ACommunityRessourceContextBox extends base_actionbox implements PapayaPluginCacheable {
 
+  /**
+   * Acommunity parameter group name for ressource context box
+   * @var string
+   */
   public $paramName = 'acrc';
 
   /**
@@ -124,6 +128,12 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -141,22 +151,16 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
         $definitionValues[] = $ressource->id;
         $definitionValues[] = $ressource->displayMode;
         if ($ressource->type == 'group') {
-          $surferHasGroupAccess = $this->group()->data()->surferHasGroupAccess;
-          $definitionValues[] = (int)$surferHasGroupAccess;
-          if ($surferHasGroupAccess) {
-            include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
-            $values = new ACommunityCacheIdentifierValues();
-            $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource->id);
-            $surferIsOwner = $this->group()->data()->surferHasStatus(NULL, 'is_owner', 1);
-            $definitionValues[] = (int)$surferIsOwner;
-            if ($surferIsOwner) {
-              $definitionValues[] = $values->lastChangeTime(
-                'group:membership_requests:group_'.$ressource->id
-              );
-              $definitionValues[] = $values->lastChangeTime(
-                'group:membership_invitations:group_'.$ressource->id
-              );
-            }
+          include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource->id);
+          if ($ressource->validSurfer === 'is_owner') {
+            $definitionValues[] = $values->lastChangeTime(
+              'group:membership_requests:group_'.$ressource->id
+            );
+            $definitionValues[] = $values->lastChangeTime(
+              'group:membership_invitations:group_'.$ressource->id
+            );
           }
         }
       }
@@ -169,25 +173,11 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $ressource = $this->acommunityConnector()->ressource();
-    if (isset($ressource->id)) {
-      switch ($ressource->type) {
-        case 'surfer':
-          $this->surfer()->data()->ressource($ressource);
-          return $ressource;
-          break;
-        case 'group':
-          $this->group()->data()->ressource($ressource);
-          if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
-            $this->group()->data()->surferHasGroupAccess(
-              $this->parentObj->moduleObj->surferHasGroupAccess
-            );
-          }
-          return $ressource;
-          break;
-      }
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->surfer()->ressource();
+      $this->_ressource->pointer = 0;
     }
-    return NULL;
+    return $this->_ressource;
   }
 
   /**
