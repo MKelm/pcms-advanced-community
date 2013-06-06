@@ -208,12 +208,12 @@ class ACommunityMessagesData extends ACommunityUiContentData {
   protected function _getMessagesList(&$listData) {
     $listData = array();
     $page = $this->owner->parameters()->get('messages_page', 0);
-    $ressource = $this->ressource();
+    $ressource = $this->owner->ressource();
     $showNotifications = (boolean)$this->owner->parameters()->get('notifications', FALSE);
     $this->messages()->load(
       array(
         'current_surfer_id' => $this->currentSurferId(),
-        'selected_surfer_id' => $showNotifications ? 'system' : $ressource['id']
+        'selected_surfer_id' => $showNotifications ? 'system' : $ressource->id
       ),
       $this->paging['messages_per_page'],
       ($page > 0) ? ($page - 1) * $this->paging['messages_per_page'] : 0
@@ -249,7 +249,6 @@ class ACommunityMessagesData extends ACommunityUiContentData {
   protected function _getMessageConversationsList(&$listData) {
     $listData = array();
     $page = $this->owner->parameters()->get('message_conversations_page', 0);
-    $ressource = $this->ressource();
     $this->messageConversations()->load(
       array(
         'current_surfer_id' => $this->currentSurferId()

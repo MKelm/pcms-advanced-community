@@ -91,10 +91,10 @@ class ACommunityMessages extends ACommunityUiContent {
         );
       }
       if (!empty($currentSurferId)) {
-        $ressource = $this->data()->ressource();
+        $ressource = $this->ressource();
         if ($showNotifications == TRUE) {
           $this->uiContentMessagesList()->appendTo($messages);
-        } elseif (!empty($ressource) && $this->data()->ressourceIsActiveSurfer == FALSE) {
+        } elseif (isset($ressource->id) && $ressource->validSurfer !== 'is_selected') {
           $messagesPage = $this->parameters()->get('messages_page', 0);
           if (!($messagesPage > 1)) {
             $this->uiContentMessageDialog()->appendTo($messages);
