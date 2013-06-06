@@ -99,6 +99,12 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
   protected $_showOwnGroups = FALSE;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -131,9 +137,12 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
           $lastChangeRessource = 'groups';
         }
         $definitionValues = array(
-          'acommunity_groups_page', (int)$moderator, $values->lastChangeTime($lastChangeRessource)
+          'acommunity_groups_page',
+          (int)$moderator,
+          (int)$ownGroups,
+          $values->lastChangeTime($lastChangeRessource)
         );
-        if (!empty($ressource)) {
+        if (isset($ressource->id)) {
           $definitionValues[] = $ressource->type;
           $definitionValues[] = $ressource->id;
         }
@@ -170,15 +179,17 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $this->groups()->data()->showOwnGroups($this->_showOwnGroups);
-    if ($this->_showOwnGroups) {
-      $ressource = $this->groups()->data()->ressource(
-        'surfer', $this, NULL, array('surfer' => array()), NULL, 'object'
-      );
-      $this->groups()->acommunityConnector()->ressource($ressource);
-      return $ressource;
+    if (is_null($this->_ressource)) {
+      $this->groups()->data()->showOwnGroups($this->_showOwnGroups);
+      if ($this->_showOwnGroups) {
+        $ressource = $this->groups()->ressource();
+        $ressource->set('surfer', NULL, array('surfer' => array()), NULL, NULL, 'is_selected');
+        $this->_ressource = $ressource;
+      } else {
+        $this->_ressource = FALSE;
+      }
     }
-    return NULL;
+    return $this->_ressource;
   }
 
   /**

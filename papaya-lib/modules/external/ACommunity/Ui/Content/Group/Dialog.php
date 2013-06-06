@@ -112,7 +112,6 @@ class ACommunityUiContentGroupDialog
       $dialog = new PapayaUiDialogDatabaseSave(clone $this->record());
     }
 
-
     $dialog->callbacks()->onBeforeSave = array($this, 'callbackBeforeSaveRecord');
 
     $dialog->papaya($this->papaya());

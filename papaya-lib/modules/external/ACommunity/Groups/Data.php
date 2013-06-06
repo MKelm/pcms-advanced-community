@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php');
+require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
 
 /**
  * Advanced community groups data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php')
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
+class ACommunityGroupsData extends ACommunityUiContentData {
 
   /**
    * Data to display paging
@@ -183,7 +183,10 @@ class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
    */
   protected function _getCommandLinks(&$links, $groupsList) {
     if (!empty($groupsList['data'])) {
-      $groupSurferRelations = $this->groupSurferRelations();
+      // get previously loaded group surfe relations
+      $groupSurferRelations = $this->owner->acommunityConnector()->groupSurferRelations()
+        ->content()->toArray();
+
       $mode = $this->owner->parameters()->get('mode', 'groups');
       foreach ($groupsList['data'] as $id => $group) {
         if ((!$this->showOwnGroups() && $this->surferIsModerator()) ||
@@ -286,7 +289,7 @@ class ACommunityGroupsData extends ACommunityUiContentDataGroupSurferRelations {
           'include_owner_status' => 1
         );
       }
-      $this->groupSurferRelations()->load(
+      $this->owner->acommunityConnector()->groupSurferRelations()->content()->load(
         $filter,
         $this->pagingItemsPerPage,
         ($page > 0) ? ($page - 1) * $this->pagingItemsPerPage : 0

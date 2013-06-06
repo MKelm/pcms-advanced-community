@@ -122,6 +122,9 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
       'Edit Button', 'isNoHTML', TRUE, 'input', 200, '', 'Edit'
     ),
     'Error Messages',
+    'message_access_denied' => array(
+      'Access denied', 'isNoHTML', TRUE, 'input', 200, '', 'Groups overview access denied.'
+    ),
     'message_no_groups' => array(
       'No Groups', 'isNoHTML', TRUE, 'input', 200, '', 'No groups.'
     ),
@@ -187,6 +190,6 @@ class ACommunitySurferGroupsPage extends ACommunityGroupsPage {
     'message_dialog_error_upload', 'message_no_invitations',
     'message_dialog_error_file_extension', 'message_dialog_error_file_type',
     'message_dialog_error_media_db', 'message_dialog_error_handle_duplicate',
-    'message_failed_to_execute_command', 'message_no_requests'
+    'message_failed_to_execute_command', 'message_no_requests', 'message_access_denied'
   );
 }
