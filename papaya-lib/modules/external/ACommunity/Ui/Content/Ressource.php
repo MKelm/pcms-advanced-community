@@ -435,11 +435,17 @@ class ACommunityUiContentRessource extends PapayaObject {
           break;
         case 'group':
           if (!empty($sourceParameterValue)) {
-            $id = (int)$this->uiContent->acommunityConnector()->getGroupIdByHandle($sourceParameterValue);
+            $this->uiContent->acommunityConnector()->groupSurferRelations()->group()
+              ->load(array('handle' => $sourceParameterValue));
+            $id = (int)$this->uiContent->acommunityConnector()->groupSurferRelations()->group()->id;
+            if ($this->uiContent->acommunityConnector()->groupSurferRelations()->group()->public === 0) {
+              if ($this->needsValidSurfer === FALSE) {
+                $this->needsValidSurfer = TRUE;
+              }
+            }
             $this->validSurfer = FALSE;
             if (!empty($id)) {
               $this->id = $id;
-
               if ($this->papaya()->surfer->isValid == TRUE && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
                 $status = $this->uiContent->acommunityConnector()->groupSurferRelations()->status(
                   $this->id, $this->papaya()->surfer->surfer['surfer_id']
