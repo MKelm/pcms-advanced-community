@@ -116,8 +116,7 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
       $definitionValues = array('acommunity_comments_box');
       $ressource = $this->setRessourceData();
       if (isset($ressource->id)) {
-        $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
-          $this->papaya()->surfer->surfer['surfer_id'] : NULL;
+        $currentSurferId = $this->comments()->data()->currentSurferId();
         if (!empty($currentSurferId)) {
           $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
         } else {
