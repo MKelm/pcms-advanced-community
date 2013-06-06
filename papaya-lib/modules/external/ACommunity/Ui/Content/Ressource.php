@@ -435,17 +435,26 @@ class ACommunityUiContentRessource extends PapayaObject {
           break;
         case 'group':
           if (!empty($sourceParameterValue)) {
-            if ($this->needsValidSurfer == TRUE) {
-              if (!empty($this->_module->surferHasGroupAccess)) {
-                $this->validSurfer = TRUE;
-              } else {
-                $this->validSurfer = FALSE;
+            $id = (int)$this->uiContent->acommunityConnector()->getGroupIdByHandle($sourceParameterValue);
+            $this->validSurfer = FALSE;
+            if (!empty($id)) {
+              $this->id = $id;
+
+              if ($this->papaya()->surfer->isValid == TRUE && !empty($this->papaya()->surfer->surfer['surfer_id'])) {
+                $status = $this->uiContent->acommunityConnector()->groupSurferRelations()->status(
+                  $this->id, $this->papaya()->surfer->surfer['surfer_id']
+                );
+                if (!empty($status['is_owner'])) {
+                  $this->validSurfer = 'is_owner';
+                } elseif (!empty($status['is_member'])) {
+                  $this->validSurfer = 'is_member';
+                }
               }
             }
-            if (!$this->needsValidSurfer || ($this->needsValidSurfer && $this->validSurfer)) {
-              $this->id = (int)$this->uiContent->acommunityConnector()->getGroupIdByHandle(
-                $sourceParameterValue
-              );
+            if (($this->needsValidSurfer === TRUE && $this->validSurfer === FALSE) ||
+                ($this->needsValidSurfer === 'is_owner' && $this->validSurfer !== 'is_owner') ||
+                ($this->needsValidSurfer === 'is_member' && $this->validSurfer !== 'is_member')) {
+              $this->id = NULL;
             }
           }
           break;

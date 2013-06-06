@@ -8,6 +8,7 @@ require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
 require_once(PAPAYA_INCLUDE_PATH.'modules/external/ACommunity/Ui/Content/Ressource.php');
 require_once(PAPAYA_INCLUDE_PATH.'modules/external/ACommunity/Ui/Content.php');
 require_once(PAPAYA_INCLUDE_PATH.'modules/external/ACommunity/Connector.php');
+require_once(PAPAYA_INCLUDE_PATH.'modules/external/ACommunity/Group/Surfer/Relations.php');
 require_once(PAPAYA_INCLUDE_PATH.'modules/_base/community/connector_surfers.php');
 
 class parent_dummy {
@@ -617,7 +618,7 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
   /**
    * @covers ACommunityUiContentRessource::set
    */
-  public function testSetWithTypeGroupAndSourceParameterValue() {
+  public function testSetWithTypeGroupAndSourceParameterValueAndNoLogin() {
     $groupHandle = 'my_handle';
     $groupId = 23445;
 
@@ -633,11 +634,125 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
       ->method('acommunityConnector')
       ->will($this->returnValue($connector));
 
+    $surfer = new base_surfer_dummy();
+    $application = $this->getMockApplicationObject(array('surfer' => $surfer));
+
     $ressource = $this->_getRessourceWithSourceData();
+    $ressource->papaya($application);
     $ressource->uiContent = $uiContent;
     $ressource->set('group', NULL, NULL, NULL, $groupHandle);
     $this->assertEquals($groupId, $ressource->id);
     $this->assertEquals($groupHandle, $ressource->handle);
+  }
+
+  /**
+   * @covers ACommunityUiContentRessource::set
+   */
+  public function testSetWithTypeGroupAndSourceParameterValueAndLoginNoValidSurferNeeded() {
+    $currentSurferHandle = 'jamesbond';
+    $currentSurferId = '28ba9f2d3f1047019be54dac44a30c7d';
+    $groupHandle = 'my_handle';
+    $groupId = 23445;
+
+    $groupSurferRelations = $this->getMock('ACommunityGroupSurferRelations');
+    $groupSurferRelations
+      ->expects($this->once())
+      ->method('status')
+      ->with($this->equalTo($groupId), $this->equalTo($currentSurferId))
+      ->will($this->returnValue(FALSE));
+    $connector = $this->getMock('ACommunityConnector');
+    $connector
+      ->expects($this->once())
+      ->method('getGroupIdByHandle')
+      ->with($this->equalTo($groupHandle))
+      ->will($this->returnValue($groupId));
+   $connector
+      ->expects($this->once())
+      ->method('groupSurferRelations')
+      ->will($this->returnValue($groupSurferRelations));
+    $uiContent = $this->getMock('ACommunityUiContent');
+    $uiContent
+      ->expects($this->any())
+      ->method('acommunityConnector')
+      ->will($this->returnValue($connector));
+
+    $surfer = new base_surfer_dummy();
+    $surfer->isValid = TRUE;
+    $surfer->surfer['surfer_id'] = $currentSurferId;
+    $surfer->surfer['surfer_handle'] = $currentSurferHandle;
+    $application = $this->getMockApplicationObject(array('surfer' => $surfer));
+
+    $ressource = $this->_getRessourceWithSourceData();
+    $ressource->papaya($application);
+    $ressource->uiContent = $uiContent;
+    $ressource->set('group', NULL, NULL, NULL, $groupHandle);
+    $this->assertEquals($groupId, $ressource->id);
+  }
+
+  public static function providerGroupSurferRelationsStatusForOneSurfer() {
+    return array(
+      'group surfer is member' => array(TRUE, array('is_member' => 1, 'is_owner' => 0), TRUE),
+      'group surfer is owner' => array(TRUE, array('is_member' => 0, 'is_owner' => 1), TRUE),
+      'group surfer is none' => array(TRUE, array('is_member' => 0, 'is_owner' => 0), FALSE),
+      'group surfer is member owner needed' =>
+        array('is_owner', array('is_member' => 1, 'is_owner' => 0), FALSE),
+      'group surfer is owner owner needed' =>
+        array('is_owner', array('is_member' => 0, 'is_owner' => 1), TRUE),
+      'group surfer is none owner needed' =>
+        array('is_owner', array('is_member' => 0, 'is_owner' => 0), FALSE),
+      'group surfer is member member needed' =>
+        array('is_member', array('is_member' => 1, 'is_owner' => 0), TRUE),
+      'group surfer is owner member needed' =>
+        array('is_member', array('is_member' => 0, 'is_owner' => 1), FALSE),
+      'group surfer is none member needed' =>
+        array('is_member', array('is_member' => 0, 'is_owner' => 0), FALSE),
+    );
+  }
+
+  /**
+   * @covers ACommunityUiContentRessource::set
+   * @dataProvider providerGroupSurferRelationsStatusForOneSurfer
+   */
+  public function testSetWithTypeGroupAndSourceParameterValueAndLoginValidSurferNeeded(
+                    $needsValidSurfer, $groupSurferStatus, $resultStatus) {
+    $currentSurferHandle = 'jamesbond';
+    $currentSurferId = '28ba9f2d3f1047019be54dac44a30c7d';
+    $groupHandle = 'my_handle';
+    $groupId = 23445;
+
+    $groupSurferRelations = $this->getMock('ACommunityGroupSurferRelations');
+    $groupSurferRelations
+      ->expects($this->once())
+      ->method('status')
+      ->with($this->equalTo($groupId), $this->equalTo($currentSurferId))
+      ->will($this->returnValue($groupSurferStatus));
+    $connector = $this->getMock('ACommunityConnector');
+    $connector
+      ->expects($this->once())
+      ->method('getGroupIdByHandle')
+      ->with($this->equalTo($groupHandle))
+      ->will($this->returnValue($groupId));
+   $connector
+      ->expects($this->once())
+      ->method('groupSurferRelations')
+      ->will($this->returnValue($groupSurferRelations));
+    $uiContent = $this->getMock('ACommunityUiContent');
+    $uiContent
+      ->expects($this->any())
+      ->method('acommunityConnector')
+      ->will($this->returnValue($connector));
+
+    $surfer = new base_surfer_dummy();
+    $surfer->isValid = TRUE;
+    $surfer->surfer['surfer_id'] = $currentSurferId;
+    $surfer->surfer['surfer_handle'] = $currentSurferHandle;
+    $application = $this->getMockApplicationObject(array('surfer' => $surfer));
+
+    $ressource = $this->_getRessourceWithSourceData();
+    $ressource->papaya($application);
+    $ressource->uiContent = $uiContent;
+    $ressource->set('group', NULL, NULL, NULL, $groupHandle, $needsValidSurfer);
+    $this->assertEquals($resultStatus, $groupId == $ressource->id);
   }
 
   /**
@@ -749,7 +864,7 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
   /**
    * @covers ACommunityUiContentRessource::set
    */
-  public function testSetWithTypeSurferAndSourceParameterValueNotActiveLogin() {
+  public function testSetWithTypeSurferAndSourceParameterValueWithAnotherSurferLogin() {
     $currentSurferHandle = 'anothersurfer';
     $currentSurferId = 'ea90c0a2371b44efb617c82853ad036e';
     $selectedSurferHandle = 'thesurfer';
@@ -777,13 +892,13 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
     $ressource->papaya($application);
     $ressource->set('surfer', NULL, NULL, NULL, $selectedSurferHandle);
     $this->assertEquals($selectedSurferId, $ressource->id);
-    $this->assertEquals(FALSE, $ressource->isActiveSurfer);
+    $this->assertEquals(FALSE, $ressource->validSurfer);
   }
 
   /**
    * @covers ACommunityUiContentRessource::set
    */
-  public function testSetWithTypeSurferAndSourceParameterValueActiveLogin() {
+  public function testSetWithTypeSurferAndSourceParameterValueWithValidSurferLogin() {
     $currentSurferHandle = 'thesurfer';
     $currentSurferId = 'ea90c0a2371b44efb617c82853ad036e';
     $selectedSurferHandle = 'thesurfer';
@@ -818,7 +933,7 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
   /**
    * @covers ACommunityUiContentRessource::set
    */
-  public function testSetWithTypeSurferAndSourceParameterValueNotActiveLoginButNeedsActiveLogin() {
+  public function testSetWithTypeSurferAndSourceParameterValueNotValidSurferLoginButNeedsLogin() {
     $currentSurferHandle = 'anothersurfer';
     $currentSurferId = 'ea90c0a2371b44efb617c82853ad036e';
     $selectedSurferHandle = 'thesurfer';
@@ -961,7 +1076,33 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
     }
 
     if (isset($sourceParameters['group_handle'])) {
+
+      $groupSurferRelations = $this->getMock('ACommunityGroupSurferRelations');
+      // call in page module
+      $groupSurferRelations
+        ->expects($this->at(0))
+        ->method('status')
+        ->with($this->equalTo($ressourceId), $this->equalTo($activeSurfer[1]))
+        ->will($this->returnValue(array('is_owner' => 1, 'is_member' => 0)));
+      if ($uploadRessourceParameters != array()) {
+        // call in upload box if reached
+        if ($uploadBoxRessourceId == $ressourceId) {
+          // valid surfer
+          $groupSurferStatus = array('is_owner' => 1, 'is_member' => 0);
+        } else {
+          $groupSurferStatus = FALSE;
+        }
+        $groupSurferRelations
+          ->expects($this->at(1))
+          ->method('status')
+          ->with($this->equalTo($ressourceId), $this->equalTo($activeSurfer[1]))
+          ->will($this->returnValue($groupSurferStatus));
+      }
       $connector = $this->getMock('ACommunityConnector');
+      $connector
+        ->expects($this->any())
+        ->method('groupSurferRelations')
+        ->will($this->returnValue($groupSurferRelations));
       $connector
         ->expects($this->any())
         ->method('getGroupIdByHandle')
