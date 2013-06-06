@@ -108,6 +108,7 @@ class ACommunityCommentsRankingBox extends base_actionbox implements PapayaPlugi
       $this->_comments->parameterGroup($this->paramName);
       $this->_comments->data()->languageId = $this->papaya()->request->languageId;
       $this->_comments->data()->mode = 'ranking';
+      $this->_comments->module = $this;
     }
     return $this->_comments;
   }

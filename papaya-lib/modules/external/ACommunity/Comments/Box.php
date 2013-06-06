@@ -205,6 +205,7 @@ class ACommunityCommentsBox extends base_actionbox implements PapayaPluginCachea
       $this->_comments = new ACommunityComments();
       $this->_comments->parameterGroup($this->paramName);
       $this->_comments->data()->languageId = $this->papaya()->request->languageId;
+      $this->_comments->module = $this;
     }
     return $this->_comments;
   }
