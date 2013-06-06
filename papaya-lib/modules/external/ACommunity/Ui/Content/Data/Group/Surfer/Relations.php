@@ -2,6 +2,9 @@
 /**
  * Advanced community surfers data class with group surfer relations helper methods
  *
+ * DEPRECATED CLASS: Use the groupSurferRelations object from the connector to use the new
+ * ACommunityGroupSurferRelations class.
+ *
  * @copyright 2013 by Martin Kelm
  * @link http://idx.shrt.ws
  * @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
