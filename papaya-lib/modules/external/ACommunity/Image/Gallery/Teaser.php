@@ -55,8 +55,8 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     $galleryTeaser = $parent->appendElement('acommunity-image-gallery-teaser');
-    $ressource = $this->data()->ressource('ressource');
-    if (isset($ressource->id) && ($ressource->type != 'group' || $this->data()->surferHasGroupAccess)) {
+    $ressource = $this->ressource();
+    if (isset($ressource->id)) {
       $this->data()->galleries()->load(
         array(
           'ressource_type' => $ressource->type,
@@ -81,14 +81,14 @@ class ACommunityImageGalleryTeaser extends ACommunityUiContent {
           }
         }
       }
-      if (empty($images) && $ressource->type == 'surfer' && $ressource->validSurfer) {
+      if (empty($images) && $ressource->type == 'surfer' && $ressource->validSurfer === 'is_selected') {
         $galleryTeaser->appendElement(
           'add-new-images-link',
           array('href' => $this->acommunityConnector()->getGalleryPageLink('surfer', $ressource->id)),
           $this->data()->captions['add_new_images_link']
         );
       } elseif (empty($images) && $ressource->type == 'group' &&
-                $this->data()->surferHasStatus(NULL, 'is_owner', 1)) {
+                ($ressource->validSurfer === 'is_owner' || $ressource->validSurfer === 'is_member')) {
         $galleryTeaser->appendElement(
           'add-new-images-link',
           array('href' => $this->acommunityConnector()->getGalleryPageLink('group', $ressource->id)),

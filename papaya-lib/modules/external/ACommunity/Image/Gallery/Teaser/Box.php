@@ -75,6 +75,12 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
   protected $_cacheDefinition = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -92,24 +98,17 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
         $values = new ACommunityCacheIdentifierValues();
         $definitionValues[] = $ressource->type;
         $definitionValues[] = $ressource->id;
-        $access = TRUE;
-        if ($ressource->type == 'group') {
-          $access = $this->teaser()->data()->surferHasGroupAccess;
+        if ($ressource->type == 'surfer') {
+          $definitionValues[] = (int)$ressource->validSurfer === 'is_selected';
+          $lastChangeRessource = 'surfer_gallery_images:folder_base:surfer_'.$ressource->id;
+        } elseif ($ressource->type == 'group') {
+          $definitionValues[] = (int)(
+            $ressource->validSurfer === 'is_owner' || $ressource->validSurfer === 'is_member'
+          );
+          $lastChangeRessource = 'group_gallery_images:folder_base:group_'.$ressource->id;
         }
-        $definitionValues[] = (int)$access;
-        if ($access) {
-          if ($ressource->type == 'surfer') {
-            $definitionValues[] = (int)$ressource->validSurfer;
-            $lastChangeRessource = 'surfer_gallery_images:folder_base:surfer_'.$ressource->id;
-          } elseif ($ressource->type == 'group') {
-            $definitionValues[] = (int)$this->teaser()->data()->surferHasStatus(
-              $ressource->id, 'is_owner', 1
-            );
-            $lastChangeRessource = 'group_gallery_images:folder_base:group_'.$ressource->id;
-          }
-          if (isset($lastChangeRessource)) {
-            $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
-          }
+        if (isset($lastChangeRessource)) {
+          $definitionValues[] = $values->lastChangeTime($lastChangeRessource);
         }
       }
       $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues($definitionValues);
@@ -121,14 +120,10 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
    * Set ressource by page module with connector to get surfer or group
    */
   public function setRessourceData() {
-    $ressource = $this->teaser()->acommunityConnector()->ressource();
-    $this->teaser()->data()->ressource($this->teaser()->acommunityConnector()->ressource());
-    if (isset($ressource->id) && $ressource->type == 'group') {
-      if (!empty($this->parentObj->moduleObj->surferHasGroupAccess)) {
-        $this->teaser()->data()->surferHasGroupAccess = TRUE;
-      }
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->teaser()->ressource();
     }
-    return $ressource;
+    return $this->_ressource;
   }
 
   /**
