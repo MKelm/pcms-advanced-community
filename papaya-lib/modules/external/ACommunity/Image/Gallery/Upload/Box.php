@@ -138,7 +138,7 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
       $filterParameterNames,
       array('surfer' => 'enlarge', 'group' => 'enlarge'),
       $ressource->handle,
-      TRUE
+      $ressource->type == 'group' ? TRUE : 'is_selected'
     );
     $this->upload()->data()->ressource($ressource);
     return $ressource;
