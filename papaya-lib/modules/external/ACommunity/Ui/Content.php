@@ -195,7 +195,7 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
       $this->_ressource = $ressource;
     } elseif (is_null($this->_ressource)) {
       include_once(dirname(__FILE__).'/Content/Ressource.php');
-      $this->_ressource = ACommunityUiContentRessource::getInstance();
+      $this->_ressource = ACommunityUiContentRessource::getInstance($module);
       $this->_ressource->papaya($this->papaya());
       $this->_ressource->uiContent = $this;
     }
