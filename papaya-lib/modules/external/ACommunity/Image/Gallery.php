@@ -80,14 +80,11 @@ class ACommunityImageGallery extends MediaImageGallery {
     if ($command == 'delete_image') {
       $fileId = $this->parameters()->get('id', NULL);
       if (!empty($fileId)) {
-        $ressource = $this->data()->ressource('ressource');
-        if (($ressource->type == 'surfer' &&
-             ($ressource->validSurfer || $this->data()->surferIsModerator())) ||
-            ($ressource->type == 'group' &&
-             ($this->data()->surferHasStatus(NULL, 'is_owner', 1) || $this->data()->surferIsModerator()))) {
+        $ressource = $this->ressource();
+        if ($ressource->validSurfer === 'is_selected' || $ressource->validSurfer === 'is_owner' ||
+            $this->data()->surferIsModerator()) {
 
           if ($this->data()->mediaDBEdit()->deleteFile($fileId)) {
-
             $folderId = $this->parameters()->get('folder_id', 0);
             if (!($folderId > 0)) {
               $lastChangeRessource = $ressource->type.'_gallery_images:folder_base:'.
@@ -121,8 +118,7 @@ class ACommunityImageGallery extends MediaImageGallery {
    * @param PapayaXmlElement $parent
    */
   public function appendTo(PapayaXmlElement $parent) {
-    $ressource = $this->data()->ressource('ressource');
-    if ($ressource->type != 'group' || $this->data()->surferHasGroupAccess()) {
+    if (isset($this->ressource()->id)) {
       parent::appendTo($parent);
     } else {
       $parent->appendElement(
@@ -145,8 +141,7 @@ class ACommunityImageGallery extends MediaImageGallery {
               PapayaXmlElement $parent, $fileId, $fileOffset = 0, $thumbnail = FALSE
             ) {
     parent::_appendImageTo($parent, $fileId, $fileOffset, $thumbnail);
-    $ressource = $this->data()->ressource('ressource');
-    if ($thumbnail == TRUE && $this->_options['lightbox'] == 1 && isset($ressource->id)) {
+    if ($thumbnail == TRUE && $this->_options['lightbox'] == 1) {
       // file description for lighbox extension
       $fileDescription = !empty($this->_folder['translations'][$fileId]['file_description']) ?
         $this->_folder['translations'][$fileId]['file_description'] : NULL;
@@ -163,11 +158,10 @@ class ACommunityImageGallery extends MediaImageGallery {
         'image-extras-link', array(), PapayaUtilStringXml::escape($link)
       );
     }
+    $ressource = $this->ressource();
     if ($thumbnail == TRUE &&
-        (($ressource->type == 'surfer' &&
-          ($ressource->validSurfer || $this->data()->surferIsModerator())) ||
-         ($ressource->type == 'group' &&
-          ($this->data()->surferHasStatus(NULL, 'is_owner', 1) || $this->data()->surferIsModerator())))) {
+        ($ressource->validSurfer === 'is_selected' || $ressource->validSurfer === 'is_owner' ||
+         $this->data()->surferIsModerator())) {
       $reference = clone $this->reference();
       $reference->setParameters(
         array(

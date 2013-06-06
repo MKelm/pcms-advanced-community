@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../../Ui/Content/Data/Group/Surfer/Relations.php');
+require_once(dirname(__FILE__).'/../../Ui/Content/Data.php');
 
 /**
  * Advanced community surfer gallery data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../../Ui/Content/Data/Group/Surfer/Relations.ph
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelations {
+class ACommunityImageGalleryData extends ACommunityUiContentData {
 
   /**
    * Gallery database record
@@ -55,12 +55,6 @@ class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelat
   protected $_group = NULL;
 
   /**
-   * Flag of surfer group access status
-   * @var boolean
-   */
-  protected $_surferHasGroupAccess = NULL;
-
-  /**
   * Access to group database record data
   *
   * @param ACommunityContentGroup $group
@@ -75,38 +69,6 @@ class ACommunityImageGalleryData extends ACommunityUiContentDataGroupSurferRelat
       $this->_group->papaya($this->papaya());
     }
     return $this->_group;
-  }
-
-  /**
-   * Detects group access by surfer
-   *
-   * @return boolean
-   */
-  public function surferHasGroupAccess() {
-    if (is_null($this->_surferHasGroupAccess)) {
-      $ressource = $this->ressource('ressource');
-      if (isset($ressource->id)) {
-        $this->group()->load($ressource->id);
-        $surferIsOwner = $this->surferHasStatus(NULL, 'is_owner', 1);
-        $surferIsMember = $this->surferHasStatus(NULL, 'is_member', 1);
-        if ($this->group()->public == 0) {
-          if ($surferIsOwner || $surferIsMember) {
-            $this->owner->module->surferHasGroupAccess = TRUE;
-            $this->owner->module->groupSurferStatus =
-              array('is_owner' => $surferIsOwner, 'is_member' => $surferIsMember);
-            $this->_surferHasGroupAccess = TRUE;
-          } else {
-            $this->_surferHasGroupAccess = FALSE;
-          }
-        } else {
-          $this->owner->module->surferHasGroupAccess = TRUE;
-          $this->owner->module->groupSurferStatus =
-            array('is_owner' => $surferIsOwner, 'is_member' => $surferIsMember);
-          $this->_surferHasGroupAccess = TRUE;
-        }
-      }
-    }
-    return $this->_surferHasGroupAccess;
   }
 
   /**
