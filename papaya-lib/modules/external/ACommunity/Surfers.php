@@ -58,26 +58,26 @@ class ACommunitySurfers extends ACommunityUiContent {
    * Perform commands to change surfer contact
    */
   protected function _performCommands() {
+    $ressource = $this->ressource();
     if ($this->data()->displayMode == 'contacts_and_requests') {
       $command = $this->parameters()->get('command', NULL);
       if (!empty($command)) {
         $surferId = $this->communityConnector()->getIdByHandle(
           $this->parameters()->get('surfer_handle', NULL)
         );
-        if ($this->data()->ressourceIsActiveSurfer == TRUE && !empty($surferId)) {
-          $currentSurferId = $this->data()->currentSurferId();
+        if (isset($ressource->id)) {
           switch ($command) {
             case 'remove_contact_request':
-              return $this->data()->contactChanges()->deleteContactRequest($currentSurferId, $surferId);
+              return $this->data()->contactChanges()->deleteContactRequest($ressource->id, $surferId);
               break;
             case 'accept_contact_request':
-              return $this->data()->contactChanges()->acceptContactRequest($currentSurferId, $surferId);
+              return $this->data()->contactChanges()->acceptContactRequest($ressource->id, $surferId);
               break;
             case 'decline_contact_request':
-              return $this->data()->contactChanges()->declineContactRequest($currentSurferId, $surferId);
+              return $this->data()->contactChanges()->declineContactRequest($ressource->id, $surferId);
               break;
             case 'remove_contact':
-              return $this->data()->contactChanges()->deleteContact($currentSurferId, $surferId);
+              return $this->data()->contactChanges()->deleteContact($ressource->id, $surferId);
               break;
           }
         }
@@ -87,41 +87,37 @@ class ACommunitySurfers extends ACommunityUiContent {
     } elseif ($this->data()->displayMode == 'surfers') {
       $command = $this->parameters()->get('command', NULL);
       if (!empty($command)) {
-        $ressource = $this->data()->ressource();
-        if ($ressource['type'] == 'group') {
-          $groupSurferRelations = clone $this->data()->groupSurferRelations();
-          $groupSurferRelations->load(
-            array('id' => $ressource['id'], 'surfer_id' => $this->data()->currentSurferId())
-          );
-          $groupSurferRelation = reset($groupSurferRelations->toArray());
+        if ($ressource->type == 'group') {
           $surferId = $this->communityConnector()->getIdByHandle(
             $this->parameters()->get('surfer_handle', NULL)
           );
-          if (!empty($groupSurferRelation['is_owner']) && !empty($surferId)) {
+          if ($this->acommunityConnector()->groupSurferRelations()
+                ->status($ressource->id, $surferId, 'is_owner', 1)) {
+            $changes = $this->acommunityConnector()->groupSurferRelations()->changes();
             switch ($command) {
               case 'remove_member':
-                return $this->data()->groupSurferChanges()->removeMember(
-                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                return $changes->removeMember(
+                  $ressource->id, $surferId, $this->data()->currentSurferId()
                 );
                 break;
               case 'invite_surfer':
-                return $this->data()->groupSurferChanges()->inviteSurfer(
-                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                return $changes->inviteSurfer(
+                  $ressource->id, $surferId, $this->data()->currentSurferId()
                 );
                 break;
               case 'remove_invitation':
-                return $this->data()->groupSurferChanges()->removeInvitation(
-                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                return $changes->removeInvitation(
+                  $ressource->id, $surferId, $this->data()->currentSurferId()
                 );
                 break;
               case 'accept_request':
-                return $this->data()->groupSurferChanges()->acceptRequest(
-                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                return $changes->acceptRequest(
+                  $ressource->id, $surferId, $this->data()->currentSurferId()
                 );
                 break;
               case 'decline_request':
-                return $this->data()->groupSurferChanges()->declineRequest(
-                  $ressource['id'], $surferId, $this->data()->currentSurferId()
+                return $changes->declineRequest(
+                  $ressource->id, $surferId, $this->data()->currentSurferId()
                 );
                 break;
             }
@@ -142,32 +138,32 @@ class ACommunitySurfers extends ACommunityUiContent {
   public function appendTo(PapayaXmlElement $parent) {
     $listElement = $parent->appendElement('acommunity-surfers');
     $result = $this->_performCommands();
-    if ($result !== NULL) {
-      if ($result === FALSE) {
-        $listElement->appendElement(
-          'message', array('type' => 'error'), $this->data()->messages['failed_to_execute_command']
-        );
-      }
+    if ($result === FALSE) {
+      $listElement->appendElement(
+        'message', array('type' => 'error'), $this->data()->messages['failed_to_execute_command']
+      );
     }
 
     if ($this->data()->displayMode == 'contacts_and_requests') {
-      $this->data()->initialize();
-      foreach ($this->data()->surfers as $groupName => $surfers) {
-        $groupElement = $listElement->appendElement(
-          'group', array('name' => $groupName, 'caption' => $this->data()->captions[$groupName])
-        );
-        if (empty($surfers)) {
-          $groupElement->appendElement(
-            'message', array('type' => 'info'), $this->data()->messages['empty_list']
+      if (isset($this->ressource()->id)) {
+        $this->data()->initialize();
+        foreach ($this->data()->surfers as $groupName => $surfers) {
+          $groupElement = $listElement->appendElement(
+            'group', array('name' => $groupName, 'caption' => $this->data()->captions[$groupName])
           );
-        } else {
-          foreach ($surfers as $surfer) {
-            $this->_appendSurferTo($groupElement, $surfer);
-          }
-          if ($this->data()->showPaging) {
-            $this->paging(
-              NULL, TRUE, $groupName.'_', $this->data()->pagingItemsAbsCount[$groupName]
-            )->appendTo($groupElement);
+          if (empty($surfers)) {
+            $groupElement->appendElement(
+              'message', array('type' => 'info'), $this->data()->messages['empty_list']
+            );
+          } else {
+            foreach ($surfers as $surfer) {
+              $this->_appendSurferTo($groupElement, $surfer);
+            }
+            if ($this->data()->showPaging) {
+              $this->paging(
+                NULL, TRUE, $groupName.'_', $this->data()->pagingItemsAbsCount[$groupName]
+              )->appendTo($groupElement);
+            }
           }
         }
       }

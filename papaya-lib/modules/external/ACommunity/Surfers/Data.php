@@ -19,7 +19,7 @@
 /**
  * Base ui content data object
  */
-require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php');
+require_once(dirname(__FILE__).'/../Ui/Content/Data.php');
 
 /**
  * Advanced community surfers data class to handle all sorts of related data
@@ -27,7 +27,7 @@ require_once(dirname(__FILE__).'/../Ui/Content/Data/Group/Surfer/Relations.php')
  * @package Papaya-Modules
  * @subpackage External-ACommunity
  */
-class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations {
+class ACommunitySurfersData extends ACommunityUiContentData {
 
   /**
    * Surfers data
@@ -121,7 +121,7 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
    */
   public function initialize() {
     $timeframe = 60 * 60 * 24 * $this->_timeframe;
-    $ressource = $this->ressource();
+    $ressource = $this->owner->ressource();
     $surfers = array();
     switch ($this->displayMode) {
       case 'lastaction':
@@ -152,12 +152,12 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
         break;
 
       case 'contacts_and_requests':
-        if ($this->ressourceIsActiveSurfer == TRUE) {
+        if ($ressource->validSurfer === 'is_selected') {
           $this->pagingItemsAbsCount = array();
           // load contacts by current surfer
           $page = $this->owner->parameters()->get('contacts_list_page', 0);
           $surfers['contacts'] = $this->owner->communityConnector()->getContacts(
-            $this->currentSurferId(),
+            $ressource->id,
             FALSE,
             $this->pagingItemsPerPage,
             $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
@@ -166,7 +166,7 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
           // load own contact requests by current surfer
           $page = $this->owner->parameters()->get('own_contact_requests_list_page', 0);
           $surfers['own_contact_requests'] = $this->owner->communityConnector()->getContactRequestsSent(
-            $this->currentSurferId(),
+            $ressource->id,
             FALSE,
             $this->pagingItemsPerPage,
             $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
@@ -175,7 +175,7 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
           // load contact requests by current surfer
           $page = $this->owner->parameters()->get('contact_requests_list_page', 0);
           $surfers['contact_requests'] = $this->owner->communityConnector()->getContactRequestsReceived(
-            $this->currentSurferId(),
+            $ressource->id,
             FALSE,
             $this->pagingItemsPerPage,
             $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
@@ -249,7 +249,7 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
         // load surfers by contacts
         $page = $this->owner->parameters()->get('contacts_list_page', 0);
         $contactIds = $this->owner->communityConnector()->getContacts(
-          $ressource['id'],
+          $ressource->id,
           FALSE,
           $this->pagingItemsPerPage,
           $page > 0 ? ($page - 1) * $this->pagingItemsPerPage : 0
@@ -260,41 +260,44 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
 
       case 'surfers':
         // load group surfer relations in group modes
-        if ($ressource['type'] == 'group') {
+        if ($ressource->type == 'group') {
           $surferIds = NULL;
-          $mode = $this->owner->parameters()->get('mode', NULL);
-          if ($mode == 'members') {
-            $this->groupSurferRelations()->load(
-              array('id' => $ressource['id'], 'surfer_status_pending' => 0)
+          if ($ressource->displayMode == 'members') {
+            $this->owner->acommunityConnector()->groupSurferRelations()->content()->load(
+              array('id' => $ressource->id, 'surfer_status_pending' => 0)
             );
-            $groupSurferRelations = $this->groupSurferRelations()->toArray();
+            $groupSurferRelations = $this->owner->acommunityConnector()->groupSurferRelations()
+              ->content()->toArray();
             $surferIds = array_keys($groupSurferRelations);
             if (empty($surferIds)) {
               return FALSE;
             }
-          } elseif ($mode == 'membership_invitations') {
-            $this->groupSurferRelations()->load(
-              array('id' => $ressource['id'], 'surfer_status_pending' => 2)
+          } elseif ($ressource->displayMode == 'membership_invitations') {
+            $this->owner->acommunityConnector()->groupSurferRelations()->content()->load(
+              array('id' => $ressource->id, 'surfer_status_pending' => 2)
             );
-            $groupSurferRelations = $this->groupSurferRelations()->toArray();
+            $groupSurferRelations =$this->owner->acommunityConnector()->groupSurferRelations()
+              ->content()->toArray();
             $surferIds = array_keys($groupSurferRelations);
             if (empty($surferIds)) {
               return FALSE;
             }
-          } elseif ($mode == 'membership_requests') {
-            $this->groupSurferRelations()->load(
-              array('id' => $ressource['id'], 'surfer_status_pending' => 1)
+          } elseif ($ressource->displayMode == 'membership_requests') {
+            $this->owner->acommunityConnector()->groupSurferRelations()->content()->load(
+              array('id' => $ressource->id, 'surfer_status_pending' => 1)
             );
-            $groupSurferRelations = $this->groupSurferRelations()->toArray();
+            $groupSurferRelations = $this->owner->acommunityConnector()->groupSurferRelations()
+              ->content()->toArray();
             $surferIds = array_keys($groupSurferRelations);
             if (empty($surferIds)) {
               return FALSE;
             }
-          } elseif ($mode == 'invite_surfers') {
-            $this->groupSurferRelations()->load(
-              array('id' => $ressource['id'])
+          } elseif ($ressource->displayMode == 'invite_surfers') {
+            $this->owner->acommunityConnector()->groupSurferRelations()->content()->load(
+              array('id' => $ressource->id)
             );
-            $groupSurferRelations = $this->groupSurferRelations()->toArray();
+            $groupSurferRelations = $this->owner->acommunityConnector()->groupSurferRelations()
+              ->content()->toArray();
           }
         }
         // get list limit / offset
@@ -352,7 +355,7 @@ class ACommunitySurfersData extends ACommunityUiContentDataGroupSurferRelations 
         $this->pagingItemsAbsCount = $this->owner->communityConnector()->surferAdmin->surfersAbsCount;
         $surfers = $this->getSurfer(array_keys($surfers), NULL, $surfers);
         // action commands for group modes
-        if ($ressource['type'] == 'group' && $this->surferHasStatus(NULL, 'is_owner', 1)) {
+        if ($ressource->type == 'group' && $ressource->validSurfer === 'is_owner') {
           if ($mode == 'members') {
             // add remove member in members mode
             foreach ($surfers as $key => $surfer) {
