@@ -937,17 +937,31 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
     $ressource->papaya($application);
     $ressource->set('surfer', NULL, NULL, NULL, $selectedSurferHandle);
     $this->assertEquals($selectedSurferId, $ressource->id);
+    $this->assertEquals(FALSE, $ressource->validSurfer);
+  }
+
+  public static function providerSetWithTypeSurferAndValidSurferLogin() {
+    $anotherSurferHandle = 'anothersurfer';
+    $anotherSurferId = '8560a752653040e689fb0110e8425d8d';
+    $surferHandle = 'thesurfer';
+    $surferId = 'ea90c0a2371b44efb617c82853ad036e';
+    return array(
+      'login with selected surfer' => array(
+        $surferHandle, $surferId, $surferHandle, $surferId, 'is_selected'
+      ),
+      'login with another surfer' => array(
+        $surferHandle, $surferId, $anotherSurferHandle, $anotherSurferId, 'is_another'
+      )
+    );
   }
 
   /**
    * @covers ACommunityUiContentRessource::set
+   * @dataProvider providerSetWithTypeSurferAndValidSurferLogin
    */
-  public function testSetWithTypeSurferAndSourceParameterValueWithAnotherSurferLogin() {
-    $currentSurferHandle = 'anothersurfer';
-    $currentSurferId = 'ea90c0a2371b44efb617c82853ad036e';
-    $selectedSurferHandle = 'thesurfer';
-    $selectedSurferId = '610ffec2030548049355a8aad1d23157';
-
+  public function testSetWithTypeSurferAndSourceParameterValueWithValidSurferLogin(
+           $selectedSurferHandle, $selectedSurferId, $currentSurferHandle, $currentSurferId, $validSurferStatus
+         ) {
     $connector = $this->getMock('connector_surfers');
     $connector
       ->expects($this->once())
@@ -970,17 +984,47 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
     $ressource->papaya($application);
     $ressource->set('surfer', NULL, NULL, NULL, $selectedSurferHandle);
     $this->assertEquals($selectedSurferId, $ressource->id);
-    $this->assertEquals(FALSE, $ressource->validSurfer);
+    $this->assertEquals($selectedSurferHandle, $ressource->handle);
+    $this->assertEquals($validSurferStatus, $ressource->validSurfer);
+  }
+
+  public static function providerSetWithTypeSurferAndNeedsValidSurferLogin() {
+    $anotherSurferHandle = 'anothersurfer';
+    $anotherSurferId = '8560a752653040e689fb0110e8425d8d';
+    $surferHandle = 'thesurfer';
+    $surferId = 'ea90c0a2371b44efb617c82853ad036e';
+    return array(
+      'login with selected surfer needs selected' => array(
+        $surferHandle, $surferId, $surferHandle, $surferId, 'is_selected', 'is_selected', $surferId
+      ),
+      'login with selected surfer needs another' => array(
+        $surferHandle, $surferId, $surferHandle, $surferId, 'is_another', 'is_selected', NULL
+      ),
+      'login with selected surfer needs valid' => array(
+        $surferHandle, $surferId, $surferHandle, $surferId, TRUE, 'is_selected', $surferId
+      ),
+      'login with another surfer needs another' => array(
+        $surferHandle, $surferId, $anotherSurferHandle, $anotherSurferId, 'is_another', 'is_another',
+        $surferId
+      ),
+      'login with another surfer needs selected' => array(
+        $surferHandle, $surferId, $anotherSurferHandle, $anotherSurferId, 'is_selected', 'is_another', NULL
+      ),
+      'login with another surfer needs valid' => array(
+        $surferHandle, $surferId, $anotherSurferHandle, $anotherSurferId, TRUE, 'is_another',
+        $surferId
+      )
+    );
   }
 
   /**
    * @covers ACommunityUiContentRessource::set
+   * @dataProvider providerSetWithTypeSurferAndNeedsValidSurferLogin
    */
-  public function testSetWithTypeSurferAndSourceParameterValueWithValidSurferLogin() {
-    $currentSurferHandle = 'thesurfer';
-    $currentSurferId = 'ea90c0a2371b44efb617c82853ad036e';
-    $selectedSurferHandle = 'thesurfer';
-    $selectedSurferId = 'ea90c0a2371b44efb617c82853ad036e';
+  public function testSetWithTypeSurferAndSourceParameterValueAndNeedsValidSurferLogin(
+           $selectedSurferHandle, $selectedSurferId, $currentSurferHandle, $currentSurferId,
+           $needsValidSurfer, $validSurferStatus, $resultSurferId
+         ) {
 
     $connector = $this->getMock('connector_surfers');
     $connector
@@ -1002,43 +1046,9 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
     $surfer->surfer['surfer_handle'] = $currentSurferHandle;
     $application = $this->getMockApplicationObject(array('surfer' => $surfer));
     $ressource->papaya($application);
-    $ressource->set('surfer', NULL, NULL, NULL, $selectedSurferHandle);
-    $this->assertEquals($currentSurferId, $ressource->id);
-    $this->assertEquals($currentSurferHandle, $ressource->handle);
-    $this->assertEquals(TRUE, $ressource->validSurfer);
-  }
-
-  /**
-   * @covers ACommunityUiContentRessource::set
-   */
-  public function testSetWithTypeSurferAndSourceParameterValueNotValidSurferLoginButNeedsLogin() {
-    $currentSurferHandle = 'anothersurfer';
-    $currentSurferId = 'ea90c0a2371b44efb617c82853ad036e';
-    $selectedSurferHandle = 'thesurfer';
-    $selectedSurferId = '610ffec2030548049355a8aad1d23157';
-
-    $connector = $this->getMock('connector_surfers');
-    $connector
-      ->expects($this->once())
-      ->method('getIdByHandle')
-      ->with($this->equalTo($selectedSurferHandle))
-      ->will($this->returnValue($selectedSurferId));
-    $uiContent = $this->getMock('ACommunityUiContent');
-    $uiContent
-      ->expects($this->once())
-      ->method('communityConnector')
-      ->will($this->returnValue($connector));
-
-    $ressource = $this->_getRessourceWithSourceData();
-    $ressource->uiContent = $uiContent;
-    $surfer = new base_surfer_dummy();
-    $surfer->isValid = TRUE;
-    $surfer->surfer['surfer_id'] = $currentSurferId;
-    $surfer->surfer['surfer_handle'] = $currentSurferHandle;
-    $application = $this->getMockApplicationObject(array('surfer' => $surfer));
-    $ressource->papaya($application);
-    $ressource->set('surfer', NULL, NULL, NULL, $selectedSurferHandle, TRUE);
-    $this->assertEquals(NULL, $ressource->id);
+    $ressource->set('surfer', NULL, NULL, NULL, $selectedSurferHandle, $needsValidSurfer);
+    $this->assertEquals($resultSurferId, $ressource->id);
+    $this->assertEquals($validSurferStatus, $ressource->validSurfer);
   }
 
   /**
@@ -1271,7 +1281,7 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
       $filterParameterNames,
       array('surfer' => 'enlarge', 'group' => 'enlarge'),
       $ressource->handle,
-      TRUE
+      $ressource->type == 'group' ? TRUE : 'is_selected'
     );
     $this->assertEquals($uploadBoxRessourceId, $ressource->id);
     $this->assertEquals($uploadRessourceParameters, $ressource->parameters());

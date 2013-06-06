@@ -401,11 +401,18 @@ class ACommunityUiContentRessource extends PapayaObject {
             $surferId = $currentSurferId;
             $sourceParameterValue = $currentSurferHandle;
           }
-          if (!empty($surferId)) {
-            $this->validSurfer = $surferId == $currentSurferId;
-            if (!$this->needsValidSurfer || ($this->needsValidSurfer && $this->validSurfer)) {
-              $this->id = $surferId;
-            }
+          if (!empty($currentSurferId) && ($surferId == $currentSurferId || empty($surferId))) {
+            $this->validSurfer = 'is_selected';
+          } elseif (!empty($currentSurferId) && !empty($surferId)) {
+            $this->validSurfer = 'is_another';
+          } else {
+            $this->validSurfer = FALSE;
+          }
+          $this->id = $surferId;
+          if (($this->needsValidSurfer === TRUE && $this->validSurfer === FALSE) ||
+              ($this->needsValidSurfer === 'is_selected' && $this->validSurfer !== 'is_selected') ||
+              ($this->needsValidSurfer === 'is_another' && $this->validSurfer !== 'is_another')) {
+            $this->id = NULL;
           }
           break;
         case 'image':
