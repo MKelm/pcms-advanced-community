@@ -52,7 +52,7 @@ class ACommunityImageGalleryFoldersData extends ACommunityImageGalleryData {
    */
   public function getBaseFolderId() {
     if (is_null($this->_baseFolderId)) {
-      $ressource = $this->ressource('ressource');
+      $ressource = $this->owner->ressource();
       $this->galleries()->load(
         array(
           'ressource_type' => $ressource->type,
@@ -71,7 +71,7 @@ class ACommunityImageGalleryFoldersData extends ACommunityImageGalleryData {
    */
   public function loadFolders() {
     $this->folders = array();
-    $ressource = $this->ressource('ressource');
+    $ressource = $this->owner->ressource();
     $this->galleries()->load(
       array('ressource_type' => $ressource->type, 'ressource_id' => $ressource->id)
     );

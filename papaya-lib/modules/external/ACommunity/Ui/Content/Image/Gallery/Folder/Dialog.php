@@ -115,7 +115,7 @@ class ACommunityUiContentImageGalleryFolderDialog
   * @param object $record
   */
   public function callbackBeforeSaveRecord($context, $record) {
-    $ressource = $this->data()->ressource('ressource');
+    $ressource = $this->data()->owner->ressource();
     $parentFolderId = $this->data()->getBaseFolderId();
     $languageId = $this->data()->languageId;
     $parentFolder = $this->data()->mediaDBEdit()->getFolder($parentFolderId);
@@ -156,13 +156,10 @@ class ACommunityUiContentImageGalleryFolderDialog
   * @param PapayaUiDialog $dialog
   */
   public function callbackExecuteSuccessful($context, $dialog) {
-    $ressource = $this->data()->ressource('ressource');
-    if ($ressource->type == 'group') {
-      $lastChangeRessource = 'group_gallery_folders:group_'.$ressource->id;
-    } else {
-      $lastChangeRessource = 'surfer_gallery_folders:surfer_'.$ressource->id;
-    }
-    $this->data()->setLastChangeTime($lastChangeRessource);
+    $ressource = $this->data()->owner->ressource();
+    $this->data()->setLastChangeTime(
+      $ressource->type.'_gallery_folders:'.$ressource->type.'_'.$ressource->id
+    );
     $this->data()->owner->parameters()->set('remove_dialog', 1);
   }
 

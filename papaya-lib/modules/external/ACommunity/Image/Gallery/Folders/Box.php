@@ -85,6 +85,12 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
   protected $_cacheDefinition = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -95,8 +101,7 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
     if (isset($definition)) {
       $this->_cacheDefinition = $definition;
     } elseif (NULL == $this->_cacheDefinition) {
-      $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
-          $this->papaya()->surfer->surfer['surfer_id'] : NULL;
+      $currentSurferId = $this->folders()->data()->currentSurferId();
       $command = $this->folders()->parameters()->get('command', NULL);
       if (!empty($currentSurferId) && $command == 'add_folder') {
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
@@ -127,13 +132,15 @@ class ACommunityImageGalleryFoldersBox extends base_actionbox implements PapayaP
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $ressource = $this->folders()->ressource();
-    $ressource->pointer = 0;
-    $ressource->filterSourceParameters(
-      array('surfer' => 'surfer_handle', 'group' => 'group_handle'), $ressource->type, TRUE
-    );
-    $this->folders()->data()->ressource($ressource);
-    return $ressource;
+    if (is_null($this->_ressource)) {
+      $ressource = $this->folders()->ressource();
+      $ressource->pointer = 0;
+      $ressource->filterSourceParameters(
+        array('surfer' => 'surfer_handle', 'group' => 'group_handle'), $ressource->type, TRUE
+      );
+      $this->_ressource = $ressource;
+    }
+    return $this->_ressource;
   }
 
   /**
