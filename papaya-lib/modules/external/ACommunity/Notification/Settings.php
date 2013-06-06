@@ -61,8 +61,7 @@ class ACommunityNotificationSettings extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     $parent->appendElement('title', array(), $this->data()->pageTitle);
-    $currentSurferId = $this->data()->currentSurferId();
-    if (!empty($currentSurferId)) {
+    if (isset($this->ressource()->id)) {
       $settings = $parent->appendElement('notification-settings');
       $this->data()->initializeSettings();
       $this->uiContentSettingsDialog()->appendTo($settings);

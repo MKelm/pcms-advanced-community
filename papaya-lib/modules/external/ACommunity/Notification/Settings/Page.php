@@ -76,6 +76,12 @@ class ACommunityNotificationSettingsPage extends base_content implements PapayaP
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -108,9 +114,13 @@ class ACommunityNotificationSettingsPage extends base_content implements PapayaP
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    return $this->settings()->data()->ressource(
-      'surfer', $this, NULL, array('surfer' => array()), NULL, 'object'
-    );
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->settings()->ressource();
+      $this->_ressource->set(
+        'surfer', $this, NULL, array('surfer' => array()), NULL, NULL, 'is_selected'
+      );
+    }
+    return $this->_ressource;
   }
 
   /**

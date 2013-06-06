@@ -69,9 +69,9 @@ class ACommunityNotificationSettingsData extends ACommunityUiContentData {
    * Initialize settings and setting fields with data
    */
   public function initializeSettings() {
-    $ressource = $this->ressource();
+    $ressource = $this->owner->ressource();
     $this->settings()->load(
-      array('surfer_id' => $ressource['id'], 'language_id' => $this->languageId)
+      array('surfer_id' => $ressource->id, 'language_id' => $this->languageId)
     );
     $settings = $this->settings()->toArray();
     $defaultSetting = $this->owner->acommunityConnector()->getNotificationDefaultSetting();
@@ -81,7 +81,7 @@ class ACommunityNotificationSettingsData extends ACommunityUiContentData {
         $setting = clone $this->setting();
         $setting->assign(
           array(
-            'surfer_id' => $ressource['id'],
+            'surfer_id' => $ressource->id,
             'notification_id' => $notificationSettings['notification_id'],
             'by_message' => $defaultSetting['by_message'],
             'by_email' => $defaultSetting['by_email']
@@ -108,7 +108,7 @@ class ACommunityNotificationSettingsData extends ACommunityUiContentData {
     }
     if ($changes) {
       $this->settings()->load(
-        array('surfer_id' => $ressource['id'], 'language_id' => $this->languageId)
+        array('surfer_id' => $ressource->id, 'language_id' => $this->languageId)
       );
     }
   }
@@ -117,12 +117,12 @@ class ACommunityNotificationSettingsData extends ACommunityUiContentData {
    * Save data in setting fields after dialog execute successful
    */
   public function saveSettingFields() {
-    $ressource = $this->ressource();
+    $ressource = $this->owner->ressource();
     foreach ($this->settingFields as $name => $field) {
       $setting = clone $this->setting();
       $setting->assign(
         array(
-          'surfer_id' => $ressource['id'],
+          'surfer_id' => $ressource->id,
           'notification_id' => (int)$field['data']['notification_id'],
           'by_message' => (int)$field['data']['by_message'],
           'by_email' => (int)$field['data']['by_email']
