@@ -850,6 +850,8 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
     $ressource = $this->_getRessourceWithSourceData();
     $ressource->set('image', NULL, NULL, NULL, $imageId);
     $this->assertEquals($imageId, $ressource->id);
+    // no surfer information in a image ressource without dependency
+    $this->assertEquals(FALSE, $ressource->validSurfer);
   }
 
   /**
@@ -867,6 +869,59 @@ class ACommunityUiContentRessourceTests extends PapayaTestCase {
     );
     $ressource->set('image');
     $this->assertEquals($imageId, $ressource->id);
+  }
+
+  public static function providerImageIdWithValidSurferLoginNeeded() {
+    $imageId = '9c8fe9984b6448f1bb71f2a25d89e8bc';
+    return array(
+      'valid login' => array(TRUE, $imageId),
+      'invalid login' => array(FALSE, NULL)
+    );
+  }
+
+  /**
+   * @covers ACommunityUiContentRessource::set
+   * @dataProvider providerImageIdWithValidSurferLoginNeeded
+   */
+  public function testSetWithTypeImageWithImageIdAndGalleryPageVisibiltyDependency(
+           $validSurferLogin, $resultImageId
+         ) {
+    $imageId = '9c8fe9984b6448f1bb71f2a25d89e8bc';
+    // gallery page ressource
+    $surferHandle = 'surferhandle';
+    $surferId = 'ea90c0a2371b44efb617c82853ad036e';
+    $surfer = new base_surfer_dummy();
+    $surfer->isValid = $validSurferLogin;
+    if ($validSurferLogin) {
+      $surfer->surfer['surfer_id'] = $surferId;
+      $surfer->surfer['surfer_handle'] = $surferHandle;
+    }
+    $application = $this->getMockApplicationObject(array('surfer' => $surfer));
+
+    $connector = $this->getMock('connector_surfers');
+    $connector
+      ->expects($this->once())
+      ->method('getIdByHandle')
+      ->with($this->equalTo($surferHandle))
+      ->will($this->returnValue($surferId));
+    $uiContent = $this->getMock('ACommunityUiContent');
+    $uiContent
+      ->expects($this->once())
+      ->method('communityConnector')
+      ->will($this->returnValue($connector));
+
+    $ressource = $this->_getRessourceWithSourceData(
+      TRUE, array('surfer_handle' => $surferHandle, 'enlarge' => 1), 'acig'
+    );
+    $ressource->uiContent = $uiContent;
+    $ressource->papaya($application);
+    $ressource->set('surfer', array('surfer' => 'surfer_handle'), NULL, NULL, NULL, TRUE);
+    $validSurfer = $ressource->validSurfer;
+    // depended image ressource
+    $ressource->set('image', NULL, NULL, NULL, $imageId);
+    $this->assertEquals($resultImageId, $ressource->id);
+    // a dependend image ressource needs the valid surfer status of the initial page ressource
+    $this->assertEquals($validSurfer, $ressource->validSurfer);
   }
 
   /**

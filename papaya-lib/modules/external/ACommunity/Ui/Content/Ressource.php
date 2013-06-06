@@ -429,6 +429,15 @@ class ACommunityUiContentRessource extends PapayaObject {
              */
             $this->id = $this->_module->parentObj->moduleObj->callbackGetCurrentImageId();
           }
+          $this->validSurfer == FALSE;
+          // check if the initial ressource id has been set / for box modules with dependency
+          if (!empty($this->id) && !isset($this->_pointerData['id'][0])) {
+            $this->id = NULL;
+          }
+          if (isset($this->_pointerData['validSurfer'][0])) {
+            // set the valid surfer of the page ressource / for box modules with dependecy
+            $this->validSurfer = $this->_pointerData['validSurfer'][0];
+          }
           break;
         case 'page':
           if (!empty($sourceParameterValue)) {
