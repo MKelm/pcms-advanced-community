@@ -91,6 +91,12 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
   protected $_cacheDefinition = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -101,10 +107,8 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
     if (isset($definition)) {
       $this->_cacheDefinition = $definition;
     } elseif (NULL == $this->_cacheDefinition) {
-      $currentSurferId = !empty($this->papaya()->surfer->surfer['surfer_id']) ?
-          $this->papaya()->surfer->surfer['surfer_id'] : NULL;
-      if (!empty($currentSurferId) &&
-          !$this->upload()->acommunityConnector()->ressource()->detectStopParameter('enlarge')) {
+      $ressource = $this->setRessourceData();
+      if (isset($ressource->id)) {
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       } else {
         $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues(
@@ -119,29 +123,31 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
    * Set ressource data to get surfer
    */
   public function setRessourceData() {
-    $ressource = $this->upload()->ressource();
-    $ressource->pointer = 0;
-    $command = $ressource->getSourceParameter('command');
-    if ($command != 'delete_folder') {
-      $filterParameterNames = array(
-        'surfer' => array('surfer_handle', 'folder_id', 'offset'),
-        'group' => array('group_handle', 'folder_id', 'offset')
+    if (is_null($this->_ressource)) {
+      $ressource = $this->upload()->ressource();
+      $ressource->pointer = 0;
+      $command = $ressource->getSourceParameter('command');
+      if ($command != 'delete_folder') {
+        $filterParameterNames = array(
+          'surfer' => array('surfer_handle', 'folder_id', 'offset'),
+          'group' => array('group_handle', 'folder_id', 'offset')
+        );
+      } else {
+        $filterParameterNames = array(
+          'surfer' => array('surfer_handle'), 'group' => array('group_handle')
+        );
+      }
+      $ressource->set(
+        $ressource->type,
+        NULL,
+        $filterParameterNames,
+        array('surfer' => 'enlarge', 'group' => 'enlarge'),
+        $ressource->handle,
+        $ressource->type == 'group' ? TRUE : 'is_selected'
       );
-    } else {
-      $filterParameterNames = array(
-        'surfer' => array('surfer_handle'), 'group' => array('group_handle')
-      );
+      $this->_ressource = $ressource;
     }
-    $ressource->set(
-      $ressource->type,
-      NULL,
-      $filterParameterNames,
-      array('surfer' => 'enlarge', 'group' => 'enlarge'),
-      $ressource->handle,
-      $ressource->type == 'group' ? TRUE : 'is_selected'
-    );
-    $this->upload()->data()->ressource($ressource);
-    return $ressource;
+    return $this->_ressource;
   }
 
   /**

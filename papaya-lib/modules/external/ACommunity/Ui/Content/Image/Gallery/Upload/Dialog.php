@@ -83,9 +83,7 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
     $dialog->parameters($this->parameters());
     $dialog->action($this->data()->reference()->getRelative());
     $dialog->hiddenFields()->merge(
-      array(
-        'command' => 'upload'
-      )
+      array('command' => 'upload')
     );
     $dialog->caption = NULL;
 
@@ -112,7 +110,7 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
   * @param PapayaUiDialog $dialog
   */
   public function callbackUploadImage($context, $dialog) {
-    $ressource = $this->data()->ressource('ressource');
+    $ressource = $this->data()->owner->ressource();
     $filter = array('ressource_type' => $ressource->type, 'ressource_id' => $ressource->id);
     $ressourceParameters = reset($ressource->parameters());
     if (!empty($ressourceParameters['folder_id'])) {
@@ -192,7 +190,6 @@ class ACommunityUiContentImageGalleryUploadDialog extends PapayaUiControlCommand
               if (empty($added)) {
                 $error = 'dialog_error_media_db';
               } else {
-                $ressource = $this->data()->ressource('ressource');
                 if ($gallery['parent_folder_id'] == 0) {
                   $lastChangeRessource = $ressource->type.'_gallery_images:folder_base:'.
                     $ressource->type.'_'.$ressource->id;
