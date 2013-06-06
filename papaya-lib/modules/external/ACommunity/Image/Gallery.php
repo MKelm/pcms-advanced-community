@@ -208,6 +208,7 @@ class ACommunityImageGallery extends MediaImageGallery {
       $this->_uiContent->papaya($this->papaya());
       $this->_uiContent->parameterGroup($this->parameterGroup());
       $this->_uiContent->data($this->data());
+      $this->_uiContent->module = $this->module;
     }
     return $this->_uiContent;
   }
