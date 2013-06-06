@@ -138,6 +138,12 @@ class ACommunitySurferPage extends base_content implements PapayaPluginCacheable
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -153,7 +159,7 @@ class ACommunitySurferPage extends base_content implements PapayaPluginCacheable
       if (isset($ressource->id)) {
         $command = NULL;
         $currentSurferId = $this->surfer()->data()->currentSurferId();
-        if (!empty($currentSurferId) && $currentSurferId != $ressource->id) {
+        if ($ressource->validSurfer !== 'is_selected') {
           $command = $this->surfer()->parameters()->get('command', NULL);
         }
         if (empty($command)) {
@@ -194,11 +200,13 @@ class ACommunitySurferPage extends base_content implements PapayaPluginCacheable
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    $ressource = $this->surfer()->data()->ressource(
-      'surfer', $this, array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_page'), NULL, 'object'
-    );
-    $this->surfer()->acommunityConnector()->ressource($ressource);
-    return $ressource;
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->surfer()->ressource();
+      $this->_ressource->set(
+        'surfer', array('surfer' => 'surfer_handle'), array('surfer' => 'surfer_page')
+      );
+    }
+    return $this->_ressource;
   }
 
   /**
@@ -214,6 +222,7 @@ class ACommunitySurferPage extends base_content implements PapayaPluginCacheable
       $this->_surfer = new ACommunitySurfer();
       $this->_surfer->parameterGroup($this->paramName);
       $this->_surfer->data()->languageId = $this->papaya()->request->languageId;
+      $this->_surfer->module = $this;
     }
     return $this->_surfer;
   }
