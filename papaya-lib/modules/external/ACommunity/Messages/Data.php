@@ -91,6 +91,12 @@ class ACommunityMessagesData extends ACommunityUiContentData {
   public $pageTitles = NULL;
 
   /**
+   * A regular expression to filter reference parameters
+   * @var string
+   */
+  protected $_referenceParametersExpression = 'notifications|surfer_handle';
+
+  /**
    * Set data by plugin object
    *
    * @param array $data
