@@ -38,10 +38,10 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
   protected $_groupSurferRelation = NULL;
 
   /**
-   * Ui content data object with group surfer relations
-   * @var ACommunityUiContentDataGroupSurferRelations
+   * Group surfer relations helper methods
+   * @var ACommunityGroupSurferRelations
    */
-  public $data = NULL;
+  public $groupSurferRelations = NULL;
 
   /**
   * Access to group surfer relation database record data
@@ -116,18 +116,17 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
         );
         if ($groupSurferRelation->save()) {
           // notifiy invited surfer
-          $this->data->group()->load($groupId);
-          $this->data->owner->notificationHandler()->notify(
+          $this->groupSurferRelations->group()->load($groupId);
+          $this->groupSurferRelations->acommunityConnector()->notify(
             'new-group-membership-invitation',
-            $this->data->languageId,
+            $this->papaya()->request->languageId,
             $surferId,
             array(
               'recipient_surfer' => $surferId,
               'context_surfer' => $currentSurferId,
-              'group_title' => $this->data->group()->title,
-              'page_url' => $this->data->owner->acommunityConnector()->getSurferGroupsPageLink(
-                $this->data->languageId, 'invitations'
-              )
+              'group_title' => $this->groupSurferRelations->group()->title,
+              'page_url' => $this->groupSurferRelations->acommunityConnector()
+                ->getSurferGroupsPageLink($this->papaya()->request->languageId, 'invitations')
             )
           );
           // change affects the amount of group's membership invitations
@@ -270,17 +269,18 @@ class ACommunityGroupSurferChanges extends ACommunityUiContentDataLastChange {
         );
         if ($groupSurferRelation->save()) {
           // notifiy group owner
-          $this->data->group()->load($groupId);
-          $this->data->owner->notificationHandler()->notify(
+          $this->groupSurferRelations->group()->load($groupId);
+          $this->groupSurferRelations->acommunityConnector()->notify(
             'new-group-membership-request',
-            $this->data->languageId,
-            $this->data->group()->owner,
+            $this->papaya()->request->languageId,
+            $this->groupSurferRelations->group()->owner,
             array(
-              'recipient_surfer' => $this->data->group()->owner,
+              'recipient_surfer' => $this->groupSurferRelations->group()->owner,
               'context_surfer' => $currentSurferId,
-              'group_title' => $this->data->group()->title,
-              'page_url' => $this->data->owner->acommunityConnector()->getSurfersPageLink(
-                $this->data->languageId, 'membership_requests', $this->data->group()->handle
+              'group_title' => $this->groupSurferRelations->group()->title,
+              'page_url' => $this->groupSurferRelations->acommunityConnector()->getSurfersPageLink(
+                $this->papaya()->request->languageId, 'membership_requests',
+                $this->groupSurferRelations->group()->handle
               )
             )
           );
