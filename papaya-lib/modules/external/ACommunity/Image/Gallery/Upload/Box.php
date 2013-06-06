@@ -163,6 +163,7 @@ class ACommunityImageGalleryUploadBox extends base_actionbox implements PapayaPl
       $this->_upload = new ACommunityImageGalleryUpload();
       $this->_upload->parameterGroup($this->paramName);
       $this->_upload->data()->languageId = $this->papaya()->request->languageId;
+      $this->_upload->module = $this;
     }
     return $this->_upload;
   }

@@ -139,6 +139,7 @@ class ACommunityImageGalleryTeaserBox extends base_actionbox implements PapayaPl
       $this->_teaser = new ACommunityImageGalleryTeaser();
       $this->_teaser->parameterGroup($this->paramName);
       $this->_teaser->data()->languageId = $this->papaya()->request->languageId;
+      $this->_teaser->module = $this;
     }
     return $this->_teaser;
   }
