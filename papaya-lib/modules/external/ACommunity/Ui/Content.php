@@ -37,12 +37,6 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
   protected $_acommunityConnector = NULL;
 
   /**
-   * Notification handler
-   * @var ACommunityNotificationHandler
-   */
-  protected $_notificationHandler = NULL;
-
-  /**
    * Content data
    * @var ACommunityUiContentData
    */
@@ -121,23 +115,6 @@ class ACommunityUiContent extends PapayaUiControlInteractive {
       );
     }
     return $this->_acommunityConnector;
-  }
-
-  /**
-   * Get/set notification handler
-   *
-   * @param ACommunityNotificationHandler $handler
-   * @return ACommunityNotificationHandler
-   */
-  public function notificationHandler(ACommunityNotificationHandler $handler = NULL) {
-    if (isset($handler)) {
-      $this->_notificationHandler = $handler;
-    } elseif (is_null($this->_notificationHandler)) {
-      include_once(dirname(__FILE__).'/../Notification/Handler.php');
-      $this->_notificationHandler = new ACommunityNotificationHandler();
-      $this->_notificationHandler->papaya($this->papaya());
-    }
-    return $this->_notificationHandler;
   }
 
   /**

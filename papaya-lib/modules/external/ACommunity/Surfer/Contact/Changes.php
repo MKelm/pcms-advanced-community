@@ -119,7 +119,7 @@ class ACommunitySurferContactChanges extends ACommunityUiContentDataLastChange {
     );
     if ($result == TRUE) {
       // notify reuested surfer
-      $this->data->owner->notificationHandler()->notify(
+      $this->data->owner->acommunityConnector()->notify(
         'new-contact-request',
         $this->data->languageId,
         $contactId,

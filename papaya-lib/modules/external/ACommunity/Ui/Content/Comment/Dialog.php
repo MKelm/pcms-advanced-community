@@ -150,7 +150,7 @@ class ACommunityUiContentCommentDialog
     $ressource = $this->data()->owner->ressource();
     if ($ressource->type == 'surfer') {
       if ($ressource->validSurfer !== 'is_selected') {
-        $this->data()->owner->notificationHandler()->notify(
+        $this->data()->owner->acommunityConnector()->notify(
           'new-surfer-comment',
           $this->data()->languageId,
           $ressource->id,
@@ -166,7 +166,7 @@ class ACommunityUiContentCommentDialog
         // use owner id from group data previously loaded by ressource object
         $groupOwnerId = $this->data()->owner->acommunityConnector()->groupSurferRelations()
           ->group()->owner;
-        $this->data()->owner->notificationHandler()->notify(
+        $this->data()->owner->acommunityConnector()->notify(
           'new-group-comment',
           $this->data()->languageId,
           $groupOwnerId,
@@ -187,7 +187,7 @@ class ACommunityUiContentCommentDialog
       $pageRessourceValidSurfer = $ressource->validSurfer;
       $ressource->pointer = $pointer;
       if ($pageRessourceType == 'surfer' && $pageRessourceValidSurfer !== 'is_selected') {
-        $this->data()->owner->notificationHandler()->notify(
+        $this->data()->owner->acommunityConnector()->notify(
           'new-surfer-image-comment',
           $this->data()->languageId,
           $pageRessourceId,
@@ -201,7 +201,7 @@ class ACommunityUiContentCommentDialog
         // use owner id from group data previously loaded by ressource object
         $groupOwnerId = $this->data()->owner->acommunityConnector()->groupSurferRelations()
           ->group()->owner;
-        $this->data()->owner->notificationHandler()->notify(
+        $this->data()->owner->acommunityConnector()->notify(
           'new-group-image-comment',
           $this->data()->languageId,
           $groupOwnerId,
