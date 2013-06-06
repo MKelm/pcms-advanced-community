@@ -54,6 +54,12 @@ class ACommunitySurferEditorPage extends content_profile implements PapayaPlugin
   protected $_acommunityConnector = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -84,7 +90,11 @@ class ACommunitySurferEditorPage extends content_profile implements PapayaPlugin
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    return $this->surfer()->data()->ressource('surfer', $this);
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->surfer()->ressource();
+      $this->_ressource->set('surfer', NULL, array('surfer' => array()));
+    }
+    return $this->_ressource;
   }
 
   /**
@@ -100,6 +110,7 @@ class ACommunitySurferEditorPage extends content_profile implements PapayaPlugin
       $this->_surfer = new ACommunitySurfer();
       $this->_surfer->parameterGroup($this->paramName);
       $this->_surfer->data()->languageId = $this->papaya()->request->languageId;
+      $this->_surfer->module = $this;
     }
     return $this->_surfer;
   }
