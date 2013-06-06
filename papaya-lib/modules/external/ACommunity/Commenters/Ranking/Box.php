@@ -100,6 +100,7 @@ class ACommunityCommentersRankingBox extends base_actionbox implements PapayaPlu
       include_once(dirname(__FILE__).'/../Ranking.php');
       $this->_ranking = new ACommunityCommentersRanking();
       $this->_ranking->parameterGroup($this->paramName);
+      $this->_ranking->module = $this;
     }
     return $this->_ranking;
   }
