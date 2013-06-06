@@ -117,11 +117,11 @@ class ACommunitySurferContactsPage extends ACommunitySurfersPage {
       $this->_cacheDefiniton = $definition;
     } elseif (NULL == $this->_cacheDefiniton) {
       $definitionValues = array('acommunity_surfers_page', $this->_displayMode);
-      $definitionParameters = array();
       $ressource = $this->setRessourceData();
       if (isset($ressource->id)) {
         $command = $this->surfers()->parameters()->get('command', NULL);
         if (empty($command)) {
+          $definitionParameters = array();
           include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $ressource->id;
@@ -131,15 +131,15 @@ class ACommunitySurferContactsPage extends ACommunitySurfersPage {
           $definitionParameters[] = 'contact_requests_list_page';
           $definitionParameters[] = 'surfer_handle';
           $definitionParameters[] = 'command';
+          $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+            new PapayaCacheIdentifierDefinitionValues($definitionValues),
+            new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
+          );
         } else {
           $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
         }
-      }
-      if (is_null($this->_cacheDefiniton)) {
-        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-          new PapayaCacheIdentifierDefinitionValues($definitionValues),
-          new PapayaCacheIdentifierDefinitionParameters($definitionParameters, $this->paramName)
-        );
+      } else {
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionValues($definitionValues);
       }
     }
     return $this->_cacheDefiniton;
