@@ -171,6 +171,7 @@ class ACommunityGroupsPage extends base_content implements PapayaPluginCacheable
       $this->_groups = new ACommunityGroups();
       $this->_groups->parameterGroup($this->paramName);
       $this->_groups->data()->languageId = $this->papaya()->request->languageId;
+      $this->_groups->module = $this;
     }
     return $this->_groups;
   }
