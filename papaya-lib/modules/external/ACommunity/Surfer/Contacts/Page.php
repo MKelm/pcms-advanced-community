@@ -118,14 +118,14 @@ class ACommunitySurferContactsPage extends ACommunitySurfersPage {
     } elseif (NULL == $this->_cacheDefiniton) {
       $definitionValues = array('acommunity_surfers_page', $this->_displayMode);
       $definitionParameters = array();
-      include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
-      $values = new ACommunityCacheIdentifierValues();
       $ressource = $this->setRessourceData();
-      if (!empty($ressource)) {
+      if (isset($ressource->id)) {
         $command = $this->surfers()->parameters()->get('command', NULL);
         if (empty($command)) {
-          $definitionValues[] = $ressource['id'];
-          $definitionValues[] = $values->lastChangeTime('contacts:surfer_'.$ressource['id']);
+          include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+          $values = new ACommunityCacheIdentifierValues();
+          $definitionValues[] = $ressource->id;
+          $definitionValues[] = $values->lastChangeTime('contacts:surfer_'.$ressource->id);
           $definitionParameters[] = 'contacts_list_page';
           $definitionParameters[] = 'own_contact_requests_list_page';
           $definitionParameters[] = 'contact_requests_list_page';
@@ -160,6 +160,10 @@ class ACommunitySurferContactsPage extends ACommunitySurfersPage {
    * Set surfer ressource data to load corresponding surfer
    */
   public function setRessourceData() {
-    return $this->surfers()->data()->ressource('surfer', $this);
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->surfers()->ressource();
+      $this->_ressource->set('surfer', NULL, array('surfer' => array()), NULL, NULL, 'is_selected');
+    }
+    return $this->_ressource;
   }
 }
