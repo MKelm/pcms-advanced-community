@@ -111,17 +111,6 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
   protected $_surferIsModerator = NULL;
 
   /**
-   * Ressource object
-   * @var ACommunityUiContentRessource
-   */
-  protected $_ressource = NULL;
-
-  /** RESSOURCE PROPERTIES DEPRECATED **/
-  public $ressourceIsActiveSurfer = FALSE;
-  protected $_ressourceNeedsActiveSurfer = FALSE;
-  /** RESSOURCE PROPERTIES DEPRECATED **/
-
-  /**
    * Get surfer data by id depending on some module options
    *
    * @param array|string $surferId one id or multiple ids
@@ -265,76 +254,6 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
   }
 
   /**
-   * Set/get data of current ressource by type and id
-   *
-   * DEPRECATED: Use ACommunityUiContent->ressource(..) instead, because the ressource object,
-   * needs a (parent) instance of uiContent!
-   *
-   * @param string $type
-   * @param object $module Modul object to get parameters from
-   * @param array $parameterNames A list of parameter names by ressource type to get ressource id
-   * @param array $filterParameterNames A list of parameter names by ressource type to filter for ressource parameters
-   * @param array $storpParameterNames A list of parameter names by ressource type to stop ressource detection
-   * @param string $returnType array or object
-   * @param array|ACommunityUiContentRessource
-   */
-  public function ressource(
-          $type = NULL,
-          $module = NULL,
-          $parameterNames = NULL,
-          $filterParameterNames = NULL,
-          $stopParameterNames = NULL,
-          $returnType = 'array'
-         ) {
-
-    if ($type == 'ressource') {
-      if (is_null($this->_ressource)) {
-        include_once(dirname(__FILE__).'/Ressource.php');
-        if (is_a($module, 'base_content')) {
-          // use a singleton for page modules to get the same in connector for box modules
-          $this->_ressource = ACommunityUiContentRessource::getInstance($module);
-        } else {
-          // compatibility for box modules with a different ressource handling
-          // future plans: add support for nested ressources in ressource class
-          $this->_ressource = new ACommunityUiContentRessource($module);
-        }
-        $this->_ressource->papaya($this->papaya());
-        $this->_ressource->uiContent = $this->owner;
-      }
-      return $this->_ressource;
-    } elseif (is_a($type, 'ACommunityUiContentRessource')) {
-      $this->_ressource = $type; // set ressource in box modules by page module ressource
-    } elseif (!empty($type) && !isset($this->_ressource->isInvalid)) {
-      include_once(dirname(__FILE__).'/Ressource.php');
-      if (is_a($module, 'base_content')) {
-        // use a singleton for page modules to get the same in connector for box modules
-        $this->_ressource = ACommunityUiContentRessource::getInstance($module);
-      } else {
-        // compatibility for box modules with a different ressource handling
-        // future plans: add support for nested ressources in ressource class
-        $this->_ressource = new ACommunityUiContentRessource($module);
-      }
-      $this->_ressource->papaya($this->papaya());
-      $this->_ressource->uiContent = $this->owner;
-      $this->_ressource->needsActiveSurfer = $this->_ressourceNeedsActiveSurfer; // backward compatibilty
-      $this->_ressource->set($type, $parameterNames, $filterParameterNames, $stopParameterNames);
-      $this->ressourceIsActiveSurfer = $this->_ressource->isActiveSurfer; // backward compatibilty
-    }
-    if (isset($this->_ressource)) {
-      if ($returnType == 'array') {
-        return array(
-          'type' => $this->_ressource->type,
-          'id' => $this->_ressource->id,
-          'handle' => $this->_ressource->handle
-        );
-      } else {
-        return $this->_ressource;
-      }
-    }
-    return NULL;
-  }
-
-  /**
    * Get/ set reference parameters for use in reference object
    *
    * Parameters of the owner module
@@ -370,11 +289,10 @@ class ACommunityUiContentData extends ACommunityUiContentDataLastChange {
     } elseif (is_null($this->_reference)) {
       $this->_reference = new PapayaUiReference();
       $this->_reference->papaya($this->papaya());
-      if (method_exists($this->_ressource, 'parameters')) {
-        foreach ($this->_ressource->parameters() as $parameterGroup => $parameters) {
-          $this->_reference->setParameters(
-            $parameters, $parameterGroup
-          );
+      if (method_exists($this->owner, 'ressource')) {
+        $ressource = $this->owner->ressource();
+        foreach ($ressource->parameters() as $parameterGroup => $parameters) {
+          $this->_reference->setParameters($parameters, $parameterGroup);
         }
       }
       $referenceParameters = $this->referenceParameters();
