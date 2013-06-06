@@ -95,8 +95,8 @@ class ACommunityGroupData extends ACommunityUiContentData {
    */
   public function initialize() {
     // get group data from previous loaded data by ressource initialization
-    $group = $this->owner->acommunityConnector()->groupSurferRelations()->group();
     $ressource = $this->owner->ressource();
+    $group = $this->owner->acommunityConnector()->groupSurferRelations()->group();
     if (!empty($group->title)) {
       $this->title = $group->title;
       $this->time = date('Y-m-d H:i:s', $group->time);
@@ -131,9 +131,10 @@ class ACommunityGroupData extends ACommunityUiContentData {
           );
         }
 
-        if (!empty($this->currentSurferId())) {
+        $currentSurferId = $this->currentSurferId();
+        if (!empty($currentSurferId)) {
           $surferStatus = $this->owner->acommunityConnector()->groupSurferRelations()->status(
-            $group->id, $this->currentSurferId()
+            $group->id, $currentSurferId
           );
 
           if (empty($surferStatus)) {
