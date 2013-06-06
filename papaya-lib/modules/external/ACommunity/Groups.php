@@ -74,7 +74,7 @@ class ACommunityGroups extends ACommunityUiContent {
             $moderatorAction = !$this->data()->showOwnGroups() && $this->data()->surferIsModerator();
             $ownerAction = $this->data()->showOwnGroups() &&
               $this->acommunityConnector()->groupSurferRelations()->status(
-                $groupId, $this->data()->currentSurferId() 'is_owner', 1
+                $groupId, $this->data()->currentSurferId(), 'is_owner', 1
               );
             if ($moderatorAction || $ownerAction) {
               $group = clone $this->data()->group();

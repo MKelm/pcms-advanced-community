@@ -294,7 +294,8 @@ class ACommunityGroupsData extends ACommunityUiContentData {
         $this->pagingItemsPerPage,
         ($page > 0) ? ($page - 1) * $this->pagingItemsPerPage : 0
       );
-      $groupSurferRelations = $this->groupSurferRelations()->toArray();
+      $groupSurferRelations = $this->owner->acommunityConnector()->groupSurferRelations()
+        ->content()->toArray();
       $groupsFilter = array('id' => array_keys($groupSurferRelations));
     } else {
       $groupsFilter = array('public' => 1);
