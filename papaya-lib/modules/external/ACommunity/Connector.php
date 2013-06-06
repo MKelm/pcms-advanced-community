@@ -170,16 +170,16 @@ class ACommunityConnector extends base_connector {
   protected $_notifcationHandler = NULL;
 
   /**
-   * Group database record to get group ids / handles
-   * @var object
-   */
-  protected $_group = NULL;
-
-  /**
    * Ressource of page module
    * @var ACommunityUiContentRessource
    */
   protected $_ressource = NULL;
+
+  /**
+   * Data object for group surfer relations
+   * @var ACommunityGroupSurferRelations
+   */
+  protected $_groupSurferRelations = NULL;
 
   /**
   * Get form xml to select a surfer group by callback.
@@ -207,6 +207,25 @@ class ACommunityConnector extends base_connector {
     }
     $result .= '</select>';
     return $result;
+  }
+
+  /**
+   * Get/set object for group surfer relations helper methods.
+   * Used by content ressource to identify valid group surfers.
+   *
+   * @param ACommunityGroupSurferRelations $relations
+   * @return ACommunityGroupSurferRelations
+   */
+  public function groupSurferRelations(ACommunityGroupSurferRelations $relations = NULL) {
+    if (isset($relations)) {
+      $this->_groupSurferRelations = $relations;
+    } elseif (is_null($this->_groupSurferRelations)) {
+      include_once(dirname(__FILE__).'/Group/Surfer/Relations.php');
+      $this->_groupSurferRelations = new ACommunityGroupSurferRelations();
+      $this->_groupSurferRelations->papaya($this->papaya());
+      $this->_groupSurferRelations->acommunityConnector($this);
+    }
+    return $this->_groupSurferRelations;
   }
 
   /**
@@ -587,7 +606,7 @@ class ACommunityConnector extends base_connector {
    * @return integer
    */
   public function getGroupIdByHandle($handle) {
-    $group = clone $this->group();
+    $group = clone $this->groupSurferRelations()->group();
     $group->load(array('handle' => $handle));
     if (!empty($group['id'])) {
       return (int)$group['id'];
@@ -602,7 +621,7 @@ class ACommunityConnector extends base_connector {
    * @return string
    */
   public function getGroupHandleById($id) {
-    $group = clone $this->group();
+    $group = clone $this->groupSurferRelations()->group();
     $group->load($id);
     if (!empty($group['handle'])) {
       return $group['handle'];
@@ -744,22 +763,5 @@ class ACommunityConnector extends base_connector {
       );
     }
     return $this->_pagesConnector;
-  }
-
-  /**
-  * Access to group database record data
-  *
-  * @param ACommunityContentGroup $group
-  * @return ACommunityContentGroup
-  */
-  public function group(ACommunityContentGroup $group = NULL) {
-    if (isset($group)) {
-      $this->_group = $group;
-    } elseif (is_null($this->_group)) {
-      include_once(dirname(__FILE__).'/Content/Group.php');
-      $this->_group = new ACommunityContentGroup();
-      $this->_group->papaya($this->papaya());
-    }
-    return $this->_group;
   }
 }
