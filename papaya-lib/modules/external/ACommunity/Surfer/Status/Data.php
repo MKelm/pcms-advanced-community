@@ -60,8 +60,8 @@ class ACommunitySurferStatusData extends ACommunityUiContentData {
    * Intitialize surfer data
    */
   public function initialize() {
-    $ressource = $this->ressource('ressource');
-    if (!empty($ressource->id)) {
+    $ressource = $this->owner->ressource();
+    if (isset($ressource->id)) {
       $baseSurfer = new base_surfer();
       $logoutParameters = array($baseSurfer->logformVar.'_logout' => 1);
       if ($this->_logoutRedirectionPageId > 0) {

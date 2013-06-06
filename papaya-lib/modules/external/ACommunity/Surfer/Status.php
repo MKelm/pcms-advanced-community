@@ -55,8 +55,8 @@ class ACommunitySurferStatus extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     $status = $parent->appendElement('acommunity-surfer-status');
-    $ressource = $this->data()->ressource('ressource');
     $this->data()->initialize();
+    $ressource = $this->ressource();
     if (!isset($ressource->id)) {
       $message = $status->appendElement('message', array('type' => 'no-login'));
       $message->appendXml($this->data()->messages['no_login']);

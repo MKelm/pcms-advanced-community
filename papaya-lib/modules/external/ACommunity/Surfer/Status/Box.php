@@ -118,6 +118,12 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
   protected $_cacheDefinition = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -129,13 +135,16 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
       $this->_cacheDefinition = $definition;
     } elseif (NULL == $this->_cacheDefinition) {
       $ressource = $this->setRessourceData();
-      include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
-      $values = new ACommunityCacheIdentifierValues();
+      $definitionValues = array('acommunity_surfer_status_box');
+      if (isset($ressource->id)) {
+        include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
+        $values = new ACommunityCacheIdentifierValues();
+        $definitionValues[] = $ressource->id;
+        $definitionValues[] = $values->lastChangeTime('surfer:surfer_'.$ressource->id);
+        $definitionValues[] = $values->lastChangeTime('contacts:surfer_'.$ressource->id);
+      }
       $this->_cacheDefinition = new PapayaCacheIdentifierDefinitionValues(
-        'acommunity_surfer_status_box',
-        isset($ressource->id) ? $ressource->id : '',
-        isset($ressource->id) ? $values->lastChangeTime('surfer:surfer_'.$ressource->id) : 0,
-        isset($ressource->id) ? $values->lastChangeTime('contacts:surfer_'.$ressource->id) : 0
+        $definitionValues
       );
     }
     return $this->_cacheDefinition;
@@ -146,10 +155,11 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    $ressource = $this->status()->ressource();
-    $ressource->set('surfer', NULL, array('surfer' => array()));
-    $this->status()->data()->ressource($ressource);
-    return $ressource;
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->status()->ressource();
+      $this->_ressource->set('surfer', NULL, array('surfer' => array()), NULL, NULL, 'is_selected');
+    }
+    return $this->_ressource;
   }
 
   /**
@@ -163,6 +173,7 @@ class ACommunitySurferStatusBox extends base_actionbox implements PapayaPluginCa
     } elseif (is_null($this->_status)) {
       include_once(dirname(__FILE__).'/../Status.php');
       $this->_status = new ACommunitySurferStatus();
+      $this->_status->module = $this;
       $this->_status->parameterGroup($this->paramName);
       $this->_status->data()->languageId = $this->papaya()->request->languageId;
     }
