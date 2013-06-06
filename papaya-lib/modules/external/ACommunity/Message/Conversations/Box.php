@@ -77,6 +77,12 @@ class ACommunityMessageConversationsBox extends base_actionbox implements Papaya
   protected $_cacheDefiniton = NULL;
 
   /**
+   * Current ressource
+   * @var ACommunityUiContentRessource
+   */
+  protected $_ressource = NULL;
+
+  /**
    * Define the cache definition for output.
    *
    * @see PapayaPluginCacheable::cacheable()
@@ -111,9 +117,10 @@ class ACommunityMessageConversationsBox extends base_actionbox implements Papaya
    * Overwrite this method for customized ressources
    */
   public function setRessourceData() {
-    $ressource = $this->messages()->acommunityConnector()->ressource();
-    $this->messages()->data()->ressource($ressource);
-    return $ressource;
+    if (is_null($this->_ressource)) {
+      $this->_ressource = $this->messages()->ressource();
+    }
+    return $this->_ressource;
   }
 
   /**

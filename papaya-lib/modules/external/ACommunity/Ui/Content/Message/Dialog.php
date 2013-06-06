@@ -82,7 +82,7 @@ class ACommunityUiContentMessageDialog
     );
     $dialog->caption = NULL;
 
-    $ressource = $this->data()->ressource();
+    $ressource = $this->data()->owner->ressource();
     include_once(dirname(__FILE__).'/../../../Filter/Text/Extended.php');
     $dialog->fields[] = $field = new PapayaUiDialogFieldTextarea(
       $this->data()->captions['dialog_text'],
@@ -91,7 +91,7 @@ class ACommunityUiContentMessageDialog
       '',
       new ACommunityFilterTextExtended(
         PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
-        'surfer_'.$this->data()->currentSurferId().':surfer_'.$ressource['id']
+        'surfer_'.$this->data()->currentSurferId().':surfer_'.$ressource->id
       )
     );
     $field->setMandatory(TRUE);
@@ -109,23 +109,23 @@ class ACommunityUiContentMessageDialog
   * @param object $record
   */
   public function callbackBeforeSaveRecord($context, $record) {
-    $ressource = $this->data()->ressource();
+    $ressource = $this->data()->owner->ressource();
     // save message surfer bi-directional to detect message conversation correctly
     $messageSurfer = clone $this->data()->messageSurfer();
     $messageSurfer->assign(
-      array('surfer_id' => $this->data()->currentSurferId(), 'contact_surfer_id' => $ressource['id'])
+      array('surfer_id' => $this->data()->currentSurferId(), 'contact_surfer_id' => $ressource->id)
     );
     $messageSurfer->save();
     $messageSurfer = clone $this->data()->messageSurfer();
     $messageSurfer->assign(
-      array('surfer_id' => $ressource['id'], 'contact_surfer_id' => $this->data()->currentSurferId())
+      array('surfer_id' => $ressource->id, 'contact_surfer_id' => $this->data()->currentSurferId())
     );
     $messageSurfer->save();
     // assign missing message data
     $record->assign(
       array(
         'sender' => $this->data()->currentSurferId(),
-        'recipient' => $ressource['id'],
+        'recipient' => $ressource->id,
         'time' => time()
       )
     );
