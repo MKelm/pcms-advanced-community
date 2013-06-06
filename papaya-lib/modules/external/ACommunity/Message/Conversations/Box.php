@@ -137,6 +137,7 @@ class ACommunityMessageConversationsBox extends base_actionbox implements Papaya
       $this->_messages->parameterGroup($this->paramName);
       $this->_messages->data()->languageId = $this->papaya()->request->languageId;
       $this->_messages->mode = 'message-conversations';
+      $this->_messages->module = $this;
     }
     return $this->_messages;
   }

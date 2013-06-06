@@ -117,7 +117,7 @@ class ACommunityNotificationSettingsPage extends base_content implements PapayaP
     if (is_null($this->_ressource)) {
       $this->_ressource = $this->settings()->ressource();
       $this->_ressource->set(
-        'surfer', $this, NULL, array('surfer' => array()), NULL, NULL, 'is_selected'
+        'surfer', NULL, array('surfer' => array()), NULL, NULL, 'is_selected'
       );
     }
     return $this->_ressource;
@@ -136,6 +136,7 @@ class ACommunityNotificationSettingsPage extends base_content implements PapayaP
       $this->_settings = new ACommunityNotificationSettings();
       $this->_settings->parameterGroup($this->paramName);
       $this->_settings->data()->languageId = $this->papaya()->request->languageId;
+      $this->_settings->module = $this;
     }
     return $this->_settings;
   }

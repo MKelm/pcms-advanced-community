@@ -151,7 +151,7 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
         $definitionValues[] = $ressource->id;
         $definitionValues[] = $ressource->displayMode;
         if ($ressource->type == 'group') {
-          include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
+          include_once(dirname(__FILE__).'/../../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $values->lastChangeTime('group:memberships:group_'.$ressource->id);
           if ($ressource->validSurfer === 'is_owner') {
@@ -194,6 +194,7 @@ class ACommunityRessourceContextBox extends base_actionbox implements PapayaPlug
       $this->_surfer->parameterGroup($this->paramName);
       $this->_surfer->data()->languageId = $this->papaya()->request->languageId;
       $this->_surfer->data()->mode = 'surfer-bar';
+      $this->_surfer->module = $this;
     }
     return $this->_surfer;
   }
