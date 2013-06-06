@@ -52,34 +52,34 @@ class ACommunitySurfer extends ACommunityUiContent {
    */
   protected function _performCommands() {
     $command = $this->parameters()->get('command', NULL);
-    $ressource = $this->data()->ressource();
-    if (!empty($ressource['id']) && $this->data()->ressourceIsActiveSurfer == FALSE) {
+    $ressource = $this->ressource();
+    if (isset($ressource->id) && $ressource->validSurfer !== 'is_selected') {
       $currentSurferId = $this->data()->currentSurferId();
       if (!empty($currentSurferId)) {
         switch ($command) {
           case 'request_contact':
             $result = $this->data()->contactChanges()->addContactRequest(
-              $currentSurferId, $ressource['id']
+              $currentSurferId, $ressource->id
             );
             break;
           case 'remove_contact_request':
             $this->data()->contactChanges()->deleteContactRequest(
-              $currentSurferId, $ressource['id']
+              $currentSurferId, $ressource->id
             );
             break;
           case 'accept_contact_request':
             $this->data()->contactChanges()->acceptContactRequest(
-              $currentSurferId, $ressource['id']
+              $currentSurferId, $ressource->id
             );
             break;
           case 'decline_contact_request':
             $this->data()->contactChanges()->declineContactRequest(
-              $currentSurferId, $ressource['id']
+              $currentSurferId, $ressource->id
             );
             break;
           case 'remove_contact':
             $this->data()->contactChanges()->deleteContact(
-              $currentSurferId, $ressource['id']
+              $currentSurferId, $ressource->id
             );
             break;
         }
@@ -94,7 +94,7 @@ class ACommunitySurfer extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    $ressource = $this->data()->ressource('ressource');
+    $ressource = $this->ressource();
     if (isset($ressource->id)) {
       $surfer = $parent->appendElement('surfer', array('mode' => $this->data()->mode));
       $this->_performCommands();
@@ -119,11 +119,13 @@ class ACommunitySurfer extends ACommunityUiContent {
         $ignoreDetails = array('id', 'page_link', 'handle', 'givenname', 'surname');
         if (!in_array($name, $ignoreDetails)) {
           if (isset($this->data()->captions['surfer_'.$name])) {
-            $baseDetails->appendElement(
-              'detail',
-              array('name' => $name, 'caption' => $this->data()->captions['surfer_'.$name]),
-              PapayaUtilStringXml::escape($value)
-            );
+            if ($name != 'email' || $ressource->validSurfer !== 'is_selected') {
+              $baseDetails->appendElement(
+                'detail',
+                array('name' => $name, 'caption' => $this->data()->captions['surfer_'.$name]),
+                PapayaUtilStringXml::escape($value)
+              );
+            }
           }
         }
       }

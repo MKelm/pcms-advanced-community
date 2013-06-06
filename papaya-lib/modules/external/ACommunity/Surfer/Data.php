@@ -94,18 +94,18 @@ class ACommunitySurferData extends ACommunityUiContentData {
    * Intitialize surfer data
    */
   public function initialize() {
-    $ressource = $this->ressource();
-    $this->surferBaseDetails = $this->getSurfer($ressource['id'], NULL, NULL, TRUE);
+    $ressource = $this->owner->ressource();
+    $this->surferBaseDetails = $this->getSurfer($ressource->id, NULL, NULL, TRUE);
 
     if ($this->mode == 'surfer-details') {
-      if ($this->ressourceIsActiveSurfer == FALSE) {
+      if ($ressource->validSurfer !== 'is_selected') {
         $this->sendMessageLink = $this->owner->acommunityConnector()->getMessagesPageLink(
-          $ressource['id']
+          $ressource->id
         );
       }
 
       $this->surferDetails = array();
-      $details = $this->owner->communityConnector()->getProfileData($ressource['id']);
+      $details = $this->owner->communityConnector()->getProfileData($ressource->id);
       if (!empty($details)) {
         $groupIds = $this->owner->communityConnector()->getProfileDataClasses();
         foreach ($groupIds as $groupId) {
@@ -132,15 +132,13 @@ class ACommunitySurferData extends ACommunityUiContentData {
         }
       }
 
-      if ($this->ressourceIsActiveSurfer == FALSE) {
-        $currentSurfer = $this->owner->communityConnector()->getCurrentSurfer();
-        $currentSurferId = $currentSurfer->surfer['surfer_id'];
-        unset($currentSurfer);
+      if ($ressource->validSurfer !== 'is_selected') {
+        $currentSurferId = $this->currentSurferId();
         if (!empty($currentSurferId)) {
           $contactStatus = 'none';
           $commandNames = array('request_contact');
           $isContact = $this->owner->communityConnector()->isContact(
-            $currentSurferId, $ressource['id'], FALSE, TRUE
+            $currentSurferId, $ressource->id, FALSE, TRUE
           );
           switch ($isContact) {
             case SURFERCONTACT_PENDING + SURFERCONTACT_OWNREQUEST:
