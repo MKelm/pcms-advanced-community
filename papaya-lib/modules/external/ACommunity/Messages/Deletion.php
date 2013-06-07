@@ -45,6 +45,12 @@ class ACommunityMessagesDeletion extends PapayaObject {
   protected $_tableNameMessageSurfers = 'acommunity_message_surfers';
 
   /**
+   * Table name of media db files
+   * @var string
+   */
+  protected $_tableMediaDBFiles = PAPAYA_DB_TBL_MEDIADB_FILES;
+
+  /**
   * Set/get database access object
   *
   * @return PapayaDatabaseAccess
@@ -80,5 +86,25 @@ class ACommunityMessagesDeletion extends PapayaObject {
       $this->databaseAccess()->getTableName($this->_tableNameMessageSurfers),
       array('contact_surfer_id' => $surferId)
     );
+  }
+
+  /**
+   * Delete all thumbnail link files of surfer's messages.
+   * It is enough to delete the files only, because these entries do not have translations.
+   *
+   * @param integer $folderId media db folder by text options from connector
+   * @param string $surferId
+   */
+  public function deleteMessagesThumbnailLinkFiles($folderId, $surferId) {
+    // delete files by message sender
+    $sql = "DELETE FROM %s WHERE folder_id = '%d' AND file_name LIKE '%%%s'";
+    $parameters = array($this->_tableMediaDBFiles, $folderId, ':messages:surfer_'.$surferId);
+    $this->databaseAccess()->queryFmtWrite($sql, $parameters);
+    // delete files by message recipient
+    $sql = "DELETE FROM %s WHERE folder_id = '%d' AND file_name LIKE '%%%s%%%s'";
+    $parameters = array(
+      $this->_tableMediaDBFiles, $folderId, ':messages:surfer_', ':surfer_'.$surferId
+    );
+    $this->databaseAccess()->queryFmtWrite($sql, $parameters);
   }
 }

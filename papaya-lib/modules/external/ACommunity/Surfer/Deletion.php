@@ -39,6 +39,12 @@ class ACommunitySurferDeletion extends PapayaObject {
   protected $_tableNameComments = 'acommunity_comments';
 
   /**
+   * Table name of media db files
+   * @var string
+   */
+  protected $_tableMediaDBFiles = PAPAYA_DB_TBL_MEDIADB_FILES;
+
+  /**
   * Set/get database access object
   *
   * @return PapayaDatabaseAccess
@@ -56,12 +62,13 @@ class ACommunitySurferDeletion extends PapayaObject {
    * Delete all surfer galleries and related data by one surfer id
    *
    * @param string $surferId
+   * @param integer $imageCommentsThumbnailLinksFolder
    */
-  public function deleteSurferGalleries($surferId) {
+  public function deleteSurferGalleries($surferId, $imageCommentsThumbnailLinksFolder) {
     include_once(dirname(__FILE__).'/../Image/Gallery/Deletion.php');
     $deletion = new ACommunityImageGalleryDeletion();
     $deletion->papaya($this->papaya());
-    $deletion->deleteGalleries('surfer', $surferId);
+    $deletion->deleteGalleries('surfer', $surferId, $imageCommentsThumbnailLinksFolder);
   }
 
   /**
@@ -74,6 +81,19 @@ class ACommunitySurferDeletion extends PapayaObject {
       $this->databaseAccess()->getTableName($this->_tableNameComments),
       array('comment_ressource_id' => $surferId, 'comment_ressource_type' => 'surfer')
     );
+  }
+
+  /**
+   * Delete all thumbnail link files of surfer comments.
+   * It is enough to delete the files only, because these entries do not have translations.
+   *
+   * @param integer $folderId media db folder by text options from connector
+   * @param string $surferId
+   */
+  public function deleteSurferCommentsThumbnailLinkFiles($folderId, $surferId) {
+    $sql = "DELETE FROM %s WHERE folder_id = '%d' AND file_name LIKE '%%%s'";
+    $parameters = array($this->_tableMediaDBFiles, $folderId, ':comments:surfer_'.$surferId);
+    $this->databaseAccess()->queryFmtWrite($sql, $parameters);
   }
 
   /**

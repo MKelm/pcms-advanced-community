@@ -45,6 +45,12 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
   protected $_tableNameGalleries = 'acommunity_galleries';
 
   /**
+   * Table name of media db files
+   * @var string
+   */
+  protected $_tableMediaDBFiles = PAPAYA_DB_TBL_MEDIADB_FILES;
+
+  /**
    * Media db edit object
    * @var object
    */
@@ -73,10 +79,12 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
   /**
    * Delete all galleries and related data by ressource
    *
-   * @param string $surferId
+   * @param string $ressourceType
+   * @param mixed $ressourceId
+   * @param integer $imageCommentsThumbnailLinksFolder
    * @param boolean $result
    */
-  public function deleteGalleries($ressourceType, $ressourceId) {
+  public function deleteGalleries($ressourceType, $ressourceId, $imageCommentsThumbnailLinksFolder) {
     $this->imageGalleries()->load(
       array('ressource_type' => $ressourceType, 'ressource_id' => $ressourceId)
     );
@@ -84,7 +92,7 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
     $result = TRUE;
     if (!empty($galleries)) {
       foreach ($galleries as $gallery) {
-        $this->_deleteMediaDBFolder($gallery['folder_id']);
+        $this->_deleteMediaDBFolder($gallery['folder_id'], $imageCommentsThumbnailLinksFolder);
       }
       $result = $result && $this->databaseAccess()->deleteRecord(
         $this->databaseAccess()->getTableName($this->_tableNameGalleries),
@@ -105,7 +113,7 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
     $gallery = reset($this->imageGalleries()->toArray());
     $result = FALSE;
     if (!empty($gallery)) {
-      if ($this->_deleteMediaDBFolder($gallery['folder_id'])) {
+      if ($this->_deleteMediaDBFolder($gallery['folder_id'], $imageCommentsThumbnailLinksFolder)) {
         $result = $this->databaseAccess()->deleteRecord(
           $this->databaseAccess()->getTableName($this->_tableNameGalleries),
           array('gallery_folder_id' => $gallery['folder_id'])
@@ -119,13 +127,17 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
    * Delete one media db folder, all related files and comments
    *
    * @param integer $folderId
+   * @param integer $imageCommentsThumbnailLinksFolder
    */
-  protected function _deleteMediaDBFolder($folderId) {
-    $files = $this->mediaDBEdit()->getFiles($folderId);
-    if (!empty($files)) {
-      foreach ($files as $file) {
-        $this->mediaDBEdit()->deleteFile($file['file_id']);
-        $this->_deleteImageComments($file['file_id']);
+  protected function _deleteMediaDBFolder($folderId, $imageCommentsThumbnailLinksFolder) {
+    // use a custom sql query to load file_id only
+    // the getFiles method from the media db class has too much overhead
+    $sql = "SELECT file_id FROM %s WHERE folder_id = '%d'";
+    $parameters = array($this->_tableMediaDBFiles, $folderId);
+    if ($result = $this->databaseAccess()->queryFmt($sql, $parameters)) {
+      while ($fileId = $result->fetchField()) {
+        $this->mediaDBEdit()->deleteFile($fileId); // delete file with translations/derivations
+        $this->_deleteImageComments($fileId, $imageCommentsThumbnailLinksFolder);
       }
     }
     return $this->mediaDBEdit()->deleteFolder($folderId);
@@ -135,8 +147,9 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
    * Delete all image comments
    *
    * @param string $imageId
+   * @param integer $thumbnailLinksFolder
    */
-  protected function _deleteImageComments($imageId) {
+  protected function _deleteImageComments($imageId, $thumbnailLinksFolder) {
     $this->databaseAccess()->deleteRecord(
       $this->databaseAccess()->getTableName($this->_tableNameComments),
       array(
@@ -144,6 +157,20 @@ class ACommunityImageGalleryDeletion extends PapayaObject {
         'comment_ressource_id' => $file['file_id']
       )
     );
+    $this->_deleteImageCommentsThumbnailLinkFiles($thumbnailLinksFolder, $imageId);
+  }
+
+  /**
+   * Delete all thumbnail link files of image comments.
+   * It is enough to delete the files only, because these entries do not have translations.
+   *
+   * @param integer $folderId media db folder by text options from connector
+   * @param string $imageFileId
+   */
+  protected function _deleteImageCommentsThumbnailLinkFiles($folderId, $imageFileId) {
+    $sql = "DELETE FROM %s WHERE folder_id = '%d' AND file_name LIKE '%%%s'";
+    $parameters = array($this->_tableMediaDBFiles, $folderId, ':comments:image'.$imageFileId);
+    $this->databaseAccess()->queryFmtWrite($sql, $parameters);
   }
 
   /**

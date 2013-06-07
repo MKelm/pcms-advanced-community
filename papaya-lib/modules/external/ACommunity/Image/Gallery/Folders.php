@@ -91,7 +91,9 @@ class ACommunityImageGalleryFolders extends ACommunityUiContent {
       case 'delete_folder':
         $folderId = $this->parameters()->get('folder_id', NULL);
         if (!empty($folderId)) {
-          if ($this->galleryDeletion()->deleteGalleryByFolderId($folderId)) {
+          // get option for image comments thumbnail links folder
+          $options = $this->acommunityConnector()->getTextOptions();
+          if ($this->galleryDeletion()->deleteGalleryByFolderId($folderId, $options['thumbnails_folder'])) {
             $ressource = $this->ressource();
             return $this->data()->setLastChangeTime(
               $ressource->type.'_gallery_folders:'.$ressource->type.'_'.$ressource->id

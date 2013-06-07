@@ -39,6 +39,12 @@ class ACommunityPageDeletion extends PapayaObject {
   protected $_tableNameComments = 'acommunity_comments';
 
   /**
+   * Table name of media db files
+   * @var string
+   */
+  protected $_tableMediaDBFiles = PAPAYA_DB_TBL_MEDIADB_FILES;
+
+  /**
   * Set/get database access object
   *
   * @return PapayaDatabaseAccess
@@ -62,5 +68,20 @@ class ACommunityPageDeletion extends PapayaObject {
       $this->databaseAccess()->getTableName($this->_tableNameComments),
       array('comment_ressource_id' => $pageIds, 'comment_ressource_type' => 'page')
     );
+  }
+
+  /**
+   * Delete all thumbnail link files of page comments.
+   * It is enough to delete the files only, because these entries do not have translations.
+   *
+   * @param integer $folderId media db folder by text options from connector
+   * @param array $pageIds
+   */
+  public function deletePageCommentsThumbnailLinkFiles($folderId, $pageIds) {
+    foreach ($pageIds as $pageId) {
+      $sql = "DELETE FROM %s WHERE folder_id = '%d' AND file_name LIKE '%%%s'";
+      $parameters = array($this->_tableMediaDBFiles, $folderId, ':comments:page_'.$pageId);
+      $this->databaseAccess()->queryFmtWrite($sql, $parameters);
+    }
   }
 }
