@@ -74,7 +74,11 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
   protected $_textOptions = NULL;
 
   /**
-   * A ressource to indentify image thumbnails by ressource
+   * A ressource string to indentify image thumbnails by ressource.
+   * You can use properties from the content ressource object to get a valid ressource string like:
+   * "ressourceType_ressourceId"
+   * Ressources with the same type should have an additional prefix in the ressource string,
+   * e.g. 'messages:surfer_suferId' / 'comments:surfer_surferId'
    * @var string
    */
   protected $_ressource = NULL;
@@ -86,13 +90,30 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
   protected $_thumbnailLinks = array();
 
   /**
+   * Use session values to save thumbnail links' image urls and media file ids
+   * @var PapayaSession
+   */
+  protected $_session = NULL;
+
+  /**
    * Create object and store options to match additional character groups
    *
    * @param integer $options
    */
-  public function __construct($options, $ressource = NULL) {
+  public function __construct($options, $ressource = NULL, $session = NULL) {
     parent::__construct($options);
     $this->_ressource = $ressource;
+    $this->_session = $session;
+    $this->_textOptions = $this->acommunityConnector()->getTextOptions();
+  }
+
+  /**
+   * Get thumbnail links
+   *
+   * @return array
+   */
+  public function thumbnailLinks() {
+    return $this->_thumbnailLinks;
   }
 
   /**
@@ -103,7 +124,6 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
   */
   public function filter($value) {
     $value = parent::filter($value);
-    $this->_textOptions = $this->acommunityConnector()->getTextOptions();
     $result = sprintf('<text-raw>%s</text-raw>', PapayaUtilStringXml::escape($value));
     $result .= sprintf(
       '<text>%s</text>',
@@ -113,6 +133,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         base_object::getXHTMLString($value, TRUE)
       )
     );
+
     if (count($this->_thumbnailLinks) > 0) {
       $result .= '<text-thumbnail-links>';
       foreach ($this->_thumbnailLinks as $link) {
@@ -135,12 +156,38 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
       preg_match($imagePattern, $match[1], $imageMatches);
 
       if (!empty($imageMatches[0])) {
-        $contents = file_get_contents($match[1]);
-        if (!empty($contents)) {
-          $path = tempnam('/tmp', 'acommunity-text-thumbnail-');
-          $handle = fopen($path, "a");
-          fwrite($handle, $contents);
-          fclose($handle);
+        $this->addThumbnailLink($match[1]);
+      }
+    }
+    $urlToShow = $match[1];
+    if (strlen($urlToShow) > $this->_urlLength) {
+      $urlToShow = substr($match[1], 0, $this->_urlLength - 3).'...';
+    }
+    return sprintf('<a href="%s">%s</a>', $match[1], $urlToShow);
+  }
+
+  /**
+   * An method to add a thumbnail by an image url for the messages/comments output.
+   * The comments page supports an ajax request for single thumbnail link requests used
+   * by the javascript extension for dynamic url detection on user input. Session values are
+   * supported to create one media file per image url only.
+   *
+   * @param string $imageUrl
+   */
+  public function addThumbnailLink($imageUrl) {
+    // session values detection
+    if (isset($this->_session->values['thumbnail_link_media_ids'][$imageUrl])) {
+      $fileId = $this->_session->values['thumbnail_link_media_ids'][$imageUrl];
+      $detected = $fileId;
+    }
+    if (!isset($fileId)) {
+      $contents = file_get_contents($imageUrl);
+      if (!empty($contents)) {
+        $path = tempnam('/tmp', 'acommunity-text-thumbnail-');
+        $handle = fopen($path, "a");
+        fwrite($handle, $contents);
+        fclose($handle);
+        if (getimagesize($path) != FALSE) {
           if (!empty($this->_ressource)) {
             $fileName = $path.':'.$this->_ressource;
           } else {
@@ -149,24 +196,34 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
           $fileId = $this->mediaDbEdit()->addFile(
             $path, $fileName, $this->_textOptions['thumbnails_folder'], ''
           );
-          unlink($path);
-
-          $this->_thumbnailLinks[] = sprintf(
-            '<a href="%s" title="%s">%s</a>',
-            $match[1], $match[1],
-            PapayaUtilStringPapaya::getImageTag(
-              $fileId, $this->_textOptions['thubmnails_size'], $this->_textOptions['thubmnails_size'],
-              '', $this->_textOptions['thubmnails_resize_mode']
-            )
+          // session values insert
+          if (!is_array($this->_session->values['thumbnail_link_media_ids'])) {
+            $this->_session->values['thumbnail_link_media_ids'] = array();
+          }
+          $this->_session->values['thumbnail_link_media_ids'] = array_merge(
+            $this->_session->values['thumbnail_link_media_ids'], array($imageUrl => $fileId)
           );
+        }
+        if (file_exists($path)) {
+          unlink($path);
         }
       }
     }
-    $urlToShow = $match[1];
-    if (strlen($urlToShow) > $this->_urlLength) {
-      $urlToShow = substr($match[1], 0, $this->_urlLength - 3).'...';
+    if (isset($fileId)) {
+      $this->_thumbnailLinks[] = sprintf(
+        '<a href="%s" title="%s">%s</a>',
+        $imageUrl, $imageUrl,
+        PapayaUtilStringPapaya::getImageTag(
+          $fileId, $this->_textOptions['thubmnails_size'], $this->_textOptions['thubmnails_size'],
+          '', $this->_textOptions['thubmnails_resize_mode']
+        )
+      );
     }
-    return sprintf('<a href="%s">%s</a>', $match[1], $urlToShow);
+    if (isset($detected) && $fileId == $detected) {
+      $ids = $this->_session->values['thumbnail_link_media_ids'];
+      unset($ids[$imageUrl]);
+      $this->_session->values['thumbnail_link_media_ids'] = $ids;
+    }
   }
 
   /**
