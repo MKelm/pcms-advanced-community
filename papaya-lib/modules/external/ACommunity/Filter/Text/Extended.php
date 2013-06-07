@@ -96,14 +96,21 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
   protected $_session = NULL;
 
   /**
+   * A session ident to get session values from, a md5 hash of a special ressource definition
+   * e.g. "request_the_special_content:surfer_SURFERID"
+   */
+  protected $_sessionIdent = NULL;
+
+  /**
    * Create object and store options to match additional character groups
    *
    * @param integer $options
    */
-  public function __construct($options, $ressource = NULL, $session = NULL) {
+  public function __construct($options, $ressource = NULL, $session = NULL, $sessionIdent = NULL) {
     parent::__construct($options);
     $this->_ressource = $ressource;
     $this->_session = $session;
+    $this->_sessionIdent = $sessionIdent;
     $this->_textOptions = $this->acommunityConnector()->getTextOptions();
   }
 
@@ -133,7 +140,13 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         base_object::getXHTMLString($value, TRUE)
       )
     );
-
+    if (!empty($this->_session->values[$this->_sessionIdent])) {
+      // add the rest of all thumbnail links from session to thumbnail links array, final run
+      $this->_thumbnailLinks = array_merge(
+        $this->_thumbnailLinks, array_values($this->_session->values[$this->_sessionIdent])
+      );
+      unset($this->_session->values[$this->_sessionIdent]);
+    }
     if (count($this->_thumbnailLinks) > 0) {
       $result .= '<text-thumbnail-links>';
       foreach ($this->_thumbnailLinks as $link) {
@@ -156,7 +169,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
       preg_match($imagePattern, $match[1], $imageMatches);
 
       if (!empty($imageMatches[0])) {
-        $this->addThumbnailLink($match[1]);
+        $this->addThumbnailLink($match[1], TRUE);
       }
     }
     $urlToShow = $match[1];
@@ -168,19 +181,25 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
 
   /**
    * An method to add a thumbnail by an image url for the messages/comments output.
-   * The comments page supports an ajax request for single thumbnail link requests used
+   * The comments/messages page supports an ajax request for single thumbnail link requests used
    * by the javascript extension for dynamic url detection on user input. Session values are
-   * supported to create one media file per image url only.
+   * supported to create one media file per image url only. They have a unique identifier for each
+   * registered surfer. This solution allows user tracking extensions to avoid spam.
    *
    * @param string $imageUrl
+   * @param boolean $removeDetectedSessionValues
    */
-  public function addThumbnailLink($imageUrl) {
-    // session values detection
-    if (isset($this->_session->values['thumbnail_link_media_ids'][$imageUrl])) {
-      $fileId = $this->_session->values['thumbnail_link_media_ids'][$imageUrl];
-      $detected = $fileId;
+  public function addThumbnailLink($imageUrl, $removeDetectedSessionValues = FALSE) {
+    // detect thumbnail links by session values to avoid duplicate media db files
+    if (isset($this->_session->values[$this->_sessionIdent][$imageUrl])) {
+      $thumbnailLink = $this->_session->values[$this->_sessionIdent][$imageUrl];
+      if ($removeDetectedSessionValues == TRUE) {
+        // remove thumbnail links in the filter process, that's the final run
+        $removeThumbnailLinkFromSession = TRUE;
+      }
     }
-    if (!isset($fileId)) {
+    if (!isset($thumbnailLink)) {
+      // download image and insert it to media db, first run
       $contents = file_get_contents($imageUrl);
       if (!empty($contents)) {
         $path = tempnam('/tmp', 'acommunity-text-thumbnail-');
@@ -196,13 +215,6 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
           $fileId = $this->mediaDbEdit()->addFile(
             $path, $fileName, $this->_textOptions['thumbnails_folder'], ''
           );
-          // session values insert
-          if (!is_array($this->_session->values['thumbnail_link_media_ids'])) {
-            $this->_session->values['thumbnail_link_media_ids'] = array();
-          }
-          $this->_session->values['thumbnail_link_media_ids'] = array_merge(
-            $this->_session->values['thumbnail_link_media_ids'], array($imageUrl => $fileId)
-          );
         }
         if (file_exists($path)) {
           unlink($path);
@@ -210,7 +222,8 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
       }
     }
     if (isset($fileId)) {
-      $this->_thumbnailLinks[] = sprintf(
+      // create link with media image tag for thumbnail creation, first run
+      $thumbnailLink = sprintf(
         '<a href="%s" title="%s">%s</a>',
         $imageUrl, $imageUrl,
         PapayaUtilStringPapaya::getImageTag(
@@ -219,10 +232,25 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         )
       );
     }
-    if (isset($detected) && $fileId == $detected) {
-      $ids = $this->_session->values['thumbnail_link_media_ids'];
-      unset($ids[$imageUrl]);
-      $this->_session->values['thumbnail_link_media_ids'] = $ids;
+
+    if (isset($thumbnailLink)) {
+      if (isset($fileId)) {
+        // session values insert on file creation, that's the first run
+        if (empty($this->_session->values[$this->_sessionIdent])) {
+          $this->_session->values[$this->_sessionIdent] = array();
+        }
+        $this->_session->values[$this->_sessionIdent] = array_merge(
+          $this->_session->values[$this->_sessionIdent], array($imageUrl => $thumbnailLink)
+        );
+      }
+      $this->_thumbnailLinks[] = $thumbnailLink;
+    }
+    if (isset($removeThumbnailLinkFromSession) && $removeThumbnailLinkFromSession == TRUE) {
+      // remove thumbnail links that have been detected in input text, to avoid duplications
+      // in thumbnail links insertion by session values after this method, see filter method
+      $thumbnailLinks = $this->_session->values[$this->_sessionIdent];
+      unset($thumbnailLinks[$imageUrl]);
+      $this->_session->values[$this->_sessionIdent] = $thumbnailLinks;
     }
   }
 
