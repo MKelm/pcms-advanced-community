@@ -125,7 +125,22 @@ class ACommunityComments extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    if (isset($this->ressource()->id)) {
+    if ($this->parameters()->get('request') == 'thumbnail_link') {
+      // output for ajax request "thumbnail_link"
+      $imageUrl = $this->parameters()->get('url');
+      if (!empty($imageUrl)) {
+        include_once(dirname(__FILE__).'/Filter/Text/Extended.php');
+        $filter = new ACommunityFilterTextExtended(
+          NULL, $this->ressource(), $this->papaya()->session, TRUE
+        );
+        $filter->addThumbnailLink($imageUrl);
+        $thumbnailLink = reset($filter->thumbnailLinks());
+        if (!empty($thumbnailLink)) {
+          $parent->appendXml($thumbnailLink);
+        }
+      }
+    } elseif (isset($this->ressource()->id)) {
+      // comments output
       $this->performCommands();
       $comments = $parent->appendElement('acommunity-comments');
       if ($this->data()->mode == 'list') {

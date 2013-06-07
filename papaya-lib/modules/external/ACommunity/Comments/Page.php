@@ -114,6 +114,7 @@ class ACommunityCommentsPage extends base_content implements PapayaPluginCacheab
       $this->_cacheDefiniton = $definition;
     } elseif (NULL == $this->_cacheDefiniton) {
       $definitionValues = array('acommunity_comments_box');
+      $parameterNames = array('request', 'url');
       $ressource = $this->setRessourceData();
       if (isset($ressource->id)) {
         $currentSurferId = $this->comments()->data()->currentSurferId();
@@ -123,27 +124,22 @@ class ACommunityCommentsPage extends base_content implements PapayaPluginCacheab
           $definitionValues[] = $ressource->type;
           $definitionValues[] = $ressource->id;
           $referenceParameters = $this->comments()->data()->referenceParameters();
-          $parameterNames = array_merge(
+          $parameterNamesExtra = array_merge(
             array('command', 'comment_id'), array_keys($referenceParameters)
           );
+          $parameterNames = array_merge($parameterNames, $parameterNamesExtra);
           unset($referenceParameters);
           include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
           $definitionValues[] = $values->lastChangeTime(
             'comments:'.$ressource->type.'_'.$ressource->id
           );
-          $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-            new PapayaCacheIdentifierDefinitionValues($definitionValues),
-            new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
-          );
-        } else {
-          $definitionValues[] = $ressource->type;
-          $definitionValues[] = $ressource->id;
         }
       }
       if (is_null($this->_cacheDefiniton)) {
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-          new PapayaCacheIdentifierDefinitionValues($definitionValues)
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters($parameterNames, $this->paramName)
         );
       }
     }
