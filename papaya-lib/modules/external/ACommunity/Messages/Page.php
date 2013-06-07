@@ -118,25 +118,27 @@ class ACommunityMessagesPage extends base_content implements PapayaPluginCacheab
       if ($ressource->validSurfer === 'is_another') {
         $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionBoolean(FALSE);
       } elseif ($ressource->validSurfer === 'is_selected') {
+        $definitionValues[] = $ressource->id;
         $notifications = $this->messages()->parameters()->get('notifications', NULL);
         if (isset($notifications)) {
           include_once(dirname(__FILE__).'/../Cache/Identifier/Values.php');
           $values = new ACommunityCacheIdentifierValues();
-          $definitionValues[] = $currentSurferId;
           $definitionValues[] = 'system';
-          $definitionValues[] = $values->lastMessageTime($currentSurferId, 'system');
+          $definitionValues[] = $values->lastMessageTime($ressource->id, 'system');
         } else {
           $definitionValues[] = 1; // no valid surfer selected, with login
         }
       } else {
         $definitionValues[] = 0; // no valid surfer selected, without login
       }
-      $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
-        new PapayaCacheIdentifierDefinitionValues($definitionValues),
-        new PapayaCacheIdentifierDefinitionParameters(
-          array('messages_page'), $this->paramName
-        )
-      );
+      if (is_null($this->_cacheDefiniton)) {
+        $this->_cacheDefiniton = new PapayaCacheIdentifierDefinitionGroup(
+          new PapayaCacheIdentifierDefinitionValues($definitionValues),
+          new PapayaCacheIdentifierDefinitionParameters(
+            array('messages_page'), $this->paramName
+          )
+        );
+      }
     }
     return $this->_cacheDefiniton;
   }
@@ -169,7 +171,7 @@ class ACommunityMessagesPage extends base_content implements PapayaPluginCacheab
         array('surfer' => array('surfer_handle', 'notifications')),
         NULL,
         NULL,
-        'is_another'
+        TRUE
       );
     }
     return $this->_ressource;
