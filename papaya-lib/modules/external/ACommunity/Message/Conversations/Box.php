@@ -119,6 +119,7 @@ class ACommunityMessageConversationsBox extends base_actionbox implements Papaya
   public function setRessourceData() {
     if (is_null($this->_ressource)) {
       $this->_ressource = $this->messages()->ressource();
+      $this->_ressource->set('surfer', NULL, array('surfer' => array()), NULL, NULL, 'is_selected');
     }
     return $this->_ressource;
   }

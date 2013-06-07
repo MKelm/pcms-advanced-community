@@ -148,7 +148,7 @@ class ACommunityCacheIdentifierValues extends PapayaObject {
    */
   public function lastMessageConversationTime($surferId) {
     $this->messageConversations()->load(array('current_surfer_id' => $surferId), 1);
-    if (count($this->messageConversations) > 0) {
+    if (count($this->messageConversations()) > 0) {
       $result = reset($this->messageConversations()->toArray());
       return (int)$result['time'];
     }
