@@ -1,23 +1,6 @@
-Index: papaya-themes/default/page_community.css
-===================================================================
---- papaya-themes/default/page_community.css	(Revision 38500)
-+++ papaya-themes/default/page_community.css	(Arbeitskopie)
-@@ -48,4 +48,11 @@
- img.communityUserAvatar {
-   margin-top: 20px;
-   margin-bottom: 20px;
-+}
-+div.deleteAccount,
-+div.deleteAccount form div.buttons {
-+  margin-top: 1em;
-+}
-+div.deleteAccount fieldset {
-+  margin: 0;
- }
-\ No newline at end of file
 Index: papaya-themes/default/page_thumbs.css
 ===================================================================
---- papaya-themes/default/page_thumbs.css	(Revision 38500)
+--- papaya-themes/default/page_thumbs.css	(Revision 38512)
 +++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
 @@ -1,6 +1,6 @@
  .galleryThumbnail {
@@ -29,7 +12,7 @@ Index: papaya-themes/default/page_thumbs.css
    display: block;
 Index: papaya-themes/default/basic.css
 ===================================================================
---- papaya-themes/default/basic.css	(Revision 38500)
+--- papaya-themes/default/basic.css	(Revision 38512)
 +++ papaya-themes/default/basic.css	(Arbeitskopie)
 @@ -72,6 +72,9 @@
  
@@ -124,429 +107,26 @@ Index: papaya-themes/default/basic.css
    }
 -}  
 +}
-Index: papaya-lib/system/Papaya/Theme/Handler.php
+Index: papaya-themes/default/page_community.css
 ===================================================================
---- papaya-lib/system/Papaya/Theme/Handler.php	(Revision 38500)
-+++ papaya-lib/system/Papaya/Theme/Handler.php	(Arbeitskopie)
-@@ -26,6 +26,11 @@
- class PapayaThemeHandler extends PapayaObject {
- 
-   /**
-+   * Name of sub theme.
-+   */
-+  protected $_subThemeName = NULL;
-+
-+  /**
-   * Get url for theme files, is $themeName is empty the current theme is used.
-   *
-   * @param string $themeName
-@@ -51,10 +56,15 @@
-       );
-     }
-     if (empty($themeName)) {
--      return $baseUrl.$this->getTheme().'/';
-+      $themeName = $this->getTheme();
-     } else {
--      return $baseUrl.$themeName.'/';
-+      $themeNameParts = explode('-', $themeName);
-+      if (count($themeNameParts) == 2) {
-+        $themeName = $themeNameParts[0];
-+        $this->_subThemeName = $themeNameParts[1];
-+      }
-     }
-+    return $baseUrl.$themeName.'/';
-   }
- 
-   /**
-@@ -82,6 +92,12 @@
-   public function getLocalThemePath($themeName = NULL) {
-     if (empty($themeName)) {
-       $themeName = $this->getTheme();
-+    } else {
-+      $themeNameParts = explode('-', $themeName);
-+      if (count($themeNameParts) == 2) {
-+        $themeName = $themeNameParts[0];
-+        $this->_subThemeName = $themeNameParts[1];
-+      }
-     }
-     return PapayaUtilFilePath::cleanup(
-       $this->getLocalPath().$themeName
-@@ -125,10 +141,24 @@
-         ->options
-         ->getOption('PAPAYA_LAYOUT_THEME');
-     }
-+    $themeNameParts = explode('-', $theme);
-+    if (count($themeNameParts) == 2) {
-+      $theme = $themeNameParts[0];
-+      $this->_subThemeName = $themeNameParts[1];
-+    }
-     return $theme;
-   }
- 
-   /**
-+  * Get the currently active sub theme name
-+  *
-+  * @return string
-+  */
-+  public function getSubTheme() {
-+    return $this->_subThemeName;
-+  }
-+
-+  /**
-   * Get the currently active theme set id
-   *
-   * @return string
-Index: papaya-lib/system/Papaya/Filter/Text.php
-===================================================================
---- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38500)
-+++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
-@@ -49,7 +49,7 @@
-    * @return string^
-    */
-   private function getPattern() {
--    $result = '([^\\pL\\pP';
-+    $result = '([^\\pL\\pP=';
-     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
-       $result .= '\\p{Zs} ';
-     }
-Index: papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php
-===================================================================
---- papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php	(Revision 38500)
-+++ papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php	(Arbeitskopie)
-@@ -35,7 +35,7 @@
-   * XML configuration file of theme.
-   * @var string
-   */
--  private $_themeConfigurationFile = 'theme.xml';
-+  private $_themeConfigurationFile = '~theme(-.+)?\.xml~i';
- 
-   /***************************************************************************/
-   /** Methods                                                                */
-@@ -62,33 +62,53 @@
-   public function getThemeConfiguration($themePath) {
-     $result = array();
-     $document = $this->getDOMDocumentObject();
--    $xmlFile = $themePath . '/' . $this->_themeConfigurationFile;
--    if ($this->loadXml($xmlFile)) {
--      $xpath = new DOMXPath($document);
--      $result['name'] = $xpath->evaluate('string(//papaya-theme/name)', $document);
--      $result['templates'] = $xpath->evaluate(
--        'string(//papaya-theme/templates/@directory)',
--        $document
--      );
--      $result['version'] = $xpath->evaluate(
--        'string(//papaya-theme/version/@number)',
--        $document
--      );
--      $result['date'] = $xpath->evaluate(
--        'string(//papaya-theme/version/@date)',
--        $document
--      );
--      $result['author'] = $xpath->evaluate('string(//papaya-theme/author)', $document);
--      $result['description'] = $xpath->evaluate('string(//papaya-theme/description)', $document);
--      $result['thumbMedium'] = $xpath->evaluate(
--        "string(//papaya-theme/thumbs/thumb[@size = 'medium']/@src)",
--        $document
--      );
--      $result['thumbLarge'] = $xpath->evaluate(
--        "string(//papaya-theme/thumbs/thumb[@size = 'large']/@src)",
--        $document
--      );
-+
-+    if (is_dir($themePath) && $directory = opendir($themePath)) {
-+      while ($fileName = readdir($directory)) {
-+        if (is_file($themePath.'/'.$fileName) &&
-+            preg_match($this->_themeConfigurationFile, $fileName)) {
-+          $xmlFile = $themePath . '/' . $fileName;
-+          if ($this->loadXml($xmlFile)) {
-+            $xpath = new DOMXPath($document);
-+            $config['name'] = $xpath->evaluate('string(//papaya-theme/name)', $document);
-+            $config['templates'] = $xpath->evaluate(
-+              'string(//papaya-theme/templates/@directory)',
-+              $document
-+            );
-+            $config['version'] = $xpath->evaluate(
-+              'string(//papaya-theme/version/@number)',
-+              $document
-+            );
-+            $config['date'] = $xpath->evaluate(
-+              'string(//papaya-theme/version/@date)',
-+              $document
-+            );
-+            $config['author'] = $xpath->evaluate('string(//papaya-theme/author)', $document);
-+            $config['description'] = $xpath->evaluate('string(//papaya-theme/description)', $document);
-+            $config['thumbMedium'] = $xpath->evaluate(
-+              "string(//papaya-theme/thumbs/thumb[@size = 'medium']/@src)",
-+              $document
-+            );
-+            $config['thumbLarge'] = $xpath->evaluate(
-+              "string(//papaya-theme/thumbs/thumb[@size = 'large']/@src)",
-+              $document
-+            );
-+            $subTheme = $xpath->evaluate(
-+              'string(//papaya-theme/sub-theme)',
-+              $document
-+            );
-+            if (empty($subTheme)) {
-+              $subTheme = '';
-+            }
-+            $result[$subTheme] = $config;
-+          }
-+        }
-+      }
-+      closedir($directory);
-     }
-+    if (count($result) > 0) {
-+      ksort($result);
-+    }
-     return $result;
-   }
- 
-Index: papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php
-===================================================================
---- papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php	(Revision 38500)
-+++ papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php	(Arbeitskopie)
-@@ -353,10 +353,16 @@
-       while ($directoryName = readdir($directory)) {
-         if (is_dir($themesPath.$directoryName) && substr($directoryName, 0, 1) != '.') {
-           $currentConfiguration = $configuration->getThemeConfiguration(
--            $themesPath . $directoryName
-+            $themesPath.$directoryName
-           );
-           if (!empty($currentConfiguration)) {
--            $result[$directoryName] = $currentConfiguration;
-+            foreach ($currentConfiguration as $subTheme => $values) {
-+              if (empty($subTheme)) {
-+                $result[$directoryName] = $values;
-+              } else {
-+                $result[$directoryName.'-'.$subTheme] = $values;
-+              }
-+            }
-           }
-         }
-       }
-Index: papaya-lib/system/papaya_mediadb.php
-===================================================================
---- papaya-lib/system/papaya_mediadb.php	(Revision 38500)
-+++ papaya-lib/system/papaya_mediadb.php	(Arbeitskopie)
-@@ -677,7 +677,14 @@
-         }
-         break;
-       case 'crop_image_window':
--        $this->getImageCropWindow();
-+        if ($this->currentFile['mimetype'] == 'image/jpeg') {
-+          $this->getImageCropWindow();
-+        } else {
-+          $this->addMsg(
-+            MSG_WARNING,
-+            $this->_gt('You can crop image/jpeg files only, please convert the image first.')
-+          );
-+        }
-         break;
-       case 'crop_image_rpc':
-         header('Content-type: text/xml; charset=utf-8');
-@@ -1195,9 +1202,9 @@
-             'actions-edit-copy',
-             'Copy file to clipboard'
-           );
--          if ($this->currentFile['mimetype_ext'] == 'jpg' ||
--              $this->currentFile['mimetype_ext'] == 'gif' ||
--              $this->currentFile['mimetype_ext'] == 'png') {
-+          if ($this->currentFile['mimetype'] == 'image/jpeg' ||
-+              $this->currentFile['mimetype'] == 'image/gif' ||
-+              $this->currentFile['mimetype'] == 'image/png') {
-             $convertParams = array(
-               'cmd' => 'convert_image',
-               'file_id' => $this->params['file_id'],
-@@ -1212,22 +1219,33 @@
-           }
-         }
- 
--        if (strtolower($this->getFileExtension($this->currentFile['file_name'])) == 'jpg') {
-+        if ($this->currentFile['mimetype'] == 'image/jpeg') {
-+          $cropLink = sprintf(
-+            "javascript:window.open('%s', 'cropwindow',
-+             'width=656,height=556,top=100,left=100'); return false;",
-+            $this->getLink(
-+              array(
-+                'cmd' => 'crop_image_window',
-+                'file_id' => $this->params['file_id']
-+              )
-+            )
-+          );
-+        } elseif ($this->currentFile['mimetype'] == 'image/gif' ||
-+                  $this->currentFile['mimetype'] == 'image/png') {
-           $cropLink = $this->getLink(
-             array(
-               'cmd' => 'crop_image_window',
-               'file_id' => $this->params['file_id']
-             )
-           );
-+        }
-+        if (!empty($cropLink)) {
-           $this->menubar->addButton(
-             'Crop',
--            sprintf(
--              "javascript:window.open('%s', 'cropwindow',
--               'width=656,height=556,top=100,left=100'); return false;",
--              $cropLink
--            ),
-+            $cropLink,
-             'actions-edit-crop',
--            'Crop image'
-+            'Crop image',
-+            isset($this->params['cmd']) && $this->params['cmd'] == 'crop_image_window'
-           );
-         }
- 
-Index: papaya-lib/system/base_mediadb_edit.php
-===================================================================
---- papaya-lib/system/base_mediadb_edit.php	(Revision 38500)
-+++ papaya-lib/system/base_mediadb_edit.php	(Arbeitskopie)
-@@ -653,6 +653,8 @@
-           $doDelete = TRUE;
-         }
-         if ($doDelete) {
-+          $this->deleteFileDerivations($fileId);
-+          $this->deleteFileTrans($fileId);
-           $condition = array('file_id' => $fileId);
-           return (FALSE !== $this->databaseDeleteRecord($this->tableFiles, $condition));
-         }
-@@ -662,6 +664,20 @@
-   }
- 
-   /**
-+   * Delete file translation by id
-+   *
-+   * @param string $fileId
-+   * @return boolean
-+   */
-+  function deleteFileTrans($fileId) {
-+    if (!empty($fileId)) {
-+      $condition = array('file_id' => $fileId);
-+      return FALSE !== $this->databaseDeleteRecord($this->tableFilesTrans, $condition);
-+    }
-+    return FALSE;
-+  }
-+
-+  /**
-   * delete a version of a file
-   *
-   * use this method to delete a specific version of a file
-@@ -679,6 +695,7 @@
-       include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
-       $thumbnail = new base_thumbnail;
-       $thumbnail->deleteThumbs($fileId);
-+      $this->deleteFileDerivations($fileId, $versionId);
-       return (FALSE !== $this->databaseDeleteRecord($this->tableFilesVersions, $condition));
-     }
-   }
-@@ -695,6 +712,7 @@
-     if ($fileId != '') {
-       $versions = $this->getFileVersions($fileId);
-       if (is_array($versions) && count($versions) > 0) {
-+        $this->deleteFileDerivations($fileId, array_keys($versions));
-         foreach ($versions as $versionId => $version) {
-           $fileName = $this->getFileName($fileId, $versionId, TRUE);
-           if (!is_file($fileName) || unlink($fileName)) {
-@@ -717,6 +735,31 @@
-   }
- 
-   /**
-+   * Delete file derivations by file or file version.
-+   *
-+   * @param string $fileId
-+   * @param integer $versionId
-+   * @return boolean
-+   */
-+  function deleteFileDerivations($fileId, $versionId = NULL) {
-+    if (!empty($fileId)) {
-+      $condition = array('parent_file_id' => $fileId);
-+      if (!empty($versionId)) {
-+        $condition['parent_file_version_id'] = $versionId;
-+      }
-+      $result1 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
-+      if (empty($versionId)) {
-+        $condition = array('child_file_id' => $fileId);
-+        $result2 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
-+        return $result1 && $result2;
-+      } else {
-+        return $result1;
-+      }
-+    }
-+    return FALSE;
-+  }
-+
-+  /**
-   * move multiple files to a different folder
-   *
-   * use this method to move multiple files to a different folder
-@@ -1009,4 +1052,4 @@
-     return $size;
-   }
+--- papaya-themes/default/page_community.css	(Revision 38512)
++++ papaya-themes/default/page_community.css	(Arbeitskopie)
+@@ -48,4 +48,11 @@
+ img.communityUserAvatar {
+   margin-top: 20px;
+   margin-bottom: 20px;
++}
++div.deleteAccount,
++div.deleteAccount form div.buttons {
++  margin-top: 1em;
++}
++div.deleteAccount fieldset {
++  margin: 0;
  }
--?>
-+?>
 \ No newline at end of file
-Index: papaya-lib/system/papaya_publictopic.php
-===================================================================
---- papaya-lib/system/papaya_publictopic.php	(Revision 38500)
-+++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
-@@ -229,7 +229,7 @@
-         $definition
-       );
-     } else {
--      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
-+      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
-     }
-   }
- 
-Index: papaya-lib/system/papaya_page.php
-===================================================================
---- papaya-lib/system/papaya_page.php	(Revision 38500)
-+++ papaya-lib/system/papaya_page.php	(Arbeitskopie)
-@@ -265,7 +265,7 @@
-     if (isset($_GET['exit'])) {
-       $this->allowSessionRedirects = FALSE;
-       $this->startSession();
--      $urlPattern = '(^/sid'.preg_quote($this->sessionName).'([a-zA-Z\d,-]{20,40})([^?]*))i';
-+      $urlPattern = '(^/sid[a-z]+([a-zA-Z\d,-]{20,40})((?:/.*)|$))i';
-       if (preg_match($urlPattern, $_SERVER['REQUEST_URI'], $regs)) {
-         $this->doRedirectToPath(
-           301,
-@@ -1534,6 +1534,7 @@
-       }
-       $themeHandler = new PapayaThemeHandler();
-       $this->layout->setParam('PAGE_THEME', $themeHandler->getTheme());
-+      $this->layout->setParam('PAGE_SUB_THEME', $themeHandler->getSubTheme());
-       $this->layout->setParam('PAGE_THEME_SET', $themeHandler->getThemeSet());
-       $this->layout->setParam('PAGE_THEME_PATH', $themeHandler->getUrl());
-       $this->layout->setParam('PAGE_THEME_PATH_LOCAL', $themeHandler->getLocalThemePath());
-Index: papaya-lib/system/base_topic_edit.php
-===================================================================
---- papaya-lib/system/base_topic_edit.php	(Revision 38500)
-+++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
-@@ -1623,9 +1623,14 @@
-                 //delete page
-                 if (FALSE !== $this->databaseDeleteRecord(
-                       $this->tableTopicsTrans, $filter)) {
--                  return FALSE !== $this->databaseDeleteRecord(
--                    $this->tableTopics, $filter
--                  );
-+                  if (FALSE !== $this->databaseDeleteRecord(
-+                        $this->tableTopics, $filter)) {
-+                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
-+                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
-+                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
-+                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
-+                    return TRUE;
-+                  }
-                 }
-               }
-             }
 Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 ===================================================================
---- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38500)
+--- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38512)
 +++ papaya-lib/modules/free/thumbs/content_thumbs.php	(Arbeitskopie)
 @@ -1,540 +0,0 @@
 -<?php
@@ -1090,155 +670,6 @@ Index: papaya-lib/modules/free/thumbs/content_thumbs.php
 -  }
 -}
 \ No newline at end of file
-Index: papaya-lib/modules/free/thumbs/Image/Gallery/Page.php
-===================================================================
---- papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
-+++ papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
-@@ -0,0 +1,143 @@
-+<?php
-+/**
-+* Media image gallery page
-+*
-+* @copyright 2002-2013 by papaya Software GmbH - All rights reserved.
-+* @link http://www.papaya-cms.com/
-+* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
-+*
-+* You can redistribute and/or modify this script under the terms of the GNU General Public
-+* License (GPL) version 2, provided that the copyright and license notes, including these
-+* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
-+* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-+* FOR A PARTICULAR PURPOSE.
-+*
-+* @package Papaya-Modules
-+* @subpackage Free-Media
-+* @version $Id: $
-+*/
-+
-+/**
-+* Basic class page module
-+*/
-+require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
-+
-+
-+/**
-+* Media image gallery page
-+*
-+* @package Papaya-Modules
-+* @subpackage Free-Media
-+*/
-+class MediaImageGalleryPage extends base_content {
-+
-+  /**
-+   * Parameter group
-+   * @var string
-+   */
-+  public $paramName = 'mig';
-+
-+  /**
-+  * Content edit fields
-+  * @var array $editFields
-+  */
-+  var $editFields = array(
-+    'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
-+      array(0 => 'Yes', 1 => 'No'), 'Apply linebreaks from input to the HTML output.', 0
-+    ),
-+    'title' => array('Title', 'isSomeText', FALSE, 'input', 400, '', ''),
-+    'subtitle' => array('Subtitle', 'isSomeText', FALSE, 'input', 400, '', ''),
-+    'teaser' => array('Teaser', 'isSomeText', FALSE, 'simplerichtext', 5, '', ''),
-+    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 10, '', ''),
-+
-+    'Thumbnails',
-+    'directory' => array('Folder', 'isNum', TRUE, 'mediafolder'),
-+    'maxperpage' => array('Thumbnail count', 'isNum', TRUE, 'input', 5, '', 9),
-+    'maxperline' => array('Column count', 'isNum', TRUE, 'input', 5, '', 3),
-+    'resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
-+      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
-+        'mincrop' => 'Minimum cropped'), '', 'max'),
-+    'thumbwidth' => array('Thumbnail width', 'isNum', TRUE, 'input', 5, '', 100),
-+    'thumbheight' => array('Thumbnail height', 'isNum', TRUE, 'input', 5, '', 100),
-+    'order' => array('Sort type', 'isNoHTML', TRUE, 'translatedcombo',
-+      array('name' => 'File name', 'date' => 'File date'), '', 'name'),
-+    'sort' => array('Sort order', 'isNoHTML', TRUE, 'translatedcombo',
-+      array('asc' => 'Ascending', 'desc' => 'Descending'), '', 'asc'),
-+
-+    'Images',
-+    'display_title' => array('Display title?', 'isNoHTML', TRUE, 'translatedcombo',
-+       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
-+    'display_comment' => array('Display description?', 'isNoHTML', TRUE, 'translatedcombo',
-+       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
-+    'show_lightbox' => array('Display in lightbox?', 'isNum', TRUE, 'yesno', NULL, NULL, '1'),
-+    'show_mode' => array('Display mode', 'isNum', TRUE, 'translatedcombo',
-+      array(
-+        0 => 'Resized image',
-+        4 => 'Resized image with original image link',
-+        5 => 'Resized image with download link',
-+        1 => 'Original image',
-+        2 => 'Original image download',
-+        3 => 'Resized image download'
-+      ), '', 0
-+    ),
-+    'width' => array('Width', 'isNum', TRUE, 'input', 5, '', 640),
-+    'height' => array('Height', 'isNum', TRUE, 'input', 5, '', 480),
-+    'show_resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
-+      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
-+        'mincrop' => 'Minimum cropped'), '', 'max')
-+  );
-+
-+  /**
-+   * Gallery object
-+   * @var MediaImageGallery
-+   */
-+  protected $_gallery = NULL;
-+
-+  /**
-+  * Get (and, if necessary, initialize) the MediaImageGallery object
-+  *
-+  * @return MediaImageGallery $gallery
-+  */
-+  public function gallery(MediaImageGallery $gallery = NULL) {
-+    if (isset($gallery)) {
-+      $this->_gallery = $gallery;
-+    } elseif (is_null($this->_gallery)) {
-+      include_once(dirname(__FILE__).'/../Gallery.php');
-+      $this->_gallery = new MediaImageGallery();
-+      $this->_gallery->parameterGroup($this->paramName);
-+      $this->_gallery->languageId = $this->papaya()->request->languageId;
-+    }
-+    return $this->_gallery;
-+  }
-+
-+  /**
-+  * Get parsed teaser
-+  *
-+  * @access public
-+  * @return string $result
-+  */
-+  function getParsedTeaser() {
-+    $this->setDefaultData();
-+    $this->gallery()->initialize($this, $this->data, 'teaser');
-+    $this->gallery()->load();
-+    return $this->gallery()->getXml();
-+  }
-+
-+  /**
-+  * Get parsed data
-+  *
-+  * build an XML string containing either...
-+  * an image with links to previous image and next image or...
-+  * a page containing thumbnails with links to the previous and next pages of thumbnails.
-+  *
-+  * @access public
-+  * @return string $result
-+  */
-+  function getParsedData() {
-+    $this->setDefaultData();
-+    $this->initializeParams();
-+    $this->gallery()->initialize($this, $this->data);
-+    $this->gallery()->load();
-+    return $this->gallery()->getXml();
-+  }
-+}
-\ No newline at end of file
 Index: papaya-lib/modules/free/thumbs/Image/Gallery.php
 ===================================================================
 --- papaya-lib/modules/free/thumbs/Image/Gallery.php	(Revision 0)
@@ -1702,9 +1133,158 @@ Index: papaya-lib/modules/free/thumbs/Image/Gallery.php
 +  }
 +}
 \ No newline at end of file
+Index: papaya-lib/modules/free/thumbs/Image/Gallery/Page.php
+===================================================================
+--- papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
++++ papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
+@@ -0,0 +1,143 @@
++<?php
++/**
++* Media image gallery page
++*
++* @copyright 2002-2013 by papaya Software GmbH - All rights reserved.
++* @link http://www.papaya-cms.com/
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++* @version $Id: $
++*/
++
++/**
++* Basic class page module
++*/
++require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
++
++
++/**
++* Media image gallery page
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++*/
++class MediaImageGalleryPage extends base_content {
++
++  /**
++   * Parameter group
++   * @var string
++   */
++  public $paramName = 'mig';
++
++  /**
++  * Content edit fields
++  * @var array $editFields
++  */
++  var $editFields = array(
++    'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
++      array(0 => 'Yes', 1 => 'No'), 'Apply linebreaks from input to the HTML output.', 0
++    ),
++    'title' => array('Title', 'isSomeText', FALSE, 'input', 400, '', ''),
++    'subtitle' => array('Subtitle', 'isSomeText', FALSE, 'input', 400, '', ''),
++    'teaser' => array('Teaser', 'isSomeText', FALSE, 'simplerichtext', 5, '', ''),
++    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 10, '', ''),
++
++    'Thumbnails',
++    'directory' => array('Folder', 'isNum', TRUE, 'mediafolder'),
++    'maxperpage' => array('Thumbnail count', 'isNum', TRUE, 'input', 5, '', 9),
++    'maxperline' => array('Column count', 'isNum', TRUE, 'input', 5, '', 3),
++    'resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
++      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
++        'mincrop' => 'Minimum cropped'), '', 'max'),
++    'thumbwidth' => array('Thumbnail width', 'isNum', TRUE, 'input', 5, '', 100),
++    'thumbheight' => array('Thumbnail height', 'isNum', TRUE, 'input', 5, '', 100),
++    'order' => array('Sort type', 'isNoHTML', TRUE, 'translatedcombo',
++      array('name' => 'File name', 'date' => 'File date'), '', 'name'),
++    'sort' => array('Sort order', 'isNoHTML', TRUE, 'translatedcombo',
++      array('asc' => 'Ascending', 'desc' => 'Descending'), '', 'asc'),
++
++    'Images',
++    'display_title' => array('Display title?', 'isNoHTML', TRUE, 'translatedcombo',
++       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
++    'display_comment' => array('Display description?', 'isNoHTML', TRUE, 'translatedcombo',
++       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
++    'show_lightbox' => array('Display in lightbox?', 'isNum', TRUE, 'yesno', NULL, NULL, '1'),
++    'show_mode' => array('Display mode', 'isNum', TRUE, 'translatedcombo',
++      array(
++        0 => 'Resized image',
++        4 => 'Resized image with original image link',
++        5 => 'Resized image with download link',
++        1 => 'Original image',
++        2 => 'Original image download',
++        3 => 'Resized image download'
++      ), '', 0
++    ),
++    'width' => array('Width', 'isNum', TRUE, 'input', 5, '', 640),
++    'height' => array('Height', 'isNum', TRUE, 'input', 5, '', 480),
++    'show_resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
++      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
++        'mincrop' => 'Minimum cropped'), '', 'max')
++  );
++
++  /**
++   * Gallery object
++   * @var MediaImageGallery
++   */
++  protected $_gallery = NULL;
++
++  /**
++  * Get (and, if necessary, initialize) the MediaImageGallery object
++  *
++  * @return MediaImageGallery $gallery
++  */
++  public function gallery(MediaImageGallery $gallery = NULL) {
++    if (isset($gallery)) {
++      $this->_gallery = $gallery;
++    } elseif (is_null($this->_gallery)) {
++      include_once(dirname(__FILE__).'/../Gallery.php');
++      $this->_gallery = new MediaImageGallery();
++      $this->_gallery->parameterGroup($this->paramName);
++      $this->_gallery->languageId = $this->papaya()->request->languageId;
++    }
++    return $this->_gallery;
++  }
++
++  /**
++  * Get parsed teaser
++  *
++  * @access public
++  * @return string $result
++  */
++  function getParsedTeaser() {
++    $this->setDefaultData();
++    $this->gallery()->initialize($this, $this->data, 'teaser');
++    $this->gallery()->load();
++    return $this->gallery()->getXml();
++  }
++
++  /**
++  * Get parsed data
++  *
++  * build an XML string containing either...
++  * an image with links to previous image and next image or...
++  * a page containing thumbnails with links to the previous and next pages of thumbnails.
++  *
++  * @access public
++  * @return string $result
++  */
++  function getParsedData() {
++    $this->setDefaultData();
++    $this->initializeParams();
++    $this->gallery()->initialize($this, $this->data);
++    $this->gallery()->load();
++    return $this->gallery()->getXml();
++  }
++}
+\ No newline at end of file
 Index: papaya-lib/modules/free/thumbs/modules.xml
 ===================================================================
---- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38500)
+--- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38512)
 +++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
 @@ -5,7 +5,7 @@
    <modules>
@@ -1715,9 +1295,506 @@ Index: papaya-lib/modules/free/thumbs/modules.xml
      <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
    </modules>
    <tables>
+Index: papaya-lib/modules/free/images/Image/Reflection.php
+===================================================================
+--- papaya-lib/modules/free/images/Image/Reflection.php	(Revision 0)
++++ papaya-lib/modules/free/images/Image/Reflection.php	(Revision 0)
+@@ -0,0 +1,273 @@
++<?php
++/**
++* Generate an image with reflection effect
++*
++* Known issue: The transparency mode does not support soft edges in the reflection image,
++* because the set colored pixel function does not support alpha channel information greater than 0
++* correctly.
++*
++* @copyright 2013 by Martin Kelm
++* @link http://mkelm.github.io/papaya-cms
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Images
++* @version $Id: $
++*/
++
++/**
++* Base class for image plugins
++*/
++require_once(PAPAYA_INCLUDE_PATH.'system/base_dynamicimage.php');
++
++/**
++* Generate an image with reflection effect
++*
++* @package Papaya-Modules
++* @subpackage Free-Images
++*/
++class ImagesImageReflection extends base_dynamicimage {
++
++  /**
++  * Edit fields
++  * @var array $editFields
++  */
++  var $editFields = array(
++  );
++
++  /**
++  * Attribute fields
++  * @var array $attributeFields
++  */
++  var $attributeFields = array(
++    'image_guid' => array('Image', 'isGuid', TRUE, 'imagefixed', 32, '', ''),
++    'thumbnail_size' => array('Thumbnail Size', 'isNum', FALSE, 'input', 50, '', 0),
++    'thumbnail_resize_mode' => array('Thumbnail Resize Mode', 'isAlpha', FALSE, 'input', 50, '', 'max'),
++    'reflection_height' => array('Reflection Height', 'isNum', FALSE, 'input', 50, '', 100),
++    'divider_line_height' => array('Devider Line Height', 'isNum', FALSE, 'input', 50, '', 1),
++    'starting_transparency' => array('Starting Transparency', 'isNum', FALSE, 'input', 50, '', 30),
++    'background_color' => array('Background Color', 'isHTMLColor', FALSE, 'color', 7, '', NULL),
++    'transparent_background' => array('Transparent Background', 'isNum', FALSE, 'yesno', NULL, NULL, 0),
++    'include_image' => array('Include Image', 'isNum', FALSE, 'yesno', NULL, NULL, 0),
++  );
++  /**
++  * generate the image
++  *
++  * @param object base_imagegenerator &$controller controller object
++  * @access public
++  * @return image $result resource image
++  */
++  function &generateImage(&$controller) {
++    $this->setDefaultData();
++    $result = NULL;
++    foreach ($this->attributeFields as $field => $data) {
++      if (empty($this->attributes[$field]) && is_array($data) && !empty($data[6])) {
++        $this->attributes[$field] = $data[6];
++      }
++    }
++    if (!empty($this->attributes['image_guid'])) {
++
++      if (empty($this->attributes['background_color']) && PAPAYA_THUMBS_BACKGROUND != '') {
++        $backgroundColor = $controller->colorToRGB(PAPAYA_THUMBS_BACKGROUND);
++      } elseif (!empty($this->attributes['background_color'])) {
++        $backgroundColor = $controller->colorToRGB($this->attributes['background_color']);
++      }
++      if (PAPAYA_THUMBS_TRANSPARENT > 0 && $this->attributes['transparent_background'] > 0) {
++        $transparentBackground = TRUE;
++      } else {
++        $transparentBackground = FALSE;
++      }
++
++      // generate thumbnail if needed
++      $thumbnailSize = $this->attributes['thumbnail_size'];
++      if ($thumbnailSize > 0) {
++        include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
++        $baseThumbnail = new base_thumbnail();
++        $baseThumbnail->getThumbnail(
++          $this->attributes['image_guid'], NULL, $thumbnailSize, $thumbnailSize,
++          $this->attributes['thumbnail_resize_mode'],
++          array('bgcolor' => $this->attributes['background_color'])
++        );
++
++        $image = &$controller->loadImage(
++          PAPAYA_PATH_DATA.'media/thumbs/'.$baseThumbnail->lastThumbFileName
++        );
++        unset($baseThumbnail);
++      } else {
++        $image = &$controller->getMediaFileImage($this->attributes['image_guid']);
++      }
++
++      $width = imagesx($image);
++      $height = imagesy($image);
++      if ($width > 0 && $height > 0) {
++
++        if (!$transparentBackground && !(PAPAYA_THUMBS_TRANSPARENT == 0)) {
++          // set a background if the system option differs from attributes
++          $tempImage = imagecreatetruecolor($width, $height);
++          imagesavealpha($tempImage, FALSE);
++          imagealphablending($tempImage, FALSE);
++          $tempImageColorIdx = imagecolorallocate(
++            $tempImage,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue']
++          );
++          imagefilledrectangle($tempImage, 0, 0, $width, $height, $tempImageColorIdx);
++          imagealphablending($tempImage, TRUE);
++          imagecopyresampled(
++            $tempImage, $image, 0, 0, 0, 0, $width, $height, $width, $height
++          );
++          $image = $tempImage;
++          unset($tempImage);
++          unset($tempImageColorIdx);
++        }
++        $sourceImage = $image;
++
++        $reflectionHeight = $this->attributes['reflection_height'];
++        $dividerLineSize = $this->attributes['divider_line_height'];
++        $startingTransparency = $this->attributes['starting_transparency'];
++
++        // prepare reflection line
++        $backgroundLine = imagecreatetruecolor($width, 1);
++        if ($transparentBackground) {
++          imagealphablending($backgroundLine, FALSE);
++          imagesavealpha($backgroundLine, TRUE);
++          $backgroundLineColorIdx = imagecolorallocatealpha(
++            $backgroundLine,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue'],
++            127
++          );
++          imagefill($backgroundLine, 0, 0, $backgroundLineColorIdx);
++        } else {
++          $backgroundLineColorIdx = imagecolorallocate(
++            $backgroundLine,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue']
++          );
++          imagefill($backgroundLine, 0, 0, $backgroundLineColorIdx);
++        }
++        unset($backgroundLineColorIdx);
++
++        // flip image
++        $tempImage = imagecreatetruecolor($width, $height);
++        if ($transparentBackground) {
++          imagealphablending($tempImage, FALSE);
++          imagesavealpha($tempImage, TRUE);
++        }
++        for ($y = 0; $y < $height; $y++) {
++          imagecopy($tempImage, $image, 0, $y, 0, $height - $y - 1, $width, 1);
++        }
++        $image = $tempImage;
++        unset($tempImage);
++
++        // clip image to reflection height
++        $tempImage = imagecreatetruecolor($width, $reflectionHeight);
++        if ($transparentBackground) {
++          imagealphablending($tempImage, FALSE);
++          imagesavealpha($tempImage, TRUE);
++          $tempImageColorIdx = imagecolorallocatealpha(
++            $tempImage,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue'],
++            127
++          );
++          imagefill($tempImage, 0, 0, $tempImageColorIdx);
++          unset($tempImageColorIdx);
++        }
++        for ($y = 0; $y < $reflectionHeight; $y++) {
++          imagecopy($tempImage, $image, 0, $y, 0, $y, $width, 1);
++        }
++        $image = $tempImage;
++        unset($tempImage);
++        unset($tempImageColorIdx);
++
++        // add transparency effect
++        if ($transparentBackground) {
++          $tempImage = imagecreatetruecolor($width, $reflectionHeight);
++          imagealphablending($tempImage, FALSE);
++          imagesavealpha($tempImage, TRUE);
++          $increaseTransparency = 127 / $reflectionHeight;
++          $transparency = ($startingTransparency / 100) * 127;
++          for ($y = 0; $y < $height; $y++) {
++            if ($transparency > 127) {
++              $transparency = 127;
++            }
++            for ($x = 0; $x < $width; $x++) {
++              $colors = imagecolorsforindex($image, imagecolorat($image, $x, $y));
++              if ($colors['alpha'] == 0) {
++                $tempImageColorIdx = imagecolorallocatealpha(
++                  $tempImage , $colors['red'], $colors['green'], $colors['blue'], floor($transparency)
++                );
++                imagesetpixel($tempImage, $x, $y, $tempImageColorIdx);
++              } else {
++                $tempImageColorIdx = imagecolorallocatealpha(
++                  $tempImage, $colors['red'], $colors['green'], $colors['blue'], 127
++                );
++                imagesetpixel($tempImage, $x, $y, $tempImageColorIdx);
++              }
++            }
++            $transparency += $increaseTransparency;
++          }
++          $image = $tempImage;
++          unset($tempImage);
++          unset($tempImageColorIdx);
++        } else {
++          $increaseTransparency = 100 / $reflectionHeight;
++          $transparency = $startingTransparency;
++          for ($y = 0; $y <= $reflectionHeight; $y++){
++            if ($transparency > 100) $transparency = 100;
++            imagecopymerge($image, $backgroundLine, 0, $y, 0, 0, $width, 1, $transparency);
++            $transparency += $increaseTransparency;
++          }
++        }
++
++         // get new height for image(s) with divider line
++        if ($this->attributes['include_image'] > 0) {
++          $newHeight = $height + $reflectionHeight + $dividerLineSize;
++        } else {
++          $newHeight = $reflectionHeight + $dividerLineSize;
++        }
++        $tempImage = imagecreatetruecolor($width, $newHeight);
++        if ($transparentBackground) {
++          imagealphablending($tempImage, FALSE);
++          imagesavealpha($tempImage, TRUE);
++          $tempImageColorIdx = imagecolorallocatealpha(
++            $tempImage, 0, 0, 0, 127
++          );
++          imagefill($tempImage, 0, 0, $tempImageColorIdx);
++        } else {
++          $tempImageColorIdx = imagecolorallocate(
++            $tempImage,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue']
++          );
++          imagefill($tempImage, 0, 0, $tempImageColorIdx);
++        }
++        unset($tempImageColorIdx);
++
++        // finally copy part image(s) to new image with divider line
++        if ($this->attributes['include_image'] > 0) {
++          imagecopy($tempImage, $sourceImage, 0, 0, 0, 0, $width, $height);
++          imagecopy($tempImage, $image, 0, $height + $dividerLineSize, 0, 0, $width, $reflectionHeight);
++          $image = $tempImage;
++        } else {
++          imagecopy($tempImage, $image, 0, $dividerLineSize, 0, 0, $width, $reflectionHeight);
++          $image = $tempImage;
++        }
++        return $image;
++      }
++    }
++    return FALSE;
++  }
++}
+\ No newline at end of file
+Index: papaya-lib/modules/free/images/Rotated/Masked/Image.php
+===================================================================
+--- papaya-lib/modules/free/images/Rotated/Masked/Image.php	(Revision 0)
++++ papaya-lib/modules/free/images/Rotated/Masked/Image.php	(Revision 0)
+@@ -0,0 +1,199 @@
++<?php
++/**
++* Generate a rotated and masked image
++*
++* @copyright 2013 by Martin Kelm
++* @link http://mkelm.github.io/papaya-cms
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Images
++* @version $Id: $
++*/
++
++/**
++* Base class for image plugins
++*/
++require_once(PAPAYA_INCLUDE_PATH.'system/base_dynamicimage.php');
++
++/**
++* Generate a rotated and masked image
++*
++* @package Papaya-Modules
++* @subpackage Free-Images
++*/
++class ImagesRotatedMaskedImage extends base_dynamicimage {
++
++  /**
++  * Edit fields
++  * @var array $editFields
++  */
++  var $editFields = array(
++    'Source Image',
++    'thumbnail_size' => array('Thumbnail Size', 'isNum', FALSE, 'input', 50,
++      'Set a thumbnail size to increase performance on large images.', ''),
++    'thumbnail_resize_mode' => array('Thumbnail Resize Mode', 'isAlpha', FALSE, 'combo',
++      array(
++         'abs' => 'Absolute', 'max' => 'Maximum', 'maxfill' => 'Maximum fill', 'min' => 'Minimum',
++         'mincrop' => 'Minimum cropped'
++       ), '', 'mincrop'
++    ),
++    'Mask Image',
++    'mask_image_guid' => array('Image', 'isGuid', FALSE, 'imagefixed', 32,
++      'Use a PNG image with a transparent background.', ''),
++    'mask_size' => array('Size', 'isFloat', FALSE, 'input', 50,
++      'Use a float value greater than 0.0 and less or equal than 1.0 to modify the mask size in
++      relation to the rotated source image size. Needs the options PAPAYA_THUMBS_TRANSPARENT = on and
++       	PAPAYA_THUMBS_FILETYPE = PNG. Leave this option empty if you have a mask image with a size
++        less or equal than the source image or the source image thumbnail.',
++      '')
++  );
++
++  /**
++  * Attribute fields
++  * @var array $attributeFields
++  */
++  var $attributeFields = array(
++    'Source Image',
++    'image_guid' => array('Image', 'isGuid', TRUE, 'imagefixed', 32, '', ''),
++    'rotation_angle' => array('Rotation Angle', 'isFloat', FALSE, 'input', 50,
++      'Use a float value to define the angle in degrees. A positive value rotates the image anticlockwise.',
++      ''),
++    'rotation_bg_color' => array('Rotation Background Color', 'isHTMLColor', FALSE, 'color', 7,
++      'Use to fill empty areas on rotation. The default value is PAPAYA_THUMBS_BACKGROUND.', '')
++  );
++  /**
++  * generate the image
++  *
++  * @param object base_imagegenerator &$controller controller object
++  * @access public
++  * @return image $result resource image
++  */
++  function &generateImage(&$controller) {
++    $this->setDefaultData();
++    $result = NULL;
++    foreach ($this->attributeFields as $field => $data) {
++      if (empty($this->attributes[$field]) && is_array($data) && !empty($data[6])) {
++        $this->attributes[$field] = $data[6];
++      }
++    }
++    if (!empty($this->attributes['image_guid'])) {
++
++      // generate thumbnail if needed
++      $thumbnailSize = $this->data['thumbnail_size'];
++      if ($thumbnailSize > 0) {
++        include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
++        $baseThumbnail = new base_thumbnail();
++        $baseThumbnail->getThumbnail(
++          $this->attributes['image_guid'], NULL, $thumbnailSize, $thumbnailSize,
++          $this->data['thumbnail_resize_mode']
++        );
++        $image = &$controller->loadImage(
++          PAPAYA_PATH_DATA.'media/thumbs/'.$baseThumbnail->lastThumbFileName
++        );
++        unset($baseThumbnail);
++      } else {
++        $image = &$controller->getMediaFileImage($this->attributes['image_guid']);
++      }
++
++      $width = imagesx($image);
++      $height = imagesy($image);
++      if ($width > 0 && $height > 0) {
++        if (!empty($this->attributes['rotation_angle'])) {
++          if (!empty($this->attributes['rotation_bg_color'])) {
++            $rotationBgColor = $controller->colorToRGB($this->attributes['rotation_bg_color']);
++          } else {
++            $rotationBgColor = $controller->colorToRGB(PAPAYA_THUMBS_BACKGROUND);
++          }
++          $rotationBgColor = imagecolorallocate(
++            $image,
++            $rotationBgColor['red'],
++            $rotationBgColor['green'],
++            $rotationBgColor['blue']
++          );
++          $image = imagerotate($image, $this->attributes['rotation_angle'], $rotationBgColor);
++        }
++
++        if (!empty($this->data['mask_image_guid'])) {
++          $width = imagesx($image);
++          $height = imagesy($image);
++
++          include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
++
++          if (empty($this->data['mask_size'])) {
++            $maskImage = &$controller->getMediaFileImage($this->data['mask_image_guid']);
++            $maskWidth = imagesx($maskImage);
++            $maskHeight = imagesy($maskImage);
++          } else {
++            $maskSize = (float)$this->data['mask_size'];
++            $maskWidth = floor($maskSize * $width);
++            $maskHeight = floor($maskSize * $height);
++            $baseThumbnail = new base_thumbnail();
++            $baseThumbnail->getThumbnail(
++              $this->data['mask_image_guid'], NULL, $maskWidth, $maskHeight, 'maxfill'
++            );
++            $maskImage = &$controller->loadImage(
++              PAPAYA_PATH_DATA.'media/thumbs/'.$baseThumbnail->lastThumbFileName
++            );
++            unset($baseThumbnail);
++          }
++          $maskXOffset = floor(($width - $maskWidth) / 2);
++          $maskYOffset = floor(($height - $maskHeight) / 2);
++
++          if ($maskXOffset >= 0 && $maskYOffset >= 0) {
++            $tempImage = imagecreatetruecolor($maskWidth, $maskHeight);
++            if ($controller->imageConf['image_format'] == 3 ||
++                ($controller->imageConf['image_format'] == 0 &&
++                 PAPAYA_THUMBS_FILETYPE == 3)) {
++              imagesavealpha($tempImage, TRUE);
++              imagealphablending($tempImage, FALSE);
++              $tempImageColorIdx = imagecolorallocatealpha(
++                $tempImage, 0, 0, 0, 127
++              );
++              imagefill($tempImage, 0, 0, $tempImageColorIdx);
++            } else {
++              imagesavealpha($tempImage, FALSE);
++              imagealphablending($tempImage, TRUE);
++              $tempImageColor = $controller->colorToRGB(PAPAYA_THUMBS_BACKGROUND);
++              $tempImageColorIdx = imagecolorallocate(
++                $tempImage, $tempImageColor['red'], $tempImageColor['green'], $tempImageColor['blue']
++              );
++              imagefill($tempImage, 0, 0, $tempImageColorIdx);
++            }
++
++            for ($y = 0; $y < $height; $y++) {
++              for ($x = 0; $x < $width; $x++) {
++                if ($x >= $maskXOffset && $y >= $maskYOffset && $x < $maskXOffset + $maskWidth &&
++                    $y < $maskYOffset + $maskHeight) {
++                  $maskColors = imagecolorsforindex(
++                    $maskImage, imagecolorat($maskImage, $x - $maskXOffset, $y - $maskYOffset)
++                  );
++                  if ($maskColors['alpha'] < 127) {
++                    $imageColors = imagecolorsforindex($image, imagecolorat($image, $x, $y));
++                    $tempImageColorIdx = imagecolorallocatealpha(
++                      $tempImage,
++                      $imageColors['red'],
++                      $imageColors['green'],
++                      $imageColors['blue'],
++                      $maskColors['alpha']
++                    );
++                    imagesetpixel($tempImage, $x - $maskXOffset, $y - $maskYOffset, $tempImageColorIdx);
++                  }
++                }
++              }
++            }
++            $image = $tempImage;
++          }
++        }
++        return $image;
++      }
++    }
++    return FALSE;
++  }
++}
+\ No newline at end of file
+Index: papaya-lib/modules/free/images/modules.xml
+===================================================================
+--- papaya-lib/modules/free/images/modules.xml	(Revision 38512)
++++ papaya-lib/modules/free/images/modules.xml	(Arbeitskopie)
+@@ -8,6 +8,8 @@
+     <module type="image" guid="b041b47247c81b817a3f40620e96b457" name="Image Buttons" class="image_buttons" file="image_buttons.php">Generate a button with a text on an image.</module>
+     <module type="image" guid="3b44894b6672335217334aa3db23104a" name="Dynamic Image Buttons" class="dyn_image_buttons" file="dyn_image_buttons.php">Generate a button with a text on images.</module>
+     <module type="image" guid="e821359d50c00a33d67558242687027e" name="Image Colorizer" class="image_colored" file="image_colored.php">Colorize images.</module>
++    <module type="image" guid="0718af49240b461d9984ffe046521557" name="Image Reflection" class="ImagesImageReflection" file="Image/Reflection.php">An image with a reflection effect or a reflection effect only.</module>
++    <module type="image" guid="3523604250c4400cabb939f4d7869cb7" name="Rotated Masked Image" class="ImagesRotatedMaskedImage" file="Rotated/Masked/Image.php">An image with a rotation and mask.</module>
+   </modules>
+   <tables>
+   </tables>
 Index: papaya-lib/modules/free/calendar/output_calendar.php
 ===================================================================
---- papaya-lib/modules/free/calendar/output_calendar.php	(Revision 38500)
+--- papaya-lib/modules/free/calendar/output_calendar.php	(Revision 38512)
 +++ papaya-lib/modules/free/calendar/output_calendar.php	(Arbeitskopie)
 @@ -611,10 +611,10 @@
          isset($this->contentModules[$this->date['date_content_guid']])) {
@@ -1732,256 +1809,9 @@ Index: papaya-lib/modules/free/calendar/output_calendar.php
          papaya_strings::escapeHTMLChars($this->date['date_data'])
        );
        // uses getModuleEdit to get content formular
-Index: papaya-lib/modules/_base/community/content_profile.php
-===================================================================
---- papaya-lib/modules/_base/community/content_profile.php	(Revision 38500)
-+++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
-@@ -240,6 +240,10 @@
-           'Query string for redirect url',
-           ''
-         ),
-+        'Dynamic Data',
-+        'dynamic_class' => array(
-+          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
-+        )
-       ),
-     ),
-     array(
-@@ -576,6 +580,15 @@
-         ),
-         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
-         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
-+        'caption_section_email' => array(
-+          'Section email',
-+          'isNoHTML',
-+          FALSE,
-+          'input',
-+          200,
-+          'Adds a section caption above "Change email"',
-+          ''
-+        ),
-         'caption_change_email' => array(
-           'Change email',
-           'isNoHTML',
-@@ -617,6 +630,15 @@
-         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
-         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
-         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
-+        'caption_section_password' => array(
-+          'Section password',
-+          'isNoHTML',
-+          FALSE,
-+          'input',
-+          200,
-+          'Adds a section caption above "Old password"',
-+          ''
-+        ),
-         'caption_old_password' => array(
-           'Old password',
-           'isNoHTML',
-@@ -705,6 +727,24 @@
-           '',
-           'Enter the new password twice or leave blank to keep the old one.'
-         ),
-+        'descr_old_password' => array(
-+          'Old password',
-+          'isSomeText',
-+          FALSE,
-+          'simplerichtext',
-+          7,
-+          '',
-+          'Enter the old password if you want to change your email.'
-+        ),
-+        'descr_need_old_password' => array(
-+          'Change password',
-+          'isSomeText',
-+          FALSE,
-+          'simplerichtext',
-+          7,
-+          '',
-+          'Enter the old password to confirm changes.'
-+        ),
-         'descr_delete_account' => array(
-           'Delete account',
-           'isSomeText',
-@@ -828,6 +868,9 @@
-     }
- 
-     if ($this->data['change_email'] == 1) {
-+      if (!empty($this->data['caption_section_email'])) {
-+        $fields[] = $this->data['caption_section_email'];
-+      }
-       $fields['surfer_new_email'] = array(
-         $this->data['caption_change_email'],
-         'isEmail',
-@@ -842,6 +885,9 @@
-     }
- 
-     if ($this->data['change_password'] == 1) {
-+      if (!empty($this->data['caption_section_password'])) {
-+        $fields[] = $this->data['caption_section_password'];
-+      }
-       $fields['surfer_password1'] = array(
-         $this->data['caption_new_password'],
-         'isPassword',
-@@ -854,21 +900,53 @@
-         'isSomeText',
-         FALSE,
-         'password',
--        200
-+        200,
-+        $this->data['descr_change_password']
-       );
-+    }
-+    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
-       $fields['surfer_password3'] = array(
-         $this->data['caption_old_password'],
-         'isSomeText',
--        FALSE,
-+        !empty($this->data['need_oldpassword']),
-         'password',
-         200,
--        $this->data['descr_change_password']
-+        !empty($this->data['need_oldpassword']) ?
-+          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
-       );
-     }
- 
-+    // Add dynamic data fields
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      $dynFields = $this->baseSurfers->getDynamicEditFields(
-+        $this->data['dynamic_class'],
-+        'dynamic',
-+        $this->parentObj->topic['TRANSLATION']['lng_id'],
-+        TRUE
-+      );
-+      $fields = array_merge($fields, $dynFields);
-+    }
-+
-+    $data = $this->surferData;
-+    // Get existing dynamic data
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
-+      $dynData = $this->baseSurfers->getDynamicData(
-+        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
-+        $fieldNames
-+      );
-+      if ($dynData != NULL) {
-+        foreach ($dynData as $fieldName => $fieldValue) {
-+          $data['dynamic_'.$fieldName] = $fieldValue;
-+        }
-+      }
-+    }
-+
-     $hidden = array('save' => 1);
-     $this->profileForm = new base_frontend_form(
--      $this, $this->paramName, $fields, $this->surferData, $hidden
-+      $this, $this->paramName, $fields, $data, $hidden
-     );
-     $this->profileForm->msgs = &$this->msgs;
-     $this->profileForm->loadParams();
-@@ -996,7 +1074,25 @@
-     if ($this->data['edit_gender'] == 0) {
-       unset($this->surferData['surfer_gender']);
-     }
--    return $this->baseSurfers->saveSurfer($this->surferData);
-+    $result = $this->baseSurfers->saveSurfer($this->surferData);
-+
-+    // Now save the dynamic data, if necessary
-+    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
-+        !empty($this->data['dynamic_class'])) {
-+      // Get the field names
-+      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
-+      // Get those fields that are actually set
-+      $dynFields = array();
-+      foreach ($dynFieldNames as $fieldName) {
-+        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
-+          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
-+        }
-+      }
-+      if (!empty($dynFields)) {
-+        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
-+      }
-+    }
-+    return $result;
-   }
- 
-   /**
-@@ -1538,7 +1634,14 @@
-           // If an error field exists, the error_input message is displayed
-           // Otherwise it is a token error with a different message
-           if ($errorField == $field) {
--            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
-+            if (in_array(
-+                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
-+               ) {
-+              $message = $this->data['error_password'];
-+            } else {
-+              $message = $this->data['error_input'];
-+            }
-+            $result .= $this->getErrorMessageXml($message, $errorField);
-           } else {
-             $result .= $this->getErrorMessageXml(
-               'Invalid Token. Progress is canceled', $errorField
-@@ -1625,5 +1728,53 @@
-   function getCacheId() {
-     return FALSE;
-   }
-+
-+  /**
-+  * Get form xml to select dynamic data categories by callback.
-+  *
-+  * @param string $name Field name
-+  * @param array $element Field element configurations
-+  * @param string $data Current field data
-+  * @return string $result XML
-+  */
-+  function callbackClasses($name, $element, $data) {
-+    $this->_initBaseSurfers();
-+    $result = '';
-+    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
-+    $commonTitle = $this->_gt('Category');
-+    $sql = "SELECT c.surferdataclass_id,
-+                   ct.surferdataclasstitle_classid,
-+                   ct.surferdataclasstitle_name,
-+                   ct.surferdataclasstitle_lang
-+              FROM %s AS c LEFT OUTER JOIN %s AS ct
-+                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
-+             WHERE ct.surferdataclasstitle_lang = %d";
-+    $sqlParams = array(
-+      $this->baseSurfers->tableDataClasses,
-+      $this->baseSurfers->tableDataClassTitles,
-+      $lng
-+    );
-+    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
-+      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
-+        if (isset($row['surferdataclasstitle_name']) &&
-+            trim($row['surferdataclasstitle_name']) != '') {
-+          $title = $row['surferdataclasstitle_name'];
-+        } else {
-+          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
-+        }
-+        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
-+          ' checked="checked"' : '';
-+        $result .= sprintf(
-+          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
-+          $this->paramName,
-+          $name,
-+          $row['surferdataclass_id'],
-+          $checked,
-+          $title
-+        );
-+      }
-+    }
-+    return $result;
-+  }
- }
- ?>
 Index: papaya-lib/modules/_base/community/content_userdata.php
 ===================================================================
---- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38500)
+--- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38512)
 +++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
 @@ -522,7 +522,8 @@
          $dynFields = $this->baseSurfers->getDynamicEditFields(
@@ -2002,7 +1832,7 @@ Index: papaya-lib/modules/_base/community/content_userdata.php
 +?>
 Index: papaya-lib/modules/_base/community/connector_surfers.php
 ===================================================================
---- papaya-lib/modules/_base/community/connector_surfers.php	(Revision 38500)
+--- papaya-lib/modules/_base/community/connector_surfers.php	(Revision 38512)
 +++ papaya-lib/modules/_base/community/connector_surfers.php	(Arbeitskopie)
 @@ -103,6 +103,7 @@
  * $string|NULL = $surfersObj->getDefaultContact()
@@ -2086,7 +1916,7 @@ Index: papaya-lib/modules/_base/community/connector_surfers.php
 \ No newline at end of file
 Index: papaya-lib/modules/_base/community/content_register.php
 ===================================================================
---- papaya-lib/modules/_base/community/content_register.php	(Revision 38500)
+--- papaya-lib/modules/_base/community/content_register.php	(Revision 38512)
 +++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
 @@ -1928,7 +1928,8 @@
          $dynFields = $this->baseSurfers->getDynamicEditFields(
@@ -2100,7 +1930,7 @@ Index: papaya-lib/modules/_base/community/content_register.php
        }
 Index: papaya-lib/modules/_base/community/base_surfers.php
 ===================================================================
---- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38500)
+--- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38512)
 +++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
 @@ -773,16 +773,16 @@
            );
@@ -2481,9 +2311,256 @@ Index: papaya-lib/modules/_base/community/base_surfers.php
     * Clear old registrations and change requests.
     *
     * Deletes any records from the surfer table
+Index: papaya-lib/modules/_base/community/content_profile.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_profile.php	(Revision 38512)
++++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
+@@ -240,6 +240,10 @@
+           'Query string for redirect url',
+           ''
+         ),
++        'Dynamic Data',
++        'dynamic_class' => array(
++          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
++        )
+       ),
+     ),
+     array(
+@@ -576,6 +580,15 @@
+         ),
+         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
+         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
++        'caption_section_email' => array(
++          'Section email',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Change email"',
++          ''
++        ),
+         'caption_change_email' => array(
+           'Change email',
+           'isNoHTML',
+@@ -617,6 +630,15 @@
+         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
+         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
+         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
++        'caption_section_password' => array(
++          'Section password',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Old password"',
++          ''
++        ),
+         'caption_old_password' => array(
+           'Old password',
+           'isNoHTML',
+@@ -705,6 +727,24 @@
+           '',
+           'Enter the new password twice or leave blank to keep the old one.'
+         ),
++        'descr_old_password' => array(
++          'Old password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password if you want to change your email.'
++        ),
++        'descr_need_old_password' => array(
++          'Change password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password to confirm changes.'
++        ),
+         'descr_delete_account' => array(
+           'Delete account',
+           'isSomeText',
+@@ -828,6 +868,9 @@
+     }
+ 
+     if ($this->data['change_email'] == 1) {
++      if (!empty($this->data['caption_section_email'])) {
++        $fields[] = $this->data['caption_section_email'];
++      }
+       $fields['surfer_new_email'] = array(
+         $this->data['caption_change_email'],
+         'isEmail',
+@@ -842,6 +885,9 @@
+     }
+ 
+     if ($this->data['change_password'] == 1) {
++      if (!empty($this->data['caption_section_password'])) {
++        $fields[] = $this->data['caption_section_password'];
++      }
+       $fields['surfer_password1'] = array(
+         $this->data['caption_new_password'],
+         'isPassword',
+@@ -854,21 +900,53 @@
+         'isSomeText',
+         FALSE,
+         'password',
+-        200
++        200,
++        $this->data['descr_change_password']
+       );
++    }
++    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
+       $fields['surfer_password3'] = array(
+         $this->data['caption_old_password'],
+         'isSomeText',
+-        FALSE,
++        !empty($this->data['need_oldpassword']),
+         'password',
+         200,
+-        $this->data['descr_change_password']
++        !empty($this->data['need_oldpassword']) ?
++          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
+       );
+     }
+ 
++    // Add dynamic data fields
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $dynFields = $this->baseSurfers->getDynamicEditFields(
++        $this->data['dynamic_class'],
++        'dynamic',
++        $this->parentObj->topic['TRANSLATION']['lng_id'],
++        TRUE
++      );
++      $fields = array_merge($fields, $dynFields);
++    }
++
++    $data = $this->surferData;
++    // Get existing dynamic data
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      $dynData = $this->baseSurfers->getDynamicData(
++        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
++        $fieldNames
++      );
++      if ($dynData != NULL) {
++        foreach ($dynData as $fieldName => $fieldValue) {
++          $data['dynamic_'.$fieldName] = $fieldValue;
++        }
++      }
++    }
++
+     $hidden = array('save' => 1);
+     $this->profileForm = new base_frontend_form(
+-      $this, $this->paramName, $fields, $this->surferData, $hidden
++      $this, $this->paramName, $fields, $data, $hidden
+     );
+     $this->profileForm->msgs = &$this->msgs;
+     $this->profileForm->loadParams();
+@@ -996,7 +1074,25 @@
+     if ($this->data['edit_gender'] == 0) {
+       unset($this->surferData['surfer_gender']);
+     }
+-    return $this->baseSurfers->saveSurfer($this->surferData);
++    $result = $this->baseSurfers->saveSurfer($this->surferData);
++
++    // Now save the dynamic data, if necessary
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      // Get the field names
++      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      // Get those fields that are actually set
++      $dynFields = array();
++      foreach ($dynFieldNames as $fieldName) {
++        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
++          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
++        }
++      }
++      if (!empty($dynFields)) {
++        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
++      }
++    }
++    return $result;
+   }
+ 
+   /**
+@@ -1538,7 +1634,14 @@
+           // If an error field exists, the error_input message is displayed
+           // Otherwise it is a token error with a different message
+           if ($errorField == $field) {
+-            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
++            if (in_array(
++                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
++               ) {
++              $message = $this->data['error_password'];
++            } else {
++              $message = $this->data['error_input'];
++            }
++            $result .= $this->getErrorMessageXml($message, $errorField);
+           } else {
+             $result .= $this->getErrorMessageXml(
+               'Invalid Token. Progress is canceled', $errorField
+@@ -1625,5 +1728,53 @@
+   function getCacheId() {
+     return FALSE;
+   }
++
++  /**
++  * Get form xml to select dynamic data categories by callback.
++  *
++  * @param string $name Field name
++  * @param array $element Field element configurations
++  * @param string $data Current field data
++  * @return string $result XML
++  */
++  function callbackClasses($name, $element, $data) {
++    $this->_initBaseSurfers();
++    $result = '';
++    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
++    $commonTitle = $this->_gt('Category');
++    $sql = "SELECT c.surferdataclass_id,
++                   ct.surferdataclasstitle_classid,
++                   ct.surferdataclasstitle_name,
++                   ct.surferdataclasstitle_lang
++              FROM %s AS c LEFT OUTER JOIN %s AS ct
++                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
++             WHERE ct.surferdataclasstitle_lang = %d";
++    $sqlParams = array(
++      $this->baseSurfers->tableDataClasses,
++      $this->baseSurfers->tableDataClassTitles,
++      $lng
++    );
++    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
++      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++        if (isset($row['surferdataclasstitle_name']) &&
++            trim($row['surferdataclasstitle_name']) != '') {
++          $title = $row['surferdataclasstitle_name'];
++        } else {
++          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
++        }
++        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
++          ' checked="checked"' : '';
++        $result .= sprintf(
++          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
++          $this->paramName,
++          $name,
++          $row['surferdataclass_id'],
++          $checked,
++          $title
++        );
++      }
++    }
++    return $result;
++  }
+ }
+ ?>
 Index: papaya-lib/modules/_base/filter_xslt.php
 ===================================================================
---- papaya-lib/modules/_base/filter_xslt.php	(Revision 38500)
+--- papaya-lib/modules/_base/filter_xslt.php	(Revision 38512)
 +++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
 @@ -161,8 +161,8 @@
          } else {
@@ -2496,9 +2573,556 @@ Index: papaya-lib/modules/_base/filter_xslt.php
                foreach ($moduleNames as $key => $value) {
                  $moduleNames[trim($value)] = TRUE;
                  unset($moduleNames[$key]);
+Index: papaya-lib/system/papaya_mediadb.php
+===================================================================
+--- papaya-lib/system/papaya_mediadb.php	(Revision 38512)
++++ papaya-lib/system/papaya_mediadb.php	(Arbeitskopie)
+@@ -677,7 +677,14 @@
+         }
+         break;
+       case 'crop_image_window':
+-        $this->getImageCropWindow();
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $this->getImageCropWindow();
++        } else {
++          $this->addMsg(
++            MSG_WARNING,
++            $this->_gt('You can crop image/jpeg files only, please convert the image first.')
++          );
++        }
+         break;
+       case 'crop_image_rpc':
+         header('Content-type: text/xml; charset=utf-8');
+@@ -1195,9 +1202,9 @@
+             'actions-edit-copy',
+             'Copy file to clipboard'
+           );
+-          if ($this->currentFile['mimetype_ext'] == 'jpg' ||
+-              $this->currentFile['mimetype_ext'] == 'gif' ||
+-              $this->currentFile['mimetype_ext'] == 'png') {
++          if ($this->currentFile['mimetype'] == 'image/jpeg' ||
++              $this->currentFile['mimetype'] == 'image/gif' ||
++              $this->currentFile['mimetype'] == 'image/png') {
+             $convertParams = array(
+               'cmd' => 'convert_image',
+               'file_id' => $this->params['file_id'],
+@@ -1212,22 +1219,33 @@
+           }
+         }
+ 
+-        if (strtolower($this->getFileExtension($this->currentFile['file_name'])) == 'jpg') {
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $cropLink = sprintf(
++            "javascript:window.open('%s', 'cropwindow',
++             'width=656,height=556,top=100,left=100'); return false;",
++            $this->getLink(
++              array(
++                'cmd' => 'crop_image_window',
++                'file_id' => $this->params['file_id']
++              )
++            )
++          );
++        } elseif ($this->currentFile['mimetype'] == 'image/gif' ||
++                  $this->currentFile['mimetype'] == 'image/png') {
+           $cropLink = $this->getLink(
+             array(
+               'cmd' => 'crop_image_window',
+               'file_id' => $this->params['file_id']
+             )
+           );
++        }
++        if (!empty($cropLink)) {
+           $this->menubar->addButton(
+             'Crop',
+-            sprintf(
+-              "javascript:window.open('%s', 'cropwindow',
+-               'width=656,height=556,top=100,left=100'); return false;",
+-              $cropLink
+-            ),
++            $cropLink,
+             'actions-edit-crop',
+-            'Crop image'
++            'Crop image',
++            isset($this->params['cmd']) && $this->params['cmd'] == 'crop_image_window'
+           );
+         }
+ 
+Index: papaya-lib/system/base_thumbnail.php
+===================================================================
+--- papaya-lib/system/base_thumbnail.php	(Revision 38512)
++++ papaya-lib/system/base_thumbnail.php	(Arbeitskopie)
+@@ -111,6 +111,12 @@
+   var $lastThumbSize = array(0,0);
+ 
+   /**
++   * save last thumbnail file name in buffer
++   * @var string
++   */
++  var $lastThumbFileName = NULL;
++
++  /**
+   * store the memoty limit if it is changed, restore it in desctructor
+   *
+   * @var NULL|string
+@@ -400,6 +406,7 @@
+                         $filter, $params = NULL) {
+     $result = $this->getThumbFilePath($fileName).
+       $this->getThumbFileId($fileName, $versionId, $width, $height, $imageType, $filter, $params);
++    $this->lastThumbFileName = $result;
+     return $result;
+   }
+ 
+@@ -839,9 +846,9 @@
+             ' Needed: %s bytes Available: %s bytes.'.
+             ' Increase blocked by Suhoshin in function "%s".',
+             $srcFileName,
+-            $orgWidth, 
++            $orgWidth,
+             $orgHeight,
+-            $thumbWidth, 
++            $thumbWidth,
+             $thumbHeight,
+             number_format($memoryNeeded, 0, '.', ','),
+             number_format($suhosinMemoryLimit, 0, '.', ','),
+@@ -948,9 +955,9 @@
+           'Can not scale "%s" from %dx%d to %dx%d. Not enough memory available.'.
+           ' Needed: %s bytes Available: %s bytes. Increase blocked in function "%s".',
+           $srcFileName,
+-          $orgWidth, 
++          $orgWidth,
+           $orgHeight,
+-          $thumbWidth, 
++          $thumbWidth,
+           $thumbHeight,
+           number_format($memoryNeeded, 0, '.', ','),
+           number_format($memoryLimit, 0, '.', ','),
+Index: papaya-lib/system/papaya_page.php
+===================================================================
+--- papaya-lib/system/papaya_page.php	(Revision 38512)
++++ papaya-lib/system/papaya_page.php	(Arbeitskopie)
+@@ -265,7 +265,7 @@
+     if (isset($_GET['exit'])) {
+       $this->allowSessionRedirects = FALSE;
+       $this->startSession();
+-      $urlPattern = '(^/sid'.preg_quote($this->sessionName).'([a-zA-Z\d,-]{20,40})([^?]*))i';
++      $urlPattern = '(^/sid[a-z]+([a-zA-Z\d,-]{20,40})((?:/.*)|$))i';
+       if (preg_match($urlPattern, $_SERVER['REQUEST_URI'], $regs)) {
+         $this->doRedirectToPath(
+           301,
+@@ -1534,6 +1534,7 @@
+       }
+       $themeHandler = new PapayaThemeHandler();
+       $this->layout->setParam('PAGE_THEME', $themeHandler->getTheme());
++      $this->layout->setParam('PAGE_SUB_THEME', $themeHandler->getSubTheme());
+       $this->layout->setParam('PAGE_THEME_SET', $themeHandler->getThemeSet());
+       $this->layout->setParam('PAGE_THEME_PATH', $themeHandler->getUrl());
+       $this->layout->setParam('PAGE_THEME_PATH_LOCAL', $themeHandler->getLocalThemePath());
+Index: papaya-lib/system/base_topic_edit.php
+===================================================================
+--- papaya-lib/system/base_topic_edit.php	(Revision 38512)
++++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
+@@ -1623,9 +1623,14 @@
+                 //delete page
+                 if (FALSE !== $this->databaseDeleteRecord(
+                       $this->tableTopicsTrans, $filter)) {
+-                  return FALSE !== $this->databaseDeleteRecord(
+-                    $this->tableTopics, $filter
+-                  );
++                  if (FALSE !== $this->databaseDeleteRecord(
++                        $this->tableTopics, $filter)) {
++                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
++                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
++                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
++                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
++                    return TRUE;
++                  }
+                 }
+               }
+             }
+Index: papaya-lib/system/base_mediadb_edit.php
+===================================================================
+--- papaya-lib/system/base_mediadb_edit.php	(Revision 38512)
++++ papaya-lib/system/base_mediadb_edit.php	(Arbeitskopie)
+@@ -653,6 +653,8 @@
+           $doDelete = TRUE;
+         }
+         if ($doDelete) {
++          $this->deleteFileDerivations($fileId);
++          $this->deleteFileTrans($fileId);
+           $condition = array('file_id' => $fileId);
+           return (FALSE !== $this->databaseDeleteRecord($this->tableFiles, $condition));
+         }
+@@ -662,6 +664,20 @@
+   }
+ 
+   /**
++   * Delete file translation by id
++   *
++   * @param string $fileId
++   * @return boolean
++   */
++  function deleteFileTrans($fileId) {
++    if (!empty($fileId)) {
++      $condition = array('file_id' => $fileId);
++      return FALSE !== $this->databaseDeleteRecord($this->tableFilesTrans, $condition);
++    }
++    return FALSE;
++  }
++
++  /**
+   * delete a version of a file
+   *
+   * use this method to delete a specific version of a file
+@@ -679,6 +695,7 @@
+       include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
+       $thumbnail = new base_thumbnail;
+       $thumbnail->deleteThumbs($fileId);
++      $this->deleteFileDerivations($fileId, $versionId);
+       return (FALSE !== $this->databaseDeleteRecord($this->tableFilesVersions, $condition));
+     }
+   }
+@@ -695,6 +712,7 @@
+     if ($fileId != '') {
+       $versions = $this->getFileVersions($fileId);
+       if (is_array($versions) && count($versions) > 0) {
++        $this->deleteFileDerivations($fileId, array_keys($versions));
+         foreach ($versions as $versionId => $version) {
+           $fileName = $this->getFileName($fileId, $versionId, TRUE);
+           if (!is_file($fileName) || unlink($fileName)) {
+@@ -717,6 +735,31 @@
+   }
+ 
+   /**
++   * Delete file derivations by file or file version.
++   *
++   * @param string $fileId
++   * @param integer $versionId
++   * @return boolean
++   */
++  function deleteFileDerivations($fileId, $versionId = NULL) {
++    if (!empty($fileId)) {
++      $condition = array('parent_file_id' => $fileId);
++      if (!empty($versionId)) {
++        $condition['parent_file_version_id'] = $versionId;
++      }
++      $result1 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++      if (empty($versionId)) {
++        $condition = array('child_file_id' => $fileId);
++        $result2 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++        return $result1 && $result2;
++      } else {
++        return $result1;
++      }
++    }
++    return FALSE;
++  }
++
++  /**
+   * move multiple files to a different folder
+   *
+   * use this method to move multiple files to a different folder
+@@ -1009,4 +1052,4 @@
+     return $size;
+   }
+ }
+-?>
++?>
+\ No newline at end of file
+Index: papaya-lib/system/papaya_publictopic.php
+===================================================================
+--- papaya-lib/system/papaya_publictopic.php	(Revision 38512)
++++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
+@@ -229,7 +229,7 @@
+         $definition
+       );
+     } else {
+-      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
++      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+     }
+   }
+ 
+Index: papaya-lib/system/Papaya/Filter/Text.php
+===================================================================
+--- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38512)
++++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
+@@ -49,7 +49,7 @@
+    * @return string^
+    */
+   private function getPattern() {
+-    $result = '([^\\pL\\pP';
++    $result = '([^\\pL\\pP=';
+     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
+       $result .= '\\p{Zs} ';
+     }
+Index: papaya-lib/system/Papaya/Theme/Handler.php
+===================================================================
+--- papaya-lib/system/Papaya/Theme/Handler.php	(Revision 38512)
++++ papaya-lib/system/Papaya/Theme/Handler.php	(Arbeitskopie)
+@@ -26,6 +26,11 @@
+ class PapayaThemeHandler extends PapayaObject {
+ 
+   /**
++   * Name of sub theme.
++   */
++  protected $_subThemeName = NULL;
++
++  /**
+   * Get url for theme files, is $themeName is empty the current theme is used.
+   *
+   * @param string $themeName
+@@ -51,10 +56,15 @@
+       );
+     }
+     if (empty($themeName)) {
+-      return $baseUrl.$this->getTheme().'/';
++      $themeName = $this->getTheme();
+     } else {
+-      return $baseUrl.$themeName.'/';
++      $themeNameParts = explode('-', $themeName);
++      if (count($themeNameParts) == 2) {
++        $themeName = $themeNameParts[0];
++        $this->_subThemeName = $themeNameParts[1];
++      }
+     }
++    return $baseUrl.$themeName.'/';
+   }
+ 
+   /**
+@@ -82,6 +92,12 @@
+   public function getLocalThemePath($themeName = NULL) {
+     if (empty($themeName)) {
+       $themeName = $this->getTheme();
++    } else {
++      $themeNameParts = explode('-', $themeName);
++      if (count($themeNameParts) == 2) {
++        $themeName = $themeNameParts[0];
++        $this->_subThemeName = $themeNameParts[1];
++      }
+     }
+     return PapayaUtilFilePath::cleanup(
+       $this->getLocalPath().$themeName
+@@ -125,10 +141,24 @@
+         ->options
+         ->getOption('PAPAYA_LAYOUT_THEME');
+     }
++    $themeNameParts = explode('-', $theme);
++    if (count($themeNameParts) == 2) {
++      $theme = $themeNameParts[0];
++      $this->_subThemeName = $themeNameParts[1];
++    }
+     return $theme;
+   }
+ 
+   /**
++  * Get the currently active sub theme name
++  *
++  * @return string
++  */
++  public function getSubTheme() {
++    return $this->_subThemeName;
++  }
++
++  /**
+   * Get the currently active theme set id
+   *
+   * @return string
+Index: papaya-lib/system/Papaya/Ui/Paging/Steps.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Paging/Steps.php	(Revision 38512)
++++ papaya-lib/system/Papaya/Ui/Paging/Steps.php	(Arbeitskopie)
+@@ -55,6 +55,12 @@
+   protected $_currentStepSize = 0;
+ 
+   /**
++   * Get relative Urls
++   * @var boolean
++   */
++  protected $_relativeUrls = TRUE;
++
++  /**
+   * The xml names allow to define the element and attribute names of the generated xml
+   *
+   * @var array
+@@ -73,6 +79,7 @@
+   */
+   protected $_declaredProperties = array(
+     'reference' => array('reference', 'reference'),
++    'relativeUrls' => array('_relativeUrls', '_relativeUrls'),
+     'parameterName' => array('_parameterName', '_parameterName'),
+     'currentStepSize' => array('_currentStepSize', '_currentStepSize'),
+     'stepSizes' => array('getStepSizes', 'setStepSizes'),
+@@ -86,7 +93,6 @@
+   * @param string $parameterName
+   * @param string|integer $currentStepSize
+   * @param Traversable|array $stepSizes
+-  * @param integer $mode
+   */
+   public function __construct($parameterName, $currentStepSize, $stepSizes) {
+     $this->_parameterName = $parameterName;
+@@ -109,7 +115,8 @@
+       $stepSizeNode = $list->appendElement(
+         $this->_xmlNames['item'],
+         array(
+-          $this->_xmlNames['attr-href'] => $reference->getRelative()
++          $this->_xmlNames['attr-href'] =>
++            $this->_relativeUrls ? $reference->getRelative() : $reference->get(),
+         ),
+         (string)$stepSize
+       );
+Index: papaya-lib/system/Papaya/Ui/Paging/Count.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Paging/Count.php	(Revision 38512)
++++ papaya-lib/system/Papaya/Ui/Paging/Count.php	(Arbeitskopie)
+@@ -84,6 +84,12 @@
+   protected $_currentPage = NULL;
+ 
+   /**
++   * Get relative Urls
++   * @var boolean
++   */
++  public $_relativeUrls = NULL;
++
++  /**
+   * The minimum page value. This is caluclated using the button limit.
+   * It changes with the current page.
+   *
+@@ -134,6 +140,7 @@
+   */
+   protected $_declaredProperties = array(
+     'reference' => array('reference', 'reference'),
++    'relativeUrls' => array('_relativeUrls', '_relativeUrls'),
+     'parameterName' => array('_parameterName', '_parameterName'),
+     'currentPage' => array('getCurrentPage', 'setCurrentPage'),
+     'lastPage' => array('getLastPage'),
+@@ -248,7 +255,8 @@
+     $item = $parent->appendElement(
+       $this->_xmlNames['item'],
+       array(
+-        $this->_xmlNames['attr-href'] => $reference->getRelative(),
++        $this->_xmlNames['attr-href'] =>
++          $this->_relativeUrls == TRUE ? $reference->getRelative() : $reference->get(),
+         $this->_xmlNames['attr-page'] => $page
+       )
+     );
+Index: papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php	(Revision 38512)
++++ papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php	(Arbeitskopie)
+@@ -35,7 +35,7 @@
+   * XML configuration file of theme.
+   * @var string
+   */
+-  private $_themeConfigurationFile = 'theme.xml';
++  private $_themeConfigurationFile = '~theme(-.+)?\.xml~i';
+ 
+   /***************************************************************************/
+   /** Methods                                                                */
+@@ -62,33 +62,53 @@
+   public function getThemeConfiguration($themePath) {
+     $result = array();
+     $document = $this->getDOMDocumentObject();
+-    $xmlFile = $themePath . '/' . $this->_themeConfigurationFile;
+-    if ($this->loadXml($xmlFile)) {
+-      $xpath = new DOMXPath($document);
+-      $result['name'] = $xpath->evaluate('string(//papaya-theme/name)', $document);
+-      $result['templates'] = $xpath->evaluate(
+-        'string(//papaya-theme/templates/@directory)',
+-        $document
+-      );
+-      $result['version'] = $xpath->evaluate(
+-        'string(//papaya-theme/version/@number)',
+-        $document
+-      );
+-      $result['date'] = $xpath->evaluate(
+-        'string(//papaya-theme/version/@date)',
+-        $document
+-      );
+-      $result['author'] = $xpath->evaluate('string(//papaya-theme/author)', $document);
+-      $result['description'] = $xpath->evaluate('string(//papaya-theme/description)', $document);
+-      $result['thumbMedium'] = $xpath->evaluate(
+-        "string(//papaya-theme/thumbs/thumb[@size = 'medium']/@src)",
+-        $document
+-      );
+-      $result['thumbLarge'] = $xpath->evaluate(
+-        "string(//papaya-theme/thumbs/thumb[@size = 'large']/@src)",
+-        $document
+-      );
++
++    if (is_dir($themePath) && $directory = opendir($themePath)) {
++      while ($fileName = readdir($directory)) {
++        if (is_file($themePath.'/'.$fileName) &&
++            preg_match($this->_themeConfigurationFile, $fileName)) {
++          $xmlFile = $themePath . '/' . $fileName;
++          if ($this->loadXml($xmlFile)) {
++            $xpath = new DOMXPath($document);
++            $config['name'] = $xpath->evaluate('string(//papaya-theme/name)', $document);
++            $config['templates'] = $xpath->evaluate(
++              'string(//papaya-theme/templates/@directory)',
++              $document
++            );
++            $config['version'] = $xpath->evaluate(
++              'string(//papaya-theme/version/@number)',
++              $document
++            );
++            $config['date'] = $xpath->evaluate(
++              'string(//papaya-theme/version/@date)',
++              $document
++            );
++            $config['author'] = $xpath->evaluate('string(//papaya-theme/author)', $document);
++            $config['description'] = $xpath->evaluate('string(//papaya-theme/description)', $document);
++            $config['thumbMedium'] = $xpath->evaluate(
++              "string(//papaya-theme/thumbs/thumb[@size = 'medium']/@src)",
++              $document
++            );
++            $config['thumbLarge'] = $xpath->evaluate(
++              "string(//papaya-theme/thumbs/thumb[@size = 'large']/@src)",
++              $document
++            );
++            $subTheme = $xpath->evaluate(
++              'string(//papaya-theme/sub-theme)',
++              $document
++            );
++            if (empty($subTheme)) {
++              $subTheme = '';
++            }
++            $result[$subTheme] = $config;
++          }
++        }
++      }
++      closedir($directory);
+     }
++    if (count($result) > 0) {
++      ksort($result);
++    }
+     return $result;
+   }
+ 
+Index: papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php	(Revision 38512)
++++ papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php	(Arbeitskopie)
+@@ -353,10 +353,16 @@
+       while ($directoryName = readdir($directory)) {
+         if (is_dir($themesPath.$directoryName) && substr($directoryName, 0, 1) != '.') {
+           $currentConfiguration = $configuration->getThemeConfiguration(
+-            $themesPath . $directoryName
++            $themesPath.$directoryName
+           );
+           if (!empty($currentConfiguration)) {
+-            $result[$directoryName] = $currentConfiguration;
++            foreach ($currentConfiguration as $subTheme => $values) {
++              if (empty($subTheme)) {
++                $result[$directoryName] = $values;
++              } else {
++                $result[$directoryName.'-'.$subTheme] = $values;
++              }
++            }
+           }
+         }
+       }
 Index: papaya-data/templates/default-xhtml/html/boxes.xml
 ===================================================================
---- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38512)
 +++ papaya-data/templates/default-xhtml/html/boxes.xml	(Arbeitskopie)
 @@ -1,8 +1,8 @@
  <?xml version="1.0" ?>
@@ -2572,22 +3196,9 @@ Index: papaya-data/templates/default-xhtml/html/boxes.xml
 -</boxes>
 \ No newline at end of file
 +</boxes>
-Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
-===================================================================
---- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38500)
-+++ papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Arbeitskopie)
-@@ -6,7 +6,7 @@
-   exclude-result-prefixes="#default"
- >
- <!--
--  @papaya:modules content_thumbs
-+  @papaya:modules MediaImageGalleryPage
- -->
- 
- <!-- import main layout rules, this will import the default rules, too -->
 Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl
 ===================================================================
---- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38512)
 +++ papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Arbeitskopie)
 @@ -605,40 +605,31 @@
    <fieldset>
@@ -2705,7 +3316,7 @@ Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_
  </xsl:stylesheet>
 Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
 ===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Revision 38512)
 +++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Arbeitskopie)
 @@ -2,4 +2,6 @@
    <text ident="FILE_NAME">Fichier</text>
@@ -2716,7 +3327,7 @@ Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
  </texts>
 Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
 ===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Revision 38512)
 +++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Arbeitskopie)
 @@ -2,4 +2,7 @@
    <text ident="FILE_NAME">Datei</text>
@@ -2730,7 +3341,7 @@ Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
 \ No newline at end of file
 Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl
 ===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Revision 38512)
 +++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Arbeitskopie)
 @@ -6,162 +6,177 @@
    exclude-result-prefixes="#default"
@@ -3051,7 +3662,7 @@ Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thum
 \ No newline at end of file
 Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
 ===================================================================
---- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38512)
 +++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Arbeitskopie)
 @@ -2,4 +2,7 @@
    <text ident="FILE_NAME">File</text>
@@ -3062,9 +3673,22 @@ Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
 +  <text ident="IMAGE_DOWNLOAD">Download</text>
  </texts>
 \ No newline at end of file
+Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38512)
++++ papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Arbeitskopie)
+@@ -6,7 +6,7 @@
+   exclude-result-prefixes="#default"
+ >
+ <!--
+-  @papaya:modules content_thumbs
++  @papaya:modules MediaImageGalleryPage
+ -->
+ 
+ <!-- import main layout rules, this will import the default rules, too -->
 Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
 ===================================================================
---- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38500)
+--- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38512)
 +++ papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Arbeitskopie)
 @@ -325,6 +325,9 @@
        </xsl:when>
@@ -3084,9 +3708,321 @@ Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
  </xsl:template>
  
  <xsl:template name="dialog-element-select">
+Index: tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php	(Revision 38512)
++++ tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php	(Arbeitskopie)
+@@ -48,6 +48,45 @@
+   /**
+   * @covers PapayaThemeHandler::getUrl
+   */
++  public function testGetUrlWithSubThemeName() {
++    $url = $this->getMock('PapayaUrl', array('getHostUrl'));
++    $url
++      ->expects($this->once())
++      ->method('getHostUrl')
++      ->will($this->returnValue('http://test.tld'));
++    $request = $this->getMock('PapayaRequest', array('getParameter', 'getUrl'));
++    $request
++      ->expects($this->once())
++      ->method('getParameter')
++      ->will($this->returnValue(FALSE));
++    $request
++      ->expects($this->once())
++      ->method('getUrl')
++      ->will($this->returnValue($url));
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Request' => $request,
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'http://test.tld/themes/theme/',
++      $handler->getUrl()
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
+   public function testGetUrlWithThemeNameParameter() {
+     $url = $this->getMock('PapayaUrl', array('getHostUrl'));
+     $url
+@@ -83,6 +122,65 @@
+   /**
+   * @covers PapayaThemeHandler::getUrl
+   */
++  public function testGetUrlWithSubThemeNameParameter() {
++    $url = $this->getMock('PapayaUrl', array('getHostUrl'));
++    $url
++      ->expects($this->once())
++      ->method('getHostUrl')
++      ->will($this->returnValue('http://test.tld'));
++    $request = $this->getMock('PapayaRequest', array('getParameter', 'getUrl'));
++    $request
++      ->expects($this->once())
++      ->method('getUrl')
++      ->will($this->returnValue($url));
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Request' => $request,
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'http://test.tld/themes/theme/',
++      $handler->getUrl('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
++  public function testGetThemeAndSubTheme() {
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'theme-subtheme',
++      $handler->getTheme().'-'.$handler->getSubTheme('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
+   public function testGetUrlWithCdn() {
+     $request = $this->getMock('PapayaRequest', array('getParameter'));
+     $request
+@@ -199,6 +297,31 @@
+   * @covers PapayaThemeHandler::getLocalThemePath
+   * @backupGlobals enabled
+   */
++  public function testGetLocalThemePathWithSubThemeParameter() {
++    $_SERVER['DOCUMENT_ROOT'] = '/document/root';
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      '/document/root/themes/theme/',
++      $handler->getLocalThemePath('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getLocalThemePath
++  * @backupGlobals enabled
++  */
+   public function testGetLocalThemePathWithThemeName() {
+     $_SERVER['DOCUMENT_ROOT'] = '/document/root';
+     $handler = new PapayaThemeHandler();
+Index: tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml	(Revision 38512)
++++ tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml	(Arbeitskopie)
+@@ -12,20 +12,22 @@
+   <dynamic-values>
+     <page name="MAIN" title="Sample Page 1">
+       <group name="FONT" title="Sample Group 1.1">
+-        <value name="COLOR" title="Font color" type="color" default="#FF0000"/>
++        <value name="COLOR" title="Font color" type="text" field="color" default="#FF0000">
++          <hint>main font color</hint>
++        </value>
+       </group>
+       <group name="PARAGRAPH" title="Sample Group 1.2">
+-        <value name="ALIGNMENT" title="Alignment" type="select" default="left">
+-          <type-parameter name="justify">Justify</type-parameter>
+-          <type-parameter name="left">Left</type-parameter>
+-          <type-parameter name="right">Right</type-parameter>
+-        </value> 
++        <value name="ALIGNMENT" title="Alignment" field="select" default="left" hint="Text Alignment">
++          <field-parameter key="justify">Justify</field-parameter>
++          <field-parameter key="left">Left</field-parameter>
++          <field-parameter key="right">Right</field-parameter>
++        </value>
+       </group>
+       <group name="HEADER" title="Sample Group 1.3">
+-        <value name="TITLE" title="Title" type="text" type-parameter="200"/>
+-        <value name="BACKGROUND_IMAGE" title="Backgroudn image" type="select">
+-          <type-parameter>foo.png</type-parameter>
+-          <type-parameter>bar.png</type-parameter>
++        <value name="TITLE" title="Title" field="text" field-parameter="200"/>
++        <value name="BACKGROUND_IMAGE" title="Background image" field="select">
++          <field-parameter>foo.png</field-parameter>
++          <field-parameter>bar.png</field-parameter>
+         </value> 
+       </group>
+     </page>
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php	(Revision 38512)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php	(Arbeitskopie)
+@@ -14,14 +14,16 @@
+   */
+   public function testGetThemeConfigurationWithAllFields() {
+     $expected = array(
+-      'name' => 'Theme 1',
+-      'templates' => 'theme-1',
+-      'version' => '1.0',
+-      'date' => '2010-04-07',
+-      'author' => 'Papaya Software GmbH',
+-      'description' => 'This is the 1st test theme.',
+-      'thumbMedium' => 'thumb1_theme1.jpg',
+-      'thumbLarge' => 'thumb2_theme1.jpg'
++      '' => array(
++        'name' => 'Theme 1',
++        'templates' => 'theme-1',
++        'version' => '1.0',
++        'date' => '2010-04-07',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 1st test theme.',
++        'thumbMedium' => 'thumb1_theme1.jpg',
++        'thumbLarge' => 'thumb2_theme1.jpg'
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme1';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -33,14 +35,16 @@
+   */
+   public function testGetThemeConfigurationOnlyWithNameAndTemplates() {
+     $expected = array(
+-      'name' => 'Theme 2',
+-      'templates' => 'theme-2',
+-      'version' => '',
+-      'date' => '',
+-      'author' => '',
+-      'description' => '',
+-      'thumbMedium' => '',
+-      'thumbLarge' => ''
++      '' => array(
++        'name' => 'Theme 2',
++        'templates' => 'theme-2',
++        'version' => '',
++        'date' => '',
++        'author' => '',
++        'description' => '',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme2';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -52,14 +56,16 @@
+   */
+   public function testGetThemeConfigurationWithoutThumbs() {
+     $expected = array(
+-      'name' => 'Theme 3',
+-      'templates' => 'theme-3',
+-      'version' => '6.7',
+-      'date' => '2009-12-31',
+-      'author' => 'Papaya Software GmbH',
+-      'description' => 'This is the 3rd test theme.',
+-      'thumbMedium' => '',
+-      'thumbLarge' => ''
++      '' => array(
++        'name' => 'Theme 3',
++        'templates' => 'theme-3',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 3rd test theme.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme3';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -69,6 +75,47 @@
+   /**
+   * @covers PapayaUiAdministrationBrowserThemeConfiguration::getThemeConfiguration
+   */
++  public function testGetThemeConfigurationWithSubThemes() {
++    $expected = array(
++      '' => array(
++        'name' => 'Theme 4',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'suba' => array(
++        'name' => 'Theme 4 A',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme with A.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'subb' => array(
++        'name' => 'Theme 4 B',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme with B.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
++    );
++    $themePath = dirname(__FILE__).'/../TestData/theme4';
++    $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
++    $this->assertSame($expected, $themeObject->getThemeConfiguration($themePath));
++  }
++
++  /**
++  * @covers PapayaUiAdministrationBrowserThemeConfiguration::getThemeConfiguration
++  */
+   public function testGetThemeConfigurationWithInvalidConfigurationFile() {
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+     $themePath = dirname(__FILE__).'/../TestData/theme999';
 Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php
 ===================================================================
---- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php	(Revision 38500)
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php	(Revision 38512)
 +++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php	(Arbeitskopie)
 @@ -162,6 +162,7 @@
  
@@ -3261,6 +4197,21 @@ Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeT
        )
      );
      return $themes[basename($directory)];
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml	(Revision 0)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml	(Revision 0)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<papaya-theme>
++  <name>Theme 4</name>
++  <templates directory="theme-4" />
++  <version number="6.7" date="2009-12-31" />
++  <author>Papaya Software GmbH</author>
++  <description>This is the 4th test theme.</description>
++  <sub-theme></sub-theme>
++</papaya-theme>
+\ No newline at end of file
 Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-suba.xml
 ===================================================================
 --- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-suba.xml	(Revision 0)
@@ -3291,330 +4242,3 @@ Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestDa
 +  <sub-theme>subb</sub-theme>
 +</papaya-theme>
 \ No newline at end of file
-Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml
-===================================================================
---- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml	(Revision 0)
-+++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml	(Revision 0)
-@@ -0,0 +1,9 @@
-+<?xml version="1.0" encoding="UTF-8"?>
-+<papaya-theme>
-+  <name>Theme 4</name>
-+  <templates directory="theme-4" />
-+  <version number="6.7" date="2009-12-31" />
-+  <author>Papaya Software GmbH</author>
-+  <description>This is the 4th test theme.</description>
-+  <sub-theme></sub-theme>
-+</papaya-theme>
-\ No newline at end of file
-Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php
-===================================================================
---- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php	(Revision 38500)
-+++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php	(Arbeitskopie)
-@@ -14,14 +14,16 @@
-   */
-   public function testGetThemeConfigurationWithAllFields() {
-     $expected = array(
--      'name' => 'Theme 1',
--      'templates' => 'theme-1',
--      'version' => '1.0',
--      'date' => '2010-04-07',
--      'author' => 'Papaya Software GmbH',
--      'description' => 'This is the 1st test theme.',
--      'thumbMedium' => 'thumb1_theme1.jpg',
--      'thumbLarge' => 'thumb2_theme1.jpg'
-+      '' => array(
-+        'name' => 'Theme 1',
-+        'templates' => 'theme-1',
-+        'version' => '1.0',
-+        'date' => '2010-04-07',
-+        'author' => 'Papaya Software GmbH',
-+        'description' => 'This is the 1st test theme.',
-+        'thumbMedium' => 'thumb1_theme1.jpg',
-+        'thumbLarge' => 'thumb2_theme1.jpg'
-+      )
-     );
-     $themePath = dirname(__FILE__).'/../TestData/theme1';
-     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
-@@ -33,14 +35,16 @@
-   */
-   public function testGetThemeConfigurationOnlyWithNameAndTemplates() {
-     $expected = array(
--      'name' => 'Theme 2',
--      'templates' => 'theme-2',
--      'version' => '',
--      'date' => '',
--      'author' => '',
--      'description' => '',
--      'thumbMedium' => '',
--      'thumbLarge' => ''
-+      '' => array(
-+        'name' => 'Theme 2',
-+        'templates' => 'theme-2',
-+        'version' => '',
-+        'date' => '',
-+        'author' => '',
-+        'description' => '',
-+        'thumbMedium' => '',
-+        'thumbLarge' => ''
-+      )
-     );
-     $themePath = dirname(__FILE__).'/../TestData/theme2';
-     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
-@@ -52,14 +56,16 @@
-   */
-   public function testGetThemeConfigurationWithoutThumbs() {
-     $expected = array(
--      'name' => 'Theme 3',
--      'templates' => 'theme-3',
--      'version' => '6.7',
--      'date' => '2009-12-31',
--      'author' => 'Papaya Software GmbH',
--      'description' => 'This is the 3rd test theme.',
--      'thumbMedium' => '',
--      'thumbLarge' => ''
-+      '' => array(
-+        'name' => 'Theme 3',
-+        'templates' => 'theme-3',
-+        'version' => '6.7',
-+        'date' => '2009-12-31',
-+        'author' => 'Papaya Software GmbH',
-+        'description' => 'This is the 3rd test theme.',
-+        'thumbMedium' => '',
-+        'thumbLarge' => ''
-+      )
-     );
-     $themePath = dirname(__FILE__).'/../TestData/theme3';
-     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
-@@ -69,6 +75,47 @@
-   /**
-   * @covers PapayaUiAdministrationBrowserThemeConfiguration::getThemeConfiguration
-   */
-+  public function testGetThemeConfigurationWithSubThemes() {
-+    $expected = array(
-+      '' => array(
-+        'name' => 'Theme 4',
-+        'templates' => 'theme-4',
-+        'version' => '6.7',
-+        'date' => '2009-12-31',
-+        'author' => 'Papaya Software GmbH',
-+        'description' => 'This is the 4th test theme.',
-+        'thumbMedium' => '',
-+        'thumbLarge' => ''
-+      ),
-+      'suba' => array(
-+        'name' => 'Theme 4 A',
-+        'templates' => 'theme-4',
-+        'version' => '6.7',
-+        'date' => '2009-12-31',
-+        'author' => 'Papaya Software GmbH',
-+        'description' => 'This is the 4th test theme with A.',
-+        'thumbMedium' => '',
-+        'thumbLarge' => ''
-+      ),
-+      'subb' => array(
-+        'name' => 'Theme 4 B',
-+        'templates' => 'theme-4',
-+        'version' => '6.7',
-+        'date' => '2009-12-31',
-+        'author' => 'Papaya Software GmbH',
-+        'description' => 'This is the 4th test theme with B.',
-+        'thumbMedium' => '',
-+        'thumbLarge' => ''
-+      )
-+    );
-+    $themePath = dirname(__FILE__).'/../TestData/theme4';
-+    $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
-+    $this->assertSame($expected, $themeObject->getThemeConfiguration($themePath));
-+  }
-+
-+  /**
-+  * @covers PapayaUiAdministrationBrowserThemeConfiguration::getThemeConfiguration
-+  */
-   public function testGetThemeConfigurationWithInvalidConfigurationFile() {
-     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
-     $themePath = dirname(__FILE__).'/../TestData/theme999';
-Index: tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml
-===================================================================
---- tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml	(Revision 38500)
-+++ tests/unittests/papaya-lib/system/Papaya/Theme/TestData/theme.xml	(Arbeitskopie)
-@@ -12,20 +12,22 @@
-   <dynamic-values>
-     <page name="MAIN" title="Sample Page 1">
-       <group name="FONT" title="Sample Group 1.1">
--        <value name="COLOR" title="Font color" type="color" default="#FF0000"/>
-+        <value name="COLOR" title="Font color" type="text" field="color" default="#FF0000">
-+          <hint>main font color</hint>
-+        </value>
-       </group>
-       <group name="PARAGRAPH" title="Sample Group 1.2">
--        <value name="ALIGNMENT" title="Alignment" type="select" default="left">
--          <type-parameter name="justify">Justify</type-parameter>
--          <type-parameter name="left">Left</type-parameter>
--          <type-parameter name="right">Right</type-parameter>
--        </value> 
-+        <value name="ALIGNMENT" title="Alignment" field="select" default="left" hint="Text Alignment">
-+          <field-parameter key="justify">Justify</field-parameter>
-+          <field-parameter key="left">Left</field-parameter>
-+          <field-parameter key="right">Right</field-parameter>
-+        </value>
-       </group>
-       <group name="HEADER" title="Sample Group 1.3">
--        <value name="TITLE" title="Title" type="text" type-parameter="200"/>
--        <value name="BACKGROUND_IMAGE" title="Backgroudn image" type="select">
--          <type-parameter>foo.png</type-parameter>
--          <type-parameter>bar.png</type-parameter>
-+        <value name="TITLE" title="Title" field="text" field-parameter="200"/>
-+        <value name="BACKGROUND_IMAGE" title="Background image" field="select">
-+          <field-parameter>foo.png</field-parameter>
-+          <field-parameter>bar.png</field-parameter>
-         </value> 
-       </group>
-     </page>
-Index: tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php
-===================================================================
---- tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php	(Revision 38500)
-+++ tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php	(Arbeitskopie)
-@@ -48,6 +48,45 @@
-   /**
-   * @covers PapayaThemeHandler::getUrl
-   */
-+  public function testGetUrlWithSubThemeName() {
-+    $url = $this->getMock('PapayaUrl', array('getHostUrl'));
-+    $url
-+      ->expects($this->once())
-+      ->method('getHostUrl')
-+      ->will($this->returnValue('http://test.tld'));
-+    $request = $this->getMock('PapayaRequest', array('getParameter', 'getUrl'));
-+    $request
-+      ->expects($this->once())
-+      ->method('getParameter')
-+      ->will($this->returnValue(FALSE));
-+    $request
-+      ->expects($this->once())
-+      ->method('getUrl')
-+      ->will($this->returnValue($url));
-+    $handler = new PapayaThemeHandler();
-+    $handler->papaya(
-+      $this->getMockApplicationObject(
-+        array(
-+          'Request' => $request,
-+          'Options' => $this->getMockConfigurationObject(
-+            array(
-+             'PAPAYA_CDN_THEMES' => '',
-+             'PAPAYA_PATH_THEMES' => '/themes/',
-+             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
-+            )
-+          )
-+        )
-+      )
-+    );
-+    $this->assertEquals(
-+      'http://test.tld/themes/theme/',
-+      $handler->getUrl()
-+    );
-+  }
-+
-+  /**
-+  * @covers PapayaThemeHandler::getUrl
-+  */
-   public function testGetUrlWithThemeNameParameter() {
-     $url = $this->getMock('PapayaUrl', array('getHostUrl'));
-     $url
-@@ -83,6 +122,65 @@
-   /**
-   * @covers PapayaThemeHandler::getUrl
-   */
-+  public function testGetUrlWithSubThemeNameParameter() {
-+    $url = $this->getMock('PapayaUrl', array('getHostUrl'));
-+    $url
-+      ->expects($this->once())
-+      ->method('getHostUrl')
-+      ->will($this->returnValue('http://test.tld'));
-+    $request = $this->getMock('PapayaRequest', array('getParameter', 'getUrl'));
-+    $request
-+      ->expects($this->once())
-+      ->method('getUrl')
-+      ->will($this->returnValue($url));
-+    $handler = new PapayaThemeHandler();
-+    $handler->papaya(
-+      $this->getMockApplicationObject(
-+        array(
-+          'Request' => $request,
-+          'Options' => $this->getMockConfigurationObject(
-+            array(
-+             'PAPAYA_CDN_THEMES' => '',
-+             'PAPAYA_PATH_THEMES' => '/themes/',
-+             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
-+            )
-+          )
-+        )
-+      )
-+    );
-+    $this->assertEquals(
-+      'http://test.tld/themes/theme/',
-+      $handler->getUrl('theme-subtheme')
-+    );
-+  }
-+
-+  /**
-+  * @covers PapayaThemeHandler::getUrl
-+  */
-+  public function testGetThemeAndSubTheme() {
-+    $handler = new PapayaThemeHandler();
-+    $handler->papaya(
-+      $this->getMockApplicationObject(
-+        array(
-+          'Options' => $this->getMockConfigurationObject(
-+            array(
-+             'PAPAYA_CDN_THEMES' => '',
-+             'PAPAYA_PATH_THEMES' => '/themes/',
-+             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
-+            )
-+          )
-+        )
-+      )
-+    );
-+    $this->assertEquals(
-+      'theme-subtheme',
-+      $handler->getTheme().'-'.$handler->getSubTheme('theme-subtheme')
-+    );
-+  }
-+
-+  /**
-+  * @covers PapayaThemeHandler::getUrl
-+  */
-   public function testGetUrlWithCdn() {
-     $request = $this->getMock('PapayaRequest', array('getParameter'));
-     $request
-@@ -199,6 +297,31 @@
-   * @covers PapayaThemeHandler::getLocalThemePath
-   * @backupGlobals enabled
-   */
-+  public function testGetLocalThemePathWithSubThemeParameter() {
-+    $_SERVER['DOCUMENT_ROOT'] = '/document/root';
-+    $handler = new PapayaThemeHandler();
-+    $handler->papaya(
-+      $this->getMockApplicationObject(
-+        array(
-+          'Options' => $this->getMockConfigurationObject(
-+            array(
-+             'PAPAYA_PATH_THEMES' => '/themes/',
-+             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
-+            )
-+          )
-+        )
-+      )
-+    );
-+    $this->assertEquals(
-+      '/document/root/themes/theme/',
-+      $handler->getLocalThemePath('theme-subtheme')
-+    );
-+  }
-+
-+  /**
-+  * @covers PapayaThemeHandler::getLocalThemePath
-+  * @backupGlobals enabled
-+  */
-   public function testGetLocalThemePathWithThemeName() {
-     $_SERVER['DOCUMENT_ROOT'] = '/document/root';
-     $handler = new PapayaThemeHandler();

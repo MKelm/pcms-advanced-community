@@ -1,0 +1,3953 @@
+Index: papaya-themes/default/page_community.css
+===================================================================
+--- papaya-themes/default/page_community.css	(Revision 38515)
++++ papaya-themes/default/page_community.css	(Arbeitskopie)
+@@ -48,4 +48,11 @@
+ img.communityUserAvatar {
+   margin-top: 20px;
+   margin-bottom: 20px;
++}
++div.deleteAccount,
++div.deleteAccount form div.buttons {
++  margin-top: 1em;
++}
++div.deleteAccount fieldset {
++  margin: 0;
+ }
+\ No newline at end of file
+Index: papaya-themes/default/page_thumbs.css
+===================================================================
+--- papaya-themes/default/page_thumbs.css	(Revision 38515)
++++ papaya-themes/default/page_thumbs.css	(Arbeitskopie)
+@@ -1,6 +1,6 @@
+ .galleryThumbnail {
+   float: left;
+-  padding: 20px;
++  padding: 0.4em;
+ }
+ a.galleryThumbnailFrame {
+   display: block;
+Index: papaya-themes/default/basic.css
+===================================================================
+--- papaya-themes/default/basic.css	(Revision 38515)
++++ papaya-themes/default/basic.css	(Arbeitskopie)
+@@ -72,6 +72,9 @@
+ 
+ /* Forms
+ ----------------------------------------------- */
++form h2 {
++  margin: 0.7em 0 0.2em 0;
++}
+ form p {
+   margin-bottom: .8em;
+ }
+@@ -80,6 +83,9 @@
+   padding: 0;
+   border: none;
+ }
++form div.field {
++  margin-top: 0.2em;
++}
+ form label {
+   display: block;
+   font-weight: bold;
+@@ -91,6 +97,8 @@
+   padding-left: .5em;
+ }
+ form input.text,
++form input.password,
++form input.file,
+ form textarea,
+ form select {
+   border: 1px solid #CCC;
+@@ -114,13 +122,27 @@
+   vertical-align: middle;
+   width: auto;
+ }
++form .radio {
++  float: left;
++  margin-right: 0.8em;
++}
++form input.radio {
++  margin-right: 0.2em;
++}
++form div.buttons {
++  margin-top: 15px;
++}
+ form button {
+   border: 1px solid #90A33B;
+   cursor: pointer;
+   font-weight: bold;
+   font-size: 100%;
+   padding: 1px;
++  margin-right: 0.5em;
+ }
++form div.hint {
++  margin-top: 0.3em;
++}
+ 
+ 
+ /* Accessibility
+@@ -184,7 +206,7 @@
+   font-size: 90%;
+ }
+ 
+-/* Messages 
++/* Messages
+ ----------------------------------------------- */
+ div.message, div.error {
+   border: 1px solid #90A33B;
+@@ -240,22 +262,22 @@
+ /* Mobile rules, resize page and move elements
+    for small windows
+ ----------------------------------------------- */
+-@media only screen and (max-width: 480px), 
++@media only screen and (max-width: 480px),
+        only screen and (max-device-width: 480px) {
+ 
+   p {
+     margin-bottom: 1.5em;
+     width: 20em;
+   }
+-  
++
+   h1, h2, h3, h4, h5, h6, caption {
+     font-weight: bold;
+     margin-bottom: 0.6em;
+     width: 20em;
+   }
+-  
++
+   h1 {
+     font-size: 120%;
+     padding-top: 17em;
+   }
+-}  
++}
+Index: papaya-lib/system/base_topic_edit.php
+===================================================================
+--- papaya-lib/system/base_topic_edit.php	(Revision 38515)
++++ papaya-lib/system/base_topic_edit.php	(Arbeitskopie)
+@@ -1600,9 +1600,14 @@
+                 //delete page
+                 if (FALSE !== $this->databaseDeleteRecord(
+                       $this->tableTopicsTrans, $filter)) {
+-                  return FALSE !== $this->databaseDeleteRecord(
+-                    $this->tableTopics, $filter
+-                  );
++                  if (FALSE !== $this->databaseDeleteRecord(
++                        $this->tableTopics, $filter)) {
++                    // Call the action dispatcher method for other modules who need to do page cleanup stuff
++                    include_once(PAPAYA_INCLUDE_PATH.'system/base_pluginloader.php');
++                    $actionsObj = base_pluginloader::getPluginInstance('79f18e7c40824a0f975363346716ff62', $this);
++                    $num = $actionsObj->call('system', 'onDeletePages', $ids);
++                    return TRUE;
++                  }
+                 }
+               }
+             }
+Index: papaya-lib/system/papaya_mediadb.php
+===================================================================
+--- papaya-lib/system/papaya_mediadb.php	(Revision 38515)
++++ papaya-lib/system/papaya_mediadb.php	(Arbeitskopie)
+@@ -677,7 +677,14 @@
+         }
+         break;
+       case 'crop_image_window':
+-        $this->getImageCropWindow();
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $this->getImageCropWindow();
++        } else {
++          $this->addMsg(
++            MSG_WARNING,
++            $this->_gt('You can crop image/jpeg files only, please convert the image first.')
++          );
++        }
+         break;
+       case 'crop_image_rpc':
+         header('Content-type: text/xml; charset=utf-8');
+@@ -1195,9 +1202,9 @@
+             'actions-edit-copy',
+             'Copy file to clipboard'
+           );
+-          if ($this->currentFile['mimetype_ext'] == 'jpg' ||
+-              $this->currentFile['mimetype_ext'] == 'gif' ||
+-              $this->currentFile['mimetype_ext'] == 'png') {
++          if ($this->currentFile['mimetype'] == 'image/jpeg' ||
++              $this->currentFile['mimetype'] == 'image/gif' ||
++              $this->currentFile['mimetype'] == 'image/png') {
+             $convertParams = array(
+               'cmd' => 'convert_image',
+               'file_id' => $this->params['file_id'],
+@@ -1212,22 +1219,33 @@
+           }
+         }
+ 
+-        if (strtolower($this->getFileExtension($this->currentFile['file_name'])) == 'jpg') {
++        if ($this->currentFile['mimetype'] == 'image/jpeg') {
++          $cropLink = sprintf(
++            "javascript:window.open('%s', 'cropwindow',
++             'width=656,height=556,top=100,left=100'); return false;",
++            $this->getLink(
++              array(
++                'cmd' => 'crop_image_window',
++                'file_id' => $this->params['file_id']
++              )
++            )
++          );
++        } elseif ($this->currentFile['mimetype'] == 'image/gif' ||
++                  $this->currentFile['mimetype'] == 'image/png') {
+           $cropLink = $this->getLink(
+             array(
+               'cmd' => 'crop_image_window',
+               'file_id' => $this->params['file_id']
+             )
+           );
++        }
++        if (!empty($cropLink)) {
+           $this->menubar->addButton(
+             'Crop',
+-            sprintf(
+-              "javascript:window.open('%s', 'cropwindow',
+-               'width=656,height=556,top=100,left=100'); return false;",
+-              $cropLink
+-            ),
++            $cropLink,
+             'actions-edit-crop',
+-            'Crop image'
++            'Crop image',
++            isset($this->params['cmd']) && $this->params['cmd'] == 'crop_image_window'
+           );
+         }
+ 
+Index: papaya-lib/system/base_thumbnail.php
+===================================================================
+--- papaya-lib/system/base_thumbnail.php	(Revision 38515)
++++ papaya-lib/system/base_thumbnail.php	(Arbeitskopie)
+@@ -111,6 +111,12 @@
+   var $lastThumbSize = array(0,0);
+ 
+   /**
++   * save last thumbnail file name in buffer
++   * @var string
++   */
++  var $lastThumbFileName = NULL;
++
++  /**
+   * store the memoty limit if it is changed, restore it in desctructor
+   *
+   * @var NULL|string
+@@ -400,6 +406,7 @@
+                         $filter, $params = NULL) {
+     $result = $this->getThumbFilePath($fileName).
+       $this->getThumbFileId($fileName, $versionId, $width, $height, $imageType, $filter, $params);
++    $this->lastThumbFileName = $result;
+     return $result;
+   }
+ 
+@@ -839,9 +846,9 @@
+             ' Needed: %s bytes Available: %s bytes.'.
+             ' Increase blocked by Suhoshin in function "%s".',
+             $srcFileName,
+-            $orgWidth, 
++            $orgWidth,
+             $orgHeight,
+-            $thumbWidth, 
++            $thumbWidth,
+             $thumbHeight,
+             number_format($memoryNeeded, 0, '.', ','),
+             number_format($suhosinMemoryLimit, 0, '.', ','),
+@@ -948,9 +955,9 @@
+           'Can not scale "%s" from %dx%d to %dx%d. Not enough memory available.'.
+           ' Needed: %s bytes Available: %s bytes. Increase blocked in function "%s".',
+           $srcFileName,
+-          $orgWidth, 
++          $orgWidth,
+           $orgHeight,
+-          $thumbWidth, 
++          $thumbWidth,
+           $thumbHeight,
+           number_format($memoryNeeded, 0, '.', ','),
+           number_format($memoryLimit, 0, '.', ','),
+Index: papaya-lib/system/papaya_publictopic.php
+===================================================================
+--- papaya-lib/system/papaya_publictopic.php	(Revision 38515)
++++ papaya-lib/system/papaya_publictopic.php	(Arbeitskopie)
+@@ -229,7 +229,7 @@
+         $definition
+       );
+     } else {
+-      return PapayaCacheIdentifierDefinitionBoolean(FALSE);
++      return new PapayaCacheIdentifierDefinitionBoolean(FALSE);
+     }
+   }
+ 
+Index: papaya-lib/system/base_mediadb_edit.php
+===================================================================
+--- papaya-lib/system/base_mediadb_edit.php	(Revision 38515)
++++ papaya-lib/system/base_mediadb_edit.php	(Arbeitskopie)
+@@ -653,6 +653,8 @@
+           $doDelete = TRUE;
+         }
+         if ($doDelete) {
++          $this->deleteFileDerivations($fileId);
++          $this->deleteFileTrans($fileId);
+           $condition = array('file_id' => $fileId);
+           return (FALSE !== $this->databaseDeleteRecord($this->tableFiles, $condition));
+         }
+@@ -662,6 +664,20 @@
+   }
+ 
+   /**
++   * Delete file translation by id
++   *
++   * @param string $fileId
++   * @return boolean
++   */
++  function deleteFileTrans($fileId) {
++    if (!empty($fileId)) {
++      $condition = array('file_id' => $fileId);
++      return FALSE !== $this->databaseDeleteRecord($this->tableFilesTrans, $condition);
++    }
++    return FALSE;
++  }
++
++  /**
+   * delete a version of a file
+   *
+   * use this method to delete a specific version of a file
+@@ -679,6 +695,7 @@
+       include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
+       $thumbnail = new base_thumbnail;
+       $thumbnail->deleteThumbs($fileId);
++      $this->deleteFileDerivations($fileId, $versionId);
+       return (FALSE !== $this->databaseDeleteRecord($this->tableFilesVersions, $condition));
+     }
+   }
+@@ -695,6 +712,7 @@
+     if ($fileId != '') {
+       $versions = $this->getFileVersions($fileId);
+       if (is_array($versions) && count($versions) > 0) {
++        $this->deleteFileDerivations($fileId, array_keys($versions));
+         foreach ($versions as $versionId => $version) {
+           $fileName = $this->getFileName($fileId, $versionId, TRUE);
+           if (!is_file($fileName) || unlink($fileName)) {
+@@ -717,6 +735,31 @@
+   }
+ 
+   /**
++   * Delete file derivations by file or file version.
++   *
++   * @param string $fileId
++   * @param integer $versionId
++   * @return boolean
++   */
++  function deleteFileDerivations($fileId, $versionId = NULL) {
++    if (!empty($fileId)) {
++      $condition = array('parent_file_id' => $fileId);
++      if (!empty($versionId)) {
++        $condition['parent_file_version_id'] = $versionId;
++      }
++      $result1 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++      if (empty($versionId)) {
++        $condition = array('child_file_id' => $fileId);
++        $result2 = FALSE !== $this->databaseDeleteRecord($this->tableFilesDerivations, $condition);
++        return $result1 && $result2;
++      } else {
++        return $result1;
++      }
++    }
++    return FALSE;
++  }
++
++  /**
+   * move multiple files to a different folder
+   *
+   * use this method to move multiple files to a different folder
+@@ -1009,4 +1052,4 @@
+     return $size;
+   }
+ }
+-?>
++?>
+\ No newline at end of file
+Index: papaya-lib/system/Papaya/Theme/Handler.php
+===================================================================
+--- papaya-lib/system/Papaya/Theme/Handler.php	(Revision 38515)
++++ papaya-lib/system/Papaya/Theme/Handler.php	(Arbeitskopie)
+@@ -26,6 +26,11 @@
+ class PapayaThemeHandler extends PapayaObject {
+ 
+   /**
++   * Name of sub theme.
++   */
++  protected $_subThemeName = NULL;
++
++  /**
+   * Get url for theme files, is $themeName is empty the current theme is used.
+   *
+   * @param string $themeName
+@@ -51,10 +56,15 @@
+       );
+     }
+     if (empty($themeName)) {
+-      return $baseUrl.$this->getTheme().'/';
++      $themeName = $this->getTheme();
+     } else {
+-      return $baseUrl.$themeName.'/';
++      $themeNameParts = explode('-', $themeName);
++      if (count($themeNameParts) == 2) {
++        $themeName = $themeNameParts[0];
++        $this->_subThemeName = $themeNameParts[1];
++      }
+     }
++    return $baseUrl.$themeName.'/';
+   }
+ 
+   /**
+@@ -125,10 +135,24 @@
+         ->options
+         ->getOption('PAPAYA_LAYOUT_THEME');
+     }
++    $themeNameParts = explode('-', $theme);
++    if (count($themeNameParts) == 2) {
++      $theme = $themeNameParts[0];
++      $this->_subThemeName = $themeNameParts[1];
++    }
+     return $theme;
+   }
+ 
+   /**
++  * Get the currently active sub theme name
++  *
++  * @return string
++  */
++  public function getSubTheme() {
++    return $this->_subThemeName;
++  }
++
++  /**
+   * Get the currently active theme set id
+   *
+   * @return string
+Index: papaya-lib/system/Papaya/Filter/Text.php
+===================================================================
+--- papaya-lib/system/Papaya/Filter/Text.php	(Revision 38515)
++++ papaya-lib/system/Papaya/Filter/Text.php	(Arbeitskopie)
+@@ -49,7 +49,7 @@
+    * @return string^
+    */
+   private function getPattern() {
+-    $result = '([^\\pL\\pP';
++    $result = '([^\\pL\\pP=';
+     if (PapayaUtilBitwise::inBitmask(self::ALLOW_SPACES, $this->_options)) {
+       $result .= '\\p{Zs} ';
+     }
+Index: papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php	(Revision 38515)
++++ papaya-lib/system/Papaya/Ui/Administration/Browser/Theme.php	(Arbeitskopie)
+@@ -353,10 +353,16 @@
+       while ($directoryName = readdir($directory)) {
+         if (is_dir($themesPath.$directoryName) && substr($directoryName, 0, 1) != '.') {
+           $currentConfiguration = $configuration->getThemeConfiguration(
+-            $themesPath . $directoryName
++            $themesPath.$directoryName
+           );
+           if (!empty($currentConfiguration)) {
+-            $result[$directoryName] = $currentConfiguration;
++            foreach ($currentConfiguration as $subTheme => $values) {
++              if (empty($subTheme)) {
++                $result[$directoryName] = $values;
++              } else {
++                $result[$directoryName.'-'.$subTheme] = $values;
++              }
++            }
+           }
+         }
+       }
+Index: papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php	(Revision 38515)
++++ papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/Configuration.php	(Arbeitskopie)
+@@ -35,7 +35,7 @@
+   * XML configuration file of theme.
+   * @var string
+   */
+-  private $_themeConfigurationFile = 'theme.xml';
++  private $_themeConfigurationFile = '~theme(-.+)?\.xml~i';
+ 
+   /***************************************************************************/
+   /** Methods                                                                */
+@@ -62,33 +62,53 @@
+   public function getThemeConfiguration($themePath) {
+     $result = array();
+     $document = $this->getDOMDocumentObject();
+-    $xmlFile = $themePath . '/' . $this->_themeConfigurationFile;
+-    if ($this->loadXml($xmlFile)) {
+-      $xpath = new DOMXPath($document);
+-      $result['name'] = $xpath->evaluate('string(//papaya-theme/name)', $document);
+-      $result['templates'] = $xpath->evaluate(
+-        'string(//papaya-theme/templates/@directory)',
+-        $document
+-      );
+-      $result['version'] = $xpath->evaluate(
+-        'string(//papaya-theme/version/@number)',
+-        $document
+-      );
+-      $result['date'] = $xpath->evaluate(
+-        'string(//papaya-theme/version/@date)',
+-        $document
+-      );
+-      $result['author'] = $xpath->evaluate('string(//papaya-theme/author)', $document);
+-      $result['description'] = $xpath->evaluate('string(//papaya-theme/description)', $document);
+-      $result['thumbMedium'] = $xpath->evaluate(
+-        "string(//papaya-theme/thumbs/thumb[@size = 'medium']/@src)",
+-        $document
+-      );
+-      $result['thumbLarge'] = $xpath->evaluate(
+-        "string(//papaya-theme/thumbs/thumb[@size = 'large']/@src)",
+-        $document
+-      );
++
++    if (is_dir($themePath) && $directory = opendir($themePath)) {
++      while ($fileName = readdir($directory)) {
++        if (is_file($themePath.'/'.$fileName) &&
++            preg_match($this->_themeConfigurationFile, $fileName)) {
++          $xmlFile = $themePath . '/' . $fileName;
++          if ($this->loadXml($xmlFile)) {
++            $xpath = new DOMXPath($document);
++            $config['name'] = $xpath->evaluate('string(//papaya-theme/name)', $document);
++            $config['templates'] = $xpath->evaluate(
++              'string(//papaya-theme/templates/@directory)',
++              $document
++            );
++            $config['version'] = $xpath->evaluate(
++              'string(//papaya-theme/version/@number)',
++              $document
++            );
++            $config['date'] = $xpath->evaluate(
++              'string(//papaya-theme/version/@date)',
++              $document
++            );
++            $config['author'] = $xpath->evaluate('string(//papaya-theme/author)', $document);
++            $config['description'] = $xpath->evaluate('string(//papaya-theme/description)', $document);
++            $config['thumbMedium'] = $xpath->evaluate(
++              "string(//papaya-theme/thumbs/thumb[@size = 'medium']/@src)",
++              $document
++            );
++            $config['thumbLarge'] = $xpath->evaluate(
++              "string(//papaya-theme/thumbs/thumb[@size = 'large']/@src)",
++              $document
++            );
++            $subTheme = $xpath->evaluate(
++              'string(//papaya-theme/sub-theme)',
++              $document
++            );
++            if (empty($subTheme)) {
++              $subTheme = '';
++            }
++            $result[$subTheme] = $config;
++          }
++        }
++      }
++      closedir($directory);
+     }
++    if (count($result) > 0) {
++      ksort($result);
++    }
+     return $result;
+   }
+ 
+Index: papaya-lib/system/Papaya/Ui/Paging/Steps.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Paging/Steps.php	(Revision 38515)
++++ papaya-lib/system/Papaya/Ui/Paging/Steps.php	(Arbeitskopie)
+@@ -55,6 +55,12 @@
+   protected $_currentStepSize = 0;
+ 
+   /**
++   * Get relative Urls
++   * @var boolean
++   */
++  protected $_relativeUrls = TRUE;
++
++  /**
+   * The xml names allow to define the element and attribute names of the generated xml
+   *
+   * @var array
+@@ -73,6 +79,7 @@
+   */
+   protected $_declaredProperties = array(
+     'reference' => array('reference', 'reference'),
++    'relativeUrls' => array('_relativeUrls', '_relativeUrls'),
+     'parameterName' => array('_parameterName', '_parameterName'),
+     'currentStepSize' => array('_currentStepSize', '_currentStepSize'),
+     'stepSizes' => array('getStepSizes', 'setStepSizes'),
+@@ -86,7 +93,6 @@
+   * @param string $parameterName
+   * @param string|integer $currentStepSize
+   * @param Traversable|array $stepSizes
+-  * @param integer $mode
+   */
+   public function __construct($parameterName, $currentStepSize, $stepSizes) {
+     $this->_parameterName = $parameterName;
+@@ -109,7 +115,8 @@
+       $stepSizeNode = $list->appendElement(
+         $this->_xmlNames['item'],
+         array(
+-          $this->_xmlNames['attr-href'] => $reference->getRelative()
++          $this->_xmlNames['attr-href'] =>
++            $this->_relativeUrls ? $reference->getRelative() : $reference->get(),
+         ),
+         (string)$stepSize
+       );
+Index: papaya-lib/system/Papaya/Ui/Paging/Count.php
+===================================================================
+--- papaya-lib/system/Papaya/Ui/Paging/Count.php	(Revision 38515)
++++ papaya-lib/system/Papaya/Ui/Paging/Count.php	(Arbeitskopie)
+@@ -84,6 +84,12 @@
+   protected $_currentPage = NULL;
+ 
+   /**
++   * Get relative Urls
++   * @var boolean
++   */
++  public $_relativeUrls = NULL;
++
++  /**
+   * The minimum page value. This is caluclated using the button limit.
+   * It changes with the current page.
+   *
+@@ -134,6 +140,7 @@
+   */
+   protected $_declaredProperties = array(
+     'reference' => array('reference', 'reference'),
++    'relativeUrls' => array('_relativeUrls', '_relativeUrls'),
+     'parameterName' => array('_parameterName', '_parameterName'),
+     'currentPage' => array('getCurrentPage', 'setCurrentPage'),
+     'lastPage' => array('getLastPage'),
+@@ -248,7 +255,8 @@
+     $item = $parent->appendElement(
+       $this->_xmlNames['item'],
+       array(
+-        $this->_xmlNames['attr-href'] => $reference->getRelative(),
++        $this->_xmlNames['attr-href'] =>
++          $this->_relativeUrls == TRUE ? $reference->getRelative() : $reference->get(),
+         $this->_xmlNames['attr-page'] => $page
+       )
+     );
+Index: papaya-lib/system/Papaya/Request/Parameters.php
+===================================================================
+--- papaya-lib/system/Papaya/Request/Parameters.php	(Revision 38515)
++++ papaya-lib/system/Papaya/Request/Parameters.php	(Arbeitskopie)
+@@ -48,7 +48,7 @@
+    * @see PapayaObjectParameters::get()
+    * @return mixed
+    */
+-  public function get($offset, $defaultValue = NULL, $filter = NULL) {
++  public function get($offset, $defaultValue = NULL, PapayaFilter $filter = NULL) {
+     return parent::get($this->_parseParameterName($offset), $defaultValue, $filter);
+   }
+ 
+Index: papaya-lib/system/papaya_page.php
+===================================================================
+--- papaya-lib/system/papaya_page.php	(Revision 38515)
++++ papaya-lib/system/papaya_page.php	(Arbeitskopie)
+@@ -1538,6 +1538,7 @@
+       }
+       $themeHandler = new PapayaThemeHandler();
+       $this->layout->setParam('PAGE_THEME', $themeHandler->getTheme());
++      $this->layout->setParam('PAGE_SUB_THEME', $themeHandler->getSubTheme());
+       $this->layout->setParam('PAGE_THEME_SET', $themeHandler->getThemeSet());
+       $this->layout->setParam('PAGE_THEME_PATH', $themeHandler->getUrl());
+       $this->layout->setParam('PAGE_THEME_PATH_LOCAL', $themeHandler->getLocalThemePath());
+Index: papaya-lib/modules/_base/community/content_register.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_register.php	(Revision 38515)
++++ papaya-lib/modules/_base/community/content_register.php	(Arbeitskopie)
+@@ -1928,7 +1928,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+Index: papaya-lib/modules/_base/community/base_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/base_surfers.php	(Revision 38515)
++++ papaya-lib/modules/_base/community/base_surfers.php	(Arbeitskopie)
+@@ -773,16 +773,16 @@
+           );
+         }
+       }
+-
+-      if ($isMultiples) {
+-        // case 1: multiples ids
+-        return $result;
+-      } else if (count($result) > 0) {
+-        // case 2: one id lookup
+-        return reset($result);
+-      }
+     }
+-    return '';
++    if ($isMultiples) {
++      // case 1: multiples ids
++      return $result;
++    } elseif (count($result) > 0) {
++      // case 2: one id lookup
++      return reset($result);
++    } else {
++      return '';
++    }
+   }
+ 
+   /**
+@@ -2223,41 +2223,80 @@
+   * Returns an empty array if no surfers match the pattern.
+   *
+   * @see existID() for behavior on blocked surfers
+-  * @access public
+-  * @param string $pattern Search pattern
+-  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
++  * @param string|array $pattern Search pattern or multiple search patterns
++  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
+   * @param boolean $includeBlocked Seach in blocked surfers too
+-  * @param string $orderBy Order search results by a given (NULL = disabled)
++  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
++  * @param integer $limit max results to fetch
++  * @param integer $offset fetch results from offset
++  * @param boolean $patternFirstChar using a pattern to get the first char of result
++  * @param array $surferIds filter results by a list of surfer ids
+   * @return array $result Surfers data (id, handle, email, givenname, surfname)
+   */
+-  function searchSurfers($pattern, $handleOnly = FALSE,
+-                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
++  function searchSurfers($pattern, $searchFields = NULL,
++                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
++                         $limit  = NULL, $offset = NULL, $patternFirstChar = FALSE,
++                         $surferIds = NULL) {
+     $result = array();
+-
+-    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
+-    $parser = new searchStringParser();
+-    if ($handleOnly) {
++    // backward compatibility for search fields parameter, handle only mode
++    if ($searchFields === TRUE) {
+       $searchFields = array('surfer_handle');
+-    } else {
++    } elseif ($searchFields === FALSE || $searchFields === NULL) {
+       $searchFields = array('surfer_handle', 'surfer_givenname', 'surfer_surname');
+     }
+-    if ($filter = $parser->getSQL($pattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
+-      $sql = "SELECT surfer_id,
+-                     surfer_handle,
+-                     surfer_email,
+-                     surfer_givenname,
+-                     surfer_surname
+-              FROM %s
+-              WHERE ".str_replace('%', '%%', $filter)." %s";
++    $whereCondition = '';
++    include_once(PAPAYA_INCLUDE_PATH.'system/base_searchstringparser.php');
++    $parser = new searchStringParser();
++    if ($patternFirstChar == TRUE) {
++      $parser->tokenMinLength = 1;
++    }
++    $validFilter = TRUE;
++    if (!empty($pattern)) {
++      if (!is_array($pattern)) {
++        $pattern = array($pattern);
++      }
++      foreach ($pattern as $currentPattern) {
++        if ($filter = $parser->getSQL($currentPattern, $searchFields, PAPAYA_SEARCH_BOOLEAN)) {
++          if ($patternFirstChar == TRUE) {
++            $filter = str_replace("LIKE '%", "LIKE '", $filter);
++          }
++          $whereCondition .= $whereCondition == '' ? " WHERE " : " AND ";
++          $whereCondition .= str_replace('%', '%%', $filter);
++        } else {
++          $validFilter = FALSE;
++        }
++      }
++    }
++    if (!empty($surferIds) && is_array($surferIds)) {
++      $whereCondition .= $whereCondition == '' ? " WHERE " : " AND ";
++      $whereCondition .= sprintf(" surfer_id IN ('%s') ", implode("','", $surferIds));
++    }
++    if ($validFilter == TRUE) {
++      if (is_array($orderBy)) {
++        $orderByField = ", CONCAT(".implode(",", $orderBy).") AS order_by";
++      } else {
++        $orderByField = "";
++      }
++      $sql = "SELECT surfer_id, surfer_handle, surfer_email,
++                     surfer_givenname, surfer_surname$orderByField
++                FROM %s
++                $whereCondition %s";
+       if (in_array($orderBy, array('surfer_handle', 'surfer_email', 'surfer_surname'))) {
+         $sql .= " ORDER BY ".$orderBy." ASC";
++      } elseif (is_array($orderBy)) {
++        $sql .= " ORDER BY order_by ASC";
+       }
+-      $blockedClause = ($includeBlocked === FALSE) ? ' AND surfer_valid != 4' : '';
++      $blockedClause = empty($whereCondition) ? " WHERE " : " AND ";
++      $blockedClause .= ($includeBlocked === FALSE) ? ' surfer_valid != 4' : '';
+       $sqlParams = array($this->tableSurfer, $blockedClause);
+-      if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
++      if ($res = $this->databaseQueryFmt($sql, $sqlParams, $limit, $offset)) {
+         while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++          if (isset($row['order_by'])) {
++            unset($row['order_by']);
++          }
+           $result[$row['surfer_id']] = $row;
+         }
++        $this->surfersAbsCount = $res->absCount();
+       }
+     }
+     return $result;
+@@ -3517,13 +3556,13 @@
+   * @param integer $lng Language id
+   * @return array $dynamicEditFields Fields configuration
+   */
+-  function getDynamicEditFields($fields, $prefix = '', $lng = 0) {
++  function getDynamicEditFields($fields, $prefix = '', $lng = 0, $getClasses = FALSE) {
+     // Create field condition
+     $fieldCondition = '';
+     if (is_numeric($fields) && $fields > 0) {
+-      $fieldCondition = sprintf(" surferdata_class = %d", $fields);
++      $fieldCondition = sprintf(" d.surferdata_class = %d", $fields);
+     } elseif (is_string($fields) && $fields != '0') {
+-      $fieldCondition = sprintf(" surferdata_name = '%s'", $fields);
++      $fieldCondition = sprintf(" d.surferdata_name = '%s'", $fields);
+     } elseif (is_array($fields)) {
+       // Check whether we have got an array of categories (numeric) or of names
+       $numeric = TRUE;
+@@ -3533,23 +3572,43 @@
+         }
+       }
+       if ($numeric) {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_class', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_class', $fields);
+       } else {
+-        $fieldCondition = $this->databaseGetSQLCondition('surferdata_name', $fields);
++        $fieldCondition = $this->databaseGetSQLCondition('d.surferdata_name', $fields);
+       }
+     }
+     if ($fieldCondition != '') {
+       $fieldCondition = " AND ".$fieldCondition;
+     }
+-    $sql = "SELECT surferdata_id, surferdata_name, surferdata_type,
+-                   surferdata_values, surferdata_check, surferdata_class,
+-                   surferdata_available, surferdata_mandatory, surferdata_order
+-              FROM %s
+-             WHERE surferdata_available = 1".
++
++    if ($getClasses = TRUE) {
++      $fieldSurferDataClassTitle = ", ct.surferdataclasstitle_name";
++      $joinSurferDataClassTitles = sprintf(
++        "JOIN %s AS ct ON (ct.surferdataclasstitle_classid = d.surferdata_class ".
++        "AND ct.surferdataclasstitle_lang = %d)",
++        $this->tableDataClassTitles,
++        $lng
++      );
++      $orderBySurferDataClassTitle = "ct.surferdataclasstitle_name, ";
++    } else {
++      $fieldSurferDataClassTitle = '';
++      $joinSurferDataClassTitles = '';
++      $orderBySurferDataClassTitle = '';
++    }
++
++    $sql = "SELECT d.surferdata_id, d.surferdata_name, d.surferdata_type,
++                   d.surferdata_values, d.surferdata_check, d.surferdata_class,
++                   d.surferdata_available, d.surferdata_mandatory, d.surferdata_order%s
++              FROM %s AS d
++              %s
++             WHERE d.surferdata_available = 1".
+                    $fieldCondition."
+-          ORDER BY surferdata_order, surferdata_name";
+-    $sqlParams = array($this->tableData);
++          ORDER BY %sd.surferdata_order, d.surferdata_name";
++    $sqlParams = array(
++      $fieldSurferDataClassTitle, $this->tableData, $joinSurferDataClassTitles, $orderBySurferDataClassTitle
++    );
+     $fields = array();
++
+     if ($res = $this->databaseQueryFmt($sql, $sqlParams)) {
+       while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
+         $fields[] = $row;
+@@ -3573,9 +3632,15 @@
+         }
+       }
+     }
++
+     // Create the edit fields
+     $dynamicEditFields = array();
++    $lastClassTitle = NULL;
+     foreach ($fields as $field) {
++      if ($getClasses == TRUE && $field['surferdataclasstitle_name'] != $lastClassTitle) {
++        $dynamicEditFields[] = $field['surferdataclasstitle_name'];
++        $lastClassTitle = $field['surferdataclasstitle_name'];
++      }
+       $fieldName = $field['surferdata_name'];
+       if ($prefix != '') {
+         $fieldName = $prefix.'_'.$fieldName;
+Index: papaya-lib/modules/_base/community/content_profile.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_profile.php	(Revision 38515)
++++ papaya-lib/modules/_base/community/content_profile.php	(Arbeitskopie)
+@@ -240,6 +240,10 @@
+           'Query string for redirect url',
+           ''
+         ),
++        'Dynamic Data',
++        'dynamic_class' => array(
++          'Categories', 'isNum', FALSE, 'function', 'callbackClasses'
++        )
+       ),
+     ),
+     array(
+@@ -576,6 +580,15 @@
+         ),
+         'caption_handle' => array('Handle', 'isNoHTML', TRUE, 'input', 200, '', 'Handle'),
+         'caption_email' => array('Email', 'isNoHTML', TRUE, 'input', 200, '', 'Email'),
++        'caption_section_email' => array(
++          'Section email',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Change email"',
++          ''
++        ),
+         'caption_change_email' => array(
+           'Change email',
+           'isNoHTML',
+@@ -617,6 +630,15 @@
+         'caption_female' => array('Female', 'isNoHTML', TRUE, 'input', 200, '', 'female'),
+         'caption_male' => array('Male', 'isNoHTML', TRUE, 'input', 200, '', 'male'),
+         'caption_avatar' => array('Avatar', 'isNoHTML', TRUE, 'input', 200, '', 'Avatar'),
++        'caption_section_password' => array(
++          'Section password',
++          'isNoHTML',
++          FALSE,
++          'input',
++          200,
++          'Adds a section caption above "Old password"',
++          ''
++        ),
+         'caption_old_password' => array(
+           'Old password',
+           'isNoHTML',
+@@ -705,6 +727,24 @@
+           '',
+           'Enter the new password twice or leave blank to keep the old one.'
+         ),
++        'descr_old_password' => array(
++          'Old password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password if you want to change your email.'
++        ),
++        'descr_need_old_password' => array(
++          'Change password',
++          'isSomeText',
++          FALSE,
++          'simplerichtext',
++          7,
++          '',
++          'Enter the old password to confirm changes.'
++        ),
+         'descr_delete_account' => array(
+           'Delete account',
+           'isSomeText',
+@@ -828,6 +868,9 @@
+     }
+ 
+     if ($this->data['change_email'] == 1) {
++      if (!empty($this->data['caption_section_email'])) {
++        $fields[] = $this->data['caption_section_email'];
++      }
+       $fields['surfer_new_email'] = array(
+         $this->data['caption_change_email'],
+         'isEmail',
+@@ -842,6 +885,9 @@
+     }
+ 
+     if ($this->data['change_password'] == 1) {
++      if (!empty($this->data['caption_section_password'])) {
++        $fields[] = $this->data['caption_section_password'];
++      }
+       $fields['surfer_password1'] = array(
+         $this->data['caption_new_password'],
+         'isPassword',
+@@ -854,21 +900,53 @@
+         'isSomeText',
+         FALSE,
+         'password',
+-        200
++        200,
++        $this->data['descr_change_password']
+       );
++    }
++    if (!empty($this->data['need_oldpassword']) || !empty($this->data['change_password'])) {
+       $fields['surfer_password3'] = array(
+         $this->data['caption_old_password'],
+         'isSomeText',
+-        FALSE,
++        !empty($this->data['need_oldpassword']),
+         'password',
+         200,
+-        $this->data['descr_change_password']
++        !empty($this->data['need_oldpassword']) ?
++          $this->data['descr_need_old_password'] : $this->data['descr_old_password']
+       );
+     }
+ 
++    // Add dynamic data fields
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $dynFields = $this->baseSurfers->getDynamicEditFields(
++        $this->data['dynamic_class'],
++        'dynamic',
++        $this->parentObj->topic['TRANSLATION']['lng_id'],
++        TRUE
++      );
++      $fields = array_merge($fields, $dynFields);
++    }
++
++    $data = $this->surferData;
++    // Get existing dynamic data
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      $fieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      $dynData = $this->baseSurfers->getDynamicData(
++        !empty($this->surferObj->surferId) ? $this->surferObj->surferId : '',
++        $fieldNames
++      );
++      if ($dynData != NULL) {
++        foreach ($dynData as $fieldName => $fieldValue) {
++          $data['dynamic_'.$fieldName] = $fieldValue;
++        }
++      }
++    }
++
+     $hidden = array('save' => 1);
+     $this->profileForm = new base_frontend_form(
+-      $this, $this->paramName, $fields, $this->surferData, $hidden
++      $this, $this->paramName, $fields, $data, $hidden
+     );
+     $this->profileForm->msgs = &$this->msgs;
+     $this->profileForm->loadParams();
+@@ -996,7 +1074,25 @@
+     if ($this->data['edit_gender'] == 0) {
+       unset($this->surferData['surfer_gender']);
+     }
+-    return $this->baseSurfers->saveSurfer($this->surferData);
++    $result = $this->baseSurfers->saveSurfer($this->surferData);
++
++    // Now save the dynamic data, if necessary
++    if (isset($this->data['dynamic_class']) && is_array($this->data['dynamic_class']) &&
++        !empty($this->data['dynamic_class'])) {
++      // Get the field names
++      $dynFieldNames = $this->baseSurfers->getDataFieldNames($this->data['dynamic_class']);
++      // Get those fields that are actually set
++      $dynFields = array();
++      foreach ($dynFieldNames as $fieldName) {
++        if (isset($this->profileForm->data['dynamic_'.$fieldName])) {
++          $dynFields[$fieldName] = $this->profileForm->data['dynamic_'.$fieldName];
++        }
++      }
++      if (!empty($dynFields)) {
++        $result = $result & $this->baseSurfers->setDynamicData($this->surferObj->surferId, $dynFields);
++      }
++    }
++    return $result;
+   }
+ 
+   /**
+@@ -1538,7 +1634,14 @@
+           // If an error field exists, the error_input message is displayed
+           // Otherwise it is a token error with a different message
+           if ($errorField == $field) {
+-            $result .= $this->getErrorMessageXml($this->data['error_input'], $errorField);
++            if (in_array(
++                  $errorField, array('surfer_password1', 'surfer_password2', 'surfer_password3'))
++               ) {
++              $message = $this->data['error_password'];
++            } else {
++              $message = $this->data['error_input'];
++            }
++            $result .= $this->getErrorMessageXml($message, $errorField);
+           } else {
+             $result .= $this->getErrorMessageXml(
+               'Invalid Token. Progress is canceled', $errorField
+@@ -1625,5 +1728,53 @@
+   function getCacheId() {
+     return FALSE;
+   }
++
++  /**
++  * Get form xml to select dynamic data categories by callback.
++  *
++  * @param string $name Field name
++  * @param array $element Field element configurations
++  * @param string $data Current field data
++  * @return string $result XML
++  */
++  function callbackClasses($name, $element, $data) {
++    $this->_initBaseSurfers();
++    $result = '';
++    $lng = $this->parentObj->topic['TRANSLATION']['lng_id'];
++    $commonTitle = $this->_gt('Category');
++    $sql = "SELECT c.surferdataclass_id,
++                   ct.surferdataclasstitle_classid,
++                   ct.surferdataclasstitle_name,
++                   ct.surferdataclasstitle_lang
++              FROM %s AS c LEFT OUTER JOIN %s AS ct
++                ON c.surferdataclass_id = ct.surferdataclasstitle_classid
++             WHERE ct.surferdataclasstitle_lang = %d";
++    $sqlParams = array(
++      $this->baseSurfers->tableDataClasses,
++      $this->baseSurfers->tableDataClassTitles,
++      $lng
++    );
++    if ($res = $this->baseSurfers->databaseQueryFmt($sql, $sqlParams)) {
++      while ($row = $res->fetchRow(DB_FETCHMODE_ASSOC)) {
++        if (isset($row['surferdataclasstitle_name']) &&
++            trim($row['surferdataclasstitle_name']) != '') {
++          $title = $row['surferdataclasstitle_name'];
++        } else {
++          $title = sprintf('%s %d', $commonTitle, $row['surferdataclass_id']);
++        }
++        $checked = (is_array($data) && in_array($row['surferdataclass_id'], $data)) ?
++          ' checked="checked"' : '';
++        $result .= sprintf(
++          '<input type="checkbox" name="%s[%s][]" value="%d" %s />%s'.LF,
++          $this->paramName,
++          $name,
++          $row['surferdataclass_id'],
++          $checked,
++          $title
++        );
++      }
++    }
++    return $result;
++  }
+ }
+ ?>
+Index: papaya-lib/modules/_base/community/content_userdata.php
+===================================================================
+--- papaya-lib/modules/_base/community/content_userdata.php	(Revision 38515)
++++ papaya-lib/modules/_base/community/content_userdata.php	(Arbeitskopie)
+@@ -522,7 +522,8 @@
+         $dynFields = $this->baseSurfers->getDynamicEditFields(
+           $this->data['dynamic_class'],
+           'dynamic',
+-          $this->parentObj->topic['TRANSLATION']['lng_id']
++          $this->parentObj->topic['TRANSLATION']['lng_id'],
++          TRUE
+         );
+         $fields = array_merge($fields, $dynFields);
+       }
+@@ -1005,4 +1006,4 @@
+     return $result;
+   }
+ }
+-?>
+\ No newline at end of file
++?>
+Index: papaya-lib/modules/_base/community/connector_surfers.php
+===================================================================
+--- papaya-lib/modules/_base/community/connector_surfers.php	(Revision 38515)
++++ papaya-lib/modules/_base/community/connector_surfers.php	(Arbeitskopie)
+@@ -629,18 +629,24 @@
+   *
+   * @see existID() for behavior on blocked surfers
+   * @see surfer_admin::searchSurfers Detailed description
+-  * @access public
+-  * @param string $pattern Search pattern
+-  * @param boolean $handleOnlyset to TRUE if you only want to search in surfer handles
++  * @param string|array $pattern Search pattern or multiple search patterns
++  * @param array|NULL $searchFields NULL = surfer_handle, surfer_givenname, surfer_surname
+   * @param boolean $includeBlocked Seach in blocked surfers too
+-  * @param string $orderBy Order search results by a given (NULL = disabled)
++  * @param string|array $orderBy One column or multiple column names (NULL = disabled)
++  * @param integer $limit max results to fetch
++  * @param integer $offset fetch results from offset
++  * @param boolean $patternFirstChar using a pattern to get the first char of result string
++  * @param array $surferIds filter results by a list of surfer ids
+   * @return array $result Surfers data (id, handle, email, givenname, surfname)
+   */
+-  function searchSurfers($pattern, $handleOnly = FALSE,
+-                         $includeBlocked = FALSE, $orderBy = 'surfer_handle') {
++  function searchSurfers($pattern, $searchFields = NULL,
++                         $includeBlocked = FALSE, $orderBy = 'surfer_handle',
++                         $limit = NULL, $offset = NULL, $patternFirstChar = FALSE,
++                         $surferIds = NULL) {
+     $this->_initSurferAdmin();
+     return $this->surferAdmin->searchSurfers(
+-      $pattern, $handleOnly, $includeBlocked, $orderBy
++      $pattern, $searchFields, $includeBlocked, $orderBy, $limit, $offset, $patternFirstChar,
++      $surferIds
+     );
+   }
+ 
+Index: papaya-lib/modules/_base/filter_xslt.php
+===================================================================
+--- papaya-lib/modules/_base/filter_xslt.php	(Revision 38515)
++++ papaya-lib/modules/_base/filter_xslt.php	(Arbeitskopie)
+@@ -161,8 +161,8 @@
+         } else {
+           $fileData = file_get_contents($this->getTemplatePath().$this->data['xslfile']);
+           if (preg_match('(<!--\s*(@papaya.*?)-->)si', $fileData, $match)) {
+-            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mi', $match[1], $match)) {
+-              $moduleNames = explode(',', $match[1]);
++            if (preg_match('((?:^|\s)@papaya:modules\s+(.*)(?:$))mis', $match[1], $match)) {
++              $moduleNames = explode(',', preg_replace('/^\s+|\n|\r|\s+$/m', '', $match[1]));
+               foreach ($moduleNames as $key => $value) {
+                 $moduleNames[trim($value)] = TRUE;
+                 unset($moduleNames[$key]);
+Index: papaya-lib/modules/free/calendar/output_calendar.php
+===================================================================
+--- papaya-lib/modules/free/calendar/output_calendar.php	(Revision 38515)
++++ papaya-lib/modules/free/calendar/output_calendar.php	(Arbeitskopie)
+@@ -611,10 +611,10 @@
+         isset($this->contentModules[$this->date['date_content_guid']])) {
+       // sets module to local variable and content from date to xml
+       $module = $this->contentModules[$this->date['date_content_guid']];
+-      $content = (strpos($this->date['date_data'], '<data>') === 0) ?
++      $content = (strpos($this->date['date_data'], '<data') === 0) ?
+         $this->date['date_data'] :
+       sprintf(
+-        '<data><data-element name="text"><![CDATA[%s]]></data-element></data>',
++        '<data version="2"><data-element name="text"><![CDATA[%s]]></data-element></data>',
+         papaya_strings::escapeHTMLChars($this->date['date_data'])
+       );
+       // uses getModuleEdit to get content formular
+Index: papaya-lib/modules/free/thumbs/modules.xml
+===================================================================
+--- papaya-lib/modules/free/thumbs/modules.xml	(Revision 38515)
++++ papaya-lib/modules/free/thumbs/modules.xml	(Arbeitskopie)
+@@ -5,7 +5,7 @@
+   <modules>
+     <module type="page" guid="ad2d3a0d522fa9f7c991b0a485c1138c" name="Downloads" class="content_download" file="content_download.php">Page module that displays a download list using the contents of a MediaDB folder.</module>
+     <module type="page" guid="61a6d514dc0e8edb79a370d22d5a6449" name="Uploads" class="content_upload" file="content_upload.php">Upload form that stores any image in a given MediaDB folder.</module>
+-    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Thumbnails" class="content_thumbs" file="content_thumbs.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
++    <module type="page" guid="c6d7a3e53376ec764ae9450019c28270" name="Image Gallery" class="MediaImageGalleryPage" file="Image/Gallery/Page.php">Page module that creates an image gallery using the images of a MediaDB folder.</module>
+     <module type="box" guid="cfc171342d0c34c412127b11f5baa008" name="Random Image" class="actionbox_thumbnail" file="actbox_thumbnail.php" outputfilter="no">A box module that displays a random image from the MediaDB.</module>
+   </modules>
+   <tables>
+Index: papaya-lib/modules/free/thumbs/content_thumbs.php
+===================================================================
+--- papaya-lib/modules/free/thumbs/content_thumbs.php	(Revision 38515)
++++ papaya-lib/modules/free/thumbs/content_thumbs.php	(Arbeitskopie)
+@@ -1,540 +0,0 @@
+-<?php
+-/**
+-* Page module - thumbnail gallery.
+-*
+-* @copyright 2002-2007 by papaya Software GmbH - All rights reserved.
+-* @link http://www.papaya-cms.com/
+-* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
+-*
+-* You can redistribute and/or modify this script under the terms of the GNU General Public
+-* License (GPL) version 2, provided that the copyright and license notes, including these
+-* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
+-* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+-* FOR A PARTICULAR PURPOSE.
+-*
+-* @package Papaya-Modules
+-* @subpackage Free-Media
+-* @version $Id$
+-*/
+-
+-/**
+-* Basic class page module
+-*/
+-require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
+-
+-/**
+-* Basic mediadb class for file and folder access
+-*/
+-require_once(PAPAYA_INCLUDE_PATH.'system/base_mediadb.php');
+-
+-
+-/**
+-* Page module - Thumbnail Gallery.
+-*
+-* @package Papaya-Modules
+-* @subpackage Free-Media
+-*/
+-class content_thumbs extends base_content {
+-
+-  /**
+-  * Content edit fields
+-  * @var array $editFields
+-  */
+-  var $editFields = array(
+-    'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
+-      array(0 => 'Yes', 1 => 'No'), 'Apply linebreaks from input to the HTML output.', 0
+-    ),
+-    'title' => array('Title', 'isSomeText', FALSE, 'input', 400, '', ''),
+-    'subtitle' => array('Subtitle', 'isSomeText', FALSE, 'input', 400, '', ''),
+-    'teaser' => array('Teaser', 'isSomeText', FALSE, 'simplerichtext', 5, '', ''),
+-    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 10, '', ''),
+-
+-    'Thumbnails',
+-    'directory' => array('Folder', 'isNum', TRUE, 'mediafolder'),
+-    'maxperpage' => array('Thumbnail count', 'isNum', TRUE, 'input', 5, '', 9),
+-    'maxperline' => array('Column count', 'isNum', TRUE, 'input', 5, '', 3),
+-    'resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
+-      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
+-        'mincrop' => 'Minimum cropped'), '', 'max'),
+-    'thumbwidth' => array('Thumbnail width', 'isNum', TRUE, 'input', 5, '', 100),
+-    'thumbheight' => array('Thumbnail height', 'isNum', TRUE, 'input', 5, '', 100),
+-    'order' => array('Sort type', 'isNoHTML', TRUE, 'translatedcombo',
+-      array('name' => 'File name', 'date' => 'File date'), '', 'name'),
+-    'sort' => array('Sort order', 'isNoHTML', TRUE, 'translatedcombo',
+-      array('asc' => 'Ascending', 'desc' => 'Descending'), '', 'asc'),
+-
+-    'Images',
+-    'display_title' => array('Display title?', 'isNoHTML', TRUE, 'translatedcombo',
+-       array('false' => 'no', 'true' => 'yes'), 'Display title in lightbox?', 'false'),
+-    'show_mode' => array('Large images', 'isNum', TRUE, 'translatedcombo',
+-      array(
+-        0 => 'Show resized', 1 => 'Show original', 2 => 'Download', 3 => 'Download + Resized'
+-      ), '', 0
+-    ),
+-    'width' => array('Width', 'isNum', TRUE, 'input', 5, '', 640),
+-    'height' => array('Height', 'isNum', TRUE, 'input', 5, '', 480),
+-    'show_resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
+-      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
+-        'mincrop' => 'Minimum cropped'), '', 'max')
+-  );
+-
+-  /**
+-  * Get parsed teaser
+-  *
+-  * @access public
+-  * @return string $result
+-  */
+-  function getParsedTeaser() {
+-    $this->setDefaultData();
+-    $result = sprintf(
+-      '<title>%s</title>'.LF,
+-      papaya_strings::escapeHTMLChars($this->data['title'])
+-    );
+-    $result .= sprintf(
+-      '<subtitle>%s</subtitle>'.LF,
+-      $this->getXHTMLString($this->data['subtitle'])
+-    );
+-    $result .= sprintf(
+-      '<text>%s</text>'.LF,
+-      $this->getXHTMLString(
+-        $this->data['teaser'],
+-        !((bool)$this->data['nl2br'])
+-      )
+-    );
+-
+-    $this->mediaDB = &base_mediadb::getInstance();
+-    $sort = $this->data['sort'];
+-    $order = $this->data['order'];
+-    if (!empty($this->data['directory'])) {
+-      $files = array_keys(
+-        $this->mediaDB->getFiles($this->data['directory'], 1, 0, $order, $sort)
+-      );
+-      if (!empty($files[0])) {
+-        $result .= sprintf(
+-          '<image>%s</image>'.LF,
+-          $this->getPapayaImageTag($files[0])
+-        );
+-      }
+-    }
+-    return $result;
+-  }
+-
+-  /**
+-  * Get parsed data
+-  *
+-  * build an XML string containing either...
+-  * an image with links to previous image and next image or...
+-  * a page containing thumbnails with links to the previous and next pages of thumbnails.
+-  *
+-  * @access public
+-  * @return string $result
+-  */
+-  function getParsedData() {
+-    $this->setDefaultData();
+-    $this->mediaDB = &base_mediadb::getInstance();
+-    $this->initializeParams();
+-
+-    $result = '';
+-
+-    $result .= sprintf(
+-      '<title>%s</title>'.LF,
+-      papaya_strings::escapeHTMLChars($this->data['title'])
+-    );
+-    $result .= sprintf(
+-      '<subtitle>%s</subtitle>'.LF,
+-      papaya_strings::escapeHTMLChars($this->data['subtitle'])
+-    );
+-    $result .= sprintf(
+-      '<text>%s</text>'.LF,
+-      $this->getXHTMLString($this->data['text'], !((bool)$this->data['nl2br']))
+-    );
+-    // options subsection
+-    $result .= '<options>'.LF;
+-    // maximum no. thumbnails per line
+-    $result .= sprintf(
+-      '<maxperline>%d</maxperline>'.LF,
+-      (int)$this->data['maxperline']
+-    );
+-    // width of thumbnails in pixels
+-    $result .= sprintf(
+-      '<thumbwidth>%d</thumbwidth>'.LF,
+-      (int)$this->data['thumbwidth']
+-    );
+-    // height of thumbnails in pixels
+-    $result .= sprintf(
+-      '<thumbheight>%d</thumbheight>'.LF,
+-      (int)$this->data['thumbheight']
+-    );
+-    $result .= sprintf(
+-      '<width>%d</width>'.LF,
+-      (int)$this->data['width']
+-    );
+-    $result .= sprintf(
+-      '<height>%d</height>'.LF,
+-      (int)$this->data['height']
+-    );
+-    switch ($this->data['show_mode']) {
+-    case 2 : //download images
+-      $mode = 'download';
+-      break;
+-    case 1 : //show originals
+-      $mode = 'original';
+-      break;
+-    case 0 :
+-    default :
+-      $mode = 'resized';
+-      break;
+-    }
+-    $result .= sprintf(
+-      '<mode>%s</mode>'.LF,
+-      papaya_strings::escapeHTMLChars($mode)
+-    );
+-    $result .= sprintf(
+-      '<displaytitle>%s</displaytitle>'.LF,
+-      papaya_strings::escapeHTMLChars($this->data['display_title'])
+-    );
+-    $result .= '</options>'.LF;
+-    // end of options subsection.
+-
+-    // make sure the number of thumbnails per page makes sense
+-    if (!isset($this->data['maxperpage']) || $this->data['maxperpage'] <= 1) {
+-      $this->data['maxperpage'] = 9;
+-    }
+-
+-    // calculate offset for file retrieval by idx (page)
+-    if (isset($this->params['idx']) && (int)$this->params['idx'] >= $this->data['maxperpage']) {
+-      $min = (floor($this->params['idx'] / $this->data['maxperpage']) * $this->data['maxperpage']);
+-    } else {
+-      $min = 0;
+-    }
+-
+-    $sort = (isset($this->data['sort'])) ? $this->data['sort'] : 'asc';
+-    $order = (isset($this->data['order'])) ? $this->data['order'] : 'name';
+-    if (empty($this->data['directory'])) {
+-      $files = array();
+-      $filesTrans = array();
+-      $count = 0;
+-    } else {
+-      $files = $this->mediaDB->getFiles(
+-        $this->data['directory'],
+-        $this->data['maxperpage'],
+-        $min,
+-        $order,
+-        $sort
+-      );
+-      // load file translation data
+-      $filesTrans = $this->mediaDB->getFileTrans(
+-        array_keys($files),
+-        $this->parentObj->currentLanguage['lng_id']
+-      );
+-      // resets array indices to numbers, instead of file ids
+-      $files = array_values($files);
+-      $count = $this->mediaDB->absCount;
+-    }
+-
+-    // make sure offset doesn't outrun actual number of images
+-    if ($min < 0) {
+-      $min = 0;
+-    } elseif ($min >= $count) {
+-      $min = $count - (int)$this->data['maxperpage'] - 1;
+-    }
+-    $max = $min + (int)$this->data['maxperpage'];
+-    if ($max > $count) {
+-      $max = $count;
+-    }
+-
+-    if (isset($this->params['mode']) &&
+-        isset($this->params['img']) &&
+-        $this->params['mode'] == 'max' &&
+-        $this->params['img'] >= 0) {
+-      // build xml document displaying current image,
+-      // with links to next and previous images.
+-
+-      $result .= '<image>';   // start image block
+-      $file = $files[$this->params['img']];    // retrieve filename
+-
+-      // get thumbnail object for generating resized image
+-      include_once(PAPAYA_INCLUDE_PATH.'/system/base_thumbnail.php');
+-      $thumbnailObj = new base_thumbnail();
+-      //get size for image tag
+-      // build papaya xml media tag
+-      $imageSrc = $this->getWebMediaLink(
+-        $thumbnailObj->getThumbnail(
+-          $file['file_id'],
+-          NULL,
+-          $this->data['width'],
+-          $this->data['height'],
+-          $this->data['show_resize']
+-        ),
+-        'thumb'
+-      );
+-      list($width, $height) = $thumbnailObj->lastThumbSize;
+-      $result .= sprintf(
+-        '<img src="%s" style="width: %dpx; height: %dpx" />'.LF,
+-        $imageSrc,
+-        (int)$width,
+-        (int)$height
+-      );
+-
+-      $result .= '</image>';  // end image block
+-      if (!empty($filesTrans[$file['file_id']]['file_title'])) {
+-        $result .= sprintf(
+-           '<imagetitle>%s</imagetitle>',
+-           papaya_strings::escapeHTMLChars($filesTrans[$file['file_id']]['file_title'])
+-        );
+-      }
+-      // image comment
+-      if (!empty($filesTrans[$file['file_id']]['file_description'])) {
+-        $result .= sprintf(
+-          '<imagecomment>%s</imagecomment>',
+-          $this->getXHTMLString($filesTrans[$file['file_id']]['file_description'], TRUE)
+-        );
+-      }
+-
+-      // navigation control block
+-      $result .= '<navigation>'.LF;
+-
+-      // if not at the first image
+-      if ((int)$this->params['idx'] > 0 || (int)$this->params['img'] > 0) {
+-        // work out parameters for previous
+-        $imgIdx = $this->params['img'] - 1;
+-        if ($imgIdx < 0) {
+-          $imgIdx = $this->data['maxperpage'] - 1;
+-          $pageIdx = $this->params['idx'] - $this->data['maxperpage'];
+-        } else {
+-          $pageIdx = $this->params['idx'];
+-        }
+-
+-        // construct html link to previous
+-        $href = $this->getWebLink(
+-          NULL,
+-          NULL,
+-          NULL,
+-          array(
+-            'mode' => 'max',
+-            'idx' => $pageIdx,
+-            'img' => $imgIdx,
+-            'page_id' => $this->parentObj->topicId
+-          ),
+-          $this->paramName
+-        );
+-
+-        //add link to xml list
+-        $result .= sprintf(
+-          '<navlink dir="prior" href="%s" />'.LF,
+-          papaya_strings::escapeHTMLChars($href)
+-        );
+-      }
+-
+-      // build link to current and add to html list
+-      $result .= sprintf(
+-        '<navlink dir="index" href="%s" />' . LF,
+-        papaya_strings::escapeHTMLChars(
+-          $this->getWebLink(
+-            NULL, NULL, NULL, array('idx' => (int)$this->params['idx']), $this->paramName
+-          )
+-        )
+-      );
+-
+-      // if we are not at last image
+-      if ((int)$this->params['img'] + $min < ($count - 1)) {
+-        // calculate parameters for next
+-        $imgIdx = $this->params['img'] + 1;
+-        if ($imgIdx >= (int)$this->data['maxperpage']) {
+-          $imgIdx = 0;
+-          $pageIdx = $this->params['idx'] + $this->data['maxperpage'];
+-        } else {
+-          $pageIdx = $this->params['idx'];
+-        }
+-
+-        // build link for next
+-        $href = $this->getWebLink(
+-          NULL,
+-          NULL,
+-          NULL,
+-          array(
+-            'mode' => 'max',
+-            'idx' => $pageIdx,
+-            'img' => $imgIdx,
+-            'page_id' => $this->parentObj->topicId
+-          ),
+-          $this->paramName
+-        );
+-
+-        // add link to list for next
+-        $result .= sprintf(
+-          '<navlink dir="next" href="%s" />'.LF,
+-          papaya_strings::escapeHTMLChars($href)
+-        );
+-      }
+-
+-      $result .= '</navigation>' . LF;
+-      // end of navigation control block
+-    } else {
+-      // build list of thumbnails
+-      $result .= '<thumbnails>'.LF;
+-
+-      // get thumbnail object for generating linked thumbnails
+-      include_once(PAPAYA_INCLUDE_PATH.'/system/base_thumbnail.php');
+-      $thumbnailObj = new base_thumbnail();
+-
+-      // process the list of thumbnail files
+-      foreach ($files as $i => $file) {
+-        $fileId = $file['file_id'];
+-
+-        // get translated or own title
+-        $fileTitle = '';
+-        if (isset($filesTrans) && is_array($filesTrans) &&
+-            isset($filesTrans[$fileId]) && !empty($filesTrans[$fileId]['file_title'])) {
+-          $fileTitle = $filesTrans[$fileId]['file_title'];
+-        } elseif (!empty($file['file_title'])) {
+-          $fileTitle = $file['file_title'];
+-        } else {
+-          $fileTitle = '';
+-        }
+-        // get translated or own description
+-        $fileDescription = '';
+-        if (isset($filesTrans) && is_array($filesTrans) &&
+-            isset($filesTrans[$fileId]) && !empty($filesTrans[$fileId]['file_description'])) {
+-          $fileDescription = $filesTrans[$fileId]['file_description'];
+-        } elseif (!empty($file['file_description'])) {
+-          $fileDescription = $file['file_description'];
+-        } else {
+-          $fileDescription = '';
+-        }
+-        // build a direct link to the image's thumb, will generate it if needed
+-        switch ($this->data['show_mode']) {
+-        case 3 : //download images and resized version
+-          $forHref = $this->getWebMediaLink(
+-            $thumbnailObj->getThumbnail(
+-              $file['file_id'],
+-              NULL,
+-              $this->data['width'],
+-              $this->data['height'],
+-              $this->data['show_resize']
+-            ),
+-            'thumb',
+-            $fileTitle
+-          );
+-          list($imageWidth, $imageHeight) = $thumbnailObj->lastThumbSize;
+-          $href = $this->getWebMediaLink(
+-            $file['file_id'], 'download', $fileTitle, $file['mimetype_ext']
+-          );
+-          break;
+-        case 2 : //download images no resized versions
+-          $forHref = $this->getWebMediaLink(
+-            $file['file_id'], 'media', $fileTitle, $file['mimetype_ext']
+-          );
+-          $imageWidth = $file['width'];
+-          $imageHeight = $file['height'];
+-          $href = $this->getWebMediaLink(
+-            $file['file_id'], 'download', $fileTitle, $file['mimetype_ext']
+-          );
+-          break;
+-        case 1 : //direct image links
+-          $forHref = $this->getWebMediaLink(
+-            $file['file_id'], 'media', $fileTitle, $file['mimetype_ext']
+-          );
+-          $imageWidth = $file['width'];
+-          $imageHeight = $file['height'];
+-          $href = $forHref;
+-          break;
+-        case 0 : //resized images
+-        default :
+-          $forHref = $this->getWebMediaLink(
+-            $thumbnailObj->getThumbnail(
+-              $file['file_id'],
+-              NULL,
+-              $this->data['width'],
+-              $this->data['height'],
+-              $this->data['show_resize']
+-            ),
+-            'thumb',
+-            $fileTitle
+-          );
+-          list($imageWidth, $imageHeight) = $thumbnailObj->lastThumbSize;
+-          $href = $this->getWebLink(
+-            NULL,
+-            NULL,
+-            NULL,
+-            array(
+-              'mode' => 'max',
+-              'idx' => (empty($this->params['idx'])) ? 0 : (int)$this->params['idx'],
+-              'img' => $i,
+-              'page_id' => $this->parentObj->topicId
+-            ),
+-            $this->paramName
+-          );
+-          break;
+-        }
+-
+-        $thumbSrc = $this->getWebMediaLink(
+-          $thumbnailObj->getThumbnail(
+-            $file['file_id'],
+-            NULL,
+-            $this->data['thumbwidth'],
+-            $this->data['thumbheight'],
+-            $this->data['resize']
+-          ),
+-          'thumb',
+-          $fileTitle
+-        );
+-        list($thumbWidth, $thumbHeight) = $thumbnailObj->lastThumbSize;
+-
+-        // build thumbnail media link
+-        $result .= sprintf(
+-          '<thumb for="%s" title="%s" width="%d" height="%d" mimetype="%s" updated="%s">'.
+-          '<a href="%s"><img src="%s" style="width: %dpx; height: %dpx" /></a>'.
+-          '<description>%s</description>'.
+-          '</thumb>'.LF,
+-          papaya_strings::escapeHTMLChars($forHref),
+-          papaya_strings::escapeHTMLChars($fileTitle),
+-          (int)$imageWidth,
+-          (int)$imageHeight,
+-          papaya_strings::escapeHTMLChars($file['mimetype']),
+-          PapayaUtilDate::timestampToString($file['file_date']),
+-          papaya_strings::escapeHTMLChars($href),
+-          papaya_strings::escapeHTMLChars($thumbSrc),
+-          (int)$thumbWidth,
+-          (int)$thumbHeight,
+-          $this->getXHTMLString($fileDescription)
+-        );
+-      }
+-      //end thumbnails
+-      $result .= '</thumbnails>' . LF;
+-
+-      //start navigation
+-      $result .= '<navigation>' . LF;
+-
+-      $min = (int)$min;
+-      $max = (int)$max;
+-      if ($max < $count) {
+-        // if not at last page, build a 'next' link
+-        $result .= sprintf(
+-          '<navlink dir="next" href="%s" />'.LF,
+-          papaya_strings::escapeHTMLChars(
+-            $this->getWebLink(NULL, NULL, NULL, array('idx' => $max), $this->paramName)
+-          )
+-        );
+-      }
+-
+-      if ($min > 0) {
+-        // if not at first page, build a 'previous' link
+-        $min -= $this->data['maxperpage'];
+-        if ($min < 0) {
+-          $min = 0;
+-        }
+-        $result .= sprintf(
+-          '<navlink dir="prior" href="%s" />'.LF,
+-          papaya_strings::escapeHTMLChars(
+-            $this->getWebLink(NULL, NULL, NULL, array('idx' => $min), $this->paramName)
+-          )
+-        );
+-      }
+-
+-      // end of navigation block
+-      $result .= '</navigation>' . LF;
+-    }
+-    return $result;
+-  }
+-}
+\ No newline at end of file
+Index: papaya-lib/modules/free/thumbs/Image/Gallery.php
+===================================================================
+--- papaya-lib/modules/free/thumbs/Image/Gallery.php	(Revision 0)
++++ papaya-lib/modules/free/thumbs/Image/Gallery.php	(Revision 0)
+@@ -0,0 +1,457 @@
++<?php
++/**
++* Media image gallery
++*
++* @copyright 2002-2013 by papaya Software GmbH - All rights reserved.
++* @link http://www.papaya-cms.com/
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++* @version $Id: $
++*/
++
++
++/**
++* Media image gallery
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++*/
++class MediaImageGallery extends PapayaUiControlInteractive {
++
++  /**
++   * Current language id
++   * @var integer
++   */
++  public $languageId = NULL;
++
++  /**
++   * Module obect to use some methods from
++   * @var base_content|base_actionbox
++   */
++  protected $_module = NULL;
++
++  /**
++   * Title, subtitle and text of gallery
++   * @var array
++   */
++  protected $_content = array();
++
++  /**
++   * Options to display gallery
++   * @var array
++   */
++  protected $_options = array();
++
++  /**
++   * Folder contents
++   * @var array
++   */
++  protected $_folder = array();
++
++  /**
++   * Properties to load media db folder
++   * @var array
++   */
++  protected $_folderProperties = array();
++
++  /**
++   * Links to get navigation
++   * @var array
++   */
++  protected $_navigationLinks = array();
++
++  /**
++   * Media DB object to get image files
++   * @var base_mediadb
++   */
++  protected $_mediaDB = NULL;
++
++  /**
++  * Reference object to create urls
++  * @var PapayaUiReference
++  */
++  protected $_reference = NULL;
++
++  /**
++   * Initialize properties by module configuration data and data mode (all or teaser)
++   */
++  public function initialize($module, $data, $dataMode = 'all') {
++    $this->_module = $module;
++    $this->_content = array(
++      'title' => $data['title'],
++      'subtitle' => $data['subtitle'],
++      'text' => $this->_module->getXHTMLString(
++        $dataMode == 'teaser' ? $data['teaser'] : $data['text'], !((bool)$data['nl2br'])
++      )
++    );
++    $offset = (int)$this->parameters()->get('offset', 0); // current page or image offset
++    $enlarge = (int)$this->parameters()->get('enlarge', 0); // parameter for enlarge view
++    if ($dataMode == 'all') {
++      // options
++      switch ($data['show_mode']) {
++      case 5: // show resized images with download image links
++        $showMode = 'resized-with-download-link';
++        break;
++      case 4: // show resized images with original links
++        $showMode = 'resized-with-original-link';
++        break;
++      case 3: // download resized images
++        $showMode = 'download-resized';
++        break;
++      case 2: // download images
++        $showMode = 'download';
++        break;
++      case 1: // show original images
++        $showMode = 'original';
++        break;
++      case 0:
++      default: // show resized images
++        $showMode = 'resized';
++        break;
++      }
++      $this->_options = array(
++        'max_per_line' => (int)$data['maxperline'],
++        'thumb_width' => (int)$data['thumbwidth'],
++        'thumb_height' => (int)$data['thumbheight'],
++        'thumb_resize' => $data['resize'],
++        'width' => (int)$data['width'],
++        'height' => (int)$data['height'],
++        'resize' => $data['show_resize'],
++        'mode' => $showMode,
++        'data_mode' => $dataMode,
++        'lightbox' => (int)$data['show_lightbox'],
++        'enlarge' => (int)$enlarge,
++        'display_title' => $data['display_title'] == 'true' ? 1 : 0,
++        'display_description' => $data['display_comment'] == 'true' ? 1 : 0
++      );
++      // properties for image thumbnails
++      if ($this->_options['enlarge'] == 0) {
++        $limit = (!isset($data['maxperpage']) || $data['maxperpage'] <= 1) ? 9 : $data['maxperpage'];
++        $this->_folderProperties = array(
++          'limit' => $limit,
++          'offset' => (!empty($offset) && $offset >= $limit) ? floor($offset / $limit) * $limit : 0
++        );
++      } else {
++        $indexOffset = (int)$this->parameters()->get('index', 0);
++        $this->_folderProperties = array(
++          'limit' => 1, 'offset' => $offset, 'index_offset' => $indexOffset
++        );
++      }
++    } else {
++      // properties for teaser image thumbnails
++      $this->_folderProperties = array('limit' => 1, 'offset' => 0);
++    }
++    $this->_folderProperties['sort_order'] = isset($data['sort']) ? $data['sort'] : 'asc';
++    $this->_folderProperties['sort_type'] = isset($data['order']) ? $data['order'] : 'name';
++    $this->_folderProperties['id'] = !empty($data['directory']) ? $data['directory'] : NULL;
++    if ($this->_options['data_mode'] == 'all') {
++      $reference = clone $this->reference();
++      if (isset($this->_folderProperties['index_offset'])) {
++        $reference->setParameters(
++          array('index' => $this->_folderProperties['index_offset']), $this->parameterGroup()
++        );
++      }
++      // navigation link previous
++      if ($this->_folderProperties['offset'] > 0) {
++        $previousReference = clone $reference;
++        if ($this->_options['enlarge'] == 1) {
++          $newOffset = $this->_folderProperties['offset'] - 1;
++          $previousReference->setParameters(array('enlarge' => 1), $this->parameterGroup());
++        } else {
++          $newOffset = $this->_folderProperties['offset'] - $this->_folderProperties['limit'];
++        }
++        $previousReference->setParameters(array('offset' => $newOffset), $this->parameterGroup());
++        $this->_navigationLinks['previous'] = $previousReference->getRelative();
++      }
++      // navigation link index
++      if ($this->_options['enlarge'] == 1) {
++        $indexReference = clone $this->reference();
++        $indexReference->setParameters(
++          array('offset' => $this->_folderProperties['index_offset']), $this->parameterGroup()
++        );
++        $this->_navigationLinks['index'] = $indexReference->getRelative();
++      }
++      // navigation link next
++      $nextReference = clone $reference;
++      if ($this->_options['enlarge'] == 1) {
++        $newOffset = $this->_folderProperties['offset'] + 1;
++        $nextReference->setParameters(array('enlarge' => 1), $this->parameterGroup());
++      } else {
++        $newOffset = $this->_folderProperties['offset'] + $this->_folderProperties['limit'];
++      }
++      $nextReference->setParameters(array('offset' => $newOffset), $this->parameterGroup());
++      $this->_navigationLinks['next'] = $nextReference->getRelative();
++    }
++  }
++
++  /**
++   * Get/set mediaDB object
++   *
++   * @param base_mediadb $mediaDB
++   * @return base_mediadb
++   */
++  public function mediaDB(base_mediadb $mediaDB = NULL) {
++    if (isset($mediaDB)) {
++      $this->_mediaDB = $mediaDB;
++    } elseif (is_null($this->_mediaDB)) {
++      include_once(PAPAYA_INCLUDE_PATH.'system/base_mediadb.php');
++      $this->_mediaDB = &base_mediadb::getInstance();
++    }
++    return $this->_mediaDB;
++  }
++
++  /**
++   * Load gallery images / thumbnails by media db and folder properties
++   */
++  public function load() {
++    $this->_folder['files'] = $this->mediaDB()->getFiles(
++      $this->_folderProperties['id'],
++      $this->_folderProperties['limit'],
++      $this->_folderProperties['offset'],
++      $this->_folderProperties['sort_order'],
++      $this->_folderProperties['sort_type']
++    );
++    if (!empty($this->_folder['files']) && $this->_options['data_mode'] == 'all') {
++      // load file translation data
++      $this->_folder['translations'] = $this->mediaDB()->getFileTrans(
++        array_keys($this->_folder['files']), $this->languageId
++      );
++    }
++    $this->_folder['absolute_count'] = $this->mediaDB()->absCount;
++  }
++
++  /**
++   * Create dom node structure of the given object and append it to the given xml
++   * element node.
++   *
++   * @param PapayaXmlElement $parent
++   */
++  public function appendTo(PapayaXmlElement $parent) {
++    foreach ($this->_content as $contentName => $contentValue) {
++      $content = $parent->appendElement($contentName);
++      $content->appendXml($contentValue);
++    }
++    if (!empty($this->_options)) {
++      $options = $parent->appendElement('options');
++      foreach ($this->_options as $optionName => $optionValue) {
++        $options->appendElement($optionName, array(), PapayaUtilStringXml::escape($optionValue));
++      }
++    }
++    if (!empty($this->_folder['files'])) {
++      if ($this->_options['enlarge'] == 1 || $this->_options['data_mode'] == 'teaser') {
++        $this->_appendImageTo($parent, reset(array_keys($this->_folder['files'])));
++      } else {
++        $this->_appendImagesTo($parent);
++      }
++      $this->_appendNavigationTo($parent);
++    }
++  }
++
++  /**
++   * Append images by files in folder to parent element
++   *
++   * @param PapayaXmlElement $parent
++   */
++  protected function _appendImagesTo(PapayaXmlElement $parent) {
++    $images = $parent->appendElement('images');
++    $fileOffset = 0;
++    foreach ($this->_folder['files'] as $fileId => $file) {
++      $this->_appendImageTo($images, $fileId, $fileOffset, TRUE);
++      $fileOffset++;
++    }
++  }
++
++  /**
++   * Append image or image thumbnail by current file id to parent element
++   *
++   * @param PapayaXmlElement $parent
++   * @param integer $currentFileId
++   * @param integer $fileOffset of current file in folder
++   * @param boolean $thumbnail
++   */
++  protected function _appendImageTo(
++              PapayaXmlElement $parent, $fileId, $fileOffset = 0, $thumbnail = FALSE
++            ) {
++    $fileTitle = !empty($this->_folder['translations'][$fileId]['file_title']) ?
++      $this->_folder['translations'][$fileId]['file_title'] : NULL;
++    $fileDescription = !empty($this->_folder['translations'][$fileId]['file_description']) ?
++      $this->_folder['translations'][$fileId]['file_description'] : NULL;
++
++    if ($thumbnail == TRUE) {
++      // build a direct link to the image's thumb, will generate it if needed
++      switch ($this->_options['mode']) {
++      case 'download-resized': // download images resized version
++        $destinationImageTag = PapayaUtilStringPapaya::getImageTag(
++          $fileId,
++          $this->_options['width'],
++          $this->_options['height'],
++          '',
++          $this->_options['resize'],
++          ''
++        );
++        include_once(PAPAYA_INCLUDE_PATH.'/system/base_thumbnail.php');
++        $thumbnailObj = new base_thumbnail();
++        $destinationImageLink = $this->_module->getWebMediaLink(
++          $thumbnailObj->getThumbnail(
++            $fileId,
++            NULL,
++            $this->_options['width'],
++            $this->_options['height'],
++            $this->_options['resize']
++          ),
++          'thumb',
++          $fileTitle
++        );
++        break;
++      case 'download': // download image no resized version
++        $destinationImageTag = PapayaUtilStringPapaya::getImageTag($fileId);
++        $destinationImageLink = $this->_module->getWebMediaLink(
++          $fileId, 'download', $fileTitle, $this->_folder['files'][$fileId]['mimetype_ext']
++        );
++        break;
++      case 'original': // show original image
++        $destinationImageTag = PapayaUtilStringPapaya::getImageTag($fileId);
++        $destinationImageLink = $this->_module->getWebMediaLink(
++          $fileId, 'media', $fileTitle, $this->_folder['files'][$fileId]['mimetype_ext']
++        );
++        break;
++      case 'resized-with-download-link': // show resized image page with download link
++      case 'resized-with-original-link': // show resized image page with original link
++      case 'resized': // show resized image page
++      default:
++        $destinationImageTag = PapayaUtilStringPapaya::getImageTag(
++          $fileId,
++          $this->_options['width'],
++          $this->_options['height'],
++          '',
++          $this->_options['resize']
++        );
++        $reference = clone $this->reference();
++        $reference->setParameters(
++          array(
++            'index' => $this->_folderProperties['offset'],
++            'enlarge' => 1,
++            'offset' => $this->_folderProperties['offset'] + $fileOffset
++          ),
++          $this->parameterGroup()
++        );
++        $destinationImageLink = $reference->getRelative();
++        break;
++      }
++    }
++    $image = $parent->appendElement('image');
++    $image->appendXml(
++      PapayaUtilStringPapaya::getImageTag(
++        $fileId,
++        $thumbnail == FALSE ? $this->_options['width'] : $this->_options['thumb_width'],
++        $thumbnail == FALSE ? $this->_options['height'] : $this->_options['thumb_height'],
++        '',
++        $thumbnail == FALSE ? $this->_options['resize'] : $this->_options['thumb_resize'],
++        ''
++      )
++    );
++    // destination image with link for thumbnails
++    if (isset($destinationImageLink) && isset($destinationImageTag)) {
++      $destination = $image->appendElement(
++        'destination',
++        array('href' => PapayaUtilStringXml::escapeAttribute($destinationImageLink))
++      );
++      $destination->appendXml($destinationImageTag);
++    }
++    // image title
++    if ($this->_options['display_title'] == 1 && !empty($fileTitle)) {
++      $image->appendElement(
++        'title',
++        array(),
++        PapayaUtilStringXml::escape($this->_folder['translations'][$fileId]['file_title'])
++      );
++    }
++    if ($this->_options['enlarge'] == 1) {
++      // image comment / description
++      if ($this->_options['display_description'] == 1 && !empty($fileDescription)) {
++        $description = $image->appendElement('description');
++        $description->appendXml(
++          $this->_module->getXHTMLString($this->_folder['translations'][$fileId]['file_description'])
++        );
++      }
++      // original image or image download
++      if ($this->_options['mode'] == 'resized-with-original-link' ||
++          $this->_options['mode'] == 'resized-with-download-link') {
++        $imageHref = $this->_module->getWebMediaLink(
++          $fileId,
++          $this->_options['mode'] == 'resized-with-original-link' ? 'media' : 'download',
++          $fileTitle,
++          $this->_folder['files'][$fileId]['mimetype_ext']
++        );
++        $image->appendElement(
++          $this->_options['mode'] == 'resized-with-original-link' ? 'original-link' : 'download-link',
++          array(),
++          PapayaUtilStringXml::escape($imageHref)
++        );
++      }
++    }
++  }
++
++  /**
++   * Append navigation to parent element
++   *
++   * @param PapayaXmlElement $parent
++   */
++  protected function _appendNavigationTo(PapayaXmlElement $parent) {
++    $navigation = $parent->appendElement('navigation');
++    if (isset($this->_navigationLinks['previous'])) {
++      $navigation->appendElement(
++        'navlink',
++        array(
++          'direction' => 'previous',
++          'href' => PapayaUtilStringXml::escapeAttribute($this->_navigationLinks['previous'])
++        )
++      );
++    }
++    if (isset($this->_navigationLinks['index'])) {
++      $navigation->appendElement(
++        'navlink',
++        array(
++          'direction' => 'index',
++          'href' => PapayaUtilStringXml::escapeAttribute($this->_navigationLinks['index'])
++        )
++      );
++    }
++    if (isset($this->_navigationLinks['next']) &&
++        $this->_folder['absolute_count'] > $this->_folderProperties['limit'] &&
++        (($this->_folderProperties['offset'] + $this->_folderProperties['limit']) <
++          $this->_folder['absolute_count'])) {
++      $navigation->appendElement(
++        'navlink',
++        array(
++          'direction' => 'next',
++          'href' => PapayaUtilStringXml::escapeAttribute($this->_navigationLinks['next'])
++        )
++      );
++    }
++  }
++
++  /**
++  * The basic reference object used to create urls.
++  *
++  * @param PapayaUiReference $reference
++  * @return PapayaUiReference
++  */
++  public function reference(PapayaUiReference $reference = NULL) {
++    if (isset($reference)) {
++      $this->_reference = $reference;
++    } elseif (is_null($this->_reference)) {
++      $this->_reference = new PapayaUiReference();
++      $this->_reference->papaya($this->papaya());
++    }
++    return $this->_reference;
++  }
++}
+\ No newline at end of file
+Index: papaya-lib/modules/free/thumbs/Image/Gallery/Page.php
+===================================================================
+--- papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
++++ papaya-lib/modules/free/thumbs/Image/Gallery/Page.php	(Revision 0)
+@@ -0,0 +1,143 @@
++<?php
++/**
++* Media image gallery page
++*
++* @copyright 2002-2013 by papaya Software GmbH - All rights reserved.
++* @link http://www.papaya-cms.com/
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++* @version $Id: $
++*/
++
++/**
++* Basic class page module
++*/
++require_once(PAPAYA_INCLUDE_PATH.'system/base_content.php');
++
++
++/**
++* Media image gallery page
++*
++* @package Papaya-Modules
++* @subpackage Free-Media
++*/
++class MediaImageGalleryPage extends base_content {
++
++  /**
++   * Parameter group
++   * @var string
++   */
++  public $paramName = 'mig';
++
++  /**
++  * Content edit fields
++  * @var array $editFields
++  */
++  var $editFields = array(
++    'nl2br' => array('Automatic linebreak', 'isNum', FALSE, 'translatedcombo',
++      array(0 => 'Yes', 1 => 'No'), 'Apply linebreaks from input to the HTML output.', 0
++    ),
++    'title' => array('Title', 'isSomeText', FALSE, 'input', 400, '', ''),
++    'subtitle' => array('Subtitle', 'isSomeText', FALSE, 'input', 400, '', ''),
++    'teaser' => array('Teaser', 'isSomeText', FALSE, 'simplerichtext', 5, '', ''),
++    'text' => array('Text', 'isSomeText', FALSE, 'richtext', 10, '', ''),
++
++    'Thumbnails',
++    'directory' => array('Folder', 'isNum', TRUE, 'mediafolder'),
++    'maxperpage' => array('Thumbnail count', 'isNum', TRUE, 'input', 5, '', 9),
++    'maxperline' => array('Column count', 'isNum', TRUE, 'input', 5, '', 3),
++    'resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
++      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
++        'mincrop' => 'Minimum cropped'), '', 'max'),
++    'thumbwidth' => array('Thumbnail width', 'isNum', TRUE, 'input', 5, '', 100),
++    'thumbheight' => array('Thumbnail height', 'isNum', TRUE, 'input', 5, '', 100),
++    'order' => array('Sort type', 'isNoHTML', TRUE, 'translatedcombo',
++      array('name' => 'File name', 'date' => 'File date'), '', 'name'),
++    'sort' => array('Sort order', 'isNoHTML', TRUE, 'translatedcombo',
++      array('asc' => 'Ascending', 'desc' => 'Descending'), '', 'asc'),
++
++    'Images',
++    'display_title' => array('Display title?', 'isNoHTML', TRUE, 'translatedcombo',
++       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
++    'display_comment' => array('Display description?', 'isNoHTML', TRUE, 'translatedcombo',
++       array('false' => 'no', 'true' => 'yes'), NULL, 'false'),
++    'show_lightbox' => array('Display in lightbox?', 'isNum', TRUE, 'yesno', NULL, NULL, '1'),
++    'show_mode' => array('Display mode', 'isNum', TRUE, 'translatedcombo',
++      array(
++        0 => 'Resized image',
++        4 => 'Resized image with original image link',
++        5 => 'Resized image with download link',
++        1 => 'Original image',
++        2 => 'Original image download',
++        3 => 'Resized image download'
++      ), '', 0
++    ),
++    'width' => array('Width', 'isNum', TRUE, 'input', 5, '', 640),
++    'height' => array('Height', 'isNum', TRUE, 'input', 5, '', 480),
++    'show_resize' => array('Resize mode', 'isAlpha', TRUE, 'translatedcombo',
++      array('abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum',
++        'mincrop' => 'Minimum cropped'), '', 'max')
++  );
++
++  /**
++   * Gallery object
++   * @var MediaImageGallery
++   */
++  protected $_gallery = NULL;
++
++  /**
++  * Get (and, if necessary, initialize) the MediaImageGallery object
++  *
++  * @return MediaImageGallery $gallery
++  */
++  public function gallery(MediaImageGallery $gallery = NULL) {
++    if (isset($gallery)) {
++      $this->_gallery = $gallery;
++    } elseif (is_null($this->_gallery)) {
++      include_once(dirname(__FILE__).'/../Gallery.php');
++      $this->_gallery = new MediaImageGallery();
++      $this->_gallery->parameterGroup($this->paramName);
++      $this->_gallery->languageId = $this->papaya()->request->languageId;
++    }
++    return $this->_gallery;
++  }
++
++  /**
++  * Get parsed teaser
++  *
++  * @access public
++  * @return string $result
++  */
++  function getParsedTeaser() {
++    $this->setDefaultData();
++    $this->gallery()->initialize($this, $this->data, 'teaser');
++    $this->gallery()->load();
++    return $this->gallery()->getXml();
++  }
++
++  /**
++  * Get parsed data
++  *
++  * build an XML string containing either...
++  * an image with links to previous image and next image or...
++  * a page containing thumbnails with links to the previous and next pages of thumbnails.
++  *
++  * @access public
++  * @return string $result
++  */
++  function getParsedData() {
++    $this->setDefaultData();
++    $this->initializeParams();
++    $this->gallery()->initialize($this, $this->data);
++    $this->gallery()->load();
++    return $this->gallery()->getXml();
++  }
++}
+\ No newline at end of file
+Index: papaya-lib/modules/free/images/Image/Reflection.php
+===================================================================
+--- papaya-lib/modules/free/images/Image/Reflection.php	(Revision 0)
++++ papaya-lib/modules/free/images/Image/Reflection.php	(Revision 0)
+@@ -0,0 +1,273 @@
++<?php
++/**
++* Generate an image with reflection effect
++*
++* Known issue: The transparency mode does not support soft edges in the reflection image,
++* because the set colored pixel function does not support alpha channel information greater than 0
++* correctly.
++*
++* @copyright 2013 by Martin Kelm
++* @link http://mkelm.github.io/papaya-cms
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Images
++* @version $Id: $
++*/
++
++/**
++* Base class for image plugins
++*/
++require_once(PAPAYA_INCLUDE_PATH.'system/base_dynamicimage.php');
++
++/**
++* Generate an image with reflection effect
++*
++* @package Papaya-Modules
++* @subpackage Free-Images
++*/
++class ImagesImageReflection extends base_dynamicimage {
++
++  /**
++  * Edit fields
++  * @var array $editFields
++  */
++  var $editFields = array(
++  );
++
++  /**
++  * Attribute fields
++  * @var array $attributeFields
++  */
++  var $attributeFields = array(
++    'image_guid' => array('Image', 'isGuid', TRUE, 'imagefixed', 32, '', ''),
++    'thumbnail_size' => array('Thumbnail Size', 'isNum', FALSE, 'input', 50, '', 0),
++    'thumbnail_resize_mode' => array('Thumbnail Resize Mode', 'isAlpha', FALSE, 'input', 50, '', 'max'),
++    'reflection_height' => array('Reflection Height', 'isNum', FALSE, 'input', 50, '', 100),
++    'divider_line_height' => array('Devider Line Height', 'isNum', FALSE, 'input', 50, '', 1),
++    'starting_transparency' => array('Starting Transparency', 'isNum', FALSE, 'input', 50, '', 30),
++    'background_color' => array('Background Color', 'isHTMLColor', FALSE, 'color', 7, '', NULL),
++    'transparent_background' => array('Transparent Background', 'isNum', FALSE, 'yesno', NULL, NULL, 0),
++    'include_image' => array('Include Image', 'isNum', FALSE, 'yesno', NULL, NULL, 0),
++  );
++  /**
++  * generate the image
++  *
++  * @param object base_imagegenerator &$controller controller object
++  * @access public
++  * @return image $result resource image
++  */
++  function &generateImage(&$controller) {
++    $this->setDefaultData();
++    $result = NULL;
++    foreach ($this->attributeFields as $field => $data) {
++      if (empty($this->attributes[$field]) && is_array($data) && !empty($data[6])) {
++        $this->attributes[$field] = $data[6];
++      }
++    }
++    if (!empty($this->attributes['image_guid'])) {
++
++      if (empty($this->attributes['background_color']) && PAPAYA_THUMBS_BACKGROUND != '') {
++        $backgroundColor = $controller->colorToRGB(PAPAYA_THUMBS_BACKGROUND);
++      } elseif (!empty($this->attributes['background_color'])) {
++        $backgroundColor = $controller->colorToRGB($this->attributes['background_color']);
++      }
++      if (PAPAYA_THUMBS_TRANSPARENT > 0 && $this->attributes['transparent_background'] > 0) {
++        $transparentBackground = TRUE;
++      } else {
++        $transparentBackground = FALSE;
++      }
++
++      // generate thumbnail if needed
++      $thumbnailSize = $this->attributes['thumbnail_size'];
++      if ($thumbnailSize > 0) {
++        include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
++        $baseThumbnail = new base_thumbnail();
++        $baseThumbnail->getThumbnail(
++          $this->attributes['image_guid'], NULL, $thumbnailSize, $thumbnailSize,
++          $this->attributes['thumbnail_resize_mode'],
++          array('bgcolor' => $this->attributes['background_color'])
++        );
++
++        $image = &$controller->loadImage(
++          PAPAYA_PATH_DATA.'media/thumbs/'.$baseThumbnail->lastThumbFileName
++        );
++        unset($baseThumbnail);
++      } else {
++        $image = &$controller->getMediaFileImage($this->attributes['image_guid']);
++      }
++
++      $width = imagesx($image);
++      $height = imagesy($image);
++      if ($width > 0 && $height > 0) {
++
++        if (!$transparentBackground && !(PAPAYA_THUMBS_TRANSPARENT == 0)) {
++          // set a background if the system option differs from attributes
++          $tempImage = imagecreatetruecolor($width, $height);
++          imagesavealpha($tempImage, FALSE);
++          imagealphablending($tempImage, FALSE);
++          $tempImageColorIdx = imagecolorallocate(
++            $tempImage,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue']
++          );
++          imagefilledrectangle($tempImage, 0, 0, $width, $height, $tempImageColorIdx);
++          imagealphablending($tempImage, TRUE);
++          imagecopyresampled(
++            $tempImage, $image, 0, 0, 0, 0, $width, $height, $width, $height
++          );
++          $image = $tempImage;
++          unset($tempImage);
++          unset($tempImageColorIdx);
++        }
++        $sourceImage = $image;
++
++        $reflectionHeight = $this->attributes['reflection_height'];
++        $dividerLineSize = $this->attributes['divider_line_height'];
++        $startingTransparency = $this->attributes['starting_transparency'];
++
++        // prepare reflection line
++        $backgroundLine = imagecreatetruecolor($width, 1);
++        if ($transparentBackground) {
++          imagealphablending($backgroundLine, FALSE);
++          imagesavealpha($backgroundLine, TRUE);
++          $backgroundLineColorIdx = imagecolorallocatealpha(
++            $backgroundLine,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue'],
++            127
++          );
++          imagefill($backgroundLine, 0, 0, $backgroundLineColorIdx);
++        } else {
++          $backgroundLineColorIdx = imagecolorallocate(
++            $backgroundLine,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue']
++          );
++          imagefill($backgroundLine, 0, 0, $backgroundLineColorIdx);
++        }
++        unset($backgroundLineColorIdx);
++
++        // flip image
++        $tempImage = imagecreatetruecolor($width, $height);
++        if ($transparentBackground) {
++          imagealphablending($tempImage, FALSE);
++          imagesavealpha($tempImage, TRUE);
++        }
++        for ($y = 0; $y < $height; $y++) {
++          imagecopy($tempImage, $image, 0, $y, 0, $height - $y - 1, $width, 1);
++        }
++        $image = $tempImage;
++        unset($tempImage);
++
++        // clip image to reflection height
++        $tempImage = imagecreatetruecolor($width, $reflectionHeight);
++        if ($transparentBackground) {
++          imagealphablending($tempImage, FALSE);
++          imagesavealpha($tempImage, TRUE);
++          $tempImageColorIdx = imagecolorallocatealpha(
++            $tempImage,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue'],
++            127
++          );
++          imagefill($tempImage, 0, 0, $tempImageColorIdx);
++          unset($tempImageColorIdx);
++        }
++        for ($y = 0; $y < $reflectionHeight; $y++) {
++          imagecopy($tempImage, $image, 0, $y, 0, $y, $width, 1);
++        }
++        $image = $tempImage;
++        unset($tempImage);
++        unset($tempImageColorIdx);
++
++        // add transparency effect
++        if ($transparentBackground) {
++          $tempImage = imagecreatetruecolor($width, $reflectionHeight);
++          imagealphablending($tempImage, FALSE);
++          imagesavealpha($tempImage, TRUE);
++          $increaseTransparency = 127 / $reflectionHeight;
++          $transparency = ($startingTransparency / 100) * 127;
++          for ($y = 0; $y < $height; $y++) {
++            if ($transparency > 127) {
++              $transparency = 127;
++            }
++            for ($x = 0; $x < $width; $x++) {
++              $colors = imagecolorsforindex($image, imagecolorat($image, $x, $y));
++              if ($colors['alpha'] == 0) {
++                $tempImageColorIdx = imagecolorallocatealpha(
++                  $tempImage , $colors['red'], $colors['green'], $colors['blue'], floor($transparency)
++                );
++                imagesetpixel($tempImage, $x, $y, $tempImageColorIdx);
++              } else {
++                $tempImageColorIdx = imagecolorallocatealpha(
++                  $tempImage, $colors['red'], $colors['green'], $colors['blue'], 127
++                );
++                imagesetpixel($tempImage, $x, $y, $tempImageColorIdx);
++              }
++            }
++            $transparency += $increaseTransparency;
++          }
++          $image = $tempImage;
++          unset($tempImage);
++          unset($tempImageColorIdx);
++        } else {
++          $increaseTransparency = 100 / $reflectionHeight;
++          $transparency = $startingTransparency;
++          for ($y = 0; $y <= $reflectionHeight; $y++){
++            if ($transparency > 100) $transparency = 100;
++            imagecopymerge($image, $backgroundLine, 0, $y, 0, 0, $width, 1, $transparency);
++            $transparency += $increaseTransparency;
++          }
++        }
++
++         // get new height for image(s) with divider line
++        if ($this->attributes['include_image'] > 0) {
++          $newHeight = $height + $reflectionHeight + $dividerLineSize;
++        } else {
++          $newHeight = $reflectionHeight + $dividerLineSize;
++        }
++        $tempImage = imagecreatetruecolor($width, $newHeight);
++        if ($transparentBackground) {
++          imagealphablending($tempImage, FALSE);
++          imagesavealpha($tempImage, TRUE);
++          $tempImageColorIdx = imagecolorallocatealpha(
++            $tempImage, 0, 0, 0, 127
++          );
++          imagefill($tempImage, 0, 0, $tempImageColorIdx);
++        } else {
++          $tempImageColorIdx = imagecolorallocate(
++            $tempImage,
++            $backgroundColor['red'],
++            $backgroundColor['green'],
++            $backgroundColor['blue']
++          );
++          imagefill($tempImage, 0, 0, $tempImageColorIdx);
++        }
++        unset($tempImageColorIdx);
++
++        // finally copy part image(s) to new image with divider line
++        if ($this->attributes['include_image'] > 0) {
++          imagecopy($tempImage, $sourceImage, 0, 0, 0, 0, $width, $height);
++          imagecopy($tempImage, $image, 0, $height + $dividerLineSize, 0, 0, $width, $reflectionHeight);
++          $image = $tempImage;
++        } else {
++          imagecopy($tempImage, $image, 0, $dividerLineSize, 0, 0, $width, $reflectionHeight);
++          $image = $tempImage;
++        }
++        return $image;
++      }
++    }
++    return FALSE;
++  }
++}
+\ No newline at end of file
+Index: papaya-lib/modules/free/images/Rotated/Masked/Image.php
+===================================================================
+--- papaya-lib/modules/free/images/Rotated/Masked/Image.php	(Revision 0)
++++ papaya-lib/modules/free/images/Rotated/Masked/Image.php	(Revision 0)
+@@ -0,0 +1,199 @@
++<?php
++/**
++* Generate a rotated and masked image
++*
++* @copyright 2013 by Martin Kelm
++* @link http://mkelm.github.io/papaya-cms
++* @license http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU General Public License, version 2
++*
++* You can redistribute and/or modify this script under the terms of the GNU General Public
++* License (GPL) version 2, provided that the copyright and license notes, including these
++* lines, remain unmodified. papaya is distributed in the hope that it will be useful, but
++* WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
++* FOR A PARTICULAR PURPOSE.
++*
++* @package Papaya-Modules
++* @subpackage Free-Images
++* @version $Id: $
++*/
++
++/**
++* Base class for image plugins
++*/
++require_once(PAPAYA_INCLUDE_PATH.'system/base_dynamicimage.php');
++
++/**
++* Generate a rotated and masked image
++*
++* @package Papaya-Modules
++* @subpackage Free-Images
++*/
++class ImagesRotatedMaskedImage extends base_dynamicimage {
++
++  /**
++  * Edit fields
++  * @var array $editFields
++  */
++  var $editFields = array(
++    'Source Image',
++    'thumbnail_size' => array('Thumbnail Size', 'isNum', FALSE, 'input', 50,
++      'Set a thumbnail size to increase performance on large images.', ''),
++    'thumbnail_resize_mode' => array('Thumbnail Resize Mode', 'isAlpha', FALSE, 'combo',
++      array(
++         'abs' => 'Absolute', 'max' => 'Maximum', 'maxfill' => 'Maximum fill', 'min' => 'Minimum',
++         'mincrop' => 'Minimum cropped'
++       ), '', 'mincrop'
++    ),
++    'Mask Image',
++    'mask_image_guid' => array('Image', 'isGuid', FALSE, 'imagefixed', 32,
++      'Use a PNG image with a transparent background.', ''),
++    'mask_size' => array('Size', 'isFloat', FALSE, 'input', 50,
++      'Use a float value greater than 0.0 and less or equal than 1.0 to modify the mask size in
++      relation to the rotated source image size. Needs the options PAPAYA_THUMBS_TRANSPARENT = on and
++       	PAPAYA_THUMBS_FILETYPE = PNG. Leave this option empty if you have a mask image with a size
++        less or equal than the source image or the source image thumbnail.',
++      '')
++  );
++
++  /**
++  * Attribute fields
++  * @var array $attributeFields
++  */
++  var $attributeFields = array(
++    'Source Image',
++    'image_guid' => array('Image', 'isGuid', TRUE, 'imagefixed', 32, '', ''),
++    'rotation_angle' => array('Rotation Angle', 'isFloat', FALSE, 'input', 50,
++      'Use a float value to define the angle in degrees. A positive value rotates the image anticlockwise.',
++      ''),
++    'rotation_bg_color' => array('Rotation Background Color', 'isHTMLColor', FALSE, 'color', 7,
++      'Use to fill empty areas on rotation. The default value is PAPAYA_THUMBS_BACKGROUND.', '')
++  );
++  /**
++  * generate the image
++  *
++  * @param object base_imagegenerator &$controller controller object
++  * @access public
++  * @return image $result resource image
++  */
++  function &generateImage(&$controller) {
++    $this->setDefaultData();
++    $result = NULL;
++    foreach ($this->attributeFields as $field => $data) {
++      if (empty($this->attributes[$field]) && is_array($data) && !empty($data[6])) {
++        $this->attributes[$field] = $data[6];
++      }
++    }
++    if (!empty($this->attributes['image_guid'])) {
++
++      // generate thumbnail if needed
++      $thumbnailSize = $this->data['thumbnail_size'];
++      if ($thumbnailSize > 0) {
++        include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
++        $baseThumbnail = new base_thumbnail();
++        $baseThumbnail->getThumbnail(
++          $this->attributes['image_guid'], NULL, $thumbnailSize, $thumbnailSize,
++          $this->data['thumbnail_resize_mode']
++        );
++        $image = &$controller->loadImage(
++          PAPAYA_PATH_DATA.'media/thumbs/'.$baseThumbnail->lastThumbFileName
++        );
++        unset($baseThumbnail);
++      } else {
++        $image = &$controller->getMediaFileImage($this->attributes['image_guid']);
++      }
++
++      $width = imagesx($image);
++      $height = imagesy($image);
++      if ($width > 0 && $height > 0) {
++        if (!empty($this->attributes['rotation_angle'])) {
++          if (!empty($this->attributes['rotation_bg_color'])) {
++            $rotationBgColor = $controller->colorToRGB($this->attributes['rotation_bg_color']);
++          } else {
++            $rotationBgColor = $controller->colorToRGB(PAPAYA_THUMBS_BACKGROUND);
++          }
++          $rotationBgColor = imagecolorallocate(
++            $image,
++            $rotationBgColor['red'],
++            $rotationBgColor['green'],
++            $rotationBgColor['blue']
++          );
++          $image = imagerotate($image, $this->attributes['rotation_angle'], $rotationBgColor);
++        }
++
++        if (!empty($this->data['mask_image_guid'])) {
++          $width = imagesx($image);
++          $height = imagesy($image);
++
++          include_once(PAPAYA_INCLUDE_PATH.'system/base_thumbnail.php');
++
++          if (empty($this->data['mask_size'])) {
++            $maskImage = &$controller->getMediaFileImage($this->data['mask_image_guid']);
++            $maskWidth = imagesx($maskImage);
++            $maskHeight = imagesy($maskImage);
++          } else {
++            $maskSize = (float)$this->data['mask_size'];
++            $maskWidth = floor($maskSize * $width);
++            $maskHeight = floor($maskSize * $height);
++            $baseThumbnail = new base_thumbnail();
++            $baseThumbnail->getThumbnail(
++              $this->data['mask_image_guid'], NULL, $maskWidth, $maskHeight, 'maxfill'
++            );
++            $maskImage = &$controller->loadImage(
++              PAPAYA_PATH_DATA.'media/thumbs/'.$baseThumbnail->lastThumbFileName
++            );
++            unset($baseThumbnail);
++          }
++          $maskXOffset = floor(($width - $maskWidth) / 2);
++          $maskYOffset = floor(($height - $maskHeight) / 2);
++
++          if ($maskXOffset >= 0 && $maskYOffset >= 0) {
++            $tempImage = imagecreatetruecolor($maskWidth, $maskHeight);
++            if ($controller->imageConf['image_format'] == 3 ||
++                ($controller->imageConf['image_format'] == 0 &&
++                 PAPAYA_THUMBS_FILETYPE == 3)) {
++              imagesavealpha($tempImage, TRUE);
++              imagealphablending($tempImage, FALSE);
++              $tempImageColorIdx = imagecolorallocatealpha(
++                $tempImage, 0, 0, 0, 127
++              );
++              imagefill($tempImage, 0, 0, $tempImageColorIdx);
++            } else {
++              imagesavealpha($tempImage, FALSE);
++              imagealphablending($tempImage, TRUE);
++              $tempImageColor = $controller->colorToRGB(PAPAYA_THUMBS_BACKGROUND);
++              $tempImageColorIdx = imagecolorallocate(
++                $tempImage, $tempImageColor['red'], $tempImageColor['green'], $tempImageColor['blue']
++              );
++              imagefill($tempImage, 0, 0, $tempImageColorIdx);
++            }
++
++            for ($y = 0; $y < $height; $y++) {
++              for ($x = 0; $x < $width; $x++) {
++                if ($x >= $maskXOffset && $y >= $maskYOffset && $x < $maskXOffset + $maskWidth &&
++                    $y < $maskYOffset + $maskHeight) {
++                  $maskColors = imagecolorsforindex(
++                    $maskImage, imagecolorat($maskImage, $x - $maskXOffset, $y - $maskYOffset)
++                  );
++                  if ($maskColors['alpha'] < 127) {
++                    $imageColors = imagecolorsforindex($image, imagecolorat($image, $x, $y));
++                    $tempImageColorIdx = imagecolorallocatealpha(
++                      $tempImage,
++                      $imageColors['red'],
++                      $imageColors['green'],
++                      $imageColors['blue'],
++                      $maskColors['alpha']
++                    );
++                    imagesetpixel($tempImage, $x - $maskXOffset, $y - $maskYOffset, $tempImageColorIdx);
++                  }
++                }
++              }
++            }
++            $image = $tempImage;
++          }
++        }
++        return $image;
++      }
++    }
++    return FALSE;
++  }
++}
+\ No newline at end of file
+Index: papaya-lib/modules/free/images/modules.xml
+===================================================================
+--- papaya-lib/modules/free/images/modules.xml	(Revision 38515)
++++ papaya-lib/modules/free/images/modules.xml	(Arbeitskopie)
+@@ -8,6 +8,8 @@
+     <module type="image" guid="b041b47247c81b817a3f40620e96b457" name="Image Buttons" class="image_buttons" file="image_buttons.php">Generate a button with a text on an image.</module>
+     <module type="image" guid="3b44894b6672335217334aa3db23104a" name="Dynamic Image Buttons" class="dyn_image_buttons" file="dyn_image_buttons.php">Generate a button with a text on images.</module>
+     <module type="image" guid="e821359d50c00a33d67558242687027e" name="Image Colorizer" class="image_colored" file="image_colored.php">Colorize images.</module>
++    <module type="image" guid="0718af49240b461d9984ffe046521557" name="Image Reflection" class="ImagesImageReflection" file="Image/Reflection.php">An image with a reflection effect or a reflection effect only.</module>
++    <module type="image" guid="3523604250c4400cabb939f4d7869cb7" name="Rotated Masked Image" class="ImagesRotatedMaskedImage" file="Rotated/Masked/Image.php">An image with a rotation and mask.</module>
+   </modules>
+   <tables>
+   </tables>
+Index: papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Revision 38515)
++++ papaya-data/templates/default-xhtml/html/modules/_base/community/content_community.xsl	(Arbeitskopie)
+@@ -605,40 +605,31 @@
+   <fieldset>
+     <xsl:choose>
+       <xsl:when test="$dialog/lines">
+-        <xsl:for-each select="$dialog/lines//line[@fid != 'terms']">
+-          <xsl:if test="$userDataDescriptions != false()">
+-            <xsl:choose>
+-              <xsl:when test="@fid = 'surfer_password_1'">
+-                <p class="description">
+-                  <xsl:value-of select="$userDataDescriptions/description-change-password/@content" />
+-                </p>
+-              </xsl:when>
+-              <xsl:when test="@fid = 'surfer_new_email'">
+-                <p class="description">
+-                  <xsl:value-of select="$userDataDescriptions/description-change-email/@content" />
+-                </p>
+-              </xsl:when>
+-            </xsl:choose>
+-          </xsl:if>
+-          <xsl:call-template name="dialog-field">
+-            <xsl:with-param name="dialog" select="$dialog" />
+-            <xsl:with-param name="field" select="." />
+-            <xsl:with-param name="showMandatory" select="$showMandatory" />
+-          </xsl:call-template>
+-          <xsl:if test="$userDataDescriptions != false() and @fid = 'surfer_old_password'">
+-            <p class="description">
+-              <xsl:value-of select="$userDataDescriptions/description-enter-password/@content" />
+-            </p>
+-          </xsl:if>
+-        </xsl:for-each>
+-        <xsl:if test="$dialog/lines//line[@fid = 'terms']">
+-          <xsl:call-template name="dialog-field">
+-            <xsl:with-param name="dialog" select="$dialog" />
+-            <xsl:with-param name="field" select="$dialog/lines//line[@fid = 'terms']" />
+-            <xsl:with-param name="showMandatory" select="$showMandatory" />
+-          </xsl:call-template>
+-          <p><xsl:copy-of select="$terms" /></p>
+-        </xsl:if>
++        <xsl:choose>
++          <xsl:when test="$dialog/lines/linegroup">
++            <xsl:for-each select="$dialog/lines/linegroup">
++              <xsl:if test="@caption and @caption != ''">
++                <h2><xsl:value-of select="@caption" /></h2>
++              </xsl:if>
++              <xsl:call-template name="dialog-content-lines">
++                <xsl:with-param name="dialog" select="$dialog" />
++                <xsl:with-param name="lines" select="line"/>
++                <xsl:with-param name="showMandatory" select="$showMandatory" />
++                <xsl:with-param name="userDataDescriptions" select="$userDataDescriptions" />
++                <xsl:with-param name="terms" select="$terms" />
++              </xsl:call-template>
++            </xsl:for-each>
++          </xsl:when>
++          <xsl:otherwise>
++            <xsl:call-template name="dialog-content-lines">
++              <xsl:with-param name="dialog" select="$dialog" />
++              <xsl:with-param name="lines" select="$dialog/lines//line"/>
++              <xsl:with-param name="showMandatory" select="$showMandatory" />
++              <xsl:with-param name="userDataDescriptions" select="$userDataDescriptions" />
++              <xsl:with-param name="terms" select="$terms" />
++            </xsl:call-template>
++          </xsl:otherwise>
++        </xsl:choose>
+       </xsl:when>
+       <xsl:when test="$dialog/element/*">
+         <xsl:for-each select="$dialog/element">
+@@ -669,4 +660,47 @@
+   </fieldset>
+ </xsl:template>
+ 
++<xsl:template name="dialog-content-lines">
++  <xsl:param name="dialog" />
++  <xsl:param name="lines" />
++  <xsl:param name="showMandatory" select="true()" />
++  <xsl:param name="userDataDescriptions" select="false()" />
++  <xsl:param name="terms" />
++
++  <xsl:for-each select="$lines[@fid != 'terms']">
++    <xsl:if test="$userDataDescriptions != false()">
++      <xsl:choose>
++        <xsl:when test="@fid = 'surfer_password_1'">
++          <p class="description">
++            <xsl:value-of select="$userDataDescriptions/description-change-password/@content" />
++          </p>
++        </xsl:when>
++        <xsl:when test="@fid = 'surfer_new_email'">
++          <p class="description">
++            <xsl:value-of select="$userDataDescriptions/description-change-email/@content" />
++          </p>
++        </xsl:when>
++      </xsl:choose>
++    </xsl:if>
++    <xsl:call-template name="dialog-field">
++      <xsl:with-param name="dialog" select="$dialog" />
++      <xsl:with-param name="field" select="." />
++      <xsl:with-param name="showMandatory" select="$showMandatory" />
++    </xsl:call-template>
++    <xsl:if test="$userDataDescriptions != false() and @fid = 'surfer_old_password'">
++      <p class="description">
++        <xsl:value-of select="$userDataDescriptions/description-enter-password/@content" />
++      </p>
++    </xsl:if>
++  </xsl:for-each>
++  <xsl:if test="$lines[@fid = 'terms']">
++    <xsl:call-template name="dialog-field">
++      <xsl:with-param name="dialog" select="$dialog" />
++      <xsl:with-param name="field" select="$dialog/lines//line[@fid = 'terms']" />
++      <xsl:with-param name="showMandatory" select="$showMandatory" />
++    </xsl:call-template>
++    <p><xsl:copy-of select="$terms" /></p>
++  </xsl:if>
++</xsl:template>
++
+ </xsl:stylesheet>
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Revision 38515)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/en-US.xml	(Arbeitskopie)
+@@ -2,4 +2,7 @@
+   <text ident="FILE_NAME">File</text>
+   <text ident="FILE_DATE">Date</text>
+   <text ident="FILE_SIZE">Size</text>
++  <text ident="NO_IMAGES">No images found.</text>
++  <text ident="ORIGINAL_IMAGE">Original image</text>
++  <text ident="IMAGE_DOWNLOAD">Download</text>
+ </texts>
+\ No newline at end of file
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Revision 38515)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/fr-FR.xml	(Arbeitskopie)
+@@ -2,4 +2,6 @@
+   <text ident="FILE_NAME">Fichier</text>
+   <text ident="FILE_DATE">Date</text>
+   <text ident="FILE_SIZE">Dimension</text>
++  <text ident="ORIGINAL_IMAGE">Original peinture</text>
++  <text ident="IMAGE_DOWNLOAD">Téléchargement</text>
+ </texts>
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Revision 38515)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/de-DE.xml	(Arbeitskopie)
+@@ -2,4 +2,7 @@
+   <text ident="FILE_NAME">Datei</text>
+   <text ident="FILE_DATE">Datum</text>
+   <text ident="FILE_SIZE">Größe</text>
+-</texts>
++  <text ident="NO_IMAGES">Keine Bilder gefunden.</text>
++  <text ident="ORIGINAL_IMAGE">Original Bild</text>
++  <text ident="IMAGE_DOWNLOAD">Download</text>
++</texts>
+\ No newline at end of file
+Index: papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Revision 38515)
++++ papaya-data/templates/default-xhtml/html/modules/free/thumbs/content_thumbs.xsl	(Arbeitskopie)
+@@ -6,162 +6,177 @@
+   exclude-result-prefixes="#default"
+ >
+ 
+-<xsl:import href="../../../../_functions/javascript-escape-string.xsl" />
++  <xsl:import href="../../../../_functions/javascript-escape-string.xsl" />
+ 
+-<xsl:param name="PAGE_LANGUAGE"></xsl:param>
+-<xsl:param name="LANGUAGE_MODULE_CURRENT" select="document(concat($PAGE_LANGUAGE, '.xml'))" />
+-<xsl:param name="LANGUAGE_MODULE_FALLBACK" select="document('en-US.xml')"/>
++  <xsl:param name="PAGE_LANGUAGE"></xsl:param>
++  <xsl:param name="LANGUAGE_MODULE_CURRENT" select="document(concat($PAGE_LANGUAGE, '.xml'))" />
++  <xsl:param name="LANGUAGE_MODULE_FALLBACK" select="document('en-US.xml')"/>
+ 
+-<xsl:template name="page-styles">
+-  <xsl:call-template name="link-style">
+-    <xsl:with-param name="file">page_thumbs.css</xsl:with-param>
+-  </xsl:call-template>
+-</xsl:template>
++  <xsl:template name="page-styles">
++    <xsl:call-template name="link-style">
++      <xsl:with-param name="file">page_thumbs.css</xsl:with-param>
++    </xsl:call-template>
++  </xsl:template>
+ 
+-<xsl:template name="page-scripts-lazy">
+-  <xsl:call-template name="link-script">
+-    <xsl:with-param name="file">papaya/jquery.xmlns.js</xsl:with-param>
+-  </xsl:call-template>
+-  <xsl:call-template name="link-script">
+-    <xsl:with-param name="file">papaya/jquery.papayaLightbox.js</xsl:with-param>
+-  </xsl:call-template>
+-  <xsl:call-template name="link-script">
+-    <xsl:with-param name="file">papaya/jquery.papayaGallery.js</xsl:with-param>
+-  </xsl:call-template>
+- <script type="text/javascript"><xsl:comment>
+-    jQuery(document).ready(
+-      function() {
+-        jQuery('#gallery').papayaGallery();
+-      }
+-    );
+-  </xsl:comment></script>
+-</xsl:template>
+-
+-<xsl:template name="content-area">
+-  <xsl:param name="pageContent" select="content/topic"/>
+-  <xsl:choose>
+-    <xsl:when test="$pageContent/@module = 'content_thumbs'">
+-      <xsl:call-template name="module-content-thumbs">
+-        <xsl:with-param name="pageContent" select="$pageContent"/>
++  <xsl:template name="page-scripts-lazy">
++    <xsl:if test="/page/content/topic/options/lightbox = '1'">
++      <xsl:call-template name="link-script">
++        <xsl:with-param name="file">papaya/jquery.xmlns.js</xsl:with-param>
+       </xsl:call-template>
+-    </xsl:when>
+-    <xsl:otherwise>
+-      <xsl:call-template name="module-content-default">
+-        <xsl:with-param name="pageContent" select="$pageContent"/>
++      <xsl:call-template name="link-script">
++        <xsl:with-param name="file">papaya/jquery.papayaLightbox.js</xsl:with-param>
+       </xsl:call-template>
+-    </xsl:otherwise>
+-  </xsl:choose>
+-</xsl:template>
++      <xsl:call-template name="link-script">
++        <xsl:with-param name="file">papaya/jquery.papayaGallery.js</xsl:with-param>
++      </xsl:call-template>
++     <script type="text/javascript"><xsl:comment>
++        jQuery(document).ready(
++          function() {
++            jQuery('#gallery').papayaGallery();
++          }
++        );
++      </xsl:comment></script>
++    </xsl:if>
++  </xsl:template>
+ 
+-<xsl:template name="module-content-thumbs">
+-  <xsl:param name="pageContent"/>
+-  <xsl:call-template name="module-content-topic">
+-    <xsl:with-param name="pageContent" select="$pageContent" />
+-    <xsl:with-param name="withText" select="not($pageContent/image)" />
+-  </xsl:call-template>
+-  <div id="gallery">
++  <xsl:template name="content-area">
++    <xsl:param name="pageContent" select="content/topic"/>
+     <xsl:choose>
+-      <xsl:when test="$pageContent/thumbnails/thumb">
+-        <xsl:call-template name="module-content-thumbs-list">
+-          <xsl:with-param name="thumbs" select="$pageContent/thumbnails/thumb" />
+-          <xsl:with-param name="options" select="$pageContent/options" />
++      <xsl:when test="$pageContent/@module = 'MediaImageGalleryPage'">
++        <xsl:call-template name="module-content-image-gallery">
++          <xsl:with-param name="pageContent" select="$pageContent"/>
+         </xsl:call-template>
+       </xsl:when>
+-      <xsl:when test="$pageContent/image">
+-        <xsl:call-template name="module-content-thumbs-image-detail">
+-          <xsl:with-param name="image" select="$pageContent/image" />
+-          <xsl:with-param name="imageTitle" select="$pageContent/imagetitle" />
+-          <xsl:with-param name="imageComment" select="$pageContent/imagecomment" />
+-          <xsl:with-param name="navigation" select="$pageContent/navigation" />
++      <xsl:otherwise>
++        <xsl:call-template name="module-content-default">
++          <xsl:with-param name="pageContent" select="$pageContent"/>
+         </xsl:call-template>
+-      </xsl:when>
++      </xsl:otherwise>
+     </xsl:choose>
+-    <xsl:call-template name="float-fix"/>
+-    <xsl:call-template name="module-content-thumbns-navigation">
+-      <xsl:with-param name="navigation" select="$pageContent/navigation" />
++  </xsl:template>
++
++  <xsl:template name="module-content-image-gallery">
++    <xsl:param name="pageContent"/>
++    <xsl:call-template name="module-content-topic">
++      <xsl:with-param name="pageContent" select="$pageContent" />
++      <xsl:with-param name="withText" select="not($pageContent/image)" />
+     </xsl:call-template>
+-  </div>
+-</xsl:template>
+-
+-<xsl:template name="module-content-thumbs-list">
+-  <xsl:param name="thumbs" />
+-  <xsl:param name="options" />
+-  <!-- thumbnail view -->
+-  <xsl:if test="$thumbs">
+-    <xsl:for-each select="$thumbs">
+-      <div class="galleryThumbnail">
+-        <a class="galleryThumbnailFrame"
+-           style="width: {$options/thumbwidth}px; height: {$options/thumbheight}px;"
+-           href="{a/@href}"
+-           title="{image/@title}">
+-          <img src="{a/img/@src}" style="{a/img/@style}" alt="{a/img/@alt}"/>
+-        </a>
+-      </div>
+-    </xsl:for-each>
+-    <script type="text/javascript"><xsl:comment>
+-      jQuery('#gallery').children().hide();
+-      var galleryMapping = {
+-        images : {
+-          <xsl:for-each select="$thumbs">
+-            <xsl:if test="position() &gt; 1">, </xsl:if>
+-            <xsl:call-template name="javascript-escape-string">
+-              <xsl:with-param name="string" select="a/@href" />
+-            </xsl:call-template>
+-            <xsl:text> : </xsl:text>
+-            <xsl:call-template name="javascript-escape-string">
+-              <xsl:with-param name="string" select="@for" />
+-            </xsl:call-template>
+-          </xsl:for-each>
+-        },
+-        getImageUrl : function(href) {
+-          return (this.images[href]) ? this.images[href] : href;
+-        }
+-      };
+-    </xsl:comment></script>
+-  </xsl:if>
+-</xsl:template>
+-
+-<xsl:template name="module-content-thumbs-image-detail">
+-  <xsl:param name="image" />
+-  <xsl:param name="imageTitle" />
+-  <xsl:param name="imageComment" />
+-  <xsl:param name="navigation" />
+-  <xsl:if test="$image">
+-    <div class="galleryImage">
++    <div id="gallery">
+       <xsl:choose>
+-        <xsl:when test="$navigation/navlink[@dir='index']">
+-          <a href="{$navigation/navlink[@dir='index']/@href}">
+-            <img src="{$image/img/@src}" style="{$image/img/@style}" alt="{$image/img/@alt}"/>
+-          </a>
++        <xsl:when test="$pageContent/images/image">
++          <xsl:call-template name="module-content-gallery-images">
++            <xsl:with-param name="images" select="$pageContent/images/image" />
++            <xsl:with-param name="options" select="$pageContent/options" />
++          </xsl:call-template>
+         </xsl:when>
++        <xsl:when test="$pageContent/image">
++          <xsl:call-template name="module-content-gallery-image">
++            <xsl:with-param name="image" select="$pageContent/image" />
++            <xsl:with-param name="navigation" select="$pageContent/navigation" />
++          </xsl:call-template>
++        </xsl:when>
++      </xsl:choose>
++      <xsl:call-template name="float-fix"/>
++      <xsl:choose>
++        <xsl:when test="count($pageContent/images/image) &gt; 0 or count($pageContent/image) &gt; 0">
++          <xsl:call-template name="module-content-gallery-navigation">
++            <xsl:with-param name="navigation" select="$pageContent/navigation" />
++          </xsl:call-template>
++        </xsl:when>
+         <xsl:otherwise>
+-          <img src="{$image/img/@src}" style="{$image/img/@style}" alt="{$image/img/@alt}"/>
++          <div class="message"><xsl:call-template name="language-text">
++            <xsl:with-param name="text" select="'NO_IMAGES'"/>
++          </xsl:call-template></div>
+         </xsl:otherwise>
+       </xsl:choose>
+-      <xsl:if test="$imageTitle">
+-        <h2><xsl:value-of select="$imageTitle"/></h2>
+-      </xsl:if>
+-      <xsl:if test="$imageComment">
+-        <div class="comment">
+-          <xsl:apply-templates select="$imageComment/node()"/>
+-        </div>
+-      </xsl:if>
+     </div>
+-  </xsl:if>
+-</xsl:template>
++  </xsl:template>
+ 
+-<xsl:template name="module-content-thumbns-navigation">
+-  <xsl:param name="navigation" />
+-  <xsl:if test="$navigation/navlink[(@dir='prior') or (@dir='next')]">
+-    <div class="galleryNavigation">
+-      <xsl:if test="$navigation/navlink[@dir='prior']">
+-        <a href="{$navigation/navlink[@dir='prior']/@href}" class="navigationLinkPrevious">&lt;-</a>
++  <xsl:template name="module-content-gallery-images">
++    <xsl:param name="images" />
++    <xsl:param name="options" />
++    <xsl:if test="$images">
++      <xsl:for-each select="$images">
++        <div class="galleryThumbnail">
++          <a class="galleryThumbnailFrame" href="{destination/@href}" title="{title}">
++            <img src="{img/@src}" alt="{img/@alt}"/>
++          </a>
++        </div>
++      </xsl:for-each>
++      <xsl:if test="$options/lightbox = '1'">
++        <script type="text/javascript"><xsl:comment>
++          jQuery('#gallery').children().hide();
++          var galleryMapping = {
++            images : {
++              <xsl:for-each select="$images">
++                <xsl:if test="position() &gt; 1">, </xsl:if>
++                <xsl:call-template name="javascript-escape-string">
++                  <xsl:with-param name="string" select="destination/@href" />
++                </xsl:call-template>
++                <xsl:text> : </xsl:text>
++                <xsl:call-template name="javascript-escape-string">
++                  <xsl:with-param name="string" select="destination/img/@src" />
++                </xsl:call-template>
++              </xsl:for-each>
++            },
++            getImageUrl : function(href) {
++              return (this.images[href]) ? this.images[href] : href;
++            }
++          };
++        </xsl:comment></script>
+       </xsl:if>
+-      <xsl:if test="$navigation/navlink[@dir='next']">
+-        <a href="{$navigation/navlink[@dir='next']/@href}" class="navigationLinkNext">-&gt;</a>
+-      </xsl:if>
+-    </div>
+-  </xsl:if>
+-</xsl:template>
++    </xsl:if>
++  </xsl:template>
+ 
+-</xsl:stylesheet>
++  <xsl:template name="module-content-gallery-image">
++    <xsl:param name="image" />
++    <xsl:param name="navigation" />
++    <xsl:if test="$image">
++      <div class="galleryImage">
++        <xsl:choose>
++          <xsl:when test="$navigation/navlink[@direction = 'index']">
++            <a href="{$navigation/navlink[@direction = 'index']/@href}">
++              <img src="{$image/img/@src}" alt="{$image/img/@alt}"/>
++            </a>
++          </xsl:when>
++          <xsl:otherwise>
++            <img src="{$image/img/@src}" alt="{$image/img/@alt}"/>
++          </xsl:otherwise>
++        </xsl:choose>
++        <xsl:if test="$image/title">
++          <h2><xsl:value-of select="$image/title"/></h2>
++        </xsl:if>
++        <xsl:if test="$image/description">
++          <div class="description">
++            <xsl:apply-templates select="$image/description"/>
++          </div>
++        </xsl:if>
++        <xsl:if test="$image/original-link">
++          <div class="originalImage"><a href="{$image/original-link}"><xsl:call-template name="language-text">
++            <xsl:with-param name="text" select="'ORIGINAL_IMAGE'"/>
++          </xsl:call-template></a></div>
++        </xsl:if>
++        <xsl:if test="$image/download-link">
++          <div class="imageDownload"><a href="{$image/download-link}"><xsl:call-template name="language-text">
++            <xsl:with-param name="text" select="'IMAGE_DOWNLOAD'"/>
++          </xsl:call-template></a></div>
++        </xsl:if>
++      </div>
++    </xsl:if>
++  </xsl:template>
++
++  <xsl:template name="module-content-gallery-navigation">
++    <xsl:param name="navigation" />
++    <xsl:if test="$navigation/navlink[(@direction = 'previous') or (@direction = 'next')]">
++      <div class="galleryNavigation">
++        <xsl:if test="$navigation/navlink[@direction = 'previous']">
++          <a href="{$navigation/navlink[@direction = 'previous']/@href}" class="navigationLinkPrevious">&lt;-</a>
++        </xsl:if>
++        <xsl:if test="$navigation/navlink[@direction = 'next']">
++          <a href="{$navigation/navlink[@direction = 'next']/@href}" class="navigationLinkNext">-&gt;</a>
++        </xsl:if>
++      </div>
++    </xsl:if>
++  </xsl:template>
++
++</xsl:stylesheet>
+\ No newline at end of file
+Index: papaya-data/templates/default-xhtml/html/page_gallery.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Revision 38515)
++++ papaya-data/templates/default-xhtml/html/page_gallery.xsl	(Arbeitskopie)
+@@ -6,7 +6,7 @@
+   exclude-result-prefixes="#default"
+ >
+ <!--
+-  @papaya:modules content_thumbs
++  @papaya:modules MediaImageGalleryPage
+ -->
+ 
+ <!-- import main layout rules, this will import the default rules, too -->
+Index: papaya-data/templates/default-xhtml/html/base/dialogs.xsl
+===================================================================
+--- papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Revision 38515)
++++ papaya-data/templates/default-xhtml/html/base/dialogs.xsl	(Arbeitskopie)
+@@ -325,6 +325,9 @@
+       </xsl:when>
+     </xsl:choose>
+   </div>
++  <xsl:if test="$field/@hint != ''">
++    <div class="hint"><xsl:value-of select="$field/@hint" /></div>
++  </xsl:if>
+ </xsl:template>
+ 
+ <xsl:template name="dialog-field-input">
+@@ -708,6 +711,7 @@
+   <label for="{$elementId}" class="radio">
+     <xsl:value-of select="$labelText" />
+   </label>
++  <xsl:call-template name="float-fix" />
+ </xsl:template>
+ 
+ <xsl:template name="dialog-element-select">
+Index: papaya-data/templates/default-xhtml/html/boxes.xml
+===================================================================
+--- papaya-data/templates/default-xhtml/html/boxes.xml	(Revision 38515)
++++ papaya-data/templates/default-xhtml/html/boxes.xml	(Arbeitskopie)
+@@ -1,8 +1,8 @@
+ <?xml version="1.0" ?>
+ <boxes>
+   <styles>
+-    <!-- 
+-      css files included in page head 
++    <!--
++      css files included in page head
+ 
+       Syntax: <file module="foo" file="foo.css"/>
+     -->
+@@ -23,33 +23,47 @@
+     <file module="actionbox_catalog_limited_content" file="box_catalog_limited_content.css" />
+     <file module="actionbox_catalog_related_categories" file="box_catalog_related_list.css" />
+     <file module="actionbox_quiz" file="box_quiz.css" />
+-    
++
+     <file module="actionbox_forum" file="box_forum.css" />
+     <file module="actionbox_comments" file="box_forum.css" />
+     <file module="actionbox_lastentries" file="box_forum.css" />
+-    
++
+     <file module="actionbox_nextdates_tag" file="box_calendar.css" />
+     <file module="actionbox_calendar_tag" file="box_calendar.css" />
+     <file module="actionbox_calendar" file="box_calendar.css" />
+-    
++
+     <file module="actbox_linkdb" file="box_linkdb.css" />
+-    
++
+     <file module="actionbox_searchbox" file="box_mnogo.css" />
+-  </styles>  
++
++    <file module="ACommunityPageCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunitySurferCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityImageCommentsBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityCommentsRankingBox" file="box_acommunity_comments.css" />
++    <file module="ACommunityCommentersRankingBox" file="box_acommunity_commenters.css" />
++    <file module="ACommunitySurferStatusBox" file="box_acommunity_surfer_status.css" />
++    <file module="ACommunitySurferContactsBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunitySurfersLastActionBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunitySurfersRegistrationBox" file="box_acommunity_surfers.css" />
++    <file module="ACommunityMessageConversationsBox" file="box_acommunity_message_conversations.css" />
++    <file module="ACommunitySurferGalleryTeaserBox" file="box_acommunity_surfer_gallery_teaser.css" />
++    <file module="ACommunitySurferGalleryUploadBox" file="box_acommunity_surfer_gallery_upload.css" />
++    <file module="ACommunitySurferGalleryFoldersBox" file="box_acommunity_surfer_gallery_folders.css" />
++  </styles>
+   <scripts>
+-    <!-- 
++    <!--
+       javascript files included in page head
+-     
++
+       Syntax: <file module="foo" file="foo.js"/>
+     -->
+ 
+-  </scripts>  
++  </scripts>
+   <scripts-lazy>
+-    <!-- 
++    <!--
+       javascript files included just before page boday end
+-     
++
+       Syntax: <file module="bar" file="bar.js"/>
+     -->
+-  
++
+   </scripts-lazy>
+-</boxes>
+\ No newline at end of file
++</boxes>
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php	(Revision 38515)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/Theme/ConfigurationTest.php	(Arbeitskopie)
+@@ -14,14 +14,16 @@
+   */
+   public function testGetThemeConfigurationWithAllFields() {
+     $expected = array(
+-      'name' => 'Theme 1',
+-      'templates' => 'theme-1',
+-      'version' => '1.0',
+-      'date' => '2010-04-07',
+-      'author' => 'Papaya Software GmbH',
+-      'description' => 'This is the 1st test theme.',
+-      'thumbMedium' => 'thumb1_theme1.jpg',
+-      'thumbLarge' => 'thumb2_theme1.jpg'
++      '' => array(
++        'name' => 'Theme 1',
++        'templates' => 'theme-1',
++        'version' => '1.0',
++        'date' => '2010-04-07',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 1st test theme.',
++        'thumbMedium' => 'thumb1_theme1.jpg',
++        'thumbLarge' => 'thumb2_theme1.jpg'
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme1';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -33,14 +35,16 @@
+   */
+   public function testGetThemeConfigurationOnlyWithNameAndTemplates() {
+     $expected = array(
+-      'name' => 'Theme 2',
+-      'templates' => 'theme-2',
+-      'version' => '',
+-      'date' => '',
+-      'author' => '',
+-      'description' => '',
+-      'thumbMedium' => '',
+-      'thumbLarge' => ''
++      '' => array(
++        'name' => 'Theme 2',
++        'templates' => 'theme-2',
++        'version' => '',
++        'date' => '',
++        'author' => '',
++        'description' => '',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme2';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -52,14 +56,16 @@
+   */
+   public function testGetThemeConfigurationWithoutThumbs() {
+     $expected = array(
+-      'name' => 'Theme 3',
+-      'templates' => 'theme-3',
+-      'version' => '6.7',
+-      'date' => '2009-12-31',
+-      'author' => 'Papaya Software GmbH',
+-      'description' => 'This is the 3rd test theme.',
+-      'thumbMedium' => '',
+-      'thumbLarge' => ''
++      '' => array(
++        'name' => 'Theme 3',
++        'templates' => 'theme-3',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 3rd test theme.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
+     );
+     $themePath = dirname(__FILE__).'/../TestData/theme3';
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+@@ -69,6 +75,47 @@
+   /**
+   * @covers PapayaUiAdministrationBrowserThemeConfiguration::getThemeConfiguration
+   */
++  public function testGetThemeConfigurationWithSubThemes() {
++    $expected = array(
++      '' => array(
++        'name' => 'Theme 4',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'suba' => array(
++        'name' => 'Theme 4 A',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme with A.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'subb' => array(
++        'name' => 'Theme 4 B',
++        'templates' => 'theme-4',
++        'version' => '6.7',
++        'date' => '2009-12-31',
++        'author' => 'Papaya Software GmbH',
++        'description' => 'This is the 4th test theme with B.',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      )
++    );
++    $themePath = dirname(__FILE__).'/../TestData/theme4';
++    $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
++    $this->assertSame($expected, $themeObject->getThemeConfiguration($themePath));
++  }
++
++  /**
++  * @covers PapayaUiAdministrationBrowserThemeConfiguration::getThemeConfiguration
++  */
+   public function testGetThemeConfigurationWithInvalidConfigurationFile() {
+     $themeObject = new PapayaUiAdministrationBrowserThemeConfiguration();
+     $themePath = dirname(__FILE__).'/../TestData/theme999';
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php	(Revision 38515)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/ThemeTest.php	(Arbeitskopie)
+@@ -450,22 +450,132 @@
+   public function callbackGetThemeConfiguration($directory) {
+     $themes = array(
+       'theme3' => array(
+-        'name' => 'Theme 3',
+-        'templates' => 'theme3',
+-        'thumbMedium' => 'thumb1_theme3.jpg',
+-        'thumbLarge' => 'thumb2_theme3.jpg'
++        '' => array(
++          'name' => 'Theme 3',
++          'templates' => 'theme3',
++          'thumbMedium' => 'thumb1_theme3.jpg',
++          'thumbLarge' => 'thumb2_theme3.jpg'
++        )
+       ),
+       'theme2' => array(
++        '' => array(
++          'name' => 'Theme 2',
++          'templates' => 'theme2',
++          'thumbMedium' => 'thumb1_theme2.jpg',
++          'thumbLarge' => 'thumb2_theme2.jpg'
++        )
++      ),
++      'theme1' => array(
++        '' => array(
++          'name' => 'Theme 1',
++          'templates' => 'theme1',
++          'thumbMedium' => '',
++          'thumbLarge' => ''
++        )
++      )
++    );
++    return $themes[basename($directory)];
++  }
++
++  /**
++  * @covers PapayaUiAdministrationBrowserTheme::getThemes
++  */
++  public function testGetThemesWithSubThemes() {
++    $expected = array(
++      'theme1' => array(
++        'name' => 'Theme 1',
++        'templates' => 'theme1',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'theme1-subthemea' => array(
++        'name' => 'Theme 1 Subtheme A',
++        'templates' => 'theme1',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'theme1-subthemeb' => array(
++        'name' => 'Theme 1 Subtheme B',
++        'templates' => 'theme1',
++        'thumbMedium' => '',
++        'thumbLarge' => ''
++      ),
++      'theme2' => array(
+         'name' => 'Theme 2',
+         'templates' => 'theme2',
+         'thumbMedium' => 'thumb1_theme2.jpg',
+         'thumbLarge' => 'thumb2_theme2.jpg'
+       ),
++      'theme3' => array(
++        'name' => 'Theme 3',
++        'templates' => 'theme3',
++        'thumbMedium' => 'thumb1_theme3.jpg',
++        'thumbLarge' => 'thumb2_theme3.jpg'
++      ),
++      'theme3-subthemea' => array(
++        'name' => 'Theme 3 Subtheme A',
++        'templates' => 'theme3',
++        'thumbMedium' => 'thumb1_theme3.jpg',
++        'thumbLarge' => 'thumb2_theme3.jpg'
++      ),
++    );
++    $themeObject = $this->_getThemeObjectFixture();
++    $themeObject->setThemesPath(dirname(__FILE__).'/TestData/');
++    $configurationObject = $this->getMock('PapayaUiAdministrationBrowserThemeConfiguration');
++    $configurationObject
++      ->expects($this->exactly(3))
++      ->method('getThemeConfiguration')
++      ->with($this->isType('string'))
++      ->will(
++        $this->returnCallback(array($this, 'callbackGetThemeConfigurationWithSubThemes'))
++      );
++    $themeObject->setThemeConfigurationObject($configurationObject);
++    $this->assertEquals($expected, $themeObject->getThemes());
++  }
++
++  public function callbackGetThemeConfigurationWithSubThemes($directory) {
++    $themes = array(
++      'theme3' => array(
++        '' => array(
++          'name' => 'Theme 3',
++          'templates' => 'theme3',
++          'thumbMedium' => 'thumb1_theme3.jpg',
++          'thumbLarge' => 'thumb2_theme3.jpg'
++        ),
++        'subthemea' => array(
++          'name' => 'Theme 3 Subtheme A',
++          'templates' => 'theme3',
++          'thumbMedium' => 'thumb1_theme3.jpg',
++          'thumbLarge' => 'thumb2_theme3.jpg'
++        )
++      ),
++      'theme2' => array(
++        '' => array(
++          'name' => 'Theme 2',
++          'templates' => 'theme2',
++          'thumbMedium' => 'thumb1_theme2.jpg',
++          'thumbLarge' => 'thumb2_theme2.jpg'
++        )
++      ),
+       'theme1' => array(
+-        'name' => 'Theme 1',
+-        'templates' => 'theme1',
+-        'thumbMedium' => '',
+-        'thumbLarge' => ''
++        '' => array(
++          'name' => 'Theme 1',
++          'templates' => 'theme1',
++          'thumbMedium' => '',
++          'thumbLarge' => ''
++        ),
++        'subthemea' => array(
++          'name' => 'Theme 1 Subtheme A',
++          'templates' => 'theme1',
++          'thumbMedium' => '',
++          'thumbLarge' => ''
++        ),
++        'subthemeb' => array(
++          'name' => 'Theme 1 Subtheme B',
++          'templates' => 'theme1',
++          'thumbMedium' => '',
++          'thumbLarge' => ''
++        )
+       )
+     );
+     return $themes[basename($directory)];
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-suba.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-suba.xml	(Revision 0)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-suba.xml	(Revision 0)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<papaya-theme>
++  <name>Theme 4 A</name>
++  <templates directory="theme-4" />
++  <version number="6.7" date="2009-12-31" />
++  <author>Papaya Software GmbH</author>
++  <description>This is the 4th test theme with A.</description>
++  <sub-theme>suba</sub-theme>
++</papaya-theme>
+\ No newline at end of file
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-subb.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-subb.xml	(Revision 0)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme-subb.xml	(Revision 0)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<papaya-theme>
++  <name>Theme 4 B</name>
++  <templates directory="theme-4" />
++  <version number="6.7" date="2009-12-31" />
++  <author>Papaya Software GmbH</author>
++  <description>This is the 4th test theme with B.</description>
++  <sub-theme>subb</sub-theme>
++</papaya-theme>
+\ No newline at end of file
+Index: tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml	(Revision 0)
++++ tests/unittests/papaya-lib/system/Papaya/Ui/Administration/Browser/TestData/theme4/theme.xml	(Revision 0)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<papaya-theme>
++  <name>Theme 4</name>
++  <templates directory="theme-4" />
++  <version number="6.7" date="2009-12-31" />
++  <author>Papaya Software GmbH</author>
++  <description>This is the 4th test theme.</description>
++  <sub-theme></sub-theme>
++</papaya-theme>
+\ No newline at end of file
+Index: tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php
+===================================================================
+--- tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php	(Revision 38515)
++++ tests/unittests/papaya-lib/system/Papaya/Theme/HandlerTest.php	(Arbeitskopie)
+@@ -48,6 +48,45 @@
+   /**
+   * @covers PapayaThemeHandler::getUrl
+   */
++  public function testGetUrlWithSubThemeName() {
++    $url = $this->getMock('PapayaUrl', array('getHostUrl'));
++    $url
++      ->expects($this->once())
++      ->method('getHostUrl')
++      ->will($this->returnValue('http://test.tld'));
++    $request = $this->getMock('PapayaRequest', array('getParameter', 'getUrl'));
++    $request
++      ->expects($this->once())
++      ->method('getParameter')
++      ->will($this->returnValue(FALSE));
++    $request
++      ->expects($this->once())
++      ->method('getUrl')
++      ->will($this->returnValue($url));
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Request' => $request,
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'http://test.tld/themes/theme/',
++      $handler->getUrl()
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
+   public function testGetUrlWithThemeNameParameter() {
+     $url = $this->getMock('PapayaUrl', array('getHostUrl'));
+     $url
+@@ -83,6 +122,65 @@
+   /**
+   * @covers PapayaThemeHandler::getUrl
+   */
++  public function testGetUrlWithSubThemeNameParameter() {
++    $url = $this->getMock('PapayaUrl', array('getHostUrl'));
++    $url
++      ->expects($this->once())
++      ->method('getHostUrl')
++      ->will($this->returnValue('http://test.tld'));
++    $request = $this->getMock('PapayaRequest', array('getParameter', 'getUrl'));
++    $request
++      ->expects($this->once())
++      ->method('getUrl')
++      ->will($this->returnValue($url));
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Request' => $request,
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'http://test.tld/themes/theme/',
++      $handler->getUrl('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
++  public function testGetThemeAndSubTheme() {
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_CDN_THEMES' => '',
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      'theme-subtheme',
++      $handler->getTheme().'-'.$handler->getSubTheme('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getUrl
++  */
+   public function testGetUrlWithCdn() {
+     $request = $this->getMock('PapayaRequest', array('getParameter'));
+     $request
+@@ -199,6 +297,31 @@
+   * @covers PapayaThemeHandler::getLocalThemePath
+   * @backupGlobals enabled
+   */
++  public function testGetLocalThemePathWithSubThemeParameter() {
++    $_SERVER['DOCUMENT_ROOT'] = '/document/root';
++    $handler = new PapayaThemeHandler();
++    $handler->papaya(
++      $this->getMockApplicationObject(
++        array(
++          'Options' => $this->getMockConfigurationObject(
++            array(
++             'PAPAYA_PATH_THEMES' => '/themes/',
++             'PAPAYA_LAYOUT_THEME' => 'theme-subtheme'
++            )
++          )
++        )
++      )
++    );
++    $this->assertEquals(
++      '/document/root/themes/theme/',
++      $handler->getLocalThemePath('theme-subtheme')
++    );
++  }
++
++  /**
++  * @covers PapayaThemeHandler::getLocalThemePath
++  * @backupGlobals enabled
++  */
+   public function testGetLocalThemePathWithThemeName() {
+     $_SERVER['DOCUMENT_ROOT'] = '/document/root';
+     $handler = new PapayaThemeHandler();
