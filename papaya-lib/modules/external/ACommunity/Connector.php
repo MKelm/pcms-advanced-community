@@ -320,10 +320,14 @@ class ACommunityConnector extends base_connector {
    * @param string $surferId
    */
   public function onDeleteSurfer($surferId) {
+    $textThumbnailsFolder =
+      papaya_module_options::readOption($this->_guid, 'text_thumbnails_folder', NULL);
     $this->surferDeletion()->setDeletedSurferInPageComments($surferId);
     $this->surferDeletion()->deleteSurferComments($surferId);
-    $this->surferDeletion()->deleteSurferGalleries($surferId);
+    $this->surferDeletion()->deleteSurferCommentsThumbnailLinkFiles($textThumbnailsFolder, $surferId);
+    $this->surferDeletion()->deleteSurferGalleries($surferId, $textThumbnailsFolder);
     $this->surferDeletion()->deleteMessages($surferId);
+    $this->surferDeletion()->deleteMessagesThumbnailLinkFiles($textThumbnailsFolder, $surferId);
   }
 
   /**
@@ -337,6 +341,7 @@ class ACommunityConnector extends base_connector {
    */
   public function onDeletePages($pageIds) {
     $this->pageDeletion()->deletePageComments($pageIds);
+    $this->pageDeletion()->deletePageCommentsThumbnailLinkFiles($pageIds);
   }
 
   /**
@@ -377,7 +382,7 @@ class ACommunityConnector extends base_connector {
    *
    * @return string
    */
-  public function getCommentsPageLink($languageId, $ressourceType, $ressourceId) {
+  public function getCommentsPageLink($languageId, $ressourceType, $ressourceId, $additionalParameters = array()) {
     $ressourceParameterName = NULL;
     switch ($ressourceType) {
       case 'page':
@@ -400,6 +405,12 @@ class ACommunityConnector extends base_connector {
     if (!isset($parameters)) {
       $parameters = array($ressourceParameterName => $ressourceId);
       $surferId = NULL;
+    }
+    if (isset($additionalParameters)) {
+      if ($parameters === TRUE) {
+        $parameters = array();
+      }
+      $parameters = array_merge($parameters, $additionalParameters);
     }
     $mode = papaya_module_options::readOption($this->_guid, 'display_mode_ajax_requests', 'ajax');
     return $this->_getPageLink(
@@ -620,6 +631,7 @@ class ACommunityConnector extends base_connector {
     if (!empty($optionName)) {
       $proceed = FALSE;
       if (empty($handle) && !empty($surferId)) {
+        $handleBySurferId = TRUE;
         $handle = $this->communityConnector()->getHandleById($surferId);
         if (!empty($handle)) {
           $proceed = TRUE;
@@ -636,6 +648,8 @@ class ACommunityConnector extends base_connector {
           }
         } elseif ($parameters === FALSE) {
           $parameters = array();
+        } elseif (isset($handleBySurferId)) {
+          $parameters = array_merge(array('surfer_handle' => $handle), $parameters);
         }
         if (!empty($handle)) {
           $pageName = base_object::escapeForFilename($handle).$pageNamePostfix;
