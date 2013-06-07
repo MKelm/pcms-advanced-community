@@ -80,10 +80,15 @@ class ACommunityUiContentCommentDialog
       $this->data()->absoluteReferenceUrl ? $this->data()->reference()->get() :
         $this->data()->reference()->getRelative()
     );
+    $ressource = $this->data()->owner->ressource();
     $dialog->hiddenFields()->merge(
       array(
         'command' => 'reply',
-        'comment_id' => $this->parameters()->get('comment_id', 0)
+        'comment_id' => $this->parameters()->get('comment_id', 0),
+        'image_handler_url' => $this->data()->owner->acommunityConnector()->getCommentsPageLink(
+          $this->data()->languageId, $ressource->type, $ressource->id,
+          array('request' => 'thumbnail_link', 'url' => '{URL}')
+        )
       )
     );
     $dialog->caption = NULL;
@@ -96,7 +101,8 @@ class ACommunityUiContentCommentDialog
       '',
       new ACommunityFilterTextExtended(
         PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
-        $this->data()->owner->ressource()->type.'_'.$this->data()->owner->ressource()->id
+        'comments:'.$this->data()->owner->ressource()->type.'_'.$this->data()->owner->ressource()->id,
+        $this->papaya()->session
       )
     );
     $field->setMandatory(TRUE);

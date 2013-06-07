@@ -77,8 +77,15 @@ class ACommunityUiContentMessageDialog
     $dialog->parameterGroup($this->parameterGroup());
     $dialog->parameters($this->parameters());
     $dialog->action($this->data()->reference()->getRelative());
+    $ressource = $this->data()->owner->ressource();
     $dialog->hiddenFields()->merge(
-      array('command' => 'reply')
+      array(
+        'command' => 'reply',
+        'image_handler_url' => $this->data()->owner->acommunityConnector()->getCommentsPageLink(
+          $this->data()->languageId, $ressource->type, $ressource->id,
+          array('request' => 'thumbnail_link', 'url' => '{URL}')
+        )
+      )
     );
     $dialog->caption = NULL;
 
@@ -91,7 +98,8 @@ class ACommunityUiContentMessageDialog
       '',
       new ACommunityFilterTextExtended(
         PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
-        'surfer_'.$this->data()->currentSurferId().':surfer_'.$ressource->id
+        'messages:surfer_'.$this->data()->currentSurferId().':surfer_'.$ressource->id,
+        $this->papaya()->session
       )
     );
     $field->setMandatory(TRUE);
