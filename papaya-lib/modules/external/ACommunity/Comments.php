@@ -126,12 +126,25 @@ class ACommunityComments extends ACommunityUiContent {
   */
   public function appendTo(PapayaXmlElement $parent) {
     if ($this->parameters()->get('request') == 'thumbnail_link') {
+      $ressource = $this->ressource();
+      $ident = $this->parameters()->get('ident');
+      $from = $this->parameters()->get('from');
+      $checkIdent = md5(
+        'request_a_thumbnail_link_image:'.$from.':surfer_'.$this->data()->currentSurferId().
+        ':'.$ressource->type.'_'.$ressource->id
+      );
       // output for ajax request "thumbnail_link"
       $imageUrl = $this->parameters()->get('url');
-      if (!empty($imageUrl)) {
+      if (!empty($imageUrl) && !empty($ident) && $ident == $checkIdent) {
+        if ($from == 'comments') {
+          $filterRessource = $from.':'.$ressource->type.'_'.$ressource->id;
+        } elseif ($from == 'messages') {
+          $filterRessource = $from.':surfer_'.$this->data()->currentSurferId().
+            ':'.$ressource->type.'_'.$ressource->id;
+        }
         include_once(dirname(__FILE__).'/Filter/Text/Extended.php');
         $filter = new ACommunityFilterTextExtended(
-          NULL, $this->ressource(), $this->papaya()->session, TRUE
+          NULL, $filterRessource, $this->papaya()->session, $ident
         );
         $filter->addThumbnailLink($imageUrl);
         $thumbnailLink = reset($filter->thumbnailLinks());

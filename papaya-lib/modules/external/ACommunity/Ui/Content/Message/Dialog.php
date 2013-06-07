@@ -78,18 +78,31 @@ class ACommunityUiContentMessageDialog
     $dialog->parameters($this->parameters());
     $dialog->action($this->data()->reference()->getRelative());
     $ressource = $this->data()->owner->ressource();
+
+    $imageHandlerRequestIdent = $this->parameters()->get('image_handler_request_ident', NULL);
+    if (empty($imageHandlerRequestIdent)) {
+      $imageHandlerRequestIdent = md5(
+        'request_a_thumbnail_link_image:messages:surfer_'.$this->data()->currentSurferId().
+        ':surfer_'.$ressource->id
+      );
+    }
+
     $dialog->hiddenFields()->merge(
       array(
         'command' => 'reply',
         'image_handler_url' => $this->data()->owner->acommunityConnector()->getCommentsPageLink(
           $this->data()->languageId, $ressource->type, $ressource->id,
-          array('request' => 'thumbnail_link', 'url' => '{URL}')
-        )
+          array(
+            'request' => 'thumbnail_link',
+            'from' => 'messages',
+            'ident' => $imageHandlerRequestIdent, 'url' => '{URL}'
+          )
+        ),
+        'image_handler_request_ident' => $imageHandlerRequestIdent
       )
     );
     $dialog->caption = NULL;
 
-    $ressource = $this->data()->owner->ressource();
     include_once(dirname(__FILE__).'/../../../Filter/Text/Extended.php');
     $dialog->fields[] = $field = new PapayaUiDialogFieldTextarea(
       $this->data()->captions['dialog_text'],
@@ -99,7 +112,8 @@ class ACommunityUiContentMessageDialog
       new ACommunityFilterTextExtended(
         PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
         'messages:surfer_'.$this->data()->currentSurferId().':surfer_'.$ressource->id,
-        $this->papaya()->session
+        $this->papaya()->session,
+        $imageHandlerRequestIdent
       )
     );
     $field->setMandatory(TRUE);

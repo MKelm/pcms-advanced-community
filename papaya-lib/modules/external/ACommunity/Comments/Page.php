@@ -114,7 +114,7 @@ class ACommunityCommentsPage extends base_content implements PapayaPluginCacheab
       $this->_cacheDefiniton = $definition;
     } elseif (NULL == $this->_cacheDefiniton) {
       $definitionValues = array('acommunity_comments_box');
-      $parameterNames = array('request', 'url');
+      $parameterNames = array('request', 'ident', 'url');
       $ressource = $this->setRessourceData();
       if (isset($ressource->id)) {
         $currentSurferId = $this->comments()->data()->currentSurferId();

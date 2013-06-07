@@ -81,14 +81,29 @@ class ACommunityUiContentCommentDialog
         $this->data()->reference()->getRelative()
     );
     $ressource = $this->data()->owner->ressource();
+
+    $imageHandlerRequestIdent = $this->parameters()->get('image_handler_request_ident', NULL);
+    if (empty($imageHandlerRequestIdent)) {
+      $imageHandlerRequestIdent = md5(
+        'request_a_thumbnail_link_image:comments:surfer_'.$this->data()->currentSurferId().
+        ':'.$ressource->type.'_'.$ressource->id
+      );
+    }
+
     $dialog->hiddenFields()->merge(
       array(
         'command' => 'reply',
         'comment_id' => $this->parameters()->get('comment_id', 0),
         'image_handler_url' => $this->data()->owner->acommunityConnector()->getCommentsPageLink(
           $this->data()->languageId, $ressource->type, $ressource->id,
-          array('request' => 'thumbnail_link', 'url' => '{URL}')
-        )
+          array(
+            'request' => 'thumbnail_link',
+            'from' => 'comments',
+            'ident' => $imageHandlerRequestIdent,
+            'url' => '{URL}'
+          )
+        ),
+        'image_handler_request_ident' => $imageHandlerRequestIdent
       )
     );
     $dialog->caption = NULL;
@@ -101,8 +116,9 @@ class ACommunityUiContentCommentDialog
       '',
       new ACommunityFilterTextExtended(
         PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
-        'comments:'.$this->data()->owner->ressource()->type.'_'.$this->data()->owner->ressource()->id,
-        $this->papaya()->session
+        'comments:'.$ressource->type.'_'.$ressource->id,
+        $this->papaya()->session,
+        $imageHandlerRequestIdent
       )
     );
     $field->setMandatory(TRUE);
