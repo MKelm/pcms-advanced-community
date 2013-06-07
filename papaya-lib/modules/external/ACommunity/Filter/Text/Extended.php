@@ -183,8 +183,9 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    * An method to add a thumbnail by an image url for the messages/comments output.
    * The comments/messages page supports an ajax request for single thumbnail link requests used
    * by the javascript extension for dynamic url detection on user input. Session values are
-   * supported to create one media file per image url only. They have a unique identifier for each
-   * registered surfer. This solution allows user tracking extensions to avoid spam.
+   * supported to create one media file per image url only on multiple ajax requests.
+   * The session values have a unique identifier for each registered surfer and selected ressource.
+   * This solution allows user tracking extensions to avoid spam.
    *
    * @param string $imageUrl
    * @param boolean $removeDetectedSessionValues
@@ -207,10 +208,9 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         fwrite($handle, $contents);
         fclose($handle);
         if (getimagesize($path) != FALSE) {
+          $fileName = substr($path, strlen($path) - 6); // get the random chars of tempnam as name
           if (!empty($this->_ressource)) {
-            $fileName = $path.':'.$this->_ressource;
-          } else {
-            $fileName = $path;
+            $fileName = $fileName.':'.$this->_ressource;
           }
           $fileId = $this->mediaDbEdit()->addFile(
             $path, $fileName, $this->_textOptions['thumbnails_folder'], ''
@@ -234,7 +234,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
     }
 
     if (isset($thumbnailLink)) {
-      if (isset($fileId)) {
+      if (isset($fileId) && !isset($removeDetectedSessionValues)) {
         // session values insert on file creation, that's the first run
         if (empty($this->_session->values[$this->_sessionIdent])) {
           $this->_session->values[$this->_sessionIdent] = array();

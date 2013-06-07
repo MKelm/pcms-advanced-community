@@ -133,23 +133,28 @@ class ACommunityComments extends ACommunityUiContent {
         'request_a_thumbnail_link_image:'.$from.':surfer_'.$this->data()->currentSurferId().
         ':'.$ressource->type.'_'.$ressource->id
       );
-      // output for ajax request "thumbnail_link"
-      $imageUrl = $this->parameters()->get('url');
-      if (!empty($imageUrl) && !empty($ident) && $ident == $checkIdent) {
-        if ($from == 'comments') {
-          $filterRessource = $from.':'.$ressource->type.'_'.$ressource->id;
-        } elseif ($from == 'messages') {
-          $filterRessource = $from.':surfer_'.$this->data()->currentSurferId().
-            ':'.$ressource->type.'_'.$ressource->id;
-        }
-        include_once(dirname(__FILE__).'/Filter/Text/Extended.php');
-        $filter = new ACommunityFilterTextExtended(
-          NULL, $filterRessource, $this->papaya()->session, $ident
-        );
-        $filter->addThumbnailLink($imageUrl);
-        $thumbnailLink = reset($filter->thumbnailLinks());
-        if (!empty($thumbnailLink)) {
-          $parent->appendXml($thumbnailLink);
+      if (!empty($ident) && $ident == $checkIdent) {
+        // output for ajax request "thumbnail_link"
+        $imageUrl = $this->parameters()->get('url');
+        if (!empty($imageUrl) && $imageUrl != '{URL}') {
+          if ($from == 'comments') {
+            $filterRessource = $from.':'.$ressource->type.'_'.$ressource->id;
+          } elseif ($from == 'messages') {
+            $filterRessource = $from.':surfer_'.$this->data()->currentSurferId().
+              ':'.$ressource->type.'_'.$ressource->id;
+          }
+          include_once(dirname(__FILE__).'/Filter/Text/Extended.php');
+          $filter = new ACommunityFilterTextExtended(
+            NULL, $filterRessource, $this->papaya()->session, $ident
+          );
+          $filter->addThumbnailLink($imageUrl);
+          $thumbnailLink = reset($filter->thumbnailLinks());
+          if (!empty($thumbnailLink)) {
+            $parent->appendXml($thumbnailLink);
+          }
+        } else {
+          // unset session ident request
+          unset($this->papaya()->session->values[$ident]);
         }
       }
     } elseif (isset($this->ressource()->id)) {
