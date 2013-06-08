@@ -72,6 +72,7 @@ class ACommunityUiContentCommentDialog
     $buttonCaption = $this->data()->captions['dialog_button'];
 
     $dialog = new PapayaUiDialogDatabaseSave($this->record());
+    $dialog->caption = NULL;
     $dialog->callbacks()->onBeforeSave = array($this, 'callbackBeforeSaveRecord');
     $dialog->papaya($this->papaya());
     $dialog->parameterGroup($this->parameterGroup());
@@ -81,19 +82,20 @@ class ACommunityUiContentCommentDialog
         $this->data()->reference()->getRelative()
     );
     $ressource = $this->data()->owner->ressource();
-
-    $imageHandlerRequestIdent = $this->parameters()->get('image_handler_request_ident', NULL);
-    if (empty($imageHandlerRequestIdent)) {
-      $imageHandlerRequestIdent = md5(
-        'request_a_thumbnail_link_image:comments:surfer_'.$this->data()->currentSurferId().
-        ':'.$ressource->type.'_'.$ressource->id
-      );
-    }
-
     $dialog->hiddenFields()->merge(
-      array(
-        'command' => 'reply',
-        'comment_id' => $this->parameters()->get('comment_id', 0),
+      array('command' => 'reply', 'comment_id' => $this->parameters()->get('comment_id', 0))
+    );
+
+    $textOptions = $this->data()->owner->acommunityConnector()->getTextOptions();
+    if ($textOptions['thumbnails'] == 1) {
+      $imageHandlerRequestIdent = $this->parameters()->get('image_handler_request_ident', NULL);
+      if (empty($imageHandlerRequestIdent)) {
+        $imageHandlerRequestIdent = md5(
+          'request_a_thumbnail_link_image:comments:surfer_'.$this->data()->currentSurferId().
+          ':'.$ressource->type.'_'.$ressource->id
+        );
+      }
+      $dialog->hiddenFields()->merge(array(
         'image_handler_url' => $this->data()->owner->acommunityConnector()->getCommentsPageLink(
           $this->data()->languageId, $ressource->type, $ressource->id,
           array(
@@ -104,9 +106,30 @@ class ACommunityUiContentCommentDialog
           )
         ),
         'image_handler_request_ident' => $imageHandlerRequestIdent
-      )
-    );
-    $dialog->caption = NULL;
+      ));
+    }
+
+    if ($textOptions['videos'] == 1) {
+      $videoHandlerRequestIdent = $this->parameters()->get('image_handler_request_ident', NULL);
+      if (empty($videoHandlerRequestIdent)) {
+        $videoHandlerRequestIdent = md5(
+          'request_a_video_link:comments:surfer_'.$this->data()->currentSurferId().
+          ':'.$ressource->type.'_'.$ressource->id
+        );
+      }
+      $dialog->hiddenFields()->merge(array(
+        'video_handler_url' => $this->data()->owner->acommunityConnector()->getCommentsPageLink(
+          $this->data()->languageId, $ressource->type, $ressource->id,
+          array(
+            'request' => 'video_link',
+            'from' => 'comments',
+            'ident' => $videoHandlerRequestIdent,
+            'url' => '{URL}'
+          )
+        ),
+        'video_handler_request_ident' => $videoHandlerRequestIdent
+      ));
+    }
 
     include_once(dirname(__FILE__).'/../../../Filter/Text/Extended.php');
     $dialog->fields[] = $field = new PapayaUiDialogFieldTextarea(
@@ -118,7 +141,8 @@ class ACommunityUiContentCommentDialog
         PapayaFilterText::ALLOW_SPACES|PapayaFilterText::ALLOW_DIGITS|PapayaFilterText::ALLOW_LINES,
         'comments:'.$ressource->type.'_'.$ressource->id,
         $this->papaya()->session,
-        $imageHandlerRequestIdent
+        isset($imageHandlerRequestIdent) ? $imageHandlerRequestIdent : NULL,
+        isset($videoHandlerRequestIdent) ? $videoHandlerRequestIdent : NULL
       )
     );
     $field->setMandatory(TRUE);

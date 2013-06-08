@@ -125,18 +125,21 @@ class ACommunityComments extends ACommunityUiContent {
   * @param PapayaXmlElement $parent
   */
   public function appendTo(PapayaXmlElement $parent) {
-    if ($this->parameters()->get('request') == 'thumbnail_link') {
+    $request = $this->parameters()->get('request', NULL);
+    if ($request == 'thumbnail_link' || $request == 'video_link') {
+      // output for ajax request "thumbnail_link" or "video_link" / supports messages and comments
       $ressource = $this->ressource();
       $ident = $this->parameters()->get('ident');
       $from = $this->parameters()->get('from');
+      $identRequestHandle = $request == 'thumbnail_link' ?
+        'request_a_thumbnail_link_image' : 'request_a_video_link';
       $checkIdent = md5(
-        'request_a_thumbnail_link_image:'.$from.':surfer_'.$this->data()->currentSurferId().
+        $identRequestHandle.':'.$from.':surfer_'.$this->data()->currentSurferId().
         ':'.$ressource->type.'_'.$ressource->id
       );
       if (!empty($ident) && $ident == $checkIdent) {
-        // output for ajax request "thumbnail_link"
-        $imageUrl = $this->parameters()->get('url');
-        if (!empty($imageUrl) && $imageUrl != '{URL}') {
+        $url = $this->parameters()->get('url');
+        if (!empty($url) && $url != '{URL}') {
           if ($from == 'comments') {
             $filterRessource = $from.':'.$ressource->type.'_'.$ressource->id;
           } elseif ($from == 'messages') {
@@ -144,16 +147,24 @@ class ACommunityComments extends ACommunityUiContent {
               ':'.$ressource->type.'_'.$ressource->id;
           }
           include_once(dirname(__FILE__).'/Filter/Text/Extended.php');
-          $filter = new ACommunityFilterTextExtended(
-            NULL, $filterRessource, $this->papaya()->session, $ident
-          );
-          $filter->addThumbnailLink($imageUrl);
-          $thumbnailLink = reset($filter->thumbnailLinks());
-          if (!empty($thumbnailLink)) {
-            $parent->appendXml($thumbnailLink);
+          if ($request == 'thumbnail_link') {
+            $filter = new ACommunityFilterTextExtended(
+              NULL, $filterRessource, $this->papaya()->session, $ident, NULL
+            );
+            $filter->addThumbnailLink($url);
+            $link = reset($filter->thumbnailLinks());
+          } else {
+            $filter = new ACommunityFilterTextExtended(
+              NULL, $filterRessource, $this->papaya()->session, NULL, $ident
+            );
+            $filter->addVideoLink($url);
+            $link = reset($filter->videoLinks());
+          }
+          if (!empty($link)) {
+            $parent->appendXml($link);
           }
         } else {
-          // unset session ident request
+          // unset session values by type request
           unset($this->papaya()->session->values[$ident]);
         }
       }
