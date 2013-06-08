@@ -208,10 +208,6 @@ class ACommunityUiContentComment extends PapayaUiControlCollectionItem {
         'votes_score' => $this->votesScore
       )
     );
-    include_once(
-      $this->papaya()->options->get('PAPAYA_INCLUDE_PATH', '/').
-      'system/sys_base_object.php'
-    );
     $comment->appendXml($this->text);
 
     $comment->appendElement(
