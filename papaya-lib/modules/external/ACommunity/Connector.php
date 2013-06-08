@@ -136,8 +136,20 @@ class ACommunityConnector extends base_connector {
        array(
          'abs' => 'Absolute', 'max' => 'Maximum', 'min' => 'Minimum', 'mincrop' => 'Minimum cropped'
        ), '', 'mincrop'
-    )
+    ),
+    'Text Videos',
+    'text_videos' => array(
+      'Active', 'isNum', TRUE, 'yesno', NULL, 'Show embedded videos for video links.', 1
+    ),
+    'text_videos_width' => array('Width', 'isNum', TRUE, 'input', 200, NULL, '640'),
+    'text_videos_height' => array('Height', 'isNum', TRUE, 'input', 200, NULL, '360')
   );
+
+  /**
+   * Buffer for text options
+   * @var array
+   */
+  protected $_textOptions = NULL;
 
   /**
    * Surfer deletion object
@@ -703,14 +715,20 @@ class ACommunityConnector extends base_connector {
    * @return array
    */
   public function getTextOptions() {
-    return array(
-      'thumbnails' => papaya_module_options::readOption($this->_guid, 'text_thumbnails', NULL),
-      'thumbnails_folder' => papaya_module_options::readOption($this->_guid, 'text_thumbnails_folder', NULL),
-      'thubmnails_size' => papaya_module_options::readOption($this->_guid, 'text_thumbnails_size', NULL),
-      'thubmnails_resize_mode' => papaya_module_options::readOption(
-        $this->_guid, 'text_thumbnails_resize_mode', NULL
-      )
-    );
+    if (is_null($this->_textOptions)) {
+      $this->_textOptions = array(
+        'thumbnails' => papaya_module_options::readOption($this->_guid, 'text_thumbnails', NULL),
+        'thumbnails_folder' => papaya_module_options::readOption($this->_guid, 'text_thumbnails_folder', NULL),
+        'thubmnails_size' => papaya_module_options::readOption($this->_guid, 'text_thumbnails_size', NULL),
+        'thubmnails_resize_mode' => papaya_module_options::readOption(
+          $this->_guid, 'text_thumbnails_resize_mode', NULL
+        ),
+        'videos' => papaya_module_options::readOption($this->_guid, 'text_videos', NULL),
+        'videos_width' => papaya_module_options::readOption($this->_guid, 'text_videos_width', NULL),
+        'videos_height' => papaya_module_options::readOption($this->_guid, 'text_videos_height', NULL)
+      );
+    }
+    return $this->_textOptions;
   }
 
   /**
