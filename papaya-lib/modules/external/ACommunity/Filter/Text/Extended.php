@@ -242,35 +242,20 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
     );
     $fileId = NULL;
     if (!isset($thumbnailLink)) {
-      // download image and insert it to media db, first run
-      $contents = file_get_contents($imageUrl);
-      if (!empty($contents)) {
-        $path = tempnam('/tmp', 'acommunity-text-thumbnail-');
-        $handle = fopen($path, "a");
-        fwrite($handle, $contents);
-        fclose($handle);
-        if (getimagesize($path) != FALSE) {
-          $fileName = substr($path, strlen($path) - 6); // get the random chars of tempnam as name
-          if (!empty($this->_ressource)) {
-            $fileName = $fileName.':'.$this->_ressource;
-          }
-          $fileId = $this->mediaDbEdit()->addFile(
-            $path, $fileName, $this->_textOptions['thumbnails_folder'], ''
-          );
-          // create link with media image tag for thumbnail creation, first run
-          $thumbnailLink = sprintf(
-            '<a href="%s" title="%s">%s</a>',
-            PapayaUtilStringXml::escapeAttribute($imageUrl),
-            PapayaUtilStringXml::escapeAttribute($imageUrl),
-            PapayaUtilStringPapaya::getImageTag(
-              $fileId, $this->_textOptions['thubmnails_size'], $this->_textOptions['thubmnails_size'],
-              '', $this->_textOptions['thubmnails_resize_mode']
-            )
-          );
-        }
-        if (file_exists($path)) {
-          unlink($path);
-        }
+      $fileId = $this->_addExternalImageToMediaDb(
+        $imageUrl, $this->_textOptions['thumbnails_folder']
+      );
+      if (isset($fileId)) {
+        // create link with media image tag for thumbnail creation, first run
+        $thumbnailLink = sprintf(
+          '<a href="%s" title="%s">%s</a>',
+          PapayaUtilStringXml::escapeAttribute($imageUrl),
+          PapayaUtilStringXml::escapeAttribute($imageUrl),
+          PapayaUtilStringPapaya::getImageTag(
+            $fileId, $this->_textOptions['thubmnails_size'], $this->_textOptions['thubmnails_size'],
+            '', $this->_textOptions['thubmnails_resize_mode']
+          )
+        );
       }
     }
     if (isset($thumbnailLink)) {
@@ -296,15 +281,51 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
       );
       $created = NULL;
       if (!isset($videoLink)) {
-        $videoLink = sprintf(
-          '<video-link src="%s" hoster="%s" id="%s" width="%d" height="%d" />',
-          PapayaUtilStringXml::escapeAttribute($videoUrl),
-          $hoster,
-          $id,
-          $this->_textOptions['videos_width'],
-          $this->_textOptions['videos_height']
+        switch ($hoster) {
+          case 'vimeo':
+            $apiData = unserialize(file_get_contents(
+              sprintf('http://vimeo.com/api/v2/video/%s.php', $id)
+            ));
+            $previewImageUrl = $apiData[0]['thumbnail_large'];
+            $videoTitle = (string)$apiData[0]['title'];
+            break;
+          case 'youtube':
+            $previewImageUrl = sprintf(
+              'http://img.youtube.com/vi/%s/maxresdefault.jpg', $id
+            );
+            // some youtube videos does not have a max resulution image, fallback first video thumbnail
+            $fh = @fopen($previewImageUrl, 'r');
+            if (!$fh) {
+              $previewImageUrl = sprintf('http://i.ytimg.com/vi/%s/0.jpg', $id);
+            } else {
+              fclose($fh);
+            }
+            $apiData = simplexml_load_string(file_get_contents(
+              sprintf('http://gdata.youtube.com/feeds/api/videos/%s?fields=title', $id)
+            ));
+            $videoTitle = (string)$apiData[0]->title;
+            break;
+        }
+        $fileId = $this->_addExternalImageToMediaDb(
+          $previewImageUrl, $this->_textOptions['videos_thumbnails_folder']
         );
-        $created = TRUE;
+        if (isset($fileId)) {
+          $videoLink = sprintf(
+            '<video-link src="%s" hoster="%s" id="%s" title="%s" title-js-escaped="%s" width="%d" height="%d">%s</video-link>',
+            PapayaUtilStringXml::escapeAttribute($videoUrl),
+            $hoster,
+            $id,
+            PapayaUtilStringXml::escapeAttribute($videoTitle),
+            str_replace('&', '&amp;', PapayaUtilStringXml::escapeAttribute($videoTitle)),
+            $this->_textOptions['videos_width'],
+            $this->_textOptions['videos_height'],
+            PapayaUtilStringPapaya::getImageTag(
+              $fileId, $this->_textOptions['videos_width'], $this->_textOptions['videos_height'],
+              '', 'mincrop'
+            )
+          );
+          $created = TRUE;
+        }
       }
       if (isset($videoLink)) {
         $this->_setSessionValueLink(
@@ -323,7 +344,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    * @return array [hoster / id]
    */
   protected function _getVideoHosterAndId($url) {
-    $videoPattern = '~youtube\.com/watch\?(.*)?v=([a-zA-Z0-9]+)|vimeo\.com/([0-9]+)~i';
+    $videoPattern = '~youtube\.com/watch\?(.*)?v=([a-zA-Z0-9\-]+)|vimeo\.com/([0-9]+)~i';
     preg_match($videoPattern, $url, $videoMatches);
     if (!empty($videoMatches[3])) {
       // vimeo id
@@ -334,6 +355,37 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
     }
     return array(NULL, NULL);
   }
+
+  /**
+   * Helper method to add linked image or video preview image from url to media db
+   * for thumbnail output.
+   *
+   * @param string $imageUrl
+   * @param integer $mediaDBFolderId
+   * @return string|NULL $fileId
+   */
+  protected function _addExternalImageToMediaDb($imageUrl, $mediaDBFolderId) {
+    $fileId = NULL;
+    $contents = file_get_contents($imageUrl);
+    if (!empty($contents)) {
+      $path = tempnam('/tmp', 'acommunity-extended-text-image-');
+      $handle = fopen($path, "a");
+      fwrite($handle, $contents);
+      fclose($handle);
+      if (getimagesize($path) != FALSE) {
+        $fileName = substr($path, strlen($path) - 6); // get the random chars of tempnam as name
+        if (!empty($this->_ressource)) {
+          $fileName = $fileName.':'.$this->_ressource;
+        }
+        $fileId = $this->mediaDbEdit()->addFile($path, $fileName, $mediaDBFolderId, '');
+      }
+      if (file_exists($path)) {
+        unlink($path);
+      }
+    }
+    return $fileId;
+  }
+
 
   /**
    * Helper method for add methods to get an existing session value by ident, type and url

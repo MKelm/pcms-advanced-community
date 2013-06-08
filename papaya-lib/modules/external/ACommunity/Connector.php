@@ -123,10 +123,12 @@ class ACommunityConnector extends base_connector {
     ),
     'Text Thumbnails',
     'text_thumbnails' => array(
-      'Active', 'isNum', TRUE, 'yesno', NULL, 'Show thumbnails for image links.', 1
+      'Active', 'isNum', TRUE, 'yesno', NULL,
+      'Show thumbnails for image links in comment/message text.', 1
     ),
     'text_thumbnails_folder' => array(
-      'Folder', 'isNum', TRUE, 'mediafolder', NULL, 'Media DB folder to get thumbnails for image links.'
+      'Folder', 'isNum', TRUE, 'mediafolder', NULL,
+      'Media DB folder to use for linked image thumbnails.'
     ),
     'text_thumbnails_size' => array(
       'Size', 'isNum', TRUE, 'input', 200, NULL, '100'
@@ -139,10 +141,17 @@ class ACommunityConnector extends base_connector {
     ),
     'Text Videos',
     'text_videos' => array(
-      'Active', 'isNum', TRUE, 'yesno', NULL, 'Show embedded videos for video links.', 1
+      'Active', 'isNum', TRUE, 'yesno', NULL,
+      'Show embedded videos for video links in comment/message text.', 1
     ),
-    'text_videos_width' => array('Width', 'isNum', TRUE, 'input', 200, NULL, '640'),
-    'text_videos_height' => array('Height', 'isNum', TRUE, 'input', 200, NULL, '360')
+    'text_videos_width' => array('Width', 'isNum', TRUE, 'input', 200,
+      'Width for embedded element and thumbnail.', '640'),
+    'text_videos_height' => array('Height', 'isNum', TRUE, 'input', 200,
+      'Height for embedded element and thumbnail.', '360'),
+    'text_video_thumbnails_folder' => array(
+      'Thumbnails Folder', 'isNum', TRUE, 'mediafolder', NULL,
+      'Media DB folder to use for thumbnails of video preview images.'
+    ),
   );
 
   /**
@@ -725,7 +734,10 @@ class ACommunityConnector extends base_connector {
         ),
         'videos' => papaya_module_options::readOption($this->_guid, 'text_videos', NULL),
         'videos_width' => papaya_module_options::readOption($this->_guid, 'text_videos_width', NULL),
-        'videos_height' => papaya_module_options::readOption($this->_guid, 'text_videos_height', NULL)
+        'videos_height' => papaya_module_options::readOption($this->_guid, 'text_videos_height', NULL),
+        'videos_thumbnails_folder' => papaya_module_options::readOption(
+          $this->_guid, 'text_video_thumbnails_folder', NULL
+        )
       );
     }
     return $this->_textOptions;
