@@ -90,6 +90,12 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
   protected $_thumbnailLinks = array();
 
   /**
+   * List with video links
+   * @var array
+   */
+  protected $_videoLinks = array();
+
+  /**
    * Use session values to save thumbnail links' image urls and media file ids
    * @var PapayaSession
    */
@@ -99,18 +105,28 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    * A session ident to get session values from, a md5 hash of a special ressource definition
    * e.g. "request_the_special_content:surfer_SURFERID"
    */
-  protected $_sessionIdent = NULL;
+  protected $_sessionIdentThumbnailLinks = NULL;
+
+  /**
+   * A session ident to get session values from, a md5 hash of a special ressource definition
+   * e.g. "request_the_special_content:surfer_SURFERID"
+   */
+  protected $_sessionIdentVideoLinks = NULL;
 
   /**
    * Create object and store options to match additional character groups
    *
    * @param integer $options
    */
-  public function __construct($options, $ressource = NULL, $session = NULL, $sessionIdent = NULL) {
+  public function __construct(
+                    $options, $ressource = NULL, $session = NULL,
+                    $sessionIdentThumbnailLinks = NULL, $sessionIdentVideoLinks = NULL
+                  ) {
     parent::__construct($options);
     $this->_ressource = $ressource;
     $this->_session = $session;
-    $this->_sessionIdent = $sessionIdent;
+    $this->_sessionIdentThumbnailLinks = $sessionIdentThumbnailLinks;
+    $this->_sessionIdentVideoLinks = $sessionIdentVideoLinks;
     $this->_textOptions = $this->acommunityConnector()->getTextOptions();
   }
 
@@ -121,6 +137,15 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    */
   public function thumbnailLinks() {
     return $this->_thumbnailLinks;
+  }
+
+  /**
+   * Get video links
+   *
+   * @return array
+   */
+  public function videoLinks() {
+    return $this->_videoLinks;
   }
 
   /**
@@ -140,12 +165,14 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         base_object::getXHTMLString($value, TRUE)
       )
     );
-    if (!empty($this->_session->values[$this->_sessionIdent])) {
+    if (!empty($this->_session->values[$this->_sessionIdentThumbnailLinks])) {
       // add the rest of all thumbnail links from session to thumbnail links array, final run
+      $sessionValues = $this->_session->values[$this->_sessionIdentThumbnailLinks];
       $this->_thumbnailLinks = array_merge(
-        $this->_thumbnailLinks, array_values($this->_session->values[$this->_sessionIdent])
+        $this->_thumbnailLinks, array_values($sessionValues)
       );
-      unset($this->_session->values[$this->_sessionIdent]);
+      // remove all session values left
+      $this->_removeSessionValueLink($removeValue, TRUE, 'thumbnail_links');
     }
     if (count($this->_thumbnailLinks) > 0) {
       $result .= '<text-thumbnail-links>';
@@ -153,6 +180,22 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         $result .= $link;
       }
       $result .= '</text-thumbnail-links>';
+    }
+    if (!empty($this->_session->values[$this->_sessionIdentVideoLinks])) {
+      // add the rest of all video links from session to video links array, final run
+      $sessionValues = $this->_session->values[$this->_sessionIdentVideoLinks];
+      $this->_videoLinks = array_merge(
+        $this->_videoLinks, array_values($sessionValues)
+      );
+      // remove all session values left
+      $this->_removeSessionValueLink($removeValue, TRUE, 'video_links');
+    }
+    if (count($this->_videoLinks) > 0) {
+      $result .= '<text-video-links>';
+      foreach ($this->_videoLinks as $link) {
+        $result .= $link;
+      }
+      $result .= '</text-video-links>';
     }
     return $result;
   }
@@ -167,16 +210,38 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
     if ($this->_textOptions['thumbnails'] == 1) {
       $imagePattern = '~.jpg|.jpeg|.gif|.png~i';
       preg_match($imagePattern, $match[1], $imageMatches);
-
       if (!empty($imageMatches[0])) {
         $this->addThumbnailLink($match[1], TRUE);
       }
+    }
+    if ($this->_textOptions['videos'] == 1) {
+      list($hoster, $id) = $this->getVideoHosterAndId($match[1]);
+      $this->addVideoLink($match[1], $hoster, $id, TRUE);
     }
     $urlToShow = $match[1];
     if (strlen($urlToShow) > $this->_urlLength) {
       $urlToShow = substr($match[1], 0, $this->_urlLength - 3).'...';
     }
     return sprintf('<a href="%s">%s</a>', $match[1], $urlToShow);
+  }
+
+  /**
+   * Helper method to get a video hoster and video id by an url
+   *
+   * @param string $url
+   * @return array [hoster / id]
+   */
+  public function getVideoHosterAndId($url) {
+    $videoPattern = '~youtube\.com\/watch\?(.*)?v=([a-zA-Z0-9]+)|vimeo\.com/([0-9]+)~i';
+    preg_match($videoPattern, $url, $videoMatches);
+    if (!empty($videoMatches[3])) {
+      // vimeo id
+      return array('vimeo', $videoMatches[3]);
+    } elseif (!empty($videoMatches[2])) {
+      // youtube id
+      return array('youtube', $videoMatches[2]);
+    }
+    return array(NULL, NULL);
   }
 
   /**
@@ -192,13 +257,9 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    */
   public function addThumbnailLink($imageUrl, $removeDetectedSessionValues = FALSE) {
     // detect thumbnail links by session values to avoid duplicate media db files
-    if (isset($this->_session->values[$this->_sessionIdent][$imageUrl])) {
-      $thumbnailLink = $this->_session->values[$this->_sessionIdent][$imageUrl];
-      if ($removeDetectedSessionValues == TRUE) {
-        // remove thumbnail links in the filter process, that's the final run
-        $removeThumbnailLinkFromSession = TRUE;
-      }
-    }
+    list($thumbnailLink, $removeSessionValue) = $this->_getSessionValueLink(
+      $imageUrl, 'thumbnail_links', $removeDetectedSessionValues
+    );
     if (!isset($thumbnailLink)) {
       // download image and insert it to media db, first run
       $contents = file_get_contents($imageUrl);
@@ -215,42 +276,128 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
           $fileId = $this->mediaDbEdit()->addFile(
             $path, $fileName, $this->_textOptions['thumbnails_folder'], ''
           );
+          // create link with media image tag for thumbnail creation, first run
+          $thumbnailLink = sprintf(
+            '<a href="%s" title="%s">%s</a>',
+            PapayaUtilStringXml::escapeAttribute($imageUrl),
+            PapayaUtilStringXml::escapeAttribute($imageUrl),
+            PapayaUtilStringPapaya::getImageTag(
+              $fileId, $this->_textOptions['thubmnails_size'], $this->_textOptions['thubmnails_size'],
+              '', $this->_textOptions['thubmnails_resize_mode']
+            )
+          );
         }
         if (file_exists($path)) {
           unlink($path);
         }
       }
     }
-    if (isset($fileId)) {
-      // create link with media image tag for thumbnail creation, first run
-      $thumbnailLink = sprintf(
-        '<a href="%s" title="%s">%s</a>',
-        $imageUrl, $imageUrl,
-        PapayaUtilStringPapaya::getImageTag(
-          $fileId, $this->_textOptions['thubmnails_size'], $this->_textOptions['thubmnails_size'],
-          '', $this->_textOptions['thubmnails_resize_mode']
-        )
-      );
-    }
-
     if (isset($thumbnailLink)) {
-      if (isset($fileId) && !isset($removeDetectedSessionValues)) {
-        // session values insert on file creation, that's the first run
-        if (empty($this->_session->values[$this->_sessionIdent])) {
-          $this->_session->values[$this->_sessionIdent] = array();
-        }
-        $this->_session->values[$this->_sessionIdent] = array_merge(
-          $this->_session->values[$this->_sessionIdent], array($imageUrl => $thumbnailLink)
-        );
-      }
+      $this->_setSessionValueLink(
+        $fileId, $removeSessionValue, $imageUrl, $thumbnailLink, 'thumbnail_links'
+      );
       $this->_thumbnailLinks[] = $thumbnailLink;
     }
-    if (isset($removeThumbnailLinkFromSession) && $removeThumbnailLinkFromSession == TRUE) {
-      // remove thumbnail links that have been detected in input text, to avoid duplications
-      // in thumbnail links insertion by session values after this method, see filter method
-      $thumbnailLinks = $this->_session->values[$this->_sessionIdent];
-      unset($thumbnailLinks[$imageUrl]);
-      $this->_session->values[$this->_sessionIdent] = $thumbnailLinks;
+    $this->_removeSessionValueLink($removeSessionValue, $imageUrl, 'thumbnail_links');
+  }
+
+  /**
+   * Video links to create embedded video elemenets, e.g. iframes
+   *
+   * @param string $videoUrl
+   * @param string $hoster use getVideoHosterAndId method to get it
+   * @param string $id use getVideoHosterAndId method to get it
+   * @param boolean $removeDetectedSessionValues
+   */
+  public function addVideoLink($videoUrl, $hoster, $id, $removeDetectedSessionValues = FALSE) {
+    list($videoLink, $removeSessionValue) = $this->_getSessionValueLink(
+      $videoUrl, 'video_links', $removeDetectedSessionValues
+    );
+    if (!isset($videoLink)) {
+      $videoLink = sprintf(
+        '<video-link src="%s" hoster="%s" id="%s" width="%d" height="%d" />',
+        PapayaUtilStringXml::escapeAttribute($videoUrl),
+        $hoster,
+        $id,
+        $this->_textOptions['videos_width'],
+        $this->_textOptions['videos_height']
+      );
+      $created = TRUE;
+    }
+    if (isset($videoLink)) {
+      $this->_setSessionValueLink(
+        $created, $removeSessionValue, $videoUrl, $videoLink, 'video_links'
+      );
+      $this->_videoLinks[] = $videoLink;
+    }
+    $this->_removeSessionValueLink($removeSessionValue, $videoUrl, 'video_links');
+  }
+
+  /**
+   * Helper method for add methods to get an existing session value by ident, type and url
+   *
+   * @param string $url
+   * @param string $type
+   * @param boolean $removeDetected
+   * @return array [link value from session / remove session value flag]
+   */
+  protected function _getSessionValueLink($url, $type, $removeDetected) {
+    $sessionIdent = $type == 'thumbnail_links' ?
+      $this->_sessionIdentThumbnailLinks : $this->_sessionIdentVideoLinks;
+    if (isset($this->_session->values[$sessionIdent][$url])) {
+      $link = $this->_session->values[$sessionIdent][$url];
+      if ($removeDetected == TRUE) {
+        // remove links in the filter process, that's the final run
+        return array($link, TRUE);
+      }
+      return array($link, FALSE);
+    }
+    return array(NULL, NULL);
+  }
+
+  /**
+   * Helper method for add methods to set a session value by url, type and link
+   *
+   * @param mixed $valueToCheck a value that has to exist
+   * @param boolean $removeValue remove session value flag, has to be NULL or FALSE
+   * @param string $url
+   * @param string $link
+   * @param string $type
+   */
+  protected function _setSessionValueLink($valueToCheck, $removeValue, $url, $link, $type) {
+    if (isset($valueToCheck) && (!isset($removeValue) || $removeValue == FALSE)) {
+      $sessionIdent = $type == 'thumbnail_links' ?
+        $this->_sessionIdentThumbnailLinks : $this->_sessionIdentVideoLinks;
+      // session values insert on file creation, that's the first run
+      if (!isset($this->_session->values[$sessionIdent])) {
+        $this->_session->values[$sessionIdent] = array();
+      }
+      $this->_session->values[$sessionIdent] = array_merge(
+        $this->_session->values[$sessionIdent], array($url => $link)
+      );
+    }
+  }
+
+  /**
+   * Helper method for add methods to remove a session value by url, type
+   * To avoid duplications in links insertion by session values in the filter method
+   * The filter method uses this method to remove all session value of a type
+   *
+   * @param $removeValue remove session value flag, has to be true
+   * @param string $url set to TRUE to remove all urls of a type
+   * @param string $type
+   */
+  protected function _removeSessionValueLink($removeValue, $url, $type) {
+    if (isset($removeValue) && $removeValue == TRUE) {
+      $sessionIdent = $type == 'thumbnail_links' ?
+        $this->_sessionIdentThumbnailLinks : $this->_sessionIdentVideoLinks;
+      if ($url === TRUE) {
+        unset($this->_session->values[$sessionIdent]);
+      } else {
+        $sessionValues = $this->_session->values[$sessionIdent];
+        unset($sessionValues[$url]);
+        $this->_session->values[$sessionIdent] = $sessionValues;
+      }
     }
   }
 
