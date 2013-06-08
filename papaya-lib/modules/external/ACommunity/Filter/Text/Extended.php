@@ -172,7 +172,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         $this->_thumbnailLinks, array_values($sessionValues)
       );
       // remove all session values left
-      $this->_removeSessionValueLink($removeValue, TRUE, 'thumbnail_links');
+      $this->_removeSessionValueLink(TRUE, TRUE, 'thumbnail_links');
     }
     if (count($this->_thumbnailLinks) > 0) {
       $result .= '<text-thumbnail-links>';
@@ -188,7 +188,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
         $this->_videoLinks, array_values($sessionValues)
       );
       // remove all session values left
-      $this->_removeSessionValueLink($removeValue, TRUE, 'video_links');
+      $this->_removeSessionValueLink(TRUE, TRUE, 'video_links');
     }
     if (count($this->_videoLinks) > 0) {
       $result .= '<text-video-links>';
@@ -215,33 +215,13 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
       }
     }
     if ($this->_textOptions['videos'] == 1) {
-      list($hoster, $id) = $this->getVideoHosterAndId($match[1]);
-      $this->addVideoLink($match[1], $hoster, $id, TRUE);
+      $this->addVideoLink($match[1], TRUE);
     }
     $urlToShow = $match[1];
     if (strlen($urlToShow) > $this->_urlLength) {
       $urlToShow = substr($match[1], 0, $this->_urlLength - 3).'...';
     }
     return sprintf('<a href="%s">%s</a>', $match[1], $urlToShow);
-  }
-
-  /**
-   * Helper method to get a video hoster and video id by an url
-   *
-   * @param string $url
-   * @return array [hoster / id]
-   */
-  public function getVideoHosterAndId($url) {
-    $videoPattern = '~youtube\.com\/watch\?(.*)?v=([a-zA-Z0-9]+)|vimeo\.com/([0-9]+)~i';
-    preg_match($videoPattern, $url, $videoMatches);
-    if (!empty($videoMatches[3])) {
-      // vimeo id
-      return array('vimeo', $videoMatches[3]);
-    } elseif (!empty($videoMatches[2])) {
-      // youtube id
-      return array('youtube', $videoMatches[2]);
-    }
-    return array(NULL, NULL);
   }
 
   /**
@@ -260,6 +240,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
     list($thumbnailLink, $removeSessionValue) = $this->_getSessionValueLink(
       $imageUrl, 'thumbnail_links', $removeDetectedSessionValues
     );
+    $fileId = NULL;
     if (!isset($thumbnailLink)) {
       // download image and insert it to media db, first run
       $contents = file_get_contents($imageUrl);
@@ -305,32 +286,53 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    * Video links to create embedded video elemenets, e.g. iframes
    *
    * @param string $videoUrl
-   * @param string $hoster use getVideoHosterAndId method to get it
-   * @param string $id use getVideoHosterAndId method to get it
    * @param boolean $removeDetectedSessionValues
    */
-  public function addVideoLink($videoUrl, $hoster, $id, $removeDetectedSessionValues = FALSE) {
-    list($videoLink, $removeSessionValue) = $this->_getSessionValueLink(
-      $videoUrl, 'video_links', $removeDetectedSessionValues
-    );
-    if (!isset($videoLink)) {
-      $videoLink = sprintf(
-        '<video-link src="%s" hoster="%s" id="%s" width="%d" height="%d" />',
-        PapayaUtilStringXml::escapeAttribute($videoUrl),
-        $hoster,
-        $id,
-        $this->_textOptions['videos_width'],
-        $this->_textOptions['videos_height']
+  public function addVideoLink($videoUrl, $removeDetectedSessionValues = FALSE) {
+    list($hoster, $id) = $this->_getVideoHosterAndId($videoUrl);
+    if (!empty($hoster) && !empty($id)) {
+      list($videoLink, $removeSessionValue) = $this->_getSessionValueLink(
+        $videoUrl, 'video_links', $removeDetectedSessionValues
       );
-      $created = TRUE;
+      $created = NULL;
+      if (!isset($videoLink)) {
+        $videoLink = sprintf(
+          '<video-link src="%s" hoster="%s" id="%s" width="%d" height="%d" />',
+          PapayaUtilStringXml::escapeAttribute($videoUrl),
+          $hoster,
+          $id,
+          $this->_textOptions['videos_width'],
+          $this->_textOptions['videos_height']
+        );
+        $created = TRUE;
+      }
+      if (isset($videoLink)) {
+        $this->_setSessionValueLink(
+          $created, $removeSessionValue, $videoUrl, $videoLink, 'video_links'
+        );
+        $this->_videoLinks[] = $videoLink;
+      }
+      $this->_removeSessionValueLink($removeSessionValue, $videoUrl, 'video_links');
     }
-    if (isset($videoLink)) {
-      $this->_setSessionValueLink(
-        $created, $removeSessionValue, $videoUrl, $videoLink, 'video_links'
-      );
-      $this->_videoLinks[] = $videoLink;
+  }
+
+  /**
+   * Helper method to get a video hoster and video id by an url
+   *
+   * @param string $url
+   * @return array [hoster / id]
+   */
+  protected function _getVideoHosterAndId($url) {
+    $videoPattern = '~youtube\.com/watch\?(.*)?v=([a-zA-Z0-9]+)|vimeo\.com/([0-9]+)~i';
+    preg_match($videoPattern, $url, $videoMatches);
+    if (!empty($videoMatches[3])) {
+      // vimeo id
+      return array('vimeo', $videoMatches[3]);
+    } elseif (!empty($videoMatches[2])) {
+      // youtube id
+      return array('youtube', $videoMatches[2]);
     }
-    $this->_removeSessionValueLink($removeSessionValue, $videoUrl, 'video_links');
+    return array(NULL, NULL);
   }
 
   /**
