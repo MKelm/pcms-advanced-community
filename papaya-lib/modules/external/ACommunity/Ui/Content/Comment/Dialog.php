@@ -110,7 +110,7 @@ class ACommunityUiContentCommentDialog
     }
 
     if ($textOptions['videos'] == 1) {
-      $videoHandlerRequestIdent = $this->parameters()->get('image_handler_request_ident', NULL);
+      $videoHandlerRequestIdent = $this->parameters()->get('video_handler_request_ident', NULL);
       if (empty($videoHandlerRequestIdent)) {
         $videoHandlerRequestIdent = md5(
           'request_a_video_link:comments:surfer_'.$this->data()->currentSurferId().
