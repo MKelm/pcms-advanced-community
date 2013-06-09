@@ -207,14 +207,14 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    * @return string
    */
   public function callbackReplaceUrls($match) {
-    if ($this->_textOptions['thumbnails'] == 1) {
+    if ($this->_textOptions['thumbnails'] == 1 && $this->_sessionIdentThumbnailLinks != NULL) {
       $imagePattern = '~.jpg|.jpeg|.gif|.png~i';
       preg_match($imagePattern, $match[1], $imageMatches);
       if (!empty($imageMatches[0])) {
         $this->addThumbnailLink($match[1], TRUE);
       }
     }
-    if ($this->_textOptions['videos'] == 1) {
+    if ($this->_textOptions['videos'] == 1 && $this->_sessionIdentVideoLinks != NULL) {
       $this->addVideoLink($match[1], TRUE);
     }
     $urlToShow = $match[1];

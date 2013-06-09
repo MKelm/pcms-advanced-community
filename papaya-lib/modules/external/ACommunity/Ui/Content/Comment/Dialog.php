@@ -82,12 +82,11 @@ class ACommunityUiContentCommentDialog
         $this->data()->reference()->getRelative()
     );
     $ressource = $this->data()->owner->ressource();
-    $dialog->hiddenFields()->merge(
-      array('command' => 'reply', 'comment_id' => $this->parameters()->get('comment_id', 0))
-    );
+    $commentId = $this->parameters()->get('comment_id', 0);
+    $dialog->hiddenFields()->merge(array('command' => 'reply', 'comment_id' => $commentId));
 
     $textOptions = $this->data()->owner->acommunityConnector()->getTextOptions();
-    if ($textOptions['thumbnails'] == 1) {
+    if ($textOptions['thumbnails'] == 1 && $commentId == 0) {
       $imageHandlerRequestIdent = $this->parameters()->get('image_handler_request_ident', NULL);
       if (empty($imageHandlerRequestIdent)) {
         $imageHandlerRequestIdent = md5(
@@ -109,7 +108,8 @@ class ACommunityUiContentCommentDialog
       ));
     }
 
-    if ($textOptions['videos'] == 1) {
+    // check comment id to allow video links for comments without a parent comment only
+    if ($textOptions['videos'] == 1 && $commentId == 0) {
       $videoHandlerRequestIdent = $this->parameters()->get('video_handler_request_ident', NULL);
       if (empty($videoHandlerRequestIdent)) {
         $videoHandlerRequestIdent = md5(
