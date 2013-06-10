@@ -126,8 +126,16 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
         $filterParameterNames = array('surfer' => 'surfer_handle', 'group' => 'group_handle');
       }
       $groupHandle = $ressource->getSourceParameter('group_handle');
+      $surferHandle = $ressource->getSourceParameter('surfer_handle');
+      if (isset($groupHandle)) {
+        $ressourceType = 'group';
+      } elseif (isset($surferHandle)) {
+        $ressourceType = 'surfer';
+      } else {
+        $ressourceType = 'page';
+      }
       $ressource->set(
-        isset($groupHandle) ? 'group' : 'surfer',
+        $ressourceType,
         array('surfer' => 'surfer_handle', 'group' => 'group_handle'),
         $filterParameterNames
       );
@@ -181,46 +189,50 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
     if (is_null($this->_galleryFolderId)) {
       $ressource = $this->gallery()->ressource();
       if (isset($ressource->id)) {
-        $filter = array('ressource_type' => $ressource->type, 'ressource_id' => $ressource->id);
-        $ressourceParameters = reset($ressource->parameters());
-        if (!empty($ressourceParameters['folder_id'])) {
-          $filter['folder_id'] = $ressourceParameters['folder_id'];
-        } else {
-          $filter['parent_folder_id'] = 0;
-        }
-        $this->gallery()->data()->galleries()->load($filter, 1);
-        if (empty($ressourceParameters['folder_id']) &&
-            count($this->gallery()->data()->galleries()) == 0) {
-          $languageId = $this->papaya()->request->languageId;
-          $parentFolder = $this->gallery()->data()->mediaDBEdit()->getFolder(
-            $this->data['directory']
-          );
-          if (!empty($parentFolder[$languageId])) {
-            $newFolderId = $this->gallery()->data()->mediaDBEdit()->addFolder(
-              $parentFolder[$languageId]['folder_id'],
-              $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';',
-              $parentFolder[$languageId]['permission_mode']
+        if ($ressource->type == 'group' || $ressource->type == 'surfer') {
+          $filter = array('ressource_type' => $ressource->type, 'ressource_id' => $ressource->id);
+          $ressourceParameters = reset($ressource->parameters());
+          if (!empty($ressourceParameters['folder_id'])) {
+            $filter['folder_id'] = $ressourceParameters['folder_id'];
+          } else {
+            $filter['parent_folder_id'] = 0;
+          }
+          $this->gallery()->data()->galleries()->load($filter, 1);
+          if (empty($ressourceParameters['folder_id']) &&
+              count($this->gallery()->data()->galleries()) == 0) {
+            $languageId = $this->papaya()->request->languageId;
+            $parentFolder = $this->gallery()->data()->mediaDBEdit()->getFolder(
+              $this->data['directory']
             );
-            if (!empty($newFolderId)) {
-              $this->gallery()->data()->mediaDBEdit()->addFolderTranslation(
-                $newFolderId, $languageId, $ressource->type.'_'.$ressource->id
+            if (!empty($parentFolder[$languageId])) {
+              $newFolderId = $this->gallery()->data()->mediaDBEdit()->addFolder(
+                $parentFolder[$languageId]['folder_id'],
+                $parentFolder[$languageId]['parent_path'].$parentFolder[$languageId]['folder_id'].';',
+                $parentFolder[$languageId]['permission_mode']
               );
-              $gallery = $this->gallery()->data()->gallery();
-              $gallery['ressource_type'] = $ressource->type;
-              $gallery['ressource_id'] = $ressource->id;
-              $gallery['folder_id'] = $newFolderId;
-              $gallery['parent_folder_id'] = 0;
-              $gallery->save();
-              $this->_galleryFolderId = $newFolderId;
+              if (!empty($newFolderId)) {
+                $this->gallery()->data()->mediaDBEdit()->addFolderTranslation(
+                  $newFolderId, $languageId, $ressource->type.'_'.$ressource->id
+                );
+                $gallery = $this->gallery()->data()->gallery();
+                $gallery['ressource_type'] = $ressource->type;
+                $gallery['ressource_id'] = $ressource->id;
+                $gallery['folder_id'] = $newFolderId;
+                $gallery['parent_folder_id'] = 0;
+                $gallery->save();
+                $this->_galleryFolderId = $newFolderId;
+              } else {
+                $this->_galleryFolderId = FALSE;
+              }
             } else {
               $this->_galleryFolderId = FALSE;
             }
-          } else {
-            $this->_galleryFolderId = FALSE;
+          } elseif (count($this->gallery()->data()->galleries()) > 0) {
+            $gallery = reset($this->gallery()->data()->galleries()->toArray());
+            $this->_galleryFolderId = $gallery['folder_id'];
           }
-        } elseif (count($this->gallery()->data()->galleries()) > 0) {
-          $gallery = reset($this->gallery()->data()->galleries()->toArray());
-          $this->_galleryFolderId = $gallery['folder_id'];
+        } elseif ($ressource->type == 'page') {
+          $this->_galleryFolderId = $this->data['directory'];
         }
       }
     }
