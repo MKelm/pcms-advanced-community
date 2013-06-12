@@ -344,7 +344,7 @@ class ACommunityFilterTextExtended extends PapayaFilterText {
    * @return array [hoster / id]
    */
   protected function _getVideoHosterAndId($url) {
-    $videoPattern = '~youtube\.com/watch\?(.*)?v=([a-zA-Z0-9\-]+)|vimeo\.com/([0-9]+)~i';
+    $videoPattern = '~youtube\.com/watch\?(.*)?v=([a-zA-Z0-9\-_]+)|vimeo\.com/([0-9]+)~i';
     preg_match($videoPattern, $url, $videoMatches);
     if (!empty($videoMatches[3])) {
       // vimeo id
