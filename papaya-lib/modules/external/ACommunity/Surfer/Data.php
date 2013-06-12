@@ -79,10 +79,12 @@ class ACommunitySurferData extends ACommunityUiContentData {
    * @param array $messageNames
    */
   public function setPluginData($data, $captionNames = array(), $messageNames = array()) {
-    $this->_surferGenderTitles = array(
-      'm' => $data['title_gender_male'],
-      'f' => $data['title_gender_female']
-    );
+    if (isset($data['title_gender_male']) && isset($data['title_gender_female'])) {
+      $this->_surferGenderTitles = array(
+        'm' => $data['title_gender_male'],
+        'f' => $data['title_gender_female']
+      );
+    }
     $this->_surferAvatarSize = (int)$data['avatar_size'];
     $this->_surferAvatarResizeMode = $data['avatar_resize_mode'];
     $this->_dynamicDataCategories = isset($data['dynamic_data_categories']) ?
