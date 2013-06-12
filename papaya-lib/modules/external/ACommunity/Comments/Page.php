@@ -171,29 +171,7 @@ class ACommunityCommentsPage extends base_content implements PapayaPluginCacheab
       list($ressourceType, $ressourceParameterValue) = $ressource->detectSourceParameterValue(
         $ressourceParameterNames
       );
-      if ($ressourceType == 'image') {
-        // set a initial ressource by surfer / group because image depends on them
-        $initialRessourceParameterNames = array(
-          'surfer' => array('user_name', 'user_handle', 'surfer_handle'),
-          'group' => array('group_handle')
-        );
-        list($initialRessourceType, $initialRessourceValue) = $ressource->detectSourceParameterValue(
-          $initialRessourceParameterNames
-        );
-        $ressource->set(
-          $initialRessourceType,
-          NULL,
-          array('surfer' => array(), 'group' => array()),
-          NULL,
-          $initialRessourceValue
-        );
-        if (isset($ressource->id)) {
-          // set dependend image ressource as second / active ressource
-          $ressource->set($ressourceType, NULL, $ressourceParameterNames, NULL, $ressourceParameterValue);
-        }
-      } else {
-        $ressource->set($ressourceType, NULL, $ressourceParameterNames, NULL, $ressourceParameterValue);
-      }
+      $ressource->set($ressourceType, NULL, $ressourceParameterNames, NULL, $ressourceParameterValue);
       $this->_ressource = $ressource;
     }
     return $this->_ressource;
