@@ -120,10 +120,15 @@ class ACommunityImageGalleryPage extends MediaImageGalleryPage implements Papaya
       if ($command != 'delete_folder') {
         $filterParameterNames = array(
           'surfer' => array('surfer_handle', 'folder_id'),
-          'group' => array('group_handle', 'folder_id')
+          'group' => array('group_handle', 'folder_id'),
+          'page' => array()
         );
       } else {
-        $filterParameterNames = array('surfer' => 'surfer_handle', 'group' => 'group_handle');
+        $filterParameterNames = array(
+          'surfer' => 'surfer_handle',
+          'group' => 'group_handle',
+          'page' => array()
+        );
       }
       $groupHandle = $ressource->getSourceParameter('group_handle');
       $surferHandle = $ressource->getSourceParameter('surfer_handle');
