@@ -105,9 +105,8 @@ class ACommunitySurferData extends ACommunityUiContentData {
           $ressource->id
         );
       }
-
       $this->surferDetails = array();
-      $details = $this->owner->communityConnector()->getProfileData($ressource->id);
+      $details = $this->owner->communityConnector()->getProfileData($ressource->id, NULL, TRUE);
       if (!empty($details)) {
         $groupIds = $this->owner->communityConnector()->getProfileDataClasses('order');
         foreach ($groupIds as $groupId) {
@@ -119,15 +118,37 @@ class ACommunitySurferData extends ACommunityUiContentData {
                 'details' => array()
               );
               $detailNames = $this->owner->communityConnector()->getProfileFieldNames($groupId);
+              $detailCount = 0;
               foreach ($detailNames as $detailName) {
-                $this->surferDetails[$groupId]['details'][$detailName] = NULL;
                 $detailCaptions = $this->owner->communityConnector()->getProfileFieldTitles($detailName);
                 if (!empty($detailCaptions[$this->languageId])) {
-                  $this->surferDetails[$groupId]['details'][$detailName] = array(
-                    'caption' => $detailCaptions[$this->languageId],
-                    'value' => isset($details[$detailName]) ? $details[$detailName] : NULL
-                  );
+                  if (isset($details[$detailName]) && !empty($details[$detailName]['value'])) {
+                    $value = $details[$detailName]['value'];
+                    $this->surferDetails[$groupId]['details'][$detailName] = array(
+                      'caption' => $detailCaptions[$this->languageId],
+                      'value' => $value
+                    );
+                    $values = array();
+                    if ((string)$details[$detailName]['values'] == "" &&
+                        isset($details[$detailName]['values']->options)) {
+                      $lngCode = $this->papaya()->request->language->code;
+                      foreach ($details[$detailName]['values']->options->value as $optionValue) {
+                        $values[(string)$optionValue->content] = (string)$optionValue->captions->$lngCode;
+                      }
+                      if (count($values) > 0) {
+                        $value = isset($values[$value]) ? $values[$value] : NULL;
+                        if (empty($value)) {
+                          unset($this->surferDetails[$groupId]['details'][$detailName]);
+                        } else {
+                          $this->surferDetails[$groupId]['details'][$detailName]['value'] = $value;
+                        }
+                      }
+                    }
+                  }
                 }
+              }
+              if (count($this->surferDetails[$groupId]['details']) == 0) {
+                unset($this->surferDetails[$groupId]);
               }
             }
           }
