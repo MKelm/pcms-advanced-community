@@ -109,7 +109,7 @@ class ACommunitySurferData extends ACommunityUiContentData {
       $this->surferDetails = array();
       $details = $this->owner->communityConnector()->getProfileData($ressource->id);
       if (!empty($details)) {
-        $groupIds = $this->owner->communityConnector()->getProfileDataClasses();
+        $groupIds = $this->owner->communityConnector()->getProfileDataClasses('order');
         foreach ($groupIds as $groupId) {
           if (in_array($groupId, $this->_dynamicDataCategories)) {
             $groupCaptions = $this->owner->communityConnector()->getProfileDataClassTitles($groupId);
