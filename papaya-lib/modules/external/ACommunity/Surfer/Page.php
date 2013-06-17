@@ -259,7 +259,7 @@ class ACommunitySurferPage extends base_content implements PapayaPluginCacheable
   * @return string $result XML
   */
   function callbackDynamicDataCategories($name, $element, $data) {
-    $classes = $this->surfer()->communityConnector()->getProfileDataClasses();
+    $classes = $this->surfer()->communityConnector()->getProfileDataClasses('order');
     $result = '';
     $commonTitle = $this->_gt('Category');
     foreach ($classes as $class) {
