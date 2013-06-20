@@ -106,7 +106,9 @@ class ACommunitySurferData extends ACommunityUiContentData {
         );
       }
       $this->surferDetails = array();
-      $details = $this->owner->communityConnector()->getProfileData($ressource->id, NULL, TRUE);
+      $details = $this->owner->communityConnector()->getProfileData(
+        $ressource->id, NULL, $this->languageId
+      );
       if (!empty($details)) {
         $groupIds = $this->owner->communityConnector()->getProfileDataClasses('order');
         foreach ($groupIds as $groupId) {
@@ -128,20 +130,23 @@ class ACommunitySurferData extends ACommunityUiContentData {
                       'caption' => $detailCaptions[$this->languageId],
                       'value' => $value
                     );
-                    $values = array();
-                    if ((string)$details[$detailName]['values'] == "" &&
-                        isset($details[$detailName]['values']->options)) {
-                      $lngCode = $this->papaya()->request->language->code;
-                      foreach ($details[$detailName]['values']->options->value as $optionValue) {
-                        $values[(string)$optionValue->content] = (string)$optionValue->captions->$lngCode;
-                      }
-                      if (count($values) > 0) {
-                        $value = isset($values[$value]) ? $values[$value] : NULL;
-                        if (empty($value)) {
-                          unset($this->surferDetails[$groupId]['details'][$detailName]);
-                        } else {
-                          $this->surferDetails[$groupId]['details'][$detailName]['value'] = $value;
+                    if (is_array($details[$detailName]['values']) &&
+                        count($details[$detailName]['values']) > 0) {
+                      if (!is_array($value) && isset($details[$detailName]['values'][$value])) {
+                        $value = $details[$detailName]['values'][$value];
+                      } elseif (is_array($value)) {
+                        $newValue = array();
+                        foreach ($value as $val) {
+                          if (isset($details[$detailName]['values'][$val])) {
+                            $newValue[] = $details[$detailName]['values'][$val];
+                          }
                         }
+                        $value = implode(', ', $newValue);
+                      }
+                      if (empty($value)) {
+                        unset($this->surferDetails[$groupId]['details'][$detailName]);
+                      } else {
+                        $this->surferDetails[$groupId]['details'][$detailName]['value'] = $value;
                       }
                     }
                   }
