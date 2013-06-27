@@ -97,7 +97,8 @@ class ACommunityUiContentCommentsList extends PapayaUiControl {
             $comment->linkVoteDownCaption = $this->data()->captions['command_vote_down'];
           }
 
-          if (!empty($commentData['childs']['data'])) {
+          if (!empty($commentData['childs']['data']) &&
+              !empty($this->data()->paging['comments_per_comment'])) {
             include_once(dirname(__FILE__).'/../Comments.php');
             $subComments = new ACommunityUiContentComments($comment);
             $subComments->papaya($this->papaya());
