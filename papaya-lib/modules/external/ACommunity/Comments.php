@@ -170,7 +170,9 @@ class ACommunityComments extends ACommunityUiContent {
       }
     } elseif (isset($this->ressource()->id)) {
       // comments output
-      $this->performCommands();
+      if ($this->data()->mode == 'list') {
+        $this->performCommands();
+      }
       $comments = $parent->appendElement('acommunity-comments');
       if ($this->data()->mode == 'list') {
         $currentSurferId = $this->data()->currentSurferId();
@@ -200,13 +202,15 @@ class ACommunityComments extends ACommunityUiContent {
         }
       }
       $this->uiCommentsList()->appendTo($comments);
-      $comments->appendElement(
-        'command',
-        array(
-          'name' => PapayaUtilStringXml::escape($this->parameters()->get('command', 'reply')),
-          'comment_id' => PapayaUtilStringXml::escapeAttribute($this->parameters()->get('comment_id', 0))
-        )
-      );
+      if ($this->data()->mode == 'list') {
+        $comments->appendElement(
+          'command',
+          array(
+            'name' => PapayaUtilStringXml::escape($this->parameters()->get('command', 'reply')),
+            'comment_id' => PapayaUtilStringXml::escapeAttribute($this->parameters()->get('comment_id', 0))
+          )
+        );
+      }
     }
   }
 
