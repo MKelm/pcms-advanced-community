@@ -172,9 +172,7 @@ class ACommunityComments extends ACommunityUiContent {
       // comments output
       if ($this->data()->mode == 'list') {
         $this->performCommands();
-      }
-      $comments = $parent->appendElement('acommunity-comments');
-      if ($this->data()->mode == 'list') {
+        $comments = $parent->appendElement('acommunity-comments');
         $currentSurferId = $this->data()->currentSurferId();
         if (!empty($currentSurferId)) {
 
@@ -200,6 +198,8 @@ class ACommunityComments extends ACommunityUiContent {
             );
           }
         }
+      } else {
+        $comments = $parent->appendElement('acommunity-comments-ranking');
       }
       $this->uiCommentsList()->appendTo($comments);
       if ($this->data()->mode == 'list') {
